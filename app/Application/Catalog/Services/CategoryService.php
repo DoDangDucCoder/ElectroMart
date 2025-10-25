@@ -1,0 +1,113 @@
+<?php
+
+namespace App\Application\Catalog\Services;
+
+use App\Domain\Catalog\Repositories\CategoryRepositoryInterface;
+use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+
+class CategoryService
+{
+    public function __construct(
+        private readonly CategoryRepositoryInterface $categories,
+    ) {
+    }
+
+    public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->categories->paginate($filters, $perPage);
+    }
+
+    public function listAll(array $filters = []): Collection
+    {
+        return $this->categories->all($filters);
+    }
+
+    public function listActive(): Collection
+    {
+        return $this->categories->all(['is_active' => true]);
+    }
+
+    public function listRootActive(): Collection
+    {
+        return $this->categories->all([
+            'parent_id' => 0,
+            'is_active' => true,
+        ]);
+    }
+
+    public function create(array $data): ProductCategory
+    {
+        $payload = $this->preparePayload($data);
+
+        return $this->categories->create($payload);
+    }
+
+    public function update(ProductCategory $category, array $data): ProductCategory
+    {
+        $payload = $this->preparePayload($data, $category);
+
+        return $this->categories->update($category, $payload);
+    }
+
+    public function delete(ProductCategory $category): void
+    {
+        $this->categories->delete($category);
+    }
+
+    public function updateStatus(ProductCategory $category, bool $isActive): ProductCategory
+    {
+        return $this->categories->setStatus($category, $isActive);
+    }
+
+    public function reorder(array $orderedIds): void
+    {
+        $this->categories->reorder($orderedIds);
+    }
+
+    public function findActiveBySlug(string $slug): ?ProductCategory
+    {
+        return $this->categories->findBySlug($slug, true);
+    }
+
+    public function getDescendantIds(ProductCategory $category, bool $onlyActive = true): array
+    {
+        $filters = ['parent_id' => $category->id];
+
+        if ($onlyActive) {
+            $filters['is_active'] = true;
+        }
+
+        $children = $this->categories->all($filters);
+
+        $ids = [];
+
+        foreach ($children as $child) {
+            $ids[] = $child->id;
+            $ids = array_merge($ids, $this->getDescendantIds($child, $onlyActive));
+        }
+
+        return $ids;
+    }
+
+    protected function preparePayload(array $data, ?ProductCategory $category = null): array
+    {
+        $payload = [
+            'name' => $data['name'],
+            'slug' => $data['slug'] ?? ($category?->slug ?? Str::slug($data['name'])),
+            'code' => $data['code'] ?? $category?->code,
+            'parent_id' => $data['parent_id'] ?? null,
+            'thumbnail_path' => $data['thumbnail_path'] ?? $category?->thumbnail_path,
+            'description' => $data['description'] ?? null,
+            'is_active' => $data['is_active'] ?? true,
+            'display_order' => $data['display_order'] ?? $category?->display_order ?? 0,
+            'meta_title' => $data['meta_title'] ?? null,
+            'meta_description' => $data['meta_description'] ?? null,
+            'meta' => $data['meta'] ?? $category?->meta,
+        ];
+
+        return $payload;
+    }
+}

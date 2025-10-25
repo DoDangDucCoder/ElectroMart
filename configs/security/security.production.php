@@ -1,0 +1,29 @@
+# security.production.php - Security Configuration
+# TODO: Add security configuration content
+
+# SSL/TLS Configuration
+SSL_CERT_PATH="/etc/ssl/certs/your-domain.crt"
+SSL_KEY_PATH="/etc/ssl/private/your-domain.key"
+SSL_PROTOCOLS="TLSv1.2 TLSv1.3"
+
+# Security Headers
+SECURITY_HEADERS="X-Frame-Options: DENY, X-Content-Type-Options: nosniff, X-XSS-Protection: 1; mode=block"
+
+# Rate Limiting
+RATE_LIMIT_REQUESTS=100
+RATE_LIMIT_WINDOW=60
+
+# Access Control
+ALLOWED_IPS="127.0.0.1, 10.0.0.0/8"
+BLOCKED_IPS=""
+
+# Firewall Rules
+FIREWALL_RULES="DROP INVALID, ACCEPT ESTABLISHED, ACCEPT RELATED"
+
+# Encryption
+ENCRYPTION_KEY="your-encryption-key-here"
+ENCRYPTION_CIPHER="AES-256-CBC"
+
+# Audit Configuration
+AUDIT_LOG_PATH="/var/log/audit.log"
+AUDIT_RETENTION_DAYS=90

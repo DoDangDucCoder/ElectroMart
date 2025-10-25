@@ -1,0 +1,396 @@
+/* Dark/Light Mode CSS Variables */
+:root {
+  /* Light Mode Colors */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-tertiary: #e9ecef;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --text-muted: #adb5bd;
+  --border-color: #dee2e6;
+  --shadow: rgba(0, 0, 0, 0.1);
+  --accent-color: #007bff;
+  --accent-hover: #0056b3;
+  --success-color: #28a745;
+  --warning-color: #ffc107;
+  --danger-color: #dc3545;
+  --info-color: #17a2b8;
+  
+  /* Card & Component Colors */
+  --card-bg: #ffffff;
+  --card-border: #dee2e6;
+  --input-bg: #ffffff;
+  --input-border: #ced4da;
+  --button-bg: #007bff;
+  --button-text: #ffffff;
+  --button-hover: #0056b3;
+  
+  /* Navigation */
+  --nav-bg: #ffffff;
+  --nav-text: #212529;
+  --nav-hover: #f8f9fa;
+  
+  /* Footer */
+  --footer-bg: #343a40;
+  --footer-text: #ffffff;
+  
+  /* Product Cards */
+  --product-card-bg: #ffffff;
+  --product-card-border: #dee2e6;
+  --product-card-hover: #f8f9fa;
+  
+  /* Transitions */
+  --transition-speed: 0.3s;
+  --transition-easing: ease-in-out;
+}
+
+/* Dark Mode Colors */
+[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-tertiary: #404040;
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  --text-muted: #808080;
+  --border-color: #404040;
+  --shadow: rgba(0, 0, 0, 0.3);
+  --accent-color: #4dabf7;
+  --accent-hover: #339af0;
+  --success-color: #51cf66;
+  --warning-color: #ffd43b;
+  --danger-color: #ff6b6b;
+  --info-color: #74c0fc;
+  
+  /* Card & Component Colors */
+  --card-bg: #2d2d2d;
+  --card-border: #404040;
+  --input-bg: #404040;
+  --input-border: #555555;
+  --button-bg: #4dabf7;
+  --button-text: #ffffff;
+  --button-hover: #339af0;
+  
+  /* Navigation */
+  --nav-bg: #1a1a1a;
+  --nav-text: #ffffff;
+  --nav-hover: #2d2d2d;
+  
+  /* Footer */
+  --footer-bg: #000000;
+  --footer-text: #ffffff;
+  
+  /* Product Cards */
+  --product-card-bg: #2d2d2d;
+  --product-card-border: #404040;
+  --product-card-hover: #404040;
+}
+
+/* Base Styles */
+* {
+  transition: background-color var(--transition-speed) var(--transition-easing),
+              color var(--transition-speed) var(--transition-easing),
+              border-color var(--transition-speed) var(--transition-easing),
+              box-shadow var(--transition-speed) var(--transition-easing);
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Navigation */
+.navbar {
+  background-color: var(--nav-bg) !important;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.navbar-brand,
+.navbar-nav .nav-link {
+  color: var(--nav-text) !important;
+}
+
+.navbar-nav .nav-link:hover {
+  background-color: var(--nav-hover);
+  color: var(--accent-color) !important;
+}
+
+/* Cards */
+.card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 2px 4px var(--shadow);
+}
+
+.card-header {
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Product Cards */
+.product-item {
+  background-color: var(--product-card-bg);
+  border: 1px solid var(--product-card-border);
+}
+
+.product-item:hover {
+  background-color: var(--product-card-hover);
+  box-shadow: 0 4px 8px var(--shadow);
+}
+
+/* Forms */
+.form-control {
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--text-primary);
+}
+
+.form-control:focus {
+  background-color: var(--input-bg);
+  border-color: var(--accent-color);
+  color: var(--text-primary);
+  box-shadow: 0 0 0 0.2rem rgba(77, 171, 247, 0.25);
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--button-bg);
+  border-color: var(--button-bg);
+  color: var(--button-text);
+}
+
+.btn-primary:hover {
+  background-color: var(--button-hover);
+  border-color: var(--button-hover);
+}
+
+.btn-outline-primary {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: var(--button-text);
+}
+
+/* Tables */
+.table {
+  color: var(--text-primary);
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: var(--bg-secondary);
+}
+
+.table-hover tbody tr:hover {
+  background-color: var(--bg-tertiary);
+}
+
+/* Footer */
+footer {
+  background-color: var(--footer-bg) !important;
+  color: var(--footer-text) !important;
+}
+
+footer a {
+  color: var(--footer-text);
+}
+
+footer a:hover {
+  color: var(--accent-color);
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+}
+
+/* Breadcrumb */
+.breadcrumb {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.breadcrumb-item a {
+  color: var(--accent-color);
+}
+
+/* Pagination */
+.pagination .page-link {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.pagination .page-link:hover {
+  background-color: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--accent-color);
+}
+
+.pagination .page-item.active .page-link {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+/* Alert Messages */
+.alert {
+  border: 1px solid var(--border-color);
+}
+
+.alert-success {
+  background-color: rgba(40, 167, 69, 0.1);
+  border-color: var(--success-color);
+  color: var(--success-color);
+}
+
+.alert-warning {
+  background-color: rgba(255, 193, 7, 0.1);
+  border-color: var(--warning-color);
+  color: var(--warning-color);
+}
+
+.alert-danger {
+  background-color: rgba(220, 53, 69, 0.1);
+  border-color: var(--danger-color);
+  color: var(--danger-color);
+}
+
+.alert-info {
+  background-color: rgba(23, 162, 184, 0.1);
+  border-color: var(--info-color);
+  color: var(--info-color);
+}
+
+/* Modal */
+.modal-content {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+}
+
+.modal-header {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-footer {
+  border-top: 1px solid var(--border-color);
+}
+
+/* Dropdown */
+.dropdown-menu {
+  background-color: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 4px 8px var(--shadow);
+}
+
+.dropdown-item {
+  color: var(--text-primary);
+}
+
+.dropdown-item:hover {
+  background-color: var(--bg-secondary);
+  color: var(--accent-color);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 50px;
+  padding: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px var(--shadow);
+  transition: all var(--transition-speed) var(--transition-easing);
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px var(--shadow);
+}
+
+.theme-toggle-icon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  transition: all var(--transition-speed) var(--transition-easing);
+}
+
+.theme-toggle-icon.sun {
+  color: #ffc107;
+}
+
+.theme-toggle-icon.moon {
+  color: #6c757d;
+}
+
+[data-theme="dark"] .theme-toggle-icon.sun {
+  color: #ffc107;
+}
+
+[data-theme="dark"] .theme-toggle-icon.moon {
+  color: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .theme-toggle {
+    top: 15px;
+    right: 15px;
+    padding: 8px;
+  }
+  
+  .theme-toggle-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Loading Animation */
+.theme-toggle.loading {
+  pointer-events: none;
+}
+
+.theme-toggle.loading .theme-toggle-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Smooth page transitions */
+.page-transition {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.page-transition.loaded {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Custom scrollbar for dark mode */
+[data-theme="dark"] ::-webkit-scrollbar {
+  width: 8px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}

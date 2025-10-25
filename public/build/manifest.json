@@ -1,0 +1,21 @@
+{
+  "resources/css/tailwind.css": {
+    "file": "assets/tailwind-CEpa_HtJ.css",
+    "src": "resources/css/tailwind.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-Dn5lT_CL.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "css": [
+      "assets/app-C3Nk2A13.css"
+    ]
+  },
+  "resources/sass/app.scss": {
+    "file": "assets/app-D_3uYsDq.css",
+    "src": "resources/sass/app.scss",
+    "isEntry": true
+  }
+}
