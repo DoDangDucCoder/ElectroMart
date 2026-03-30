@@ -2,59 +2,76 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
+use App\Support\AdminAccess;
+use App\Support\AdminPermissions;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\PermissionRegistrar;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class AdminSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create admin roles
-        $roles = [
-            ['name' => 'Super Admin', 'guard_name' => 'admin'],
-            ['name' => 'Admin', 'guard_name' => 'admin'],
-            ['name' => 'Editor', 'guard_name' => 'admin'],
-        ];
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        foreach ($roles as $role) {
-            DB::table('roles')->insert(array_merge($role, [
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]));
+        foreach (AdminPermissions::all() as $permissionName) {
+            Permission::firstOrCreate([
+                'name' => $permissionName,
+                'guard_name' => AdminAccess::guardName(),
+            ]);
         }
 
-        // Create admin users
+        foreach (AdminAccess::canonicalRoleNames() as $roleName) {
+            $role = Role::firstOrCreate([
+                'name' => $roleName,
+                'guard_name' => AdminAccess::guardName(),
+            ]);
+
+            $missingPermissions = array_diff(
+                AdminPermissions::defaultsForRole($roleName),
+                $role->permissions()
+                    ->where('guard_name', AdminAccess::guardName())
+                    ->pluck('name')
+                    ->all()
+            );
+
+            if ($missingPermissions !== []) {
+                $role->givePermissionTo($missingPermissions);
+            }
+        }
+
         $admins = [
             [
-                'admin_email' => 'admin@shop.com',
-                'admin_password' => Hash::make('admin123'),
-                'admin_name' => 'Super Admin',
-                'admin_phone' => '0123456789',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'email' => 'admin@shop.com',
+                'password' => Hash::make('admin123'),
+                'name' => 'Super Admin',
+                'phone' => '0123456789',
+                'role' => 'Super Admin',
             ],
             [
-                'admin_email' => 'editor@shop.com',
-                'admin_password' => Hash::make('editor123'),
-                'admin_name' => 'Editor',
-                'admin_phone' => '0987654321',
-                'created_at' => now(),
-                'updated_at' => now(),
+                'email' => 'editor@shop.com',
+                'password' => Hash::make('editor123'),
+                'name' => 'Editor',
+                'phone' => '0987654321',
+                'role' => 'Editor',
             ],
         ];
 
         foreach ($admins as $admin) {
-            $adminId = DB::table('legacy_admins')->insertGetId($admin);
-            
-            // Assign roles
-            $roleId = $admin['admin_email'] === 'admin@shop.com' ? 1 : 3; // Super Admin or Editor
-            DB::table('legacy_admin_roles')->insert([
-                'admin_admin_id' => $adminId,
-                'roles_id_roles' => $roleId,
-                'created_at' => now(),
-                'updated_at' => now(),
+            $user = User::updateOrCreate([
+                'email' => $admin['email'],
+            ], [
+                'name' => $admin['name'],
+                'phone' => $admin['phone'],
+                'password' => $admin['password'],
             ]);
+
+            $user->syncRoles([$admin['role']]);
         }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }

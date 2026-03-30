@@ -100,3 +100,48 @@
 6. Viết seeder mẫu & command `data:migrate-legacy`.
 7. Cập nhật model Eloquent tương ứng trong `App\Infrastructure\Persistence\Eloquent`.
 8. Kiểm thử + cập nhật controller/service sử dụng schema mới.
+
+## 7. Ghi chú chuẩn hóa branding storefront
+- Brand storefront mặc định đã được gom về config trung tâm:
+  - `config('services.storefront_brand.name')`
+  - `config('services.storefront_brand.descriptor')`
+- Label/copy storefront dùng lại nhiều nơi đã được gom về:
+  - `config('storefront.labels.utility_hotline')`
+  - `config('storefront.labels.utility_store')`
+  - `config('storefront.labels.chat_assistant')`
+  - `config('storefront.labels.chat_panel_title')`
+  - `config('storefront.labels.support_quick')`
+  - `config('storefront.labels.support_connect_title')`
+  - `config('storefront.labels.contact_support')`
+  - `config('storefront.labels.contact_page')`
+- Giá trị mặc định hiện tại:
+  - `STOREFRONT_BRAND_NAME=ShopW`
+  - `STOREFRONT_BRAND_DESCRIPTOR=Cửa hàng công nghệ`
+  - `STOREFRONT_LABEL_TOPBAR_CONTACT_FAST=Liên hệ nhanh`
+  - `STOREFRONT_LABEL_CHAT_ASSISTANT=Trợ lý bán hàng`
+  - `STOREFRONT_LABEL_CHAT_PANEL_TITLE=Chat hỗ trợ sản phẩm`
+  - `STOREFRONT_LABEL_CONTACT_SUPPORT=Liên hệ hỗ trợ`
+  - `STOREFRONT_LABEL_CONTACT_PAGE=Trang liên hệ`
+  - `STOREFRONT_LABEL_COMPARE_PRODUCTS=So sánh sản phẩm`
+  - `STOREFRONT_LABEL_RECOMMEND_FOR_YOU=Gợi ý cho bạn`
+  - `STOREFRONT_LABEL_ORDER_TRACKING=Theo dõi đơn hàng`
+  - `STOREFRONT_LABEL_BUY_MORE_PRODUCTS=Mua thêm sản phẩm`
+  - `STOREFRONT_LABEL_HOTLINE_CONSULTING=Hotline tư vấn`
+  - `STOREFRONT_LABEL_HOTLINE_ORDERING=Hotline đặt hàng`
+  - `STOREFRONT_LABEL_HOTLINE_SUPPORT=Hotline hỗ trợ`
+  - `STOREFRONT_LABEL_HOTLINE_AFTER_SALES=Hotline hậu mãi`
+  - `STOREFRONT_LABEL_CONTACT_FAST=Liên hệ nhanh`
+  - `STOREFRONT_LABEL_VIEW_PREVIOUS_ORDERS=Xem đơn cũ`
+- Hotline fallback mặc định đã được đổi sang placeholder trung tính:
+  - `STOREFRONT_CONTACT_PHONE_DISPLAY=1900.0000`
+  - `STOREFRONT_CONTACT_PHONE_HREF=19000000`
+- Các view storefront như `header`, `footer`, `chatbot`, `hero`, `category`, `detail`, `cart`, `checkout`, `history`, `contact`, `video` đã bỏ literal brand cũ và đọc brand/hotline từ config.
+- Các label dùng lại nhiều nơi trong `header`, `hero rail`, `chatbot launcher/panel` và action label của chatbot AI/FAQ đã bỏ hardcode và đọc từ config.
+- Các label hỗ trợ theo ngữ cảnh ở `category`, `detail`, `cart`, `checkout`, `history`, `video`, `homepage` như `Hotline tư vấn`, `Hotline hậu mãi`, `Gợi ý cho bạn`, `So sánh sản phẩm`, `Xem đơn cũ` cũng đã được gom vào `config/storefront.php`.
+- Một nhóm copy mô tả dài theo ngữ cảnh cũng đã được gom vào `config('storefront.copy.*')`, ví dụ:
+  - hỗ trợ ở trang chi tiết sản phẩm
+  - mô tả support rail ở giỏ hàng / checkout / login checkout
+  - quick-action text ở history / contact / video
+- Mục tiêu là để storefront không còn phải sửa từng câu rải rác trong Blade khi cần đổi giọng copy hoặc đổi brand.
+- Chatbot config cũng đã bỏ literal brand cũ; message chào, FAQ hotline và prompt hệ thống sẽ lấy brand hoặc hotline từ env/config.
+- Nếu cần đổi thương hiệu sau này, ưu tiên sửa `.env` thay vì thay text rải rác trong Blade.
