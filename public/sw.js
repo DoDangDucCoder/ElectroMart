@@ -3,8 +3,6 @@ const urlsToCache = [
     '/',
     '/css/tailwind.css',
     '/js/app.js',
-    '/frontend/css/dark-light-mode.css',
-    '/frontend/js/dark-light-mode.js',
     '/frontend/images/logo-mail.png',
     'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap'
 ];

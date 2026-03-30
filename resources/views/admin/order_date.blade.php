@@ -1,71 +1,85 @@
 @extends('admin_layout')
+
 @section('admin_content')
-    <div class="table-agile-info">
-  <div class="panel panel-default">
-    <div class="panel-heading">
-      Liệt kê đơn hàng 
-    </div>
-    <div class="row w3-res-tb">
-     
-     
-    
-    </div>
-    <div class="table-responsive">
-                      <?php
-                            $message = Session::get('message');
-                            if($message){
-                                echo '<span class="text-alert">'.$message.'</span>';
-                                Session::put('message',null);
-                            }
-                            ?>
-      <table class="table table-striped b-t b-light">
-        <thead>
-          <tr>
-           
-            <th>Thứ tự</th>
-            <th>Mã đơn hàng</th>
-            <th>Ngày tháng đặt hàng</th>
-            <th>Tình trạng đơn hàng</th>
+    <div class="g-admin-page-shell g-admin-order-date-list">
+        <section class="g-admin-page-hero">
+            <div>
+                <span class="g-admin-page-eyebrow">Theo ngày</span>
+                <h1>Đơn hàng theo ngày</h1>
+                <p>Danh sách đơn hàng được lọc theo khoảng thời gian đã chọn từ trang tổng quan.</p>
+            </div>
 
-            <th style="width:30px;"></th>
-          </tr>
-        </thead>
-        <tbody>
-          @php 
-          $i = 0;
-          @endphp
-          @foreach($order as $key => $ord)
-            @php 
-            $i++;
-            @endphp
-          <tr>
-            <td><i>{{$i}}</i></label></td>
-            <td>{{ $ord->order_code }}</td>
-            <td>{{ $ord->created_at }}</td>
-            <td>@if($ord->order_status==1)
-                    Đơn hàng mới
-                @else 
-                    Đã xử lý
+            <div class="g-admin-page-stats">
+                <article>
+                    <strong>{{ number_format($order->count()) }}</strong>
+                    <span>Đơn hàng tìm thấy</span>
+                </article>
+            </div>
+        </section>
+
+        <section class="g-admin-panel-card">
+            <div class="g-admin-panel-head">
+                <div>
+                    <div>Danh sách đơn hàng</div>
+                    <p>Theo dõi nhanh các đơn hàng khớp với mốc thời gian đang xem.</p>
+                </div>
+            </div>
+            <div class="g-admin-panel-body">
+                @if (session('message'))
+                    <div class="alert alert-success">{{ session('message') }}</div>
                 @endif
-            </td>
-           
-           
-            <td>
-              <a href="{{URL::to('/view-order/'.$ord->order_code)}}" class="active styling-edit" ui-toggle-class="">
-                <i class="fa fa-eye text-success text-active"></i></a>
 
-              <a onclick="return confirm('Bạn có chắc là muốn xóa đơn hàng này ko?')" href="{{URL::to('/delete-order/'.$ord->order_code)}}" class="active styling-edit" ui-toggle-class="">
-                <i class="fa fa-times text-danger text"></i>
-              </a>
-
-            </td>
-          </tr>
-          @endforeach
-        </tbody>
-      </table>
+                @if ($order->isEmpty())
+                    <div class="g-admin-empty-state">Không có đơn hàng nào khớp với ngày đã chọn.</div>
+                @else
+                    <div class="table-responsive">
+                        <table class="table table-striped b-t b-light g-admin-data-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Mã đơn</th>
+                                    <th>Ngày đặt</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($order as $index => $ord)
+                                    <tr>
+                                        <td>{{ $index + 1 }}</td>
+                                        <td>{{ $ord->order_code }}</td>
+                                        <td>{{ $ord->created_at }}</td>
+                                        <td>
+                                            @if ($ord->order_status == 1)
+                                                <span class="g-admin-status-chip is-warning">Đơn hàng mới</span>
+                                            @elseif($ord->order_status == 2)
+                                                <span class="g-admin-status-chip is-success">Đã xử lý</span>
+                                            @else
+                                                <span class="g-admin-status-chip is-danger">Đã hủy</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <div class="g-admin-order-table-actions">
+                                                <a href="{{ URL::to('/view-order/' . $ord->order_code) }}" class="btn btn-xs btn-success">
+                                                    <i class="fa fa-eye"></i> Xem
+                                                </a>
+                                                <form action="{{ url('/delete-order/' . $ord->order_code) }}" method="POST"
+                                                    onsubmit="return confirm('Bạn có chắc muốn xóa đơn hàng này không?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-xs btn-danger">
+                                                        <i class="fa fa-times"></i> Xóa
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        </section>
     </div>
- 
-   
-  </div>
-</div>
 @endsection

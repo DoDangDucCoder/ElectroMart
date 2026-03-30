@@ -1,60 +1,91 @@
 @extends('admin_layout')
+
 @section('admin_content')
-<style type="text/css">
-		ul.drive {
-	    
-	    padding: 10px;
-	}
-		ul.drive li {
-			list-style-type: none;
-	    color: #000;
-	    margin: 2px 0;
-	    font-weight: 300;
-	}
-	</style>
-<div class="row">	
+    <div class="g-admin-page-shell g-admin-document-page">
+        <section class="g-admin-page-hero">
+            <div>
+                <span class="g-admin-page-eyebrow">Tài liệu</span>
+                <h1>Kho tài liệu</h1>
+                <p>Quản lý danh sách tệp đang có trên nơi lưu trữ tài liệu hiện tại của hệ thống.</p>
+            </div>
 
-	{{-- <ul class="drive">
-		@foreach($contents as $value)
-		
-		<li>Name : {{$value['name']}}</li>
-		<li>Path : {{$value['path']}}</li>
-		<li>Basename : {{$value['basename']}}</li>
-		<li>Mimetype : {{$value['mimetype']}}</li>
-		<li>Type : {{$value['type']}}</li>
-		<li>Mimetype : {{$value['size']}}</li>
+            <div class="g-admin-page-stats">
+                <article>
+                    <strong>{{ number_format($contents->count()) }}</strong>
+                    <span>Tệp đang hiển thị</span>
+                </article>
+                <article>
+                    <strong>{{ $documentDiskLabel }}</strong>
+                    <span>Disk hiện tại · {{ $documentDiskType }}</span>
+                </article>
+            </div>
+        </section>
 
-		<li>Download file cách 1 : <a href="https://drive.google.com/file/d/{{$value['path']}}/view" target="_blank">Tải</a></li>
+        <section class="g-admin-panel-card">
+            <div class="g-admin-panel-head">
+                <div>
+                    <div>Danh sách tài liệu</div>
+                    <p>Tải xuống, xem nhanh và xóa các tệp đang có trong kho tài liệu.</p>
+                </div>
+            </div>
+            <div class="g-admin-panel-body">
+                @if (session('message'))
+                    <div class="alert alert-success">{{ session('message') }}</div>
+                @endif
 
-		<li>Download file cách 2 :  <a href="{{url('download_document', [ 'path'=>$value['path'], 'name'=>$value['name'] ])}}">Tải</a>
-		</li>
+                @if ($contents->isEmpty())
+                    <div class="g-admin-empty-state">
+                        Chưa có tệp nào trong kho tài liệu hiện tại hoặc nơi lưu trữ chưa có dữ liệu.
+                    </div>
+                @else
+                    <div class="g-admin-document-grid">
+                        @foreach ($contents as $document)
+                            <article class="g-admin-document-card">
+                                <div class="g-admin-document-preview">
+                                    @if ($document['type'] === 'image' && $document['preview_url'])
+                                        <img src="{{ $document['preview_url'] }}" alt="{{ $document['name'] }}">
+                                    @else
+                                        <div class="g-admin-document-icon">
+                                            <i class="fa fa-file-text-o"></i>
+                                        </div>
+                                    @endif
+                                </div>
 
-		<li>Delete : <a href="{{url('delete_document', [ 'path'=> $value['path'] ])}}">Delete</a></li>
+                                <div class="g-admin-document-body">
+                                    <h3>{{ $document['name'] }}</h3>
+                                    <ul class="g-admin-note-list">
+                                        <li>Đường dẫn: {{ $document['path'] }}</li>
+                                        <li>Định dạng: {{ $document['mimetype'] }}</li>
+                                        <li>Kích thước: {{ $document['size_label'] }}</li>
+                                        <li>Cập nhật: {{ $document['last_modified_label'] }}</li>
+                                    </ul>
+                                </div>
 
-		<li><iframe src="https://drive.google.com/file/d/{{$value['path']}}/preview"  width="640" height="640"></iframe></iframe>
+                                <div class="g-admin-action-stack">
+                                    <a href="{{ $document['download_url'] }}" class="btn btn-primary btn-sm">
+                                        <i class="fa fa-download"></i> Tải xuống
+                                    </a>
 
-		
-		</li>
+                                    @if ($document['preview_url'])
+                                        <a href="{{ $document['preview_url'] }}" target="_blank" class="btn btn-default btn-sm">
+                                            <i class="fa fa-external-link"></i> Mở file
+                                        </a>
+                                    @endif
 
-			@endforeach 
-		</ul> --}}
-		
-		<div class="truyentranh">
-			<style type="text/css">
-				.truyentranh ul li img {
-				    width: 500px;
-				}
-			</style>
-			<ul>
-
-				@foreach($contents as $value2)
-					<li><img src="https://drive.google.com/uc?id={{$value2['path']}}"></li>
-				@endforeach
-			</ul>
-		</div>
-		
-
-		
-	
-</div>
-	@endsection
+                                    <form action="{{ url('delete_document/' . $document['path']) }}" method="POST"
+                                        onsubmit="return confirm('Bạn có chắc là muốn xóa tài liệu này không?')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="fa fa-trash"></i> Xóa file
+                                        </button>
+                                    </form>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        </section>
+    </div>
+@endsection

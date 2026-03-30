@@ -1,0 +1,10 @@
+<script src="{{ asset('backend/js/bootstrap.js') }}"></script>
+<script src="{{ asset('backend/js/jquery.dcjqaccordion.2.7.js') }}"></script>
+<script src="{{ asset('backend/js/scripts.js') }}"></script>
+<script src="{{ asset('backend/js/jquery.slimscroll.js') }}"></script>
+<script src="{{ asset('backend/js/jquery.nicescroll.js') }}"></script>
+<script src="{{ asset('backend/ckeditor/ckeditor.js') }}"></script>
+<script src="{{ asset('backend/js/simple.money.format.js') }}"></script>
+<script src="https://canvasjs.com/assets/script/jquery.canvasjs.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="{{ asset('backend/js/jquery.form-validator.min.js') }}"></script>

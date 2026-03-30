@@ -8,8 +8,8 @@
       />
       <div class="item-badges">
         <span v-if="product.is_featured" class="badge badge-featured">Featured</span>
-        <span v-if="product.sale_price" class="badge badge-sale">
-          {{ calculateDiscountPercentage() }}% OFF
+        <span v-if="hasSale" class="badge badge-sale">
+          {{ saleBadgeText }}
         </span>
       </div>
     </div>
@@ -47,15 +47,18 @@
       
       <div class="item-footer">
         <div class="item-price">
-          <span v-if="product.sale_price" class="current-price">
-            {{ formatPrice(product.sale_price) }}
+          <span v-if="hasSale" class="current-price">
+            {{ formatPrice(displayPrice) }}
           </span>
-          <span v-if="product.sale_price" class="original-price">
+          <span v-if="hasSale" class="original-price">
             {{ formatPrice(product.price) }}
           </span>
           <span v-else class="current-price">
-            {{ formatPrice(product.price) }}
+            {{ formatPrice(displayPrice) }}
           </span>
+        </div>
+        <div v-if="hasSale && product.sale_explanation" class="item-sale-note">
+          {{ product.sale_explanation }}
         </div>
         
         <div class="item-stock" v-if="!product.is_in_stock">
@@ -110,10 +113,26 @@ export default {
       wishlistStore.items.some(item => item.id === props.product.id)
     )
     
+    const hasSale = computed(() =>
+      Number(props.product.sale_amount || 0) > 0 || Number(props.product.sale_price || 0) > 0
+    )
+
+    const displayPrice = computed(() => props.product.final_price || props.product.sale_price || props.product.price)
+
     const calculateDiscountPercentage = () => {
-      if (!props.product.sale_price) return 0
-      return Math.round(((props.product.price - props.product.sale_price) / props.product.price) * 100)
+      if (!hasSale.value || !props.product.price) return 0
+      return Math.round(((props.product.price - displayPrice.value) / props.product.price) * 100)
     }
+
+    const saleBadgeText = computed(() => {
+      if (!hasSale.value) return ''
+
+      if (props.product.sale_type === 'fixed' && props.product.sale_value) {
+        return `-${formatPrice(props.product.sale_value)}`
+      }
+
+      return `-${calculateDiscountPercentage()}%`
+    })
     
     const formatPrice = (price) => {
       return new Intl.NumberFormat('vi-VN', {
@@ -151,6 +170,9 @@ export default {
     
     return {
       isInWishlist,
+      hasSale,
+      displayPrice,
+      saleBadgeText,
       calculateDiscountPercentage,
       formatPrice,
       addToCart,
@@ -325,6 +347,12 @@ export default {
   display: flex;
   align-items: center;
   gap: 5px;
+}
+
+.item-sale-note {
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.5;
 }
 
 @media (max-width: 768px) {

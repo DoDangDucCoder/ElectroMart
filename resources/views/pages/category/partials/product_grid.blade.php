@@ -6,10 +6,15 @@
 @endphp
 
 <div class="row">
-    @include('pages.category.partials.product_cards', [
+@include('pages.category.partials.product_cards', [
         'products' => $products,
         'emptyMessage' => $emptyMessage,
         'emptyMessageClasses' => $emptyMessageClasses,
+        'cardColumnClass' => $cardColumnClass ?? 'col-sm-3',
+        'showQuickView' => $showQuickView ?? false,
+        'showCartToggle' => $showCartToggle ?? false,
+        'showWishlist' => $showWishlist ?? true,
+        'showCompare' => $showCompare ?? true,
     ])
 </div>
 

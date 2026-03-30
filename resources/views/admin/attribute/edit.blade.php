@@ -1,38 +1,51 @@
 @extends('admin_layout')
-@section('admin_content')
-    <div class="row">
-        <div class="col-lg-12">
 
-            <section class="panel">
-                <header class="panel-heading">
-                    Cập nhật thuộc tính
-                </header>
-                <?php
-                $message = Session::get('message');
-                if ($message) {
-                    echo '<span class="text-alert">' . $message . '</span>';
-                    Session::put('message', null);
-                }
-                ?>
-                <form action="{{ route('attribute.update', $attribute->id) }}" method="post">
+@section('admin_content')
+    <div class="g-admin-page-shell g-admin-attribute-edit">
+        <section class="g-admin-page-hero">
+            <div>
+                <span class="g-admin-page-eyebrow">Sản phẩm / Thuộc tính</span>
+                <h1>Cập nhật thuộc tính</h1>
+                <p>Cập nhật thuộc tính đang được dùng cho biến thể và cấu hình sản phẩm.</p>
+            </div>
+            <div class="g-admin-page-stats">
+                <article>
+                    <strong>#{{ $attribute->id }}</strong>
+                    <span>ID thuộc tính</span>
+                </article>
+            </div>
+        </section>
+
+        @if (session('message'))
+            <div class="alert alert-success">{{ session('message') }}</div>
+        @endif
+
+        <section class="g-admin-panel-card">
+            <header class="g-admin-panel-head">
+                <div>
+                    <strong>Thông tin thuộc tính</strong>
+                    <p>Điều chỉnh tên và mô tả để team quản trị dùng thống nhất hơn.</p>
+                </div>
+            </header>
+            <div class="g-admin-panel-body">
+                <form action="{{ route('attribute.update', $attribute->id) }}" method="post" class="g-admin-site-info-form">
                     @csrf
                     @method('PUT')
 
                     <div class="form-group">
-                        <label for="name">Name</label>
+                        <label for="name">Tên thuộc tính</label>
                         <input type="text" class="form-control" name="name" id="name"
                             value="{{ old('name', $attribute->name) }}" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="description">Description</label>
-                        <textarea class="form-control" name="description" id="description" required>{{ old('description', $attribute->description) }}</textarea>
+                        <label for="description">Mô tả</label>
+                        <textarea class="form-control" name="description" id="description" rows="8" required>{{ old('description', $attribute->description) }}</textarea>
                     </div>
 
                     <button type="submit" class="btn btn-primary">Cập nhật</button>
                 </form>
-
-
-            </section>
-        </div>
-    @endsection
+            </div>
+        </section>
+    </div>
+@endsection

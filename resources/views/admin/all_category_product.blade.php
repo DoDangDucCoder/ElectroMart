@@ -1,138 +1,167 @@
 @extends('admin_layout')
+
 @section('admin_content')
-    <div class="table-agile-info">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                Liệt kê danh mục sản phẩm
+    <div class="g-admin-page-shell g-admin-category-product-list">
+        <section class="g-admin-page-hero">
+            <div>
+                <span class="g-admin-page-eyebrow">Danh mục sản phẩm</span>
+                <h1>Liệt kê danh mục sản phẩm</h1>
+                <p>Theo dõi cây danh mục, trạng thái hiển thị và thứ tự sắp xếp của các nhóm sản phẩm.</p>
             </div>
-            <div class="row w3-res-tb">
-                <div class="col-sm-5 m-b-xs">
-                    <select class="input-sm form-control w-sm inline v-middle">
-                        <option value="0">Bulk action</option>
-                        <option value="1">Delete selected</option>
-                        <option value="2">Bulk edit</option>
-                        <option value="3">Export</option>
-                    </select>
-                    <button class="btn btn-sm btn-default">Apply</button>
+            <div class="g-admin-page-stats">
+                <article>
+                    <strong>{{ number_format($all_category_product->total()) }}</strong>
+                    <span>Tổng danh mục</span>
+                </article>
+                <article>
+                    <strong>{{ number_format($all_category_product->count()) }}</strong>
+                    <span>Đang hiển thị trang này</span>
+                </article>
+            </div>
+        </section>
+
+        <section class="g-admin-panel-card">
+            <header class="g-admin-panel-head">
+                <div>
+                    <strong>Danh sách danh mục</strong>
+                    <p>Quản lý trạng thái hiển thị, vị trí sắp xếp và thao tác import hoặc export dữ liệu khi cần.</p>
                 </div>
-                <div class="col-sm-4">
+                <div class="g-admin-inline-actions">
+                    <a href="{{ url('/add-category-product') }}" class="btn btn-info">Thêm danh mục</a>
                 </div>
-                <div class="col-sm-3">
-                    <div class="input-group">
-                        <input type="text" class="input-sm form-control" placeholder="Search">
-                        <span class="input-group-btn">
-                            <button class="btn btn-sm btn-default" type="button">Go!</button>
-                        </span>
+            </header>
+            <div class="g-admin-panel-body">
+                @if (session('message'))
+                    <div class="alert alert-success">{{ session('message') }}</div>
+                    {{ Session::put('message', null) }}
+                @endif
+
+                <div class="g-admin-toolbar">
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <select class="input-sm form-control w-sm inline v-middle">
+                                <option value="0">Chọn thao tác</option>
+                                <option value="1">Xóa mục đã chọn</option>
+                                <option value="2">Chỉnh sửa hàng loạt</option>
+                                <option value="3">Xuất dữ liệu</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-sm btn-default">Áp dụng</button>
+                        </div>
+                    </div>
+                    <div class="form-inline">
+                        <div class="form-group">
+                            <input type="text" class="input-sm form-control" placeholder="Tìm kiếm">
+                        </div>
+                        <div class="form-group">
+                            <button class="btn btn-sm btn-default" type="button">Tìm</button>
+                        </div>
+                    </div>
+                </div>
+
+                <style type="text/css">
+                    #category_order .ui-state-highlight {
+                        padding: 24px;
+                        background-color: #ffffcc;
+                        border: 1px dotted #ccc;
+                        cursor: move;
+                        margin-top: 12px;
+                    }
+                </style>
+
+                <div class="table-responsive">
+                    <table class="table table-striped b-t b-light g-admin-data-table">
+                        <thead>
+                            <tr>
+                                <th style="width:20px;">
+                                    <label class="i-checks m-b-none">
+                                        <input type="checkbox"><i></i>
+                                    </label>
+                                </th>
+                                <th>Tên danh mục</th>
+                                <th>Thuộc danh mục</th>
+                                <th>Slug</th>
+                                <th>Thứ tự danh mục</th>
+                                <th>Hiển thị</th>
+                                <th style="width:30px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="category_order">
+                            @foreach ($all_category_product as $cate_pro)
+                                <tr id="{{ $cate_pro->category_id }}">
+                                    <td>
+                                        <label class="i-checks m-b-none">
+                                            <input type="checkbox" name="post[]"><i></i>
+                                        </label>
+                                    </td>
+                                    <td>{{ $cate_pro->category_name }}</td>
+                                    <td>
+                                        @if ($cate_pro->category_parent == 0)
+                                            <span style="color:red;">Danh mục cha</span>
+                                        @else
+                                            @foreach ($category_product as $cate_sub_pro)
+                                                @if ($cate_sub_pro->category_id == $cate_pro->category_parent)
+                                                    <span style="color:green;">{{ $cate_sub_pro->category_name }}</span>
+                                                @endif
+                                            @endforeach
+                                        @endif
+                                    </td>
+                                    <td>{{ $cate_pro->slug_category_product }}</td>
+                                    <td>{{ $cate_pro->category_order }}</td>
+                                    <td>
+                                        <span class="text-ellipsis">
+                                            @if ($cate_pro->category_status == 0)
+                                                <a href="{{ URL::to('/unactive-category-product/' . $cate_pro->category_id) }}">
+                                                    <span class="fa-thumb-styling fa fa-thumbs-up"></span>
+                                                </a>
+                                            @else
+                                                <a href="{{ URL::to('/active-category-product/' . $cate_pro->category_id) }}">
+                                                    <span class="fa-thumb-styling fa fa-thumbs-down"></span>
+                                                </a>
+                                            @endif
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ URL::to('/edit-category-product/' . $cate_pro->category_id) }}"
+                                            class="active styling-edit" ui-toggle-class="">
+                                            <i class="fa fa-pencil-square-o text-success text-active"></i>
+                                        </a>
+                                        <a onclick="return confirm('Bạn có chắc muốn xóa danh mục này không?')"
+                                            href="{{ URL::to('/delete-category-product/' . $cate_pro->category_id) }}"
+                                            class="active styling-edit" ui-toggle-class="">
+                                            <i class="fa fa-times text-danger text"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="g-admin-panel-grid two-col">
+                    <div class="g-admin-surface">
+                        <h3>Nhập dữ liệu</h3>
+                        <form action="{{ url('import-csv') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            <input type="file" name="file" accept=".xlsx"><br>
+                            <input type="submit" value="Nhập file Excel" name="import_csv" class="btn btn-warning">
+                        </form>
+                    </div>
+
+                    <div class="g-admin-surface">
+                        <h3>Xuất dữ liệu</h3>
+                        <form action="{{ url('export-csv') }}" method="POST">
+                            @csrf
+                            <input type="submit" value="Xuất file Excel" name="export_csv" class="btn btn-success">
+                        </form>
                     </div>
                 </div>
             </div>
-            <div class="table-responsive">
-                <?php
-                $message = Session::get('message');
-                if ($message) {
-                    echo '<span class="text-alert">' . $message . '</span>';
-                    Session::put('message', null);
-                }
-                ?>
-                <table class="table table-striped b-t b-light">
-                    <thead>
-                        <tr>
-                            <th style="width:20px;">
-                                <label class="i-checks m-b-none">
-                                    <input type="checkbox"><i></i>
-                                </label>
-                            </th>
-                            <th>Tên danh mục</th>
-                            <th>Thuộc danh mục</th>
-                            <th>Slug</th>
-                            <th>Thứ tự danh mục</th>
-                            <th>Hiển thị</th>
-
-                            <th style="width:30px;"></th>
-                        </tr>
-                    </thead>
-                    <style type="text/css">
-                        #category_order .ui-state-highlight {
-                            padding: 24px;
-                            background-color: #ffffcc;
-                            border: 1px dotted #ccc;
-                            cursor: move;
-                            margin-top: 12px;
-                        }
-                    </style>
-
-                    <tbody id="category_order">
-
-                        @foreach ($all_category_product as $key => $cate_pro)
-                            <tr id="{{ $cate_pro->category_id }}">
-                                <td><label class="i-checks m-b-none"><input type="checkbox" name="post[]"><i></i></label>
-                                </td>
-                                <td>{{ $cate_pro->category_name }}</td>
-                                <td>
-                                    @if ($cate_pro->category_parent == 0)
-                                        <span style="color:red;">Danh mục cha</span>
-                                    @else
-                                        @foreach ($category_product as $key => $cate_sub_pro)
-                                            @if ($cate_sub_pro->category_id == $cate_pro->category_parent)
-                                                <span style="color:green;">{{ $cate_sub_pro->category_name }}</span>
-                                            @endif
-                                        @endforeach
-                                    @endif
-                                </td>
-                                <td>{{ $cate_pro->slug_category_product }}</td>
-                                <td>{{ $cate_pro->category_order }}</td>
-                                <td><span class="text-ellipsis">
-                                        <?php
-               if($cate_pro->category_status==0){
-                ?>
-                                        <a href="{{ URL::to('/unactive-category-product/' . $cate_pro->category_id) }}"><span
-                                                class="fa-thumb-styling fa fa-thumbs-up"></span></a>
-                                        <?php
-                 }else{
-                ?>
-                                        <a href="{{ URL::to('/active-category-product/' . $cate_pro->category_id) }}"><span
-                                                class="fa-thumb-styling fa fa-thumbs-down"></span></a>
-                                        <?php
-               }
-              ?>
-                                    </span></td>
-
-                                <td>
-                                    <a href="{{ URL::to('/edit-category-product/' . $cate_pro->category_id) }}"
-                                        class="active styling-edit" ui-toggle-class="">
-                                        <i class="fa fa-pencil-square-o text-success text-active"></i></a>
-                                    <a onclick="return confirm('Bạn có chắc là muốn xóa danh mục này ko?')"
-                                        href="{{ URL::to('/delete-category-product/' . $cate_pro->category_id) }}"
-                                        class="active styling-edit" ui-toggle-class="">
-                                        <i class="fa fa-times text-danger text"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-                <!-----import data---->
-                <form action="{{ url('import-csv') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-
-                    <input type="file" name="file" accept=".xlsx"><br>
-
-                    <input type="submit" value="Import file Excel" name="import_csv" class="btn btn-warning">
-                </form>
-
-                <!-----export data---->
-                <form action="{{ url('export-csv') }}" method="POST">
-                    @csrf
-                    <input type="submit" value="Export file Excel" name="export_csv" class="btn btn-success">
-                </form>
-
-
-            </div>
             <footer class="panel-footer">
                 <div class="row">
-
                     <div class="col-sm-5 text-center">
-                        <small class="text-muted inline m-t-sm m-b-sm">showing 20-30 of 50 items</small>
+                        <small class="text-muted inline m-t-sm m-b-sm">Danh sách danh mục sản phẩm đang hiển thị bên dưới.</small>
                     </div>
                     <div class="col-sm-7 text-right text-center-xs">
                         <ul class="pagination pagination-sm m-t-none m-b-none">
@@ -141,6 +170,6 @@
                     </div>
                 </div>
             </footer>
-        </div>
+        </section>
     </div>
 @endsection

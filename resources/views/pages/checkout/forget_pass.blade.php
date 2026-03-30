@@ -18,7 +18,10 @@
 					<h2>Điền email để lấy lại mật khẩu</h2>
 					<form action="{{url('/recover-pass')}}" method="POST">
 						@csrf
-						<input type="text" name="email_account" placeholder="Nhập email..." />
+						<input type="text" name="email_account" value="{{ old('email_account') }}" placeholder="Nhập email..." />
+						@error('email_account')
+							<p class="text-danger">{{ $message }}</p>
+						@enderror
 						<button type="submit" class="btn btn-default">Gửi mail</button>
 					</form>
 				</div><!--/login form-->

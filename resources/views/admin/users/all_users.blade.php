@@ -1,111 +1,128 @@
 @extends('admin_layout')
+
 @section('admin_content')
-    <div class="table-agile-info">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                Liệt kê users
+    <div class="g-admin-page-shell g-admin-user-list">
+        <section class="g-admin-page-hero">
+            <div>
+                <span class="g-admin-page-eyebrow">Người dùng</span>
+                <h1>Danh sách người dùng quản trị</h1>
+                <p>
+                    Quản lý tài khoản admin, chỉnh vai trò nhanh và xóa người dùng khi không còn sử dụng.
+                    Luồng `assign-roles` và `delete-user-roles` vẫn giữ nguyên.
+                </p>
             </div>
 
-            <div class="table-responsive">
-                <?php
-                $message = Session::get('message');
-                if ($message) {
-                    echo '<span class="text-alert">' . $message . '</span>';
-                    Session::put('message', null);
-                }
-                ?>
-                <table class="table table-striped b-t b-light">
-                    <thead>
-                        <tr>
-                            <th style="width:20px;">
-                                <label class="i-checks m-b-none">
-                                    <input type="checkbox"><i></i>
-                                </label>
-                            </th>
+            <div class="g-admin-page-stats">
+                <article>
+                    <strong>{{ number_format($admin->total()) }}</strong>
+                    <span>Tổng người dùng</span>
+                </article>
+                <article>
+                    <strong>{{ number_format($roles->count()) }}</strong>
+                    <span>Vai trò có thể gán</span>
+                </article>
+            </div>
+        </section>
 
-                            <th>Tên user</th>
-                            <th>Role</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Password</th>
+        <section class="g-admin-panel-card">
+            <div class="g-admin-panel-head">
+                <div>
+                    <div>Danh sách tài khoản quản trị</div>
+                    <p>Vai trò được hiển thị trực tiếp và có thể đồng bộ nhanh theo từng tài khoản.</p>
+                </div>
+                <a href="{{ url('/add-users') }}" class="btn btn-primary btn-sm">Thêm người dùng</a>
+            </div>
+            <div class="g-admin-panel-body">
+                @if (session('message'))
+                    <div class="alert alert-success">{{ session('message') }}</div>
+                @endif
 
-
-                            <th style="width:30px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($admin as $key => $user)
-                            <form action="{{ url('/assign-roles') }}" method="POST">
-                                @csrf
+                @if ($admin->isEmpty())
+                    <div class="g-admin-empty-state">Chưa có người dùng nào để quản lý.</div>
+                @else
+                    <div class="table-responsive">
+                        <table class="table table-striped b-t b-light g-admin-data-table">
+                            <thead>
                                 <tr>
-                                    <td>
-                                        <label class="i-checks m-b-none">
-                                            <input type="checkbox" name="post[]" value="{{ $user->id }}"><i></i>
-                                        </label>
-                                    </td>
-                                    <td>{{ $user->name }}</td>
-                                    <td>
-                                        @if ($user->roles->isNotEmpty())
-                                            {{ $user->roles->pluck('name')->join(', ') }}
-                                        @else
-                                            No roles assigned
-                                        @endif
-                                    </td>
-                                    <td>
-                                        {{ $user->email }}
-                                        <input type="hidden" name="admin_email" value="{{ $user->email }}">
-                                        <input type="hidden" name="admin_id" value="{{ $user->id }}">
-                                    </td>
-                                    <td>{{ $user->phone ?? 'N/A' }}</td>
-                                    <td>******</td> <!-- Masked password -->
-                                    <td>
-                                        <!-- Role Assignment Checkboxes -->
-                                        @foreach ($roles as $role)
-                                            <div>
-                                                <label>
-                                                    <input type="checkbox" name="roles[]" value="{{ $role->name }}"
-                                                        {{ $user->roles->contains('name', $role->name) ? 'checked' : '' }}>
-                                                    {{ ucfirst($role->name) }}
-                                                </label>
-                                            </div>
-                                        @endforeach
-
-
-                                        <p>
-                                            @if ($user->roles->contains('name', 'admin'))
-                                                <input type="submit" value="Phân quyền" class="btn btn-sm btn-default">
-                                            @endif
-                                        </p>
-
-
-                                        <!-- Delete User Link -->
-                                        <p>
-                                            <a style="margin:5px 0;" class="btn btn-sm btn-danger"
-                                                href="{{ url('/delete-user-roles/' . $user->id) }}">
-                                                Xóa user
-                                            </a>
-                                        </p>
-                                    </td>
-
+                                    <th>Tài khoản</th>
+                                    <th>Liên hệ</th>
+                                    <th>Vai trò hiện tại</th>
+                                    <th>Đồng bộ vai trò</th>
+                                    <th>Quản lý</th>
                                 </tr>
-                            </form>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-            <footer class="panel-footer">
-                <div class="row">
+                            </thead>
+                            <tbody>
+                                @foreach ($admin as $user)
+                                    <tr>
+                                        <td>
+                                            <div class="g-admin-order-line-name">{{ $user->name }}</div>
+                                            <small class="text-muted">ID: {{ $user->id }}</small>
+                                        </td>
+                                        <td>
+                                            <div>{{ $user->email }}</div>
+                                            <small class="text-muted">{{ $user->phone ?? 'Chưa có số điện thoại' }}</small>
+                                        </td>
+                                        <td>
+                                            <div class="g-admin-chip-grid">
+                                                @forelse ($user->roles as $role)
+                                                    <span class="g-admin-status-chip is-info">{{ $role->name }}</span>
+                                                @empty
+                                                    <span class="g-admin-status-chip">Chưa có vai trò</span>
+                                                @endforelse
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <form action="{{ url('/assign-roles') }}" method="POST" class="g-admin-role-sync-form">
+                                                @csrf
+                                                <input type="hidden" name="admin_email" value="{{ $user->email }}">
+                                                <input type="hidden" name="admin_id" value="{{ $user->id }}">
 
+                                                <div class="g-admin-role-option-list">
+                                                    @foreach ($roles as $role)
+                                                        <label class="g-admin-check-card">
+                                                            <input type="checkbox" name="roles[]" value="{{ $role->name }}"
+                                                                {{ $user->roles->contains('name', $role->name) ? 'checked' : '' }}>
+                                                            <span>{{ ucfirst($role->name) }}</span>
+                                                        </label>
+                                                    @endforeach
+                                                </div>
+
+                                                @if (\App\Support\AdminAccess::canAccess($user))
+                                                    <button type="submit" class="btn btn-sm btn-default">Cập nhật vai trò</button>
+                                                @endif
+                                            </form>
+                                        </td>
+                                        <td>
+                                            <div class="g-admin-action-stack">
+                                                <a href="{{ url('/create-spatie/' . $user->id) }}" class="btn btn-xs btn-primary">Vai trò</a>
+                                                <a href="{{ url('/create-permission/' . $user->id) }}" class="btn btn-xs btn-info">Quyền</a>
+                                                <form action="{{ url('/delete-user-roles/' . $user->id) }}" method="POST"
+                                                    onsubmit="return confirm('Bạn có chắc là muốn xóa người dùng này không?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-xs btn-danger">Xóa người dùng</button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+            <div class="panel-footer">
+                <div class="row">
                     <div class="col-sm-5 text-center">
-                        <small class="text-muted inline m-t-sm m-b-sm">showing 20-30 of 50 items</small>
+                        <small class="text-muted inline m-t-sm m-b-sm">
+                            Hiển thị {{ $admin->count() }} / {{ $admin->total() }} người dùng
+                        </small>
                     </div>
                     <div class="col-sm-7 text-right text-center-xs">
-                        <ul class="pagination pagination-sm m-t-none m-b-none">
-                            {!! $admin->links() !!}
-                        </ul>
+                        {{ $admin->links() }}
                     </div>
                 </div>
-            </footer>
-        </div>
+            </div>
+        </section>
     </div>
 @endsection

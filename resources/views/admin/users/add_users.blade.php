@@ -1,46 +1,70 @@
 @extends('admin_layout')
+
 @section('admin_content')
-<div class="row">
-            <div class="col-lg-12">
-                    <section class="panel">
-                        <header class="panel-heading">
-                           Thêm user
-                        </header>
-                         <?php
-                            $message = Session::get('message');
-                            if($message){
-                                echo '<span class="text-alert">'.$message.'</span>';
-                                Session::put('message',null);
-                            }
-                            ?>
-                        <div class="panel-body">
-
-                            <div class="position-center">
-                                <form role="form" action="{{URL::to('store-users')}}" method="post">
-                                    {{ csrf_field() }}
-                                <div class="form-group">
-                                    <label for="exampleInputEmail1">Tên users</label>
-                                    <input type="text" name="admin_name" class="form-control" id="exampleInputEmail1" placeholder="Tên danh mục">
-                                </div>
-                                <div class="form-group">
-                                    <label for="exampleInputEmail1">Email</label>
-                                    <input type="text" name="admin_email" class="form-control" id="exampleInputEmail1" placeholder="Slug">
-                                </div>
-                                 <div class="form-group">
-                                    <label for="exampleInputEmail1">Phone</label>
-                                    <input type="text" name="admin_phone" class="form-control" id="exampleInputEmail1" placeholder="Slug">
-                                </div>
-                                    <div class="form-group">
-                                    <label for="exampleInputEmail1">Password</label>
-                                    <input type="text" name="admin_password" class="form-control" id="exampleInputEmail1" placeholder="Slug">
-                                </div>
-                             
-                                <button type="submit" name="add_category_product" class="btn btn-info">Thêm users</button>
-                                </form>
-                            </div>
-
-                        </div>
-                    </section>
-
+    <div class="g-admin-page-shell g-admin-user-create">
+        <section class="g-admin-page-hero">
+            <div>
+                <span class="g-admin-page-eyebrow">Người dùng</span>
+                <h1>Thêm người dùng quản trị</h1>
+                <p>
+                    Tạo tài khoản admin mới để bàn giao cho nhân sự hoặc phân tách quyền vận hành.
+                    Vai trò mặc định hiện vẫn theo logic controller đang chạy.
+                </p>
             </div>
+
+            <div class="g-admin-page-stats">
+                <article>
+                    <strong>Web</strong>
+                    <span>Guard quản trị đang sử dụng</span>
+                </article>
+                <article>
+                    <strong>1 bước</strong>
+                    <span>Tạo user rồi phân quyền ở màn tiếp theo</span>
+                </article>
+            </div>
+        </section>
+
+        <section class="g-admin-panel-card">
+            <div class="g-admin-panel-head">
+                <div>
+                    <div>Thông tin tài khoản</div>
+                    <p>Tạo tài khoản trước, sau đó gán vai trò và quyền ở các màn quản trị tương ứng.</p>
+                </div>
+            </div>
+            <div class="g-admin-panel-body">
+                @if (session('message'))
+                    <div class="alert alert-success">{{ session('message') }}</div>
+                @endif
+
+                <form action="{{ URL::to('store-users') }}" method="post" class="g-admin-form-grid">
+                    @csrf
+
+                    <div class="form-group">
+                        <label for="admin_name">Tên người dùng</label>
+                        <input type="text" name="admin_name" class="form-control" id="admin_name" placeholder="Ví dụ: Nguyen Van B">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="admin_email">Email</label>
+                        <input type="text" name="admin_email" class="form-control" id="admin_email" placeholder="admin@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="admin_phone">Số điện thoại</label>
+                        <input type="text" name="admin_phone" class="form-control" id="admin_phone" placeholder="0909xxxxxx">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="admin_password">Mật khẩu</label>
+                        <input type="text" name="admin_password" class="form-control" id="admin_password" placeholder="Mật khẩu tạm thời">
+                    </div>
+
+                    <div class="g-admin-inline-actions g-admin-form-span-2">
+                        <button type="submit" class="btn btn-info">Thêm người dùng</button>
+                        <a href="{{ url('/users') }}" class="btn btn-default">Xem danh sách người dùng</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
 @endsection

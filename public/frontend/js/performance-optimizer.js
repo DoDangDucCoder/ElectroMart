@@ -264,8 +264,7 @@ class PerformanceOptimizer {
     preloadCriticalResources() {
         const criticalResources = [
             '/css/tailwind.css',
-            '/js/app.js',
-            '/frontend/css/dark-light-mode.css'
+            '/js/app.js'
         ];
         
         criticalResources.forEach(resource => {

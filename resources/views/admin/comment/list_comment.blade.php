@@ -1,98 +1,119 @@
 @extends('admin_layout')
+
 @section('admin_content')
-    <div class="table-agile-info">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                Liệt kê bình luận
+    <div class="g-admin-page-shell g-admin-comment-list">
+        <section class="g-admin-page-hero">
+            <div>
+                <span class="g-admin-page-eyebrow">Sản phẩm / Bình luận</span>
+                <h1>Liệt kê bình luận</h1>
+                <p>Theo dõi, duyệt và phản hồi bình luận của khách hàng ngay trên một màn hình.</p>
             </div>
-            <div id="notify_comment"></div>
-            <div class="table-responsive">
-                <?php
-                $message = Session::get('message');
-                if ($message) {
-                    echo '<span class="text-alert">' . $message . '</span>';
-                    Session::put('message', null);
-                }
-                ?>
-                <table class="table table-striped b-t b-light" id="myTable">
-                    <thead>
-                        <tr>
+            <div class="g-admin-page-stats">
+                <article>
+                    <strong>{{ $comment->count() }}</strong>
+                    <span>Bình luận gốc</span>
+                </article>
+                <article>
+                    <strong>{{ $comment_rep->count() }}</strong>
+                    <span>Reply hiện có</span>
+                </article>
+            </div>
+        </section>
 
-                            <th>Duyệt</th>
-                            <th>Tên người gửi</th>
-                            <th>Bình luận</th>
-                            <th>Ngày gửi</th>
-                            <th>Sản phẩm</th>
-                            <th>Quản lý</th>
-                            <th style="width:30px;"></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($comment as $key => $comm)
+        <section class="g-admin-panel-card">
+            <header class="g-admin-panel-head">
+                <div>
+                    <strong>Danh sách bình luận</strong>
+                    <p>Duyệt, ẩn và trả lời trực tiếp từ danh sách này.</p>
+                </div>
+            </header>
+            <div class="g-admin-panel-body">
+                <div id="notify_comment"></div>
+
+                @if (session('message'))
+                    <div class="alert alert-success">{{ session('message') }}</div>
+                @endif
+
+                <div class="table-responsive">
+                    <table class="table table-striped b-t b-light g-admin-data-table" id="myTable">
+                        <thead>
                             <tr>
-
-                                <td>
-                                    @if ($comm->comment_status == 1)
-                                        <input type="button" data-comment_status="0"
-                                            data-comment_id="{{ $comm->comment_id }}" id="{{ $comm->comment_product_id }}"
-                                            class="btn btn-primary btn-xs comment_duyet_btn" value="Duyệt">
-                                    @else
-                                        <input type="button" data-comment_status="1"
-                                            data-comment_id="{{ $comm->comment_id }}" id="{{ $comm->comment_product_id }}"
-                                            class="btn btn-danger btn-xs comment_duyet_btn" value="Bỏ Duyệt">
-                                    @endif
-
-                                </td>
-                                <td>{{ $comm->comment_name }}</td>
-
-                                <td>{{ $comm->comment }}
-                                    <style type="text/css">
-                                        ul.list_rep li {
-                                            list-style-type: decimal;
-                                            color: blue;
-                                            margin: 5px 40px;
-                                        }
-                                    </style>
-                                    <ul class="list_rep">
-                                        Trả lời :
-                                        @foreach ($comment_rep as $key => $comm_reply)
-                                            @if ($comm_reply->comment_parent_comment == $comm->comment_id)
-                                                <li> {{ $comm_reply->comment }}</li>
-                                            @endif
-                                        @endforeach
-
-                                    </ul>
-                                    @if ($comm->comment_status == 0)
-                                        <br />
-                                        <textarea class="form-control reply_comment_{{ $comm->comment_id }}" rows="5"></textarea>
-                                        <br /><button class="btn btn-default btn-xs btn-reply-comment"
-                                            data-product_id="{{ $comm->comment_product_id }}"
-                                            data-comment_id="{{ $comm->comment_id }}">Trả lời bình luận</button>
-                                    @endif
-
-
-                                </td>
-                                <td>{{ $comm->comment_date }}</td>
-                                <td>
-                                    @if (!empty($comm->product->product_slug))
-                                        <a href="{{ url('/chi-tiet/' . $comm->product->product_slug) }}"
-                                            target="_blank">{{ $comm->product->product_name }}</a>
-                                    @endif
-                                </td>
-                                <td>
-                                    <a href="" class="active styling-edit" ui-toggle-class="">
-                                        <i class="fa fa-pencil-square-o text-success text-active"></i></a>
-                                    <a onclick="return confirm('Bạn có chắc là muốn xóa bình luận này ko?')" href=""
-                                        class="active styling-edit" ui-toggle-class="">
-                                        <i class="fa fa-times text-danger text"></i>
-                                    </a>
-                                </td>
+                                <th>Duyệt</th>
+                                <th>Tên người gửi</th>
+                                <th>Bình luận</th>
+                                <th>Ngày gửi</th>
+                                <th>Sản phẩm</th>
+                                <th>Trạng thái</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            @forelse ($comment as $comm)
+                                <tr>
+                                    <td>
+                                        @if ($comm->comment_status == 1)
+                                            <input type="button" data-comment_status="0"
+                                                data-comment_id="{{ $comm->comment_id }}" id="{{ $comm->comment_product_id }}"
+                                                class="btn btn-primary btn-xs comment_duyet_btn" value="Duyệt">
+                                        @else
+                                            <input type="button" data-comment_status="1"
+                                                data-comment_id="{{ $comm->comment_id }}" id="{{ $comm->comment_product_id }}"
+                                                class="btn btn-danger btn-xs comment_duyet_btn" value="Bỏ duyệt">
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <strong>{{ $comm->comment_name }}</strong>
+                                    </td>
+                                    <td>
+                                        <div class="g-admin-comment-thread">
+                                            <p class="g-admin-comment-body">{{ $comm->comment }}</p>
 
-        </div>
+                                            <ul class="g-admin-comment-replies">
+                                                @foreach ($comment_rep as $comm_reply)
+                                                    @if ($comm_reply->comment_parent_comment == $comm->comment_id)
+                                                        <li>{{ $comm_reply->comment }}</li>
+                                                    @endif
+                                                @endforeach
+                                            </ul>
+
+                                            @if ($comm->comment_status == 0)
+                                                <div class="g-admin-comment-reply-box">
+                                                    <textarea class="form-control reply_comment_{{ $comm->comment_id }}" rows="5"
+                                                        placeholder="Trả lời bình luận này"></textarea>
+                                                    <button class="btn btn-default btn-xs btn-reply-comment"
+                                                        data-product_id="{{ $comm->comment_product_id }}"
+                                                        data-comment_id="{{ $comm->comment_id }}">Trả lời bình luận</button>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td>{{ $comm->comment_date }}</td>
+                                    <td>
+                                        @if (! empty($comm->product?->product_slug))
+                                            <a href="{{ url('/chi-tiet/' . $comm->product->product_slug) }}"
+                                                target="_blank">{{ $comm->product->product_name }}</a>
+                                        @else
+                                            <span class="text-muted">Không còn sản phẩm</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if ($comm->comment_status == 0)
+                                            <span class="label label-success">Đã duyệt</span>
+                                        @else
+                                            <span class="label label-warning">Chờ duyệt</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6">
+                                        <div class="g-admin-empty-state">Chưa có bình luận nào để xử lý.</div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
     </div>
 @endsection

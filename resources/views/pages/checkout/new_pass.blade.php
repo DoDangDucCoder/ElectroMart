@@ -15,16 +15,15 @@
 				</div>
 				@endif
 				<div class="login-form"><!--login form-->
-					@php 
-						$token = $_GET['token'];
-						$email = $_GET['email'];
-					@endphp
 					<h2>Điền mật khẩu mới</h2>
 					<form action="{{url('/reset-new-pass')}}" method="POST">
 						@csrf
-						<input type="hidden" name="email" value="{{$email}}"/>
-						<input type="hidden"name="token" value="{{$token}}"/>
-						<input type="text" name="password_account" placeholder="Nhập mật khẩu mới..." />
+						<input type="hidden" name="email" value="{{ $resetPasswordEmail }}"/>
+						<input type="hidden" name="token" value="{{ $resetPasswordToken }}"/>
+						<input type="text" name="password_account" value="{{ old('password_account') }}" placeholder="Nhập mật khẩu mới..." />
+						@error('password_account')
+							<p class="text-danger">{{ $message }}</p>
+						@enderror
 						<button type="submit" class="btn btn-default">Gửi</button>
 					</form>
 				</div><!--/login form-->

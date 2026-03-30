@@ -5,13 +5,36 @@
 @endphp
 
 @section('admin_content')
-    <div class="table-agile-info">
-        <div class="panel panel-default">
-            <div class="panel-heading d-flex justify-content-between align-items-center">
-                <span>Liệt kê thương hiệu</span>
-                <a href="{{ url('/add-brand-product') }}" class="btn btn-sm btn-primary">Thêm thương hiệu</a>
+    <div class="g-admin-page-shell g-admin-brand-list">
+        <section class="g-admin-page-hero">
+            <div>
+                <span class="g-admin-page-eyebrow">Thương hiệu</span>
+                <h1>Liệt kê thương hiệu</h1>
+                <p>Theo dõi thương hiệu hiện có, lọc nhanh theo từ khóa và cập nhật trạng thái hiển thị.</p>
             </div>
-            <div class="panel-body">
+            <div class="g-admin-page-stats">
+                <article>
+                    <strong>{{ number_format($brands->total()) }}</strong>
+                    <span>Tổng thương hiệu</span>
+                </article>
+                <article>
+                    <strong>{{ number_format($brands->count()) }}</strong>
+                    <span>Đang hiển thị trang này</span>
+                </article>
+            </div>
+        </section>
+
+        <section class="g-admin-panel-card">
+            <header class="g-admin-panel-head">
+                <div>
+                    <strong>Danh sách thương hiệu</strong>
+                    <p>Quản lý tên, mô tả, thứ tự hiển thị và trạng thái của các thương hiệu sản phẩm.</p>
+                </div>
+                <div class="g-admin-inline-actions">
+                    <a href="{{ url('/add-brand-product') }}" class="btn btn-sm btn-primary">Thêm thương hiệu</a>
+                </div>
+            </header>
+            <div class="g-admin-panel-body">
                 @if (session('message'))
                     <div class="alert alert-success">{{ session('message') }}</div>
                 @endif
@@ -26,7 +49,7 @@
                 </form>
 
                 <div class="table-responsive">
-                    <table class="table table-striped b-t b-light">
+                    <table class="table table-striped b-t b-light g-admin-data-table">
                         <thead>
                             <tr>
                                 <th style="width:20px;">
@@ -63,27 +86,41 @@
                                     </td>
                                     <td class="text-right">
                                         @if ($brand->brand_status === 0)
-                                            <a href="{{ url('/unactive-brand-product/' . $brand->brand_id) }}"
-                                                class="btn btn-xs btn-warning"
-                                                title="Ẩn thương hiệu"><i class="fa fa-eye-slash"></i></a>
+                                            <form action="{{ url('/unactive-brand-product/' . $brand->brand_id) }}"
+                                                method="POST" style="display:inline-block;">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-xs btn-warning"
+                                                    title="Ẩn thương hiệu"><i class="fa fa-eye-slash"></i></button>
+                                            </form>
                                         @else
-                                            <a href="{{ url('/active-brand-product/' . $brand->brand_id) }}"
-                                                class="btn btn-xs btn-success"
-                                                title="Hiển thị thương hiệu"><i class="fa fa-eye"></i></a>
+                                            <form action="{{ url('/active-brand-product/' . $brand->brand_id) }}"
+                                                method="POST" style="display:inline-block;">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-xs btn-success"
+                                                    title="Hiển thị thương hiệu"><i class="fa fa-eye"></i></button>
+                                            </form>
                                         @endif
                                         <a href="{{ url('/edit-brand-product/' . $brand->brand_id) }}"
                                             class="btn btn-xs btn-info" title="Chỉnh sửa"><i
                                                 class="fa fa-pencil-square-o"></i></a>
-                                        <a href="{{ url('/delete-brand-product/' . $brand->brand_id) }}"
-                                            class="btn btn-xs btn-danger"
-                                            onclick="return confirm('Xác nhận xóa thương hiệu này?')" title="Xóa">
-                                            <i class="fa fa-trash"></i>
-                                        </a>
+                                        <form action="{{ url('/delete-brand-product/' . $brand->brand_id) }}"
+                                            method="POST" style="display:inline-block;"
+                                            onsubmit="return confirm('Xác nhận xóa thương hiệu này?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-xs btn-danger" title="Xóa">
+                                                <i class="fa fa-trash"></i>
+                                            </button>
+                                        </form>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted">Chưa có thương hiệu nào.</td>
+                                    <td colspan="7">
+                                        <div class="g-admin-empty-state">Chưa có thương hiệu nào.</div>
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -94,6 +131,6 @@
                     {{ $brands->appends(request()->query())->links() }}
                 </div>
             </div>
-        </div>
+        </section>
     </div>
 @endsection

@@ -5,6 +5,11 @@
         <h2 class="title text-center">Tag tìm kiếm : {{ $product_tag }}</h2>
 
         @foreach ($pro_tag as $key => $product)
+            @php
+                $productId = $product->product_id;
+                $productUrl = URL::to('/chi-tiet/' . $product->product_slug);
+                $priceFormatted = number_format($product->final_price ?? $product->product_price, 0, ',', '.') . ' VND';
+            @endphp
             <div class="col-sm-4">
                 <div class="product-image-wrapper">
 
@@ -14,27 +19,36 @@
                                 @csrf
                                 <input type="hidden" value="{{ $product->product_id }}"
                                     class="cart_product_id_{{ $product->product_id }}">
-                                <input type="hidden" value="{{ $product->product_name }}"
+                                <input type="hidden" id="wishlist_productname{{ $productId }}" value="{{ $product->product_name }}"
                                     class="cart_product_name_{{ $product->product_id }}">
 
                                 <input type="hidden" value="{{ $product->product_quantity }}"
                                     class="cart_product_quantity_{{ $product->product_id }}">
+                                <input type="hidden" id="wishlist_productprice{{ $productId }}" value="{{ $priceFormatted }}">
 
                                 <input type="hidden" value="{{ $product->product_image }}"
                                     class="cart_product_image_{{ $product->product_id }}">
                                 <input type="hidden" value="{{ $product->product_price }}"
                                     class="cart_product_price_{{ $product->product_id }}">
                                 <input type="hidden" value="1" class="cart_product_qty_{{ $product->product_id }}">
+                                <a id="wishlist_producturl{{ $productId }}" href="{{ $productUrl }}"></a>
 
-                                <a href="{{ URL::to('/chi-tiet/' . $product->product_slug) }}">
-                                    <img src="{{ $product->product_image ? asset($product->product_image) : '' }}"
+                                <a href="{{ $productUrl }}">
+                                    <img id="wishlist_productimage{{ $productId }}" src="{{ $product->product_image ? asset($product->product_image) : '' }}"
                                         alt="" />
-                                    <h2>{{ number_format($product->product_price, 0, ',', '.') . ' ' . 'VNĐ' }}</h2>
+                                    <div class="shopw-tag-price">
+                                        @include('partials.storefront.product-price', [
+                                            'product' => $product,
+                                            'currency' => 'VND',
+                                            'showExplanation' => true,
+                                            'compact' => true,
+                                        ])
+                                    </div>
                                     <p>{{ $product->product_name }}</p>
 
 
                                 </a>
-                                <input type="button" onclick="Addtocart()" value="Thêm giỏ hàng" class="btn btn-default"
+                                <input type="button" onclick="Addtocart({{ $productId }});" value="Thêm giỏ hàng" class="btn btn-default"
                                     data-id_product="{{ $product->product_id }}" name="add-to-cart">
                             </form>
 
@@ -44,8 +58,8 @@
 
                     <div class="choose">
                         <ul class="nav nav-pills nav-justified">
-                            <li><a href="#"><i class="fa fa-plus-square"></i>Yêu thích</a></li>
-                            <li><a href="#"><i class="fa fa-plus-square"></i>So sánh</a></li>
+                            <li><a style="cursor:pointer" onclick="add_wistlist({{ $productId }})"><i class="fa fa-plus-square"></i>Yêu thích</a></li>
+                            <li><a style="cursor:pointer" onclick="add_compare({{ $productId }})"><i class="fa fa-plus-square"></i>So sánh</a></li>
                         </ul>
                     </div>
                 </div>
@@ -57,4 +71,5 @@
                       </ul> --}}
     <!--/recommended_items-->
 @endsection
+
 

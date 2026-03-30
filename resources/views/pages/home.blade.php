@@ -1,15 +1,10 @@
 @extends('layout')
 
-@section('slider')
-    @include('pages.include.slider')
-@endsection
-
-@section('sidebar')
-    @include('pages.include.sidebar')
-@endsection
+@section('body_class', 'g-home')
 
 @section('content')
     <div class="features_items"><!--features_items-->
+        @php($storefrontLabel = \App\Support\StorefrontLabel::class)
 
         <div class="category-tab"><!--category-tab-->
             <div class="col-sm-12">
@@ -24,7 +19,7 @@
                             $i++;
                         @endphp
                         <li class="tabs_pro {{ $i == 1 ? 'active' : '' }}" data-id="{{ $cat_tab->category_id }}"><a
-                                href="#tshirt" data-toggle="tab">{{ $cat_tab->category_name }}</a></li>
+                                href="#tshirt" data-toggle="tab">{{ $storefrontLabel::category($cat_tab->category_name, $cat_tab->slug_category_product ?? null) }}</a></li>
                     @endforeach
 
                 </ul>
@@ -56,7 +51,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLongTitle">Giỏ hàng của bạn</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -65,45 +60,7 @@
                     <div id="show_quick_cart"></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Modal so sanh -->
-
-    <div class="modal fade" id="sosanh" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
-        aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLongTitle">So sánh sản phẩm</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <table class="table table-striped" id="row_compare">
-                        <thead>
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">Name</th>
-                                <th scope="col">Price</th>
-                                <th scope="col">Image</th>
-                                <th scope="col">View</th>
-                                <th scope="col">Management</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-
-
-
-                        </tbody>
-                    </table>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
 
                 </div>
             </div>
@@ -120,7 +77,7 @@
                         <span id="product_quickview_title"></span>
 
                     </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>

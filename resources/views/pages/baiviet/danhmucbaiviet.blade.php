@@ -1,52 +1,106 @@
 @extends('layout')
-@section('sidebar')
-    @include('pages.include.sidebar')
-@endsection
+
 @section('content')
-    <div class="features_items">
+    @php
+        $storefrontLabel = \App\Support\StorefrontLabel::class;
+        $blogQuickLinks = [
+            [
+                'icon' => 'fa-home',
+                'label' => 'Về trang chủ',
+                'value' => 'Quay lại trang chủ để tiếp tục xem sản phẩm',
+                'url' => url('/'),
+            ],
+            [
+                'icon' => 'fa-youtube-play',
+                'label' => 'Video cửa hàng',
+                'value' => 'Xem thêm clip review và hướng dẫn',
+                'url' => url('/video-shop'),
+            ],
+            [
+                'icon' => 'fa-lightbulb-o',
+                'label' => 'Gợi ý sản phẩm',
+                'value' => 'Tiếp tục mua sắm với gợi ý phù hợp',
+                'url' => url('/goi-y-san-pham'),
+            ],
+        ];
+    @endphp
+    <div class="g-blog-list">
+        <section class="shopw-blog-list-hero">
+            <div class="shopw-blog-list-hero-copy">
+                <span class="shopw-blog-kicker">Blog / {{ $storefrontLabel::blogCategory($selected_category->cate_post_name ?? null, $selected_category->cate_post_slug ?? null, $meta_title) }}</span>
+                <h1>{{ $storefrontLabel::blogCategory($selected_category->cate_post_name ?? null, $selected_category->cate_post_slug ?? null, $meta_title) }}</h1>
+                <p>{{ $selected_category->cate_post_desc ?: 'Tổng hợp bài viết, tin nhanh và hướng dẫn liên quan đến nhóm nội dung này.' }}</p>
+            </div>
+            <div class="shopw-blog-list-hero-meta">
+                <strong>{{ method_exists($post_cate, 'total') ? $post_cate->total() : count($post_cate) }}</strong>
+                <span>bài viết đang hiển thị</span>
+            </div>
+        </section>
 
-        <h2 class="title text-center">{{ $selected_category->cate_post_name ?? $meta_title }}</h2>
-
-
-        <div class="fb-share-button" data-href="{{ $url_canonical }}" data-layout="button_count" data-size="small"><a
-                target="_blank" href="https://www.facebook.com/sharer/sharer.php?u={{ $url_canonical }}&amp;src=sdkpreparse"
-                class="fb-xfbml-parse-ignore">Chia sẻ</a></div>
-
-        <div class="zalo-share-button" data-href="{{ $url_canonical }}" data-oaid="579745863508352884" data-layout="1"
-            data-color="blue" data-customize=false></div>
-
-
-        <div class="product-image-wrapper" style="border: none;">
-
-            @forelse ($post_cate as $p)
-                <div class="single-products" style="margin:10px 0;padding: 2px">
-                    <div class="text-center">
-
-                        <img style="float:left;width:30%;padding: 5px;height: 150px;object-fit:cover"
-                            src="{{ $p->featured_image_path ? asset($p->featured_image_path) : asset('frontend/images/no-image.png') }}"
-                            alt="{{ $p->post_slug }}" />
-
-                        <h4 style="color:#000;padding: 5px;">{{ $p->post_title }}</h4>
-                        <p>{!! $p->post_desc !!}</p>
-
-
-                    </div>
-                    <div class="text-right">
-                        <a href="{{ url('/bai-viet/' . $p->post_slug) }}" class="btn btn-default btn-sm">Xem bài viết</a>
-                    </div>
-                </div>
-                <div class="clearfix"></div>
-            @empty
-                <p class="text-center text-muted">Hiện chưa có bài viết trong danh mục này.</p>
-            @endforelse
-
+        <div class="shopw-content-support-strip">
+            @foreach ($blogQuickLinks as $quickLink)
+                <a href="{{ $quickLink['url'] }}" class="shopw-content-support-item">
+                    <span class="shopw-content-support-icon">
+                        <i class="fa {{ $quickLink['icon'] }}"></i>
+                    </span>
+                    <span class="shopw-content-support-copy">
+                        <strong>{{ $quickLink['label'] }}</strong>
+                        <small>{{ $quickLink['value'] }}</small>
+                    </span>
+                    <span class="shopw-content-support-arrow">
+                        <i class="fa fa-angle-right"></i>
+                    </span>
+                </a>
+            @endforeach
         </div>
 
-    </div><!--features_items-->
-    <ul class="pagination pagination-sm m-t-none m-b-none">
+        <section class="shopw-blog-share-row">
+            <a class="shopw-blog-share-link" href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode($url_canonical) }}"
+                target="_blank" rel="noopener noreferrer">
+                <i class="fa fa-facebook"></i>
+                <span>Chia sẻ Facebook</span>
+            </a>
+            <a class="shopw-blog-share-link" href="https://zalo.me/share?url={{ urlencode($url_canonical) }}" target="_blank"
+                rel="noopener noreferrer">
+                <i class="fa fa-commenting"></i>
+                <span>Chia sẻ Zalo</span>
+            </a>
+        </section>
 
-        {{ $post_cate->appends(request()->query())->links() }}
+        @if ($post_cate->count())
+            <div class="shopw-blog-list-grid">
+                @foreach ($post_cate as $post)
+                    <article class="shopw-blog-card">
+                        <a class="shopw-blog-card-media" href="{{ url('/bai-viet/' . $post->post_slug) }}">
+                            <img src="{{ $post->featured_image_path ? asset($post->featured_image_path) : asset('uploads/product/no-image.svg') }}"
+                                alt="{{ $post->post_title }}">
+                        </a>
+                        <div class="shopw-blog-card-copy">
+                            <span class="shopw-blog-card-chip">{{ $storefrontLabel::blogCategory($selected_category->cate_post_name ?? null, $selected_category->cate_post_slug ?? null, 'Tin tức') }}</span>
+                            <h2>
+                                <a href="{{ url('/bai-viet/' . $post->post_slug) }}">{{ $post->post_title }}</a>
+                            </h2>
+                            <p>{{ \Illuminate\Support\Str::limit(strip_tags((string) $post->post_desc), 165) }}</p>
+                            <div class="shopw-blog-card-actions">
+                                <a href="{{ url('/bai-viet/' . $post->post_slug) }}" class="shopw-blog-card-link">
+                                    Đọc bài viết
+                                    <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                @endforeach
+            </div>
 
-    </ul>
-    <!--/recommended_items-->
+            <div class="shopw-blog-pagination">
+                {{ $post_cate->appends(request()->query())->links() }}
+            </div>
+        @else
+            <section class="shopw-blog-empty">
+                <h2>Danh mục này chưa có bài viết</h2>
+                <p>Nội dung mới trong danh mục này đang được cập nhật. Vui lòng quay lại sau để xem thêm bài viết.</p>
+            </section>
+        @endif
+    </div>
 @endsection
+

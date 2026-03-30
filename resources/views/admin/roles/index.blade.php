@@ -1,93 +1,89 @@
 @extends('admin_layout')
+
 @section('admin_content')
-    <div class="table-agile-info">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                Liệt kê quyền users
+    <div class="g-admin-page-shell g-admin-role-index">
+        <section class="g-admin-page-hero">
+            <div>
+                <span class="g-admin-page-eyebrow">Vai trò & quyền</span>
+                <h1>Liệt kê vai trò và quyền user</h1>
+                <p>
+                    Theo dõi vai trò hiện tại của từng tài khoản và các quyền đi kèm.
+                </p>
             </div>
-            <div class="row w3-res-tb">
-                <div class="col-sm-5 m-b-xs">
-                    {{--  <select class="input-sm form-control w-sm inline v-middle">
-          <option value="0">Bulk action</option>
-          <option value="1">Delete selected</option>
-          <option value="2">Bulk edit</option>
-          <option value="3">Export</option>
-        </select> --}}
-                    <button class="btn btn-sm btn-default">Apply</button>
-                </div>
-                <div class="col-sm-4">
-                </div>
-                <div class="col-sm-3">
-                    <div class="input-group">
-                        <input type="text" class="input-sm form-control" placeholder="Search">
-                        <span class="input-group-btn">
-                            <button class="btn btn-sm btn-default" type="button">Go!</button>
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class="table-responsive">
-                <?php
-                $message = Session::get('message');
-                if ($message) {
-                    echo '<span class="text-alert">' . $message . '</span>';
-                    Session::put('message', null);
-                }
-                ?>
 
+            <div class="g-admin-page-stats">
+                <article>
+                    <strong>{{ number_format($user->count()) }}</strong>
+                    <span>Tài khoản đang hiển thị</span>
+                </article>
             </div>
-            <footer class="panel-footer">
-                <div class="row">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Tên user</th>
-                                <th>Email user</th>
-                                <th>Vai trò</th>
-                                <th>Quyền</th>
-                                <th>Quản lý</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($user as $key => $u)
+        </section>
+
+        <section class="g-admin-panel-card">
+            <div class="g-admin-panel-head">
+                <div>
+                    <div>Ma trận phân quyền</div>
+                    <p>Kiểm tra vai trò và quyền đang áp dụng cho từng tài khoản.</p>
+                </div>
+            </div>
+            <div class="g-admin-panel-body">
+                @if (session('message'))
+                    <div class="alert alert-success">{{ session('message') }}</div>
+                @endif
+
+                @if ($user->isEmpty())
+                    <div class="g-admin-empty-state">Chưa có user nào để hiển thị ma trận phân quyền.</div>
+                @else
+                    <div class="table-responsive">
+                        <table class="table table-striped b-t b-light g-admin-data-table">
+                            <thead>
                                 <tr>
-                                    <td>{{ $u->name }}</td>
-                                    <td>{{ $u->email }}</td>
-
-                                    <td>
-
-                                        @foreach ($u->roles as $key => $role)
-                                            {{ $role->name }}
-                                        @endforeach
-
-
-                                    </td>
-                                    <td>
-                                        @foreach ($role->permissions as $key => $per)
-                                            <span class="badge badge-primary">{{ $per->name }}</span>
-                                        @endforeach
-                                    </td>
-                                    <td>
-
-                                        <a href="{{ url('create-permission/' . $u->id) }}" class="btn btn-danger">Cấp
-                                            quyền</a>
-
-                                    </td>
+                                    <th>Tên user</th>
+                                    <th>Email</th>
+                                    <th>Vai trò</th>
+                                    <th>Quyền thừa hưởng</th>
+                                    <th>Quản lý</th>
                                 </tr>
-                            @endforeach
-
-                        </tbody>
-                    </table>
-                    <div class="col-sm-5 text-center">
-                        <small class="text-muted inline m-t-sm m-b-sm">showing 20-30 of 50 items</small>
+                            </thead>
+                            <tbody>
+                                @foreach ($user as $u)
+                                    @php
+                                        $rolePermissions = $u->getPermissionsViaRoles();
+                                    @endphp
+                                    <tr>
+                                        <td>{{ $u->name }}</td>
+                                        <td>{{ $u->email }}</td>
+                                        <td>
+                                            <div class="g-admin-chip-grid">
+                                                @forelse ($u->roles as $roleItem)
+                                                    <span class="g-admin-status-chip is-info">{{ $roleItem->name }}</span>
+                                                @empty
+                                                    <span class="g-admin-status-chip">Chưa có role</span>
+                                                @endforelse
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="g-admin-chip-grid">
+                                                @forelse ($rolePermissions as $per)
+                                                    <span class="g-admin-status-chip">{{ $per->name }}</span>
+                                                @empty
+                                                    <span class="text-muted">Chưa có quyền qua role</span>
+                                                @endforelse
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="g-admin-action-stack">
+                                                <a href="{{ url('create-spatie/' . $u->id) }}" class="btn btn-primary btn-xs">Cấp vai trò</a>
+                                                <a href="{{ url('create-permission/' . $u->id) }}" class="btn btn-danger btn-xs">Cấp quyền</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
-                    <div class="col-sm-7 text-right text-center-xs">
-                        {{--  <ul class="pagination pagination-sm m-t-none m-b-none">
-             {!!$category_post->links()!!}
-          </ul> --}}
-                    </div>
-                </div>
-            </footer>
-        </div>
+                @endif
+            </div>
+        </section>
     </div>
 @endsection

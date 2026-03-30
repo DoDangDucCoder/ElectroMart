@@ -1,3 +1,4 @@
+ @php($storefrontLabel = \App\Support\StorefrontLabel::class)
  <div class="col-sm-3">
      <div class="left-sidebar">
          <h2>Danh mục sản phẩm</h2>
@@ -13,7 +14,7 @@
                                  <a data-toggle="collapse" data-parent="#accordian"
                                      href="#{{ $cate->slug_category_product }}">
                                      <span class="badge pull-right"><i class="fa fa-plus"></i></span>
-                                     {{ $cate->category_name }}
+                                     {{ $storefrontLabel::category($cate->category_name, $cate->slug_category_product) }}
                                  </a>
 
                              </h4>
@@ -25,7 +26,7 @@
                                      @foreach ($category as $key => $cate_sub)
                                          @if ($cate_sub->category_parent == $cate->category_id)
                                              <li><a
-                                                     href="{{ URL::to('/danh-muc/' . $cate_sub->slug_category_product) }}">{{ $cate_sub->category_name }}</a>
+                                                     href="{{ URL::to('/danh-muc/' . $cate_sub->slug_category_product) }}">{{ $storefrontLabel::category($cate_sub->category_name, $cate_sub->slug_category_product) }}</a>
                                              </li>
                                          @endif
                                      @endforeach
