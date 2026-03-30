@@ -6,6 +6,7 @@
 !/.env.example
 /public/build/
 /public/hot
+/public/uploads/attribute/attribute*.png
 /bootstrap/cache/*.php
 /database/*.sqlite
 /database/*.sqlite-journal
