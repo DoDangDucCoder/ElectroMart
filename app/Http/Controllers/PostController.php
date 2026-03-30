@@ -11,6 +11,7 @@ use App\Http\Requests\Cms\UpdateBlogPostRequest;
 use App\Models\Slider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class PostController extends Controller
@@ -101,11 +102,6 @@ class PostController extends Controller
 
         abort_if(! $category, 404);
 
-        $slider = Slider::orderBy('slider_id', 'DESC')
-            ->where('slider_status', '1')
-            ->take(4)
-            ->get();
-
         $categoryPosts = $this->blogCategoryService->listAll(['is_active' => true]);
         $productCategories = $this->categoryService->listAll(['is_active' => true]);
         $brands = $this->brandService->listActive();
@@ -123,7 +119,7 @@ class PostController extends Controller
             'meta_keywords' => $category->cate_post_slug,
             'meta_title' => $category->cate_post_name,
             'url_canonical' => $request->url(),
-            'slider' => $slider,
+            'slider' => $this->legacyActiveSliders(),
             'share_image' => url('frontend/images/share_news.png'),
         ]);
     }
@@ -136,11 +132,6 @@ class PostController extends Controller
 
         $this->blogPostService->incrementViews($post);
 
-        $slider = Slider::orderBy('slider_id', 'DESC')
-            ->where('slider_status', '1')
-            ->take(4)
-            ->get();
-
         $categoryPosts = $this->blogCategoryService->listAll(['is_active' => true]);
         $productCategories = $this->categoryService->listAll(['is_active' => true]);
         $brands = $this->brandService->listActive();
@@ -150,7 +141,7 @@ class PostController extends Controller
             'category' => $productCategories,
             'brand' => $brands,
             'category_post' => $categoryPosts,
-            'slider' => $slider,
+            'slider' => $this->legacyActiveSliders(),
             'post' => $post,
             'related' => $related,
             'meta_desc' => $post->post_meta_desc,
@@ -161,5 +152,17 @@ class PostController extends Controller
                 ? url($post->featured_image_path)
                 : url('frontend/images/share_news.png'),
         ]);
+    }
+
+    protected function legacyActiveSliders()
+    {
+        if (! Schema::hasTable('tbl_slider')) {
+            return collect();
+        }
+
+        return Slider::orderBy('slider_id', 'DESC')
+            ->where('slider_status', '1')
+            ->take(4)
+            ->get();
     }
 }

@@ -5,8 +5,11 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryProduct;
 use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\BrandProduct;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CouponController;
+use App\Http\Controllers\CompareController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\OrderController;
@@ -32,9 +35,12 @@ Route::get('/trang-chu', [HomeController::class, 'index']);
 Route::get('/404', [HomeController::class, 'error_page']);
 Route::post('/load-more-product', [HomeController::class, 'load_more_product']);
 Route::get('/show_quick_cart', [CartController::class, 'show_quick_cart']);
-Route::post('/tim-kiem', [HomeController::class, 'search']);
+Route::match(['get', 'post'], '/tim-kiem', [HomeController::class, 'search']);
 Route::post('/autocomplete-ajax', [HomeController::class, 'autocomplete_ajax']);
 Route::get('/yeu-thich', [HomeController::class, 'yeu_thich']);
+Route::get('/goi-y-san-pham', [HomeController::class, 'recommendations']);
+Route::get('/chatbot/conversation', [ChatController::class, 'conversation']);
+Route::post('/chatbot/messages', [ChatController::class, 'store']);
 
 // Contact page
 Route::get('/lien-he', [ContactController::class, 'lien_he']);
@@ -48,10 +54,12 @@ Route::post('/quickview', [ProductController::class, 'quickview']);
 Route::post('/load-comment', [ProductController::class, 'load_comment']);
 Route::post('/send-comment', [ProductController::class, 'send_comment']);
 Route::post('/insert-rating', [ProductController::class, 'insert_rating']);
+Route::get('/so-sanh', [CompareController::class, 'index']);
 
 // Blog
 Route::get('/danh-muc-bai-viet/{post_slug}', [PostController::class, 'danh_muc_bai_viet']);
 Route::get('/bai-viet/{post_slug}', [PostController::class, 'bai_viet']);
+Route::get('/thuong-hieu/{brandSlug}', [BrandProduct::class, 'show_brand_home']);
 
 // Coupon (customer side)
 Route::post('/check-coupon', [CartController::class, 'check_coupon']);

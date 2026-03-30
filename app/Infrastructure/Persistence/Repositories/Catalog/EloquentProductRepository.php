@@ -106,7 +106,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
         return Product::with(['brand', 'categories'])
             ->where('is_active', true)
-            ->whereHas('categories', fn (Builder $builder) => $builder->whereIn('id', $ids))
+            ->whereHas('categories', fn (Builder $builder) => $builder->whereIn('product_categories.id', $ids))
             ->orderByDesc('id')
             ->limit($limit)
             ->get();

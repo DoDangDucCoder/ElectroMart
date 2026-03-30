@@ -38,6 +38,34 @@ class CategoryService
         ]);
     }
 
+    public function getCategoryTree(): array
+    {
+        $categories = $this->categories->all(['is_active' => true]);
+
+        $grouped = $categories->groupBy(static function ($category) {
+            return $category->parent_id ?? 0;
+        });
+
+        $buildTree = function (int $parentId) use (&$buildTree, $grouped): array {
+            return $grouped->get($parentId, collect())
+                ->sortBy('display_order')
+                ->map(function ($category) use ($buildTree) {
+                    return [
+                        'id' => $category->id,
+                        'name' => $category->name,
+                        'slug' => $category->slug,
+                        'description' => $category->description,
+                        'display_order' => $category->display_order,
+                        'children' => $buildTree((int) $category->id),
+                    ];
+                })
+                ->values()
+                ->all();
+        };
+
+        return $buildTree(0);
+    }
+
     public function create(array $data): ProductCategory
     {
         $payload = $this->preparePayload($data);

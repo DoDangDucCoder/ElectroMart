@@ -5,81 +5,27 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use DB;
 use Session;
-use App\Models\Social;
 use App\Models\SocialCustomers;
 use Socialite;
-use App\Models\Login;
 use App\Models\Product;
 use App\Models\Video;
 use App\Models\Customer;
 use App\Models\Post;
 use App\Models\Statistic;
 use App\Models\Visitors;
+use App\Infrastructure\Persistence\Eloquent\Catalog\Product as StorefrontProduct;
+use App\Infrastructure\Persistence\Eloquent\Order\Order as StorefrontOrder;
+use App\Infrastructure\Persistence\Eloquent\Customer\Customer as StorefrontCustomer;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
-use Auth;
 use App\Models\Order;
 use App\Http\Requests;
-use Illuminate\Support\Facades\Redirect;
-use Validator;
-use App\Rules\Captcha;
+use App\Application\AI\Services\ChatInboxService;
+use App\Support\AdminPermissions;
 
 class AdminController extends Controller
 {
-    public function login_google()
-    {
-        return Socialite::driver('google')->redirect();
-    }
-    public function callback_google()
-    {
-        $users = Socialite::driver('google')->stateless()->user();
-        $authUser = $this->findOrCreateUser($users, 'google');
-        if ($authUser) {
-            $account_name = Login::where('admin_id', $authUser->user)->first();
-            Session::put('admin_name', $account_name->admin_name);
-            Session::put('login_normal', true);
-            Session::put('admin_id', $account_name->admin_id);
-        } elseif ($customer_new) {
-            $account_name = Login::where('admin_id', $authUser->user)->first();
-            Session::put('admin_name', $account_name->admin_name);
-            Session::put('login_normal', true);
-            Session::put('admin_id', $account_name->admin_id);
-        }
-
-        return redirect('/dashboard')->with('message', 'Đăng nhập Admin thành công');
-    }
-    public function findOrCreateUser($users, $provider)
-    {
-        $authUser = Social::where('provider_user_id', $users->id)->first();
-        if ($authUser) {
-            return $authUser;
-        } else {
-            $customer_new = new Social([
-                'provider_user_id' => $users->id,
-                'provider_user_email' => $users->email,
-                'provider' => strtoupper($provider)
-            ]);
-
-            $orang = Login::where('admin_email', $users->email)->first();
-
-            if (!$orang) {
-
-                $orang = Login::create([
-                    'admin_name' => $users->name,
-                    'admin_email' => $users->email,
-                    'admin_password' => '',
-                    'admin_phone' => '',
-                    'admin_status' => 1
-
-                ]);
-            }
-
-            $customer_new->login()->associate($orang);
-
-            $customer_new->save();
-            return $customer_new;
-        }
-    }
     public function login_customer_google()
     {
         config(['services.google.redirect' => env('GOOGLE_CLIENT_URL')]);
@@ -187,80 +133,8 @@ class AdminController extends Controller
             return redirect('/dang-nhap')->with('message', 'Đăng nhập bằng tài khoản facebook <span style="color:red">' . $account_new->customer_email . '</span> thành công');
         }
     }
-    public function login_facebook()
-    {
-
-        return Socialite::driver('facebook')->redirect();
-    }
-
-    public function callback_facebook()
-    {
-
-        $provider = Socialite::driver('facebook')->user();
-        $account = Social::where('provider', 'facebook')->where('provider_user_id', $provider->getId())->first();
-
-        if ($account != NULL) {
-
-            $account_name = Login::where('admin_id', $account->user)->first();
-            Session::put('admin_name', $account_name->admin_name);
-            Session::put('login_normal', true);
-            Session::put('admin_id', $account_name->admin_id);
-            return redirect('/dashboard')->with('message', 'Đăng nhập Admin thành công');
-        } elseif ($account == NULL) {
-
-            $admin_login = new Social([
-                'provider_user_id' => $provider->getId(),
-                'provider_user_email' => $provider->getEmail(),
-                'provider' => 'facebook'
-            ]);
-
-            $orang = Login::where('admin_email', $provider->getEmail())->first();
-
-            if (!$orang) {
-                $orang = Login::create([
-                    'admin_name' => $provider->getName(),
-                    'admin_email' => $provider->getEmail(),
-                    'admin_password' => '',
-                    'admin_phone' => ''
-
-                ]);
-            }
-            $admin_login->login()->associate($orang);
-            $admin_login->save();
-
-            $account_name = Login::where('admin_id', $admin_login->user)->first();
-            Session::put('admin_name', $admin_login->admin_name);
-            Session::put('login_normal', true);
-            Session::put('admin_id', $admin_login->admin_id);
-            return redirect('/dashboard')->with('message', 'Đăng nhập Admin thành công');
-        }
-    }
-
-    public function AuthLogin()
-    {
-
-        // if (Session::get('login_normal')) {
-
-        //     $admin_id = Session::get('admin_id');
-        // } else {
-        //     $admin_id = Auth::id();
-        // }
-        // if ($admin_id) {
-        //     return Redirect::to('dashboard');
-        // } else {
-        //     return Redirect::to('admin')->send();
-        // }
-    }
-
-    public function index()
-    {
-        return view('admin_login');
-    }
-
     public function show_dashboard(Request $request)
     {
-        //$this->AuthLogin();
-        //get ip address
         $user_ip_address = $request->ip();
 
         $early_last_month = Carbon::now('Asia/Ho_Chi_Minh')->subMonth()->startOfMonth()->toDateString();
@@ -273,49 +147,77 @@ class AdminController extends Controller
 
         $now = Carbon::now('Asia/Ho_Chi_Minh')->toDateString();
 
-        //total last month
-        $visitor_of_lastmonth = Visitors::whereBetween('date_visitor', [$early_last_month, $end_of_last_month])->get();
-        $visitor_last_month_count = $visitor_of_lastmonth->count();
+        $visitor_count = 0;
+        $visitor_last_month_count = 0;
+        $visitor_this_month_count = 0;
+        $visitor_year_count = 0;
+        $visitors_total = 0;
 
-        //total this month
-        $visitor_of_thismonth = Visitors::whereBetween('date_visitor', [$early_this_month, $now])->get();
-        $visitor_this_month_count = $visitor_of_thismonth->count();
+        if (Schema::hasTable((new Visitors())->getTable())) {
+            $visitor_last_month_count = Visitors::whereBetween('date_visitor', [$early_last_month, $end_of_last_month])->count();
+            $visitor_this_month_count = Visitors::whereBetween('date_visitor', [$early_this_month, $now])->count();
+            $visitor_year_count = Visitors::whereBetween('date_visitor', [$oneyears, $now])->count();
+            $visitors_total = Visitors::count();
+            $visitor_count = Visitors::where('ip_address', $user_ip_address)->count();
 
-        //total in one year
-        $visitor_of_year = Visitors::whereBetween('date_visitor', [$oneyears, $now])->get();
-        $visitor_year_count = $visitor_of_year->count();
-
-        //total visitors
-        $visitors = Visitors::all();
-        $visitors_total = $visitors->count();
-
-        //current online
-        $visitors_current = Visitors::where('ip_address', $user_ip_address)->get();
-        $visitor_count = $visitors_current->count();
-
-        if ($visitor_count < 1) {
-            $visitor = new Visitors();
-            $visitor->ip_address = $user_ip_address;
-            $visitor->date_visitor = Carbon::now('Asia/Ho_Chi_Minh')->toDateString();
-            $visitor->save();
+            if ($visitor_count < 1) {
+                $visitor = new Visitors();
+                $visitor->ip_address = $user_ip_address;
+                $visitor->date_visitor = Carbon::now('Asia/Ho_Chi_Minh')->toDateString();
+                $visitor->save();
+                $visitor_count = 1;
+                $visitors_total++;
+            }
         }
 
-        //total 
-        $product = Product::all()->count();
-        $post = Post::all()->count();
-        $order = Order::all()->count();
-        $video = Video::all()->count();
-        $customer = Customer::all()->count();
+        $product = $this->dashboardProductCount();
+        $post = $this->dashboardPostCount();
+        $order = $this->dashboardOrderCount();
+        $video = $this->dashboardVideoCount();
+        $customer = $this->dashboardCustomerCount();
 
-        $product_views = Product::orderBy('product_views', 'DESC')->take(20)->get();
-        $post_views = Post::orderBy('post_views', 'DESC')->take(20)->get();
+        $product_views = $this->dashboardProductViews();
+        $post_views = $this->dashboardPostViews();
+        $dashboard_totals = [
+            'products' => $product,
+            'posts' => $post,
+            'orders' => $order,
+            'videos' => $video,
+            'customers' => $customer,
+        ];
+        $chat_inbox_stats = null;
 
+        if (
+            $request->user('web')
+            && $request->user('web')->can(AdminPermissions::MANAGE_SYSTEM)
+            && Schema::hasTable('chat_conversations')
+        ) {
+            $chat_inbox_stats = app(ChatInboxService::class)->sidebarStats($request->user('web'));
+        }
 
-        return view('admin.dashboard')->with(compact('visitors_total', 'visitor_count', 'visitor_last_month_count', 'visitor_this_month_count', 'visitor_year_count', 'product', 'post', 'order', 'video', 'customer', 'product_views', 'post_views'));
+        return view('admin.dashboard')->with(compact(
+            'visitors_total',
+            'visitor_count',
+            'visitor_last_month_count',
+            'visitor_this_month_count',
+            'visitor_year_count',
+            'product',
+            'post',
+            'order',
+            'video',
+            'customer',
+            'product_views',
+            'post_views',
+            'dashboard_totals',
+            'chat_inbox_stats'
+        ));
     }
 
     public function days_order()
     {
+        if (! Schema::hasTable((new Statistic())->getTable())) {
+            return response()->json([]);
+        }
 
         $sub60days = Carbon::now('Asia/Ho_Chi_Minh')->subdays(365)->toDateString();
 
@@ -324,8 +226,9 @@ class AdminController extends Controller
         $get = Statistic::whereBetween('order_date', [$sub60days, $now])->orderBy('order_date', 'ASC')->get();
 
 
-        foreach ($get as $key => $val) {
+        $chart_data = [];
 
+        foreach ($get as $key => $val) {
             $chart_data[] = array(
                 'period' => $val->order_date,
                 'order' => $val->total_order,
@@ -335,11 +238,14 @@ class AdminController extends Controller
             );
         }
 
-        echo $data = json_encode($chart_data);
+        return response()->json($chart_data);
     }
 
     public function dashboard_filter(Request $request)
     {
+        if (! Schema::hasTable((new Statistic())->getTable())) {
+            return response()->json([]);
+        }
 
         $data = $request->all();
 
@@ -381,8 +287,9 @@ class AdminController extends Controller
         }
 
 
-        foreach ($get as $key => $val) {
+        $chart_data = [];
 
+        foreach ($get as $key => $val) {
             $chart_data[] = array(
                 'period' => $val->order_date,
                 'order' => $val->total_order,
@@ -392,10 +299,13 @@ class AdminController extends Controller
             );
         }
 
-        echo $data = json_encode($chart_data);
+        return response()->json($chart_data);
     }
     public function filter_by_date(Request $request)
     {
+        if (! Schema::hasTable((new Statistic())->getTable())) {
+            return response()->json([]);
+        }
 
         $data = $request->all();
 
@@ -405,8 +315,9 @@ class AdminController extends Controller
         $get = Statistic::whereBetween('order_date', [$from_date, $to_date])->orderBy('order_date', 'ASC')->get();
 
 
-        foreach ($get as $key => $val) {
+        $chart_data = [];
 
+        foreach ($get as $key => $val) {
             $chart_data[] = array(
 
                 'period' => $val->order_date,
@@ -417,45 +328,105 @@ class AdminController extends Controller
             );
         }
 
-        echo $data = json_encode($chart_data);
+        return response()->json($chart_data);
     }
     public function order_date(Request $request)
     {
-        $order_date = $_GET['date'];
+        $order_date = $request->query('date');
+
+        if (! $order_date) {
+            return view('admin.order_date')->with(['order' => collect()]);
+        }
+
+        if (! Schema::hasTable((new Order())->getTable())) {
+            $order = collect();
+            return view('admin.order_date')->with(compact('order'));
+        }
+
         $order = Order::where('order_date', $order_date)->orderby('created_at', 'DESC')->get();
         return view('admin.order_date')->with(compact('order'));
     }
-    public function dashboard(Request $request)
-    {
-        //$data = $request->all();
-        $data = $request->validate([
-            //validation laravel 
-            'admin_email' => 'required',
-            'admin_password' => 'required',
-            'g-recaptcha-response' => new Captcha(),    //dòng kiểm tra Captcha
-        ]);
 
-        $admin_email = $data['admin_email'];
-        $admin_password = md5($data['admin_password']);
-        $login = Login::where('admin_email', $admin_email)->where('admin_password', $admin_password)->first();
-        if ($login) {
-            $login_count = $login->count();
-            if ($login_count > 0) {
-                Session::put('admin_name', $login->admin_name);
-                Session::put('admin_id', $login->admin_id);
-                return Redirect::to('/dashboard');
-            }
-        } else {
-            Session::put('message', 'Mật khẩu hoặc tài khoản bị sai.Làm ơn nhập lại');
-            return Redirect::to('/admin');
-        }
-    }
-    public function logout()
+    protected function dashboardProductCount(): int
     {
-        $this->AuthLogin();
-        Session::put('admin_name', null);
-        Session::put('admin_id', null);
-        Session::put('login_normal', null);
-        return Redirect::to('/admin');
+        if (Schema::hasTable((new Product())->getTable())) {
+            return Product::count();
+        }
+
+        if (Schema::hasTable((new StorefrontProduct())->getTable())) {
+            return StorefrontProduct::count();
+        }
+
+        return 0;
+    }
+
+    protected function dashboardPostCount(): int
+    {
+        if (Schema::hasTable((new Post())->getTable())) {
+            return Post::count();
+        }
+
+        return 0;
+    }
+
+    protected function dashboardOrderCount(): int
+    {
+        if (Schema::hasTable((new Order())->getTable())) {
+            return Order::count();
+        }
+
+        if (Schema::hasTable((new StorefrontOrder())->getTable())) {
+            return StorefrontOrder::count();
+        }
+
+        return 0;
+    }
+
+    protected function dashboardVideoCount(): int
+    {
+        if (Schema::hasTable((new Video())->getTable())) {
+            return Video::count();
+        }
+
+        if (Schema::hasTable('videos')) {
+            return (int) DB::table('videos')->count();
+        }
+
+        return 0;
+    }
+
+    protected function dashboardCustomerCount(): int
+    {
+        if (Schema::hasTable((new Customer())->getTable())) {
+            return Customer::count();
+        }
+
+        if (Schema::hasTable((new StorefrontCustomer())->getTable())) {
+            return StorefrontCustomer::count();
+        }
+
+        return 0;
+    }
+
+    protected function dashboardProductViews()
+    {
+        if (Schema::hasTable((new Product())->getTable())) {
+            return Product::orderByDesc('product_views')->take(20)->get();
+        }
+
+        if (Schema::hasTable((new StorefrontProduct())->getTable())) {
+            return StorefrontProduct::orderByDesc('views_count')->take(20)->get();
+        }
+
+        return collect();
+    }
+
+    protected function dashboardPostViews()
+    {
+        if (Schema::hasTable((new Post())->getTable())) {
+            return Post::orderByDesc('views_count')->take(20)->get();
+        }
+
+        return collect();
     }
 }

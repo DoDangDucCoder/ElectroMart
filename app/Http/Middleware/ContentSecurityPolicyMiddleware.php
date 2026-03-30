@@ -10,21 +10,28 @@ class ContentSecurityPolicyMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // TODO: Implement security middleware logic
-        
-        // Security check
-        if (!$this->isSecure($request)) {
-            return response()->json([
-                'error' => 'Security violation detected'
-            ], 403);
+        $response = $next($request);
+
+        if (!$response->headers->has('Content-Security-Policy')) {
+            $response->headers->set('Content-Security-Policy', $this->policy());
         }
 
-        return $next($request);
+        return $response;
     }
 
-    private function isSecure(Request $request): bool
+    private function policy(): string
     {
-        // TODO: Implement security validation
-        return true;
+        return implode('; ', [
+            "default-src 'self' https: data: blob:",
+            "img-src 'self' https: data: blob:",
+            "style-src 'self' https: 'unsafe-inline'",
+            "script-src 'self' https: 'unsafe-inline' 'unsafe-eval'",
+            "font-src 'self' https: data:",
+            "connect-src 'self' https: ws: wss:",
+            "frame-src 'self' https:",
+            "object-src 'none'",
+            "base-uri 'self'",
+            "form-action 'self' https:",
+        ]);
     }
 }

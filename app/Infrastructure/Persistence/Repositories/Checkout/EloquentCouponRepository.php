@@ -6,6 +6,7 @@ use App\Domain\Checkout\Repositories\CouponRepositoryInterface;
 use App\Infrastructure\Persistence\Eloquent\Marketing\Coupon;
 use App\Infrastructure\Persistence\Eloquent\Marketing\CouponRedemption;
 use Carbon\Carbon;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class EloquentCouponRepository implements CouponRepositoryInterface
 {
@@ -24,9 +25,37 @@ class EloquentCouponRepository implements CouponRepositoryInterface
             ->first();
     }
 
+    public function findByCode(string $code): ?Coupon
+    {
+        return Coupon::where('code', $code)->first();
+    }
+
     public function findById(int $id): ?Coupon
     {
         return Coupon::find($id);
+    }
+
+    public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        $query = Coupon::query();
+
+        if (isset($filters['is_active'])) {
+            $query->where('is_active', (bool) $filters['is_active']);
+        }
+
+        if (! empty($filters['type'])) {
+            $query->whereIn('type', (array) $filters['type']);
+        }
+
+        if (! empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($builder) use ($search) {
+                $builder->where('name', 'like', "%{$search}%")
+                    ->orWhere('code', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->orderByDesc('id')->paginate($perPage);
     }
 
     public function incrementUsage(Coupon $coupon): void

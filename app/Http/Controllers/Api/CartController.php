@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Application\Checkout\Services\CartService;
+use App\Application\Checkout\Services\CustomerCartService;
 use App\Http\Resources\CartResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Auth;
 class CartController extends Controller
 {
     public function __construct(
-        private readonly CartService $cartService
+        private readonly CustomerCartService $cartService
     ) {
     }
 
@@ -31,12 +31,14 @@ class CartController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1|max:10',
+            'variant_id' => 'nullable|integer',
         ]);
 
         $cart = $this->cartService->addItem(
             Auth::id(),
             $request->product_id,
-            $request->quantity
+            $request->quantity,
+            $request->variant_id
         );
 
         return response()->json([
@@ -46,7 +48,7 @@ class CartController extends Controller
         ], 201);
     }
 
-    public function update(Request $request, int $itemId): JsonResponse
+    public function update(Request $request, string $itemId): JsonResponse
     {
         $request->validate([
             'quantity' => 'required|integer|min:0|max:10',
@@ -54,7 +56,7 @@ class CartController extends Controller
 
         $cart = $this->cartService->updateItem(
             Auth::id(),
-            $itemId,
+            (int) $itemId,
             $request->quantity
         );
 
@@ -65,9 +67,9 @@ class CartController extends Controller
         ]);
     }
 
-    public function remove(int $itemId): JsonResponse
+    public function remove(string $itemId): JsonResponse
     {
-        $cart = $this->cartService->removeItem(Auth::id(), $itemId);
+        $cart = $this->cartService->removeItem(Auth::id(), (int) $itemId);
 
         return response()->json([
             'success' => true,

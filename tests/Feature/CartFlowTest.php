@@ -47,6 +47,23 @@ class CartFlowTest extends TestCase
         $this->assertSame(2, $items->first()['product_qty']);
     }
 
+    public function test_user_can_render_live_cart_page(): void
+    {
+        $this->cartService->addItem($this->productId, 2);
+
+        $this->get('/gio-hang')
+            ->assertOk()
+            ->assertSee('g-cart')
+            ->assertSee('shopw-cart-flow', false)
+            ->assertSee('shopw-cart-support-card', false)
+            ->assertSee('Giỏ hàng của bạn')
+            ->assertSee('Tóm tắt đơn hàng')
+            ->assertSee('Đăng nhập để đặt hàng')
+            ->assertDontSee('Tiến hành checkout')
+            ->assertSee('Test Product')
+            ->assertSee('Áp dụng mã');
+    }
+
     public function test_user_can_update_cart_quantities(): void
     {
         $this->cartService->addItem($this->productId, 1);
@@ -99,6 +116,85 @@ class CartFlowTest extends TestCase
         $this->assertTrue($this->cartService->items()->isEmpty());
     }
 
+    public function test_delete_product_route_returns_json_for_ajax_requests(): void
+    {
+        $this->cartService->addItem($this->productId, 1);
+        $item = $this->cartService->items()->first();
+
+        $this->getJson('/del-product/' . $item['session_id'])
+            ->assertOk()
+            ->assertJson([
+                'message' => 'Đã xóa sản phẩm khỏi giỏ hàng.',
+            ]);
+
+        $this->assertTrue($this->cartService->items()->isEmpty());
+    }
+
+    public function test_user_can_render_cart_ajax_fragments_from_blade_partials(): void
+    {
+        $this->cartService->addItem($this->productId, 2);
+
+        $this->get('/show-cart-menu')
+            ->assertOk()
+            ->assertSee('class="badges"', false)
+            ->assertSee('2');
+
+        $this->get('/show-cart')
+            ->assertOk()
+            ->assertSee('class="badges"', false);
+
+        $this->get('/hover-cart')
+            ->assertOk()
+            ->assertSee('hover-cart')
+            ->assertSee('Test Product')
+            ->assertSee('delele-hover-cart');
+
+        $this->get('/show_quick_cart')
+            ->assertOk()
+            ->assertSee('cart_quantity_input')
+            ->assertSee('Giảm giá:')
+            ->assertSee('Test Product');
+
+        $this->get('/cart-session')
+            ->assertOk()
+            ->assertSee('class="cart_id"', false)
+            ->assertSee((string) $this->productId);
+    }
+
+    public function test_cart_requests_validate_payloads_consistently(): void
+    {
+        $this->postJson('/add-cart-ajax', [
+            'id_product' => null,
+            'cart_product_qty' => 0,
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors(['id_product', 'cart_product_qty']);
+
+        $this->getJson('/remove-item?id=invalid')
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['id']);
+
+        $this->postJson('/update-quick-cart', [
+            'session_id' => '',
+            'quantity' => 0,
+        ])->assertStatus(422)
+            ->assertJsonValidationErrors(['session_id', 'quantity']);
+
+        $this->from('/gio-hang')
+            ->post('/save-cart', [
+                'productid_hidden' => '',
+                'qty' => 0,
+            ])
+            ->assertRedirect('/gio-hang')
+            ->assertSessionHasErrors(['productid_hidden', 'qty']);
+
+        $this->from('/gio-hang')
+            ->post('/check-coupon', [
+                'coupon' => '',
+            ])
+            ->assertRedirect('/gio-hang')
+            ->assertSessionHasErrors(['coupon']);
+    }
+
     protected function createProduct(): int
     {
         $brand = Brand::create([
@@ -137,3 +233,4 @@ class CartFlowTest extends TestCase
         return $product->product_id;
     }
 }
+

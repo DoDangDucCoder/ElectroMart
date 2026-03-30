@@ -3,15 +3,20 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Application\Reporting\Services\ProductProfitReportService;
+use App\Application\Reporting\Services\ProductDiscoveryReportService;
 use App\Application\Shared\Services\DatabaseOptimizationService;
 use App\Application\Shared\Services\CacheService;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class StatisticsController extends Controller
 {
     public function __construct(
         private readonly DatabaseOptimizationService $dbOptimization,
-        private readonly CacheService $cacheService
+        private readonly CacheService $cacheService,
+        private readonly ProductProfitReportService $productProfitReportService,
+        private readonly ProductDiscoveryReportService $productDiscoveryReportService
     ) {
     }
 
@@ -60,6 +65,38 @@ class StatisticsController extends Controller
         return response()->json([
             'success' => true,
             'data' => $products,
+        ]);
+    }
+
+    public function productsProfit(Request $request): JsonResponse
+    {
+        $filters = $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
+            'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
+            'category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
+        ]);
+
+        $perPage = min((int) $request->input('per_page', 20), 100);
+
+        return response()->json([
+            'success' => true,
+            ...$this->productProfitReportService->getApiReport($filters, $perPage),
+        ]);
+    }
+
+    public function productDiscovery(Request $request): JsonResponse
+    {
+        $filters = $request->validate([
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date'],
+        ]);
+
+        $perPage = min((int) $request->input('per_page', 20), 100);
+
+        return response()->json([
+            'success' => true,
+            ...$this->productDiscoveryReportService->getApiReport($filters, $perPage),
         ]);
     }
 

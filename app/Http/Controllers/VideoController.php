@@ -2,223 +2,365 @@
 
 namespace App\Http\Controllers;
 
+use App\Application\Catalog\Services\BrandService;
+use App\Application\Catalog\Services\CategoryService;
+use App\Application\Cms\Services\BlogCategoryService;
+use App\Application\Shared\Services\PublicUploadService;
+use App\Http\Requests\Admin\Legacy\Media\DeleteVideoRequest;
+use App\Http\Requests\Admin\Legacy\Media\StoreVideoRequest;
+use App\Http\Requests\Admin\Legacy\Media\UpdateVideoImageRequest;
+use App\Http\Requests\Admin\Legacy\Media\UpdateVideoRequest;
+use App\Infrastructure\Persistence\Eloquent\Cms\Video as ModernVideo;
+use App\Models\Video as LegacyVideo;
 use Illuminate\Http\Request;
-use DB;
-use App\Models\Video;
-use Session;
-use App\Models\CatePost;
-use App\Models\Slider;
-use App\Http\Requests;
-use Illuminate\Support\Facades\Redirect;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class VideoController extends Controller
 {
-	public function AuthLogin()
-	{
+    public function __construct(
+        private readonly CategoryService $categoryService,
+        private readonly BrandService $brandService,
+        private readonly BlogCategoryService $blogCategoryService,
+        private readonly PublicUploadService $publicUploadService,
+    ) {
+    }
 
-		// if (Session::get('login_normal')) {
+    public function video()
+    {
+        return view('admin.video.list_video');
+    }
 
-		// 	$admin_id = Session::get('admin_id');
-		// } else {
-		// 	$admin_id = Auth::id();
-		// }
-		// if ($admin_id) {
-		// 	return Redirect::to('dashboard');
-		// } else {
-		// 	return Redirect::to('admin')->send();
-		// }
-	}
-	public function video()
-	{
-		return view('admin.video.list_video');
-	}
-	public function insert_video(Request $request)
-	{
-		$data = $request->all();
-		$video = new Video();
-		$sub_link = substr($data['video_link'], 17);
-		$video->video_title = $data['video_title'];
-		$video->video_desc = $data['video_desc'];
-		$video->video_link = $sub_link;
-		$video->video_slug = $data['video_slug'];
+    public function insert_video(StoreVideoRequest $request)
+    {
+        $data = $request->validated();
 
-		$get_image = $request->file('file');
-		if ($get_image) {
-			$get_name_image = $get_image->getClientOriginalName();
-			$name_image = current(explode('.', $get_name_image));
-			$new_image =  $name_image . rand(0, 99) . '.' . $get_image->getClientOriginalExtension();
-			$get_image->move('uploads/videos', $new_image);
-			$video->video_image = $new_image;
-		}
-		$video->save();
-	}
-	public function delete_video(Request $request)
-	{
-		$data = $request->all();
-		$video_id = $data['video_id'];
+        $imagePath = $request->file('file')
+            ? $this->publicUploadService->storeSluggedImage($request->file('file'), 'uploads/videos')
+            : null;
 
-		$video = Video::find($video_id);
+        if ($this->usesModernVideoTable()) {
+            ModernVideo::create([
+                'title' => $data['video_title'] ?? '',
+                'description' => $data['video_desc'] ?? null,
+                'slug' => $data['video_slug'] ?? Str::slug($data['video_title'] ?? Str::random(8)),
+                'video_url' => $data['video_link'] ?? '',
+                'thumbnail_path' => $imagePath,
+                'is_active' => true,
+                'display_order' => (int) (ModernVideo::max('display_order') ?? 0) + 1,
+            ]);
 
-		unlink('uploads/videos/' . $video->video_image);
+            return response()->noContent();
+        }
 
-		$video->delete();
-	}
-	public function update_video(Request $request)
-	{
-		$data = $request->all();
-		$video_id = $data['video_id'];
-		$video_edit =  $data['video_edit'];
-		$video_check =  $data['video_check'];
-		$video = Video::find($video_id);
+        if (! $this->usesLegacyVideoTable()) {
+            return response()->json(['message' => 'Video storage is unavailable.'], 422);
+        }
 
-		if ($video_check == 'video_title') {
+        $video = new LegacyVideo();
+        $video->video_title = $data['video_title'] ?? '';
+        $video->video_desc = $data['video_desc'] ?? null;
+        $video->video_link = $this->extractYoutubeId($data['video_link'] ?? '');
+        $video->video_slug = $data['video_slug'] ?? Str::slug($data['video_title'] ?? Str::random(8));
+        $video->video_image = $imagePath ? basename($imagePath) : null;
+        $video->save();
 
-			$video->video_title = $video_edit;
-		} elseif ($video_check == 'video_desc') {
+        return response()->noContent();
+    }
 
-			$video->video_desc = $video_edit;
-		} elseif ($video_check == 'video_link') {
+    public function delete_video(DeleteVideoRequest $request)
+    {
+        $validated = $request->validated();
+        $videoId = (int) $validated['video_id'];
 
-			$sub_link = substr($video_edit, 17);
-			$video->video_link = $sub_link;
-		} else {
+        if ($this->usesModernVideoTable()) {
+            $video = ModernVideo::find($videoId);
+            if ($video) {
+                $this->publicUploadService->deletePublicFile($video->thumbnail_path);
+                $video->delete();
+            }
 
-			$video->video_slug = $video_edit;
-		}
-		$video->save();
-	}
-	public function update_video_image(Request $request)
-	{
-		$get_image = $request->file('file');
-		$video_id = $request->video_id;
-		if ($get_image) {
-			$video = Video::find($video_id);
-			unlink('uploads/videos/' . $video->video_image);
-			$get_name_image = $get_image->getClientOriginalName();
-			$name_image = current(explode('.', $get_name_image));
-			$new_image =  $name_image . rand(0, 99) . '.' . $get_image->getClientOriginalExtension();
-			$get_image->move('uploads/videos', $new_image);
-			$video->video_image = $new_image;
-			$video->save();
-		}
-	}
-	public function select_video(Request $request)
-	{
+            return response()->noContent();
+        }
 
-		$video = Video::orderBy('video_id', 'DESC')->get();
-		$video_count = $video->count();
-		$output = ' <form>
-    					' . csrf_field() . '
-					  <table class="table table-striped b-t b-light">
-					        <thead>
-					          <tr>
-					            <th>Thứ tự</th>
-					            <th>Tên video</th>
-					            <th>Slug video</th>
-					            <th>Hình ảnh video</th>
-					            <th>Link</th>
-					            <th>Mô tả</th>
-					            <th>Demo video</th>
-					            <th style="width:30px;">Quản lý</th>
-					          </tr>
-					        </thead>
-					        <tbody>
+        if (! $this->usesLegacyVideoTable()) {
+            return response()->noContent();
+        }
 
-    	';
-		if ($video_count > 0) {
-			$i = 0;
-			foreach ($video as $key => $vid) {
-				$i++;
-				$output .= '
+        $video = LegacyVideo::find($videoId);
+        if ($video) {
+            $this->publicUploadService->deletePublicFile($video->video_image ? 'uploads/videos/' . $video->video_image : null);
+            $video->delete();
+        }
 
-    				 <tr>
-    				 <td>' . $i . '</td>
-			           <td contenteditable data-video_id="' . $vid->video_id . '" data-video_type="video_title" class="video_edit" id="video_title_' . $vid->video_id . '">' . $vid->video_title . '</td>
+        return response()->noContent();
+    }
 
-			           <td contenteditable data-video_id="' . $vid->video_id . '" data-video_type="video_slug" class="video_edit" id="video_slug_' . $vid->video_id . '">' . $vid->video_slug . '</td>
+    public function update_video(UpdateVideoRequest $request)
+    {
+        $validated = $request->validated();
 
-			      		<td>
-			      		<img src="' . url('uploads/videos/' . $vid->video_image) . '" class="img-thumbnail" width="80" height="80">
+        $videoId = (int) $validated['video_id'];
+        $videoEdit = trim((string) $validated['video_edit']);
+        $videoCheck = (string) $validated['video_check'];
 
-			      		 <input type="file" class="file_img_video" data-video_id="' . $vid->video_id . '" id="file-video-' . $vid->video_id . '" name="file" accept="image/*" />
+        if ($this->usesModernVideoTable()) {
+            $video = ModernVideo::find($videoId);
 
-			      		</td>
+            if (! $video) {
+                return response()->noContent();
+            }
 
-			           <td contenteditable data-video_id="' . $vid->video_id . '" data-video_type="video_link" class="video_edit" id="video_link_' . $vid->video_id . '">https://youtu.be/' . $vid->video_link . '
-			           </td>
-			           <td contenteditable data-video_id="' . $vid->video_id . '" data-video_type="video_desc" class="video_edit" id="video_desc_' . $vid->video_id . '">' . $vid->video_desc . '</td>
+            if ($videoCheck === 'video_title') {
+                $video->title = $videoEdit;
+            } elseif ($videoCheck === 'video_desc') {
+                $video->description = $videoEdit;
+            } elseif ($videoCheck === 'video_link') {
+                $video->video_url = $videoEdit;
+            } elseif ($videoCheck === 'video_slug') {
+                $video->slug = Str::slug($videoEdit) ?: $video->slug;
+            }
 
-			           <td><iframe width="200" height="200" src="https://www.youtube.com/embed/' . $vid->video_link . '" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></td>
-			           <td><button type="button" data-video_id="' . $vid->video_id . '"  class="btn btn-xs btn-danger btn-delete-video">Xóa video</button></td>
-			         </tr>
-                                    
+            $video->save();
 
+            return response()->noContent();
+        }
 
+        if (! $this->usesLegacyVideoTable()) {
+            return response()->noContent();
+        }
 
-    			';
-			}
-		} else {
-			$output .= '
-    				 <tr>
-                                        <td colspan="4">Chưa có video nào hết</td>
-                                       
-                                      </tr>
+        $video = LegacyVideo::find($videoId);
 
+        if (! $video) {
+            return response()->noContent();
+        }
 
-    			';
-		}
-		$output .= '
-    				 </tbody>
-    				 </table>
-    				 </form>
+        if ($videoCheck === 'video_title') {
+            $video->video_title = $videoEdit;
+        } elseif ($videoCheck === 'video_desc') {
+            $video->video_desc = $videoEdit;
+        } elseif ($videoCheck === 'video_link') {
+            $video->video_link = $this->extractYoutubeId($videoEdit);
+        } else {
+            $video->video_slug = Str::slug($videoEdit) ?: $video->video_slug;
+        }
 
+        $video->save();
 
-    			';
-		echo $output;
-	}
-	public function video_shop(Request $request)
-	{
-		//category post
-		$category_post = CatePost::orderBy('cate_post_id', 'DESC')->get();
+        return response()->noContent();
+    }
 
-		//slide
-		$slider = Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
-		//seo 
-		$meta_desc = "Video công ty TNHH một thành viên hiếushop";
-		$meta_keywords = "thiết bị chơi game,thiet bi choi game";
-		$meta_title = "Videos HiếuShop";
-		$url_canonical = $request->url();
-		//--seo
+    public function update_video_image(UpdateVideoImageRequest $request)
+    {
+        $validated = $request->validated();
 
-		$cate_product = DB::table('tbl_category_product')->where('category_status', '0')->orderby('category_id', 'desc')->get();
-		$brand_product = DB::table('tbl_brand')->where('brand_status', '0')->orderby('brand_id', 'desc')->get();
+        $videoId = (int) $validated['video_id'];
+        $imagePath = $this->publicUploadService->storeSluggedImage($request->file('file'), 'uploads/videos');
 
-		// $all_product = DB::table('tbl_product')
-		// ->join('tbl_category_product','tbl_category_product.category_id','=','tbl_product.category_id')
-		// ->join('tbl_brand','tbl_brand.brand_id','=','tbl_product.brand_id')
-		// ->orderby('tbl_product.product_id','desc')->get();
+        if (! $imagePath) {
+            return response()->noContent();
+        }
 
-		$all_video = DB::table('tbl_videos')->paginate(6);
+        if ($this->usesModernVideoTable()) {
+            $video = ModernVideo::find($videoId);
 
-		return view('pages.video.video')->with('category', $cate_product)->with('brand', $brand_product)->with('all_video', $all_video)->with('meta_desc', $meta_desc)->with('meta_keywords', $meta_keywords)->with('meta_title', $meta_title)->with('url_canonical', $url_canonical)->with('slider', $slider)->with('category_post', $category_post); //1
-		// return view('pages.home')->with(compact('cate_product','brand_product','all_product')); //2
+            if ($video) {
+                $this->publicUploadService->deletePublicFile($video->thumbnail_path);
+                $video->thumbnail_path = $imagePath;
+                $video->save();
+            }
 
-	}
-	public function watch_video(Request $request)
-	{
-		$video_id = $request->video_id;
-		$video = Video::find($video_id);
-		$output['video_title'] = $video->video_title;
-		$output['video_desc'] = $video->video_desc;
+            return response()->noContent();
+        }
 
-		// $output['video_link'] = '<iframe width="100%" height="400" src="https://www.youtube.com/embed/'.$video->video_link.'?rel=0&modestbranding=1&autohide=1&showinfo=0&controls=0" frameborder="0" allowfullscreen" frameborder="0" allowfullscreen></iframe>';
+        if (! $this->usesLegacyVideoTable()) {
+            return response()->noContent();
+        }
 
-		$output['video_link'] = '<video id="my_yt_video" 
-					       class="vlite-js" 
-					       data-youtube-id="' . $video->video_link . '">
-					</video>';
+        $video = LegacyVideo::find($videoId);
 
+        if ($video) {
+            $this->publicUploadService->deletePublicFile($video->video_image ? 'uploads/videos/' . $video->video_image : null);
+            $video->video_image = basename($imagePath);
+            $video->save();
+        }
 
-		echo json_encode($output);
-	}
+        return response()->noContent();
+    }
+
+    public function select_video(Request $request)
+    {
+        $videos = $this->fetchAdminVideos();
+
+        return response()->view('admin.video.partials.select_video_table', [
+            'videos' => $videos,
+            'extractYoutubeId' => fn (string $value): string => $this->extractYoutubeId($value),
+            'videoThumbnailUrl' => fn ($video): string => $this->videoThumbnailUrl($video),
+        ]);
+    }
+
+    public function video_shop(Request $request)
+    {
+        return view('pages.video.video', [
+            'category' => $this->categoryService->listAll(['is_active' => true]),
+            'brand' => $this->brandService->listAll(['is_active' => true]),
+            'all_video' => $this->paginateStorefrontVideos(6),
+            'meta_desc' => 'Video công nghệ, review và hướng dẫn mua sắm',
+            'meta_keywords' => 'video cong nghe, review, huong dan mua sam',
+            'meta_title' => 'Video cửa hàng',
+            'url_canonical' => $request->url(),
+            'slider' => $this->legacyActiveSliders(),
+            'category_post' => $this->blogCategoryService->listAll(['is_active' => true]),
+        ]);
+    }
+
+    public function watch_video(Request $request)
+    {
+        $video = $this->findStorefrontVideoById((int) $request->input('video_id'));
+
+        if (! $video) {
+            return response()->json([
+                'video_title' => 'Video không tồn tại',
+                'video_desc' => 'Không tìm thấy video phù hợp.',
+                'video_link' => '',
+            ], 404);
+        }
+
+        $title = $video->video_title ?? $video->title ?? '';
+        $description = $video->video_desc ?? $video->description ?? '';
+        $videoUrl = $video->video_link ?? $video->video_url ?? '';
+        $youtubeId = $this->extractYoutubeId($videoUrl);
+
+        return response()->json([
+            'video_title' => $title,
+            'video_desc' => $description,
+            'video_link' => $youtubeId
+                ? '<video id="my_yt_video" class="vlite-js" data-youtube-id="' . e($youtubeId) . '"></video>'
+                : '',
+        ]);
+    }
+
+    protected function paginateStorefrontVideos(int $perPage): LengthAwarePaginator
+    {
+        if ($this->usesModernVideoTable()) {
+            return ModernVideo::query()
+                ->where('is_active', true)
+                ->orderBy('display_order')
+                ->orderByDesc('id')
+                ->paginate($perPage);
+        }
+
+        if ($this->usesLegacyVideoTable()) {
+            return LegacyVideo::query()
+                ->orderBy('video_id', 'DESC')
+                ->paginate($perPage);
+        }
+
+        return new LengthAwarePaginator([], 0, $perPage, 1, [
+            'path' => request()->url(),
+            'pageName' => 'page',
+        ]);
+    }
+
+    protected function fetchAdminVideos()
+    {
+        if ($this->usesModernVideoTable()) {
+            return ModernVideo::query()
+                ->orderBy('display_order')
+                ->orderByDesc('id')
+                ->get();
+        }
+
+        if ($this->usesLegacyVideoTable()) {
+            return LegacyVideo::query()
+                ->orderBy('video_id', 'DESC')
+                ->get();
+        }
+
+        return collect();
+    }
+
+    protected function findStorefrontVideoById(int $id): LegacyVideo|ModernVideo|null
+    {
+        if ($this->usesModernVideoTable()) {
+            return ModernVideo::find($id);
+        }
+
+        if ($this->usesLegacyVideoTable()) {
+            return LegacyVideo::find($id);
+        }
+
+        return null;
+    }
+
+    protected function usesModernVideoTable(): bool
+    {
+        return Schema::hasTable('videos');
+    }
+
+    protected function usesLegacyVideoTable(): bool
+    {
+        return Schema::hasTable((new LegacyVideo())->getTable());
+    }
+
+    protected function legacyActiveSliders()
+    {
+        if (! Schema::hasTable('tbl_slider')) {
+            return collect();
+        }
+
+        return \App\Models\Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
+    }
+
+    protected function extractYoutubeId(string $value): string
+    {
+        $value = trim($value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if (! str_contains($value, 'http')) {
+            return trim($value, '/');
+        }
+
+        $host = (string) parse_url($value, PHP_URL_HOST);
+        $path = trim((string) parse_url($value, PHP_URL_PATH), '/');
+        $query = [];
+        parse_str((string) parse_url($value, PHP_URL_QUERY), $query);
+
+        if (isset($query['v']) && $query['v'] !== '') {
+            return (string) $query['v'];
+        }
+
+        if (str_contains($host, 'youtu.be')) {
+            return $path;
+        }
+
+        if ($path !== '' && str_contains($host, 'youtube.com')) {
+            $segments = explode('/', $path);
+
+            return (string) end($segments);
+        }
+
+        return $value;
+    }
+
+    protected function videoThumbnailUrl($video): string
+    {
+        $thumbnailPath = $video->thumbnail_path ?? null;
+        if ($thumbnailPath && File::exists(public_path($thumbnailPath))) {
+            return asset($thumbnailPath);
+        }
+
+        $legacyImage = $video->video_image ?? null;
+        if ($legacyImage && File::exists(public_path('uploads/videos/' . $legacyImage))) {
+            return asset('uploads/videos/' . $legacyImage);
+        }
+
+        return asset('uploads/product/no-image.svg');
+    }
 }

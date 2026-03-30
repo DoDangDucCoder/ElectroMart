@@ -4,6 +4,7 @@ namespace App\Infrastructure\Persistence\Repositories\Catalog;
 
 use App\Domain\Catalog\Repositories\ProductReviewRepositoryInterface;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductReview;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -30,6 +31,14 @@ class EloquentProductReviewRepository implements ProductReviewRepositoryInterfac
             ->orderBy('parent_id')
             ->orderBy('id')
             ->get();
+    }
+
+    public function paginateByProduct(int $productId, int $perPage = 10): LengthAwarePaginator
+    {
+        return ProductReview::with(['customer'])
+            ->where('product_id', $productId)
+            ->orderByDesc('id')
+            ->paginate($perPage);
     }
 
     public function getRootComments(int $limit = 100): Collection
@@ -72,10 +81,16 @@ class EloquentProductReviewRepository implements ProductReviewRepositoryInterfac
         return $review;
     }
 
+    public function delete(ProductReview $review): void
+    {
+        $review->delete();
+    }
+
     public function averageRating(int $productId): float
     {
         return (float) ProductReview::where('product_id', $productId)
-            ->whereNotNull('rating')
+            ->where('status', 'approved')
+            ->where('rating', '>', 0)
             ->avg('rating');
     }
 }

@@ -2,184 +2,195 @@
 
 namespace App\Http\Controllers;
 
-use App\Document;
-use Illuminate\Support\Facades\Redirect;
-use Storage;
-use File;
-use Auth;
-use PDF;
-use Session;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class DocumentController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function AuthLogin()
-    {
-
-        // if(Session::get('login_normal')){
-
-        //     $admin_id = Session::get('admin_id');
-        // }else{
-        //     $admin_id = Auth::id();
-        // }
-        //     if($admin_id){
-        //         return Redirect::to('dashboard');
-        //     }else{
-        //         return Redirect::to('admin')->send();
-        //     } 
-
-
-    }
-    public function upload_file()
-    {
-
-        $filename = 'Anthony Robbins.pdf';
-        $filePath = public_path('uploads/document/Đánh Thức Con Người Phi Thường Trong Bạn45.pdf');
-        $fileData = File::get($filePath);
-        Storage::cloud()->put($filename, $fileData);
-        return 'File PDF Uploaded';
-    }
-    public function create_document()
-    {
-        Storage::cloud()->put('test.txt', 'Storage 1');
-        dd('created');
-    }
-    public function upload_image()
-    {
-        $filename = 'Chapter4-567xdcv.jpg';
-        $filePath = public_path('frontend/images/chapter/Chapter4-567xdcv.jpg');
-        $fileData = File::get($filePath);
-        Storage::cloud()->put($filename, $fileData);
-        return 'Image Uploaded';
-    }
-    public function upload_video()
-    {
-        $filename = 'video_hd720.mp4';
-        $filePath = public_path('frontend/images/samplevideo.mp4');
-        $fileData = File::get($filePath);
-        Storage::cloud()->put($filename, $fileData);
-        return 'Video Uploaded';
-    }
-
     public function download_document($path, $name)
     {
+        $path = $this->guardManagedDocumentPath($path);
+        $disk = $this->documentDisk();
 
-
-        $contents = collect(Storage::cloud()->listContents('/', false))
-            ->where('type', '=', 'file')
-            ->where('path', '=', $path)
-            ->first();
-
-        $filename_download = $name;
-
-
-        $rawData = Storage::cloud()->get($path);
-
-        return response($rawData, 200)
-            ->header('Content-Type', $contents['mimetype'])
-            ->header('Content-Disposition', " attachment; filename=$filename_download ");
-
-        return redirect()->back();
-    }
-
-
-
-
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-
-    public function create_folder()
-    {
-        Storage::cloud()->makeDirectory('Conan');
-        dd('created folder');
-    }
-    public function rename_folder()
-    {
-
-        $folderinfo = collect(Storage::cloud()->listContents('/', false))
-            ->where('type', 'dir')
-            ->where('name', 'document')
-            ->first();
-
-        Storage::cloud()->move($folderinfo['path'], 'Storage');
-        dd('renamed folder');
-    }
-    public function delete_folder()
-    {
-
-        $folderinfo = collect(Storage::cloud()->listContents('/', false))
-            ->where('type', 'dir')
-            ->where('name', 'Storage')
-            ->first();
-
-        Storage::cloud()->delete($folderinfo['path']);
-        dd('deleted folder');
-    }
-    public function create_sub_dir()
-    {
-        // Create parent dir
-        Storage::cloud()->makeDirectory('Test Dir');
-
-        // Find parent dir for reference
-        $dir = '/';
-        $recursive = false; // Get subdirectories also?
-        $contents = collect(Storage::cloud()->listContents($dir, $recursive));
-
-        $dir = $contents->where('type', '=', 'dir')
-            ->where('filename', '=', 'Test Dir')
-            ->first(); // There could be duplicate directory names!
-
-        if (! $dir) {
-            return 'Directory does not exist!';
+        if (! $disk->exists($path)) {
+            abort(404);
         }
 
-        // Create sub dir
-        Storage::cloud()->makeDirectory($dir['path'] . '/Sub Dir');
+        $mimeType = $this->safeMimeType($path);
+        $rawData = $disk->get($path);
+        $downloadName = basename((string) $name) ?: basename($path);
 
-        return 'Sub Directory was created in Google Drive';
-    }
-    public function list_document()
-    {
-
-        $dir = '/';
-        $recursive = true; // Có lấy file trong các thư mục con không?
-        $contents = collect(Storage::cloud()->listContents($dir, $recursive))
-            ->where('type', '!=', 'dir');
-
-        return $contents;
+        return response($rawData, 200)
+            ->header('Content-Type', $mimeType)
+            ->header('Content-Disposition', "attachment; filename=\"{$downloadName}\"");
     }
 
     public function delete_document($path)
     {
+        $path = $this->normalizeManagedDocumentPath($path);
+        $disk = $this->documentDisk();
 
-        $fileinfo = collect(Storage::cloud()->listContents('/', false))
-            ->where('type', 'file')
-            ->where('path', $path)
-            ->first();
+        if (! $this->managedDocumentExists($path)) {
+            return redirect()->back()->with('error', 'Không tìm thấy tài liệu cần xóa.');
+        }
 
-        Storage::cloud()->delete($fileinfo['path']);
+        $disk->delete($path);
 
-        return redirect()->back();
+        return redirect()->back()->with('message', 'Xóa tài liệu thành công');
     }
 
     public function read_data()
     {
-        $this->AuthLogin();
+        $contents = $this->collectDocuments();
 
-        $dir = '/';
-        $recursive = false; // Có lấy file trong các thư mục con không?
+        return view('admin.document.read')->with([
+            'contents' => $contents,
+            'documentDiskLabel' => strtoupper($this->documentDiskName()),
+            'documentDiskType' => $this->documentDiskType(),
+        ]);
+    }
 
-        $contents = collect(Storage::cloud()->listContents($dir, $recursive))
-            ->where('type', '!=', 'dir');
-        // dd($contents);
-        return view('admin.document.read')->with(compact('contents'));
+    protected function documentDisk()
+    {
+        return Storage::disk($this->documentDiskName());
+    }
+
+    protected function documentDiskName(): string
+    {
+        $cloudDisk = config('filesystems.cloud');
+
+        if (is_string($cloudDisk) && config("filesystems.disks.{$cloudDisk}")) {
+            return $cloudDisk;
+        }
+
+        if (config('filesystems.disks.public')) {
+            return 'public';
+        }
+
+        return config('filesystems.default', 'local');
+    }
+
+    protected function documentDiskType(): string
+    {
+        return config('filesystems.disks.' . $this->documentDiskName() . '.driver', 'unknown');
+    }
+
+    protected function collectDocuments(): Collection
+    {
+        try {
+            $disk = $this->documentDisk();
+
+            return collect($disk->allFiles())
+                ->map(function (string $path) use ($disk) {
+                    $mimeType = $this->safeMimeType($path);
+                    $size = $this->safeSize($path);
+                    $lastModified = $this->safeLastModified($path);
+
+                    return [
+                        'name' => basename($path),
+                        'path' => $path,
+                        'basename' => pathinfo($path, PATHINFO_FILENAME),
+                        'extension' => strtolower(pathinfo($path, PATHINFO_EXTENSION)),
+                        'type' => str_starts_with($mimeType, 'image/') ? 'image' : 'file',
+                        'mimetype' => $mimeType,
+                        'size' => $size,
+                        'size_label' => $this->formatBytes($size),
+                        'last_modified' => $lastModified,
+                        'last_modified_label' => $lastModified ? date('d/m/Y H:i', $lastModified) : 'Chưa xác định',
+                        'download_url' => url('download_document', ['path' => $path, 'name' => basename($path)]),
+                        'preview_url' => $this->safeUrl($path),
+                    ];
+                })
+                ->sortBy('name')
+                ->values();
+        } catch (Throwable) {
+            return collect();
+        }
+    }
+
+    protected function safeMimeType(string $path): string
+    {
+        try {
+            return $this->documentDisk()->mimeType($path) ?: 'application/octet-stream';
+        } catch (Throwable) {
+            return 'application/octet-stream';
+        }
+    }
+
+    protected function safeSize(string $path): int
+    {
+        try {
+            return (int) ($this->documentDisk()->size($path) ?? 0);
+        } catch (Throwable) {
+            return 0;
+        }
+    }
+
+    protected function safeLastModified(string $path): ?int
+    {
+        try {
+            return $this->documentDisk()->lastModified($path);
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    protected function safeUrl(string $path): ?string
+    {
+        try {
+            return $this->documentDisk()->url($path);
+        } catch (Throwable) {
+            return null;
+        }
+    }
+
+    protected function formatBytes(int $bytes): string
+    {
+        if ($bytes <= 0) {
+            return '0 B';
+        }
+
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $power = (int) floor(log($bytes, 1024));
+        $power = min($power, count($units) - 1);
+        $value = $bytes / (1024 ** $power);
+
+        return number_format($value, $power === 0 ? 0 : 1, '.', ',') . ' ' . $units[$power];
+    }
+
+    protected function guardManagedDocumentPath(string $path): string
+    {
+        $normalizedPath = $this->normalizeManagedDocumentPath($path);
+
+        if (! $this->managedDocumentExists($normalizedPath)) {
+            abort(404);
+        }
+
+        return $normalizedPath;
+    }
+
+    protected function normalizeManagedDocumentPath(string $path): string
+    {
+        $normalizedPath = str_replace('\\', '/', rawurldecode($path));
+        $normalizedPath = ltrim(trim($normalizedPath), '/');
+
+        if ($normalizedPath === '' || str_contains($normalizedPath, "\0")) {
+            abort(404);
+        }
+
+        foreach (explode('/', $normalizedPath) as $segment) {
+            if ($segment === '..') {
+                abort(404);
+            }
+        }
+
+        return $normalizedPath;
+    }
+
+    protected function managedDocumentExists(string $path): bool
+    {
+        return $this->collectDocuments()
+            ->contains(fn (array $document) => ($document['path'] ?? null) === $path);
     }
 }

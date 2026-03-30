@@ -2,148 +2,82 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use DB;
-use Auth;
-use Session;
+use App\Application\Shared\Services\PublicUploadService;
+use App\Http\Requests\Admin\Legacy\Products\DeleteGalleryRequest;
+use App\Http\Requests\Admin\Legacy\Products\SelectGalleryRequest;
+use App\Http\Requests\Admin\Legacy\Products\StoreGalleryRequest;
+use App\Http\Requests\Admin\Legacy\Products\UpdateGalleryImageRequest;
+use App\Http\Requests\Admin\Legacy\Products\UpdateGalleryNameRequest;
 use App\Models\Gallery;
-use App\Http\Requests;
-use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Session;
 
 class GalleryController extends Controller
 {
-	public function AuthLogin()
-	{
-
-		// if (Session::get('login_normal')) {
-
-		// 	$admin_id = Session::get('admin_id');
-		// } else {
-		// 	$admin_id = Auth::id();
-		// }
-		// if ($admin_id) {
-		// 	return Redirect::to('dashboard');
-		// } else {
-		// 	return Redirect::to('admin')->send();
-		// }
+	public function __construct(
+		private readonly PublicUploadService $publicUploadService,
+	) {
 	}
 	public function add_gallery($product_id)
 	{
 		$pro_id = $product_id;
 		return view('admin.gallery.add_gallery')->with(compact('pro_id'));
 	}
-	public function update_gallery_name(Request $request)
+	public function update_gallery_name(UpdateGalleryNameRequest $request)
 	{
-		$gal_id = $request->gal_id;
-		$gal_text = $request->gal_text;
-		$gallery = Gallery::find($gal_id);
-		$gallery->gallery_name = $gal_text;
-		$gallery->save();
+		$data = $request->validated();
+		$gallery = Gallery::find($data['gal_id']);
+		if ($gallery) {
+			$gallery->gallery_name = $data['gal_text'];
+			$gallery->save();
+		}
+
+		return response()->noContent();
 	}
-	public function insert_gallery(Request $request, $pro_id)
+	public function insert_gallery(StoreGalleryRequest $request, $pro_id)
 	{
-		$get_image = $request->file('file');
-		if ($get_image) {
-			foreach ($get_image as $image) {
-				$get_name_image = $image->getClientOriginalName();
-				$name_image = current(explode('.', $get_name_image));
-				$new_image =  $name_image . rand(0, 99) . '.' . $image->getClientOriginalExtension();
-				$image->move('uploads/gallery', $new_image);
+		$data = $request->validated();
+		$images = (array) $request->file('file', []);
+
+		foreach ($images as $image) {
+				$new_image = $this->publicUploadService->storeLegacyImage($image, 'uploads/gallery');
 				$gallery = new Gallery();
 				$gallery->gallery_name = $new_image;
 				$gallery->gallery_image = $new_image;
-				$gallery->product_id = $pro_id;
+				$gallery->product_id = $data['pro_id'];
 				$gallery->save();
-			}
 		}
 		Session::put('message', 'Thêm thư viện ảnh thành công');
 		return redirect()->back();
 	}
-	public function delete_gallery(Request $request)
+	public function delete_gallery(DeleteGalleryRequest $request)
 	{
-		$gal_id = $request->gal_id;
-		$gallery = Gallery::find($gal_id);
-		unlink('uploads/gallery/' . $gallery->gallery_image);
-		$gallery->delete();
-	}
-	public function update_gallery(Request $request)
-	{
-		$get_image = $request->file('file');
-		$gal_id = $request->gal_id;
-		if ($get_image) {
-			$gallery = Gallery::find($gal_id);
-			unlink('uploads/gallery/' . $gallery->gallery_image);
-			$get_name_image = $get_image->getClientOriginalName();
-			$name_image = current(explode('.', $get_name_image));
-			$new_image =  $name_image . rand(0, 99) . '.' . $get_image->getClientOriginalExtension();
-			$get_image->move('uploads/gallery', $new_image);
-			$gallery->gallery_image = $new_image;
-			$gallery->save();
+		$data = $request->validated();
+		$gallery = Gallery::find($data['gal_id']);
+		if ($gallery) {
+			$this->publicUploadService->deletePublicFile('uploads/gallery/' . $gallery->gallery_image);
+			$gallery->delete();
 		}
+
+		return response()->noContent();
 	}
-	public function select_gallery(Request $request)
+	public function update_gallery(UpdateGalleryImageRequest $request)
 	{
-		$product_id = $request->pro_id;
-		$gallery = Gallery::where('product_id', $product_id)->get();
-		$gallery_count = $gallery->count();
-		$output = ' <form>
-    					' . csrf_field() . '
-
-    					<table class="table table-hover">
-                                    <thead>
-                                      <tr>
-                                      	<th>Thứ tự</th>
-                                        <th>Tên hình ảnh</th>
-                                        <th>Hình ảnh</th>
-                                        <th>Quản lý</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-
-    	';
-		if ($gallery_count > 0) {
-			$i = 0;
-			foreach ($gallery as $key => $gal) {
-				$i++;
-				$output .= '
-
-    				 <tr>
-    				 					<td>' . $i . '</td>
-                                        <td contenteditable class="edit_gal_name" data-gal_id="' . $gal->gallery_id . '">' . $gal->gallery_name . '</td>
-                                        <td>
-
-                                        <img src="' . url('uploads/gallery/' . $gal->gallery_image) . '" class="img-thumbnail" width="120" height="120">
-
-                                        <input type="file" class="file_image" style="width:40%" data-gal_id="' . $gal->gallery_id . '" id="file-' . $gal->gallery_id . '" name="file" accept="image/*" />
-
-                                        </td>
-                                        <td>
-                                        	<button type="button" data-gal_id="' . $gal->gallery_id . '" class="btn btn-xs btn-danger delete-gallery">Xóa</button>
-                                        </td>
-                                      </tr>
-                                    
-
-
-
-    			';
-			}
-		} else {
-			$output .= '
-    				 <tr>
-                                        <td colspan="4">Sản phẩm chưa thư viện ảnh</td>
-                                       
-                                      </tr>
-
-
-    			';
+		$data = $request->validated();
+		$gallery = Gallery::find($data['gal_id']);
+		if (! $gallery) {
+			return response()->noContent();
 		}
-		$output .= '
-    				 </tbody>
-    				 </table>
-    				 </form>
 
+		$this->publicUploadService->deletePublicFile('uploads/gallery/' . $gallery->gallery_image);
+		$gallery->gallery_image = $this->publicUploadService->storeLegacyImage($request->file('file'), 'uploads/gallery');
+		$gallery->save();
 
-    			';
-		echo $output;
+		return response()->noContent();
+	}
+	public function select_gallery(SelectGalleryRequest $request)
+	{
+		$gallery = Gallery::where('product_id', $request->validated('pro_id'))->get();
+
+		return response()->view('admin.gallery.partials.select_gallery_table', compact('gallery'));
 	}
 }

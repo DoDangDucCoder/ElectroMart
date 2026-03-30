@@ -1,0 +1,13 @@
+/vendor/
+/node_modules/
+/.phpunit.result.cache
+/.env
+/.env.*
+!/.env.example
+/public/build/
+/public/hot
+/bootstrap/cache/*.php
+/database/*.sqlite
+/database/*.sqlite-journal
+/storage/*.key
+/storage/logs/*.log

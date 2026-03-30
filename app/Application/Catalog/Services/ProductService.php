@@ -3,6 +3,7 @@
 namespace App\Application\Catalog\Services;
 
 use App\Domain\Catalog\Repositories\ProductRepositoryInterface;
+use App\Application\Shared\Services\ProductSearchService;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
@@ -14,7 +15,12 @@ use Illuminate\Support\Str;
 class ProductService
 {
     public function __construct(
-        private readonly ProductRepositoryInterface $products
+        private readonly ProductRepositoryInterface $products,
+        private readonly ProductPricingService $pricing,
+        private readonly ProductSearchService $search,
+        private readonly ProductRecommendationService $recommendations,
+        private readonly ProductViewTrackingService $productViews,
+        private readonly ProductDiscoveryTrackingService $discoveryTracking
     ) {
     }
 
@@ -53,6 +59,15 @@ class ProductService
         $this->products->incrementViews($product);
     }
 
+    public function recordProductView(
+        Product $product,
+        ?int $customerId = null,
+        ?string $ipAddress = null,
+        ?string $userAgent = null
+    ): void {
+        $this->productViews->track($product, $customerId, $ipAddress, $userAgent);
+    }
+
     public function getRelatedProducts(Product $product, int $limit = 6): Collection
     {
         return $this->products->relatedProducts($product, $limit);
@@ -85,7 +100,40 @@ class ProductService
 
     public function searchProducts(string $keyword, ?int $limit = null): Collection
     {
-        return $this->products->searchActive($keyword, $limit);
+        return $this->search->searchLimited([
+            'keyword' => $keyword,
+            'sort' => 'popular',
+        ], $limit ?? 12);
+    }
+
+    public function searchCatalog(array $filters = [], int $perPage = 12): LengthAwarePaginator
+    {
+        return $this->search->searchCatalog($filters, $perPage);
+    }
+
+    public function searchSuggestions(string $keyword, int $limit = 8): Collection
+    {
+        return $this->search->getSuggestions($keyword)->take($limit)->values();
+    }
+
+    public function getRecommendedProducts(
+        ?int $customerId = null,
+        ?string $ipAddress = null,
+        ?int $excludeProductId = null,
+        int $limit = 6,
+        string $context = 'storefront'
+    ): array {
+        $recommendationData = $this->recommendations->recommendForStorefront($customerId, $ipAddress, $excludeProductId, $limit);
+
+        $this->discoveryTracking->trackRecommendationImpressions(
+            $recommendationData['products'],
+            $customerId,
+            $ipAddress,
+            $context,
+            $recommendationData['sources']
+        );
+
+        return $recommendationData;
     }
 
     public function paginateForAdmin(array $filters = [], int $perPage = 15): LengthAwarePaginator
@@ -98,6 +146,13 @@ class ProductService
     public function createProduct(array $data, ?UploadedFile $image = null, ?UploadedFile $document = null): Product
     {
         return DB::transaction(function () use ($data, $image, $document) {
+            $pricingPayload = $this->pricing->derivePricingPayload(
+                (float) ($data['price'] ?? 0),
+                $data['sale_type'] ?? null,
+                $data['sale_value'] ?? null,
+                $data['sale_price'] ?? null
+            );
+
             $meta = $this->prepareMeta($data, []);
 
             if ($document) {
@@ -111,16 +166,22 @@ class ProductService
             $payload = [
                 'name' => $data['name'],
                 'slug' => $data['slug'],
+                'sku' => $data['sku'] ?? null,
+                'barcode' => $data['barcode'] ?? null,
+                'unit' => $data['unit'] ?? null,
                 'description' => $data['description'] ?? null,
                 'content' => $data['content'] ?? null,
                 'brand_id' => $data['brand_id'] ?? null,
                 'primary_category_id' => $data['primary_category_id'] ?? null,
                 'price' => $data['price'],
-                'sale_price' => $data['sale_price'] ?? null,
+                'sale_type' => $pricingPayload['sale_type'],
+                'sale_value' => $pricingPayload['sale_value'],
+                'sale_price' => $pricingPayload['sale_price'],
                 'cost_price' => $data['cost_price'] ?? null,
                 'stock_quantity' => $data['stock_quantity'] ?? 0,
                 'stock_alert_threshold' => $data['stock_alert_threshold'] ?? 0,
                 'is_active' => $data['is_active'] ?? true,
+                'is_featured' => $data['is_featured'] ?? false,
                 'display_order' => $data['display_order'] ?? 0,
                 'thumbnail_path' => $imagePath,
                 'meta' => $this->cleanMeta($meta),
@@ -152,6 +213,14 @@ class ProductService
     public function updateProduct(Product $product, array $data, ?UploadedFile $image = null, ?UploadedFile $document = null): Product
     {
         return DB::transaction(function () use ($product, $data, $image, $document) {
+            $resolvedPrice = (float) ($data['price'] ?? $product->price);
+            $pricingPayload = $this->pricing->derivePricingPayload(
+                $resolvedPrice,
+                $data['sale_type'] ?? $product->sale_type,
+                array_key_exists('sale_value', $data) ? $data['sale_value'] : $product->sale_value,
+                array_key_exists('sale_price', $data) ? $data['sale_price'] : null
+            );
+
             $meta = $this->prepareMeta($data, $product->meta ?? []);
 
             if ($document) {
@@ -173,16 +242,22 @@ class ProductService
             $payload = [
                 'name' => $data['name'] ?? $product->name,
                 'slug' => $data['slug'] ?? $product->slug,
+                'sku' => $data['sku'] ?? $product->sku,
+                'barcode' => $data['barcode'] ?? $product->barcode,
+                'unit' => $data['unit'] ?? $product->unit,
                 'description' => $data['description'] ?? $product->description,
                 'content' => $data['content'] ?? $product->content,
                 'brand_id' => $data['brand_id'] ?? $product->brand_id,
                 'primary_category_id' => $data['primary_category_id'] ?? $product->primary_category_id,
-                'price' => $data['price'] ?? $product->price,
-                'sale_price' => $data['sale_price'] ?? $product->sale_price,
+                'price' => $resolvedPrice,
+                'sale_type' => $pricingPayload['sale_type'],
+                'sale_value' => $pricingPayload['sale_value'],
+                'sale_price' => $pricingPayload['sale_price'],
                 'cost_price' => $data['cost_price'] ?? $product->cost_price,
                 'stock_quantity' => $data['stock_quantity'] ?? $product->stock_quantity,
                 'stock_alert_threshold' => $data['stock_alert_threshold'] ?? $product->stock_alert_threshold,
                 'is_active' => $data['is_active'] ?? $product->is_active,
+                'is_featured' => $data['is_featured'] ?? $product->is_featured,
                 'display_order' => $data['display_order'] ?? $product->display_order,
                 'meta' => $this->cleanMeta($meta),
                 'meta_title' => $data['meta_title'] ?? $product->meta_title,

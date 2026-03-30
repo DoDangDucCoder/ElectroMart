@@ -8,12 +8,20 @@ use App\Application\Checkout\Services\CartService;
 use App\Application\Checkout\Services\CheckoutService;
 use App\Application\Checkout\Services\CouponService;
 use App\Application\Checkout\Services\ShippingService;
+use App\Http\Requests\Storefront\Checkout\CalculateFeeRequest;
+use App\Http\Requests\Storefront\Checkout\ConfirmOrderRequest;
+use App\Http\Requests\Storefront\Checkout\LoginCustomerRequest;
+use App\Http\Requests\Storefront\Checkout\RegisterCustomerRequest;
+use App\Http\Requests\Storefront\Checkout\SelectDeliveryHomeRequest;
+use App\Models\CatePost;
+use App\Models\Slider;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use App\Infrastructure\Persistence\Eloquent\Geo\Location;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 
 class CheckoutController extends Controller
@@ -30,21 +38,21 @@ class CheckoutController extends Controller
 
     public function login_checkout(Request $request)
     {
-        return view('pages.checkout.login_checkout', $this->seoContext($request) + $this->catalogContext());
+        $currentCustomer = $this->sessionCustomer();
+
+        return view('pages.checkout.login_checkout', array_merge(
+            $this->seoContext($request),
+            $this->catalogContext(),
+            $this->cartContext(),
+            [
+                'currentCustomer' => $currentCustomer,
+            ]
+        ));
     }
 
-    public function add_customer(Request $request): RedirectResponse
+    public function add_customer(RegisterCustomerRequest $request): RedirectResponse
     {
-        $data = $request->validate([
-            'customer_name' => ['required', 'string', 'max:255'],
-            'customer_email' => ['required', 'email', 'max:255'],
-            'customer_password' => ['required', 'string', 'min:6'],
-            'customer_phone' => ['nullable', 'string', 'max:30'],
-        ]);
-
-        if (Customer::where('email', $data['customer_email'])->exists()) {
-            return Redirect::back()->with('error', 'Email already exists.');
-        }
+        $data = $request->validated();
 
         /** @var Customer $customer */
         $customer = Customer::create([
@@ -63,17 +71,16 @@ class CheckoutController extends Controller
         return Redirect::to('/checkout')->with('message', 'Registration successful.');
     }
 
-    public function login_customer(Request $request): RedirectResponse
+    public function login_customer(LoginCustomerRequest $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email_account' => ['required', 'email'],
-            'password_account' => ['required', 'string'],
-        ]);
+        $credentials = $request->validated();
 
         $customer = Customer::where('email', $credentials['email_account'])->first();
 
         if (! $customer || ! password_verify($credentials['password_account'], $customer->password)) {
-            return Redirect::back()->with('error', 'Invalid login credentials.');
+            return Redirect::back()
+                ->withInput($request->safe()->only('email_account'))
+                ->with('error', 'Invalid login credentials.');
         }
 
         Session::put('customer_id', $customer->id);
@@ -94,12 +101,15 @@ class CheckoutController extends Controller
             return Redirect::to('/gio-hang')->with('error', 'Your cart is empty.');
         }
 
+        $currentCustomer = $this->sessionCustomer();
+
         return view('pages.checkout.show_checkout', array_merge(
             $this->seoContext($request, 'Checkout', 'checkout'),
             $this->catalogContext(),
             $this->cartContext(),
             [
                 'cities' => Location::where('type', 'city')->orderBy('name')->get(),
+                'currentCustomer' => $currentCustomer,
             ]
         ));
     }
@@ -113,20 +123,13 @@ class CheckoutController extends Controller
         ));
     }
 
-    public function calculate_fee(Request $request): JsonResponse
+    public function calculate_fee(CalculateFeeRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'city_id' => ['nullable', 'integer'],
-            'province_id' => ['nullable', 'integer'],
-            'ward_id' => ['nullable', 'integer'],
-            'matp' => ['nullable'],
-            'maqh' => ['nullable'],
-            'xaid' => ['nullable'],
-        ]);
+        $validated = $request->validated();
 
-        $cityId = $validated['city_id'] ?? ($validated['matp'] ?? null);
-        $provinceId = $validated['province_id'] ?? ($validated['maqh'] ?? null);
-        $wardId = $validated['ward_id'] ?? ($validated['xaid'] ?? null);
+        $cityId = $validated['city_id'] ?? null;
+        $provinceId = $validated['province_id'] ?? null;
+        $wardId = $validated['ward_id'] ?? null;
 
         $fee = $this->shippingService->calculateFee(
             $cityId ? (int) $cityId : null,
@@ -139,10 +142,11 @@ class CheckoutController extends Controller
         return response()->json(['fee' => $fee]);
     }
 
-    public function select_delivery_home(Request $request)
+    public function select_delivery_home(SelectDeliveryHomeRequest $request)
     {
-        $action = $request->input('action');
-        $parentId = (int) $request->input('ma_id');
+        $validated = $request->validated();
+        $action = $validated['action'];
+        $parentId = (int) $validated['ma_id'];
 
         $options = '<option value="">---Select---</option>';
         $locations = collect();
@@ -175,28 +179,19 @@ class CheckoutController extends Controller
         return Redirect::back()->with('message', 'Shipping fee cleared.');
     }
 
-    public function confirm_order(Request $request): JsonResponse
+    public function confirm_order(ConfirmOrderRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'shipping_email' => ['required', 'email'],
-            'shipping_name' => ['required', 'string', 'max:255'],
-            'shipping_address' => ['required', 'string', 'max:500'],
-            'shipping_phone' => ['required', 'string', 'max:30'],
-            'shipping_notes' => ['nullable', 'string', 'max:500'],
-            'shipping_method' => ['nullable', 'string', 'max:50'],
-            'city_id' => ['nullable', 'integer'],
-            'province_id' => ['nullable', 'integer'],
-            'ward_id' => ['nullable', 'integer'],
-        ]);
+        $validated = $request->validated();
 
-        if (! Session::get('customer_id')) {
+        $customer = $this->sessionCustomer();
+        if (! $customer) {
             return response()->json(['message' => 'Please sign in before placing an order.'], 401);
         }
 
         try {
             $order = $this->checkoutService->confirmOrder(array_merge($validated, [
-                'order_note' => $request->input('order_note'),
-            ]), Session::get('customer_id'));
+                'payment_method' => $validated['shipping_method'] ?? null,
+            ]), $customer->id);
         } catch (\Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
@@ -235,8 +230,8 @@ class CheckoutController extends Controller
     protected function catalogContext(): array
     {
         return [
-            'category_post' => \App\Models\CatePost::orderBy('cate_post_id', 'DESC')->get(),
-            'slider' => \App\Models\Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get(),
+            'category_post' => $this->legacyCategoryPosts(),
+            'slider' => $this->legacyActiveSliders(),
             'category' => $this->categoryService->listAll(['is_active' => true]),
             'brand' => $this->brandService->listAll(['is_active' => true]),
         ];
@@ -253,5 +248,37 @@ class CheckoutController extends Controller
             'coupon' => $coupon,
             'shipping_fee' => $shippingFee,
         ];
+    }
+
+    protected function sessionCustomer(): ?Customer
+    {
+        $customerId = (int) Session::get('customer_id');
+
+        if ($customerId <= 0) {
+            return null;
+        }
+
+        return Customer::query()
+            ->whereKey($customerId)
+            ->where('is_active', true)
+            ->first();
+    }
+
+    protected function legacyCategoryPosts()
+    {
+        if (! Schema::hasTable('tbl_category_post')) {
+            return collect();
+        }
+
+        return CatePost::orderBy('cate_post_id', 'DESC')->get();
+    }
+
+    protected function legacyActiveSliders()
+    {
+        if (! Schema::hasTable('tbl_slider')) {
+            return collect();
+        }
+
+        return Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
     }
 }

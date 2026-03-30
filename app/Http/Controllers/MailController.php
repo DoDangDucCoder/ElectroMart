@@ -2,204 +2,304 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Str;
-
+use App\Application\Shared\MailData\CouponCampaignMailData;
+use App\Application\Shared\MailData\OrderConfirmationMailData;
+use App\Application\Shared\MailData\PasswordRecoveryMailData;
+use App\Application\Shared\Services\LegacyMailWorkflowService;
+use App\Http\Requests\Admin\Legacy\Mail\SendCouponCampaignRequest;
+use App\Http\Requests\Storefront\Checkout\RecoverPasswordRequest;
+use App\Http\Requests\Storefront\Checkout\ResetPasswordRequest;
+use App\Mail\LegacyCouponCampaignMail;
+use App\Mail\LegacyPasswordRecoveryMail;
 use Illuminate\Http\Request;
-use Mail;
-use Session;
 use DB;
-use Carbon\Carbon;
-use App\Models\Coupon;
-use App\Models\Customer;
 use App\Models\CatePost;
 use App\Models\CategoryProductModel;
 use App\Models\Slider;
-use App\Models\Product;
+use Illuminate\Mail\Markdown;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Schema;
+use Symfony\Component\HttpFoundation\Response;
 
 class MailController extends Controller
 {
-
-    public function send_coupon($coupon_time, $coupon_condition, $coupon_number, $coupon_code)
+    public function preview(Request $request)
     {
-        //get customer
-        $customer = Customer::where('customer_vip', '=', NULL)->get();
+        $previews = $this->mailPreviewDefinitions();
+        $selectedKey = (string) $request->query('preview', 'coupon-standard');
+        $selectedKey = array_key_exists($selectedKey, $previews) ? $selectedKey : 'coupon-standard';
 
-        $coupon = Coupon::where('coupon_code', $coupon_code)->first();
-        $start_coupon = $coupon->coupon_date_start;
-        $end_coupon = $coupon->coupon_date_end;
-
-        $now = Carbon::now('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
-
-        $title_mail = "Mã khuyến mãi ngày" . ' ' . $now;
-
-        $data = [];
-        foreach ($customer as $normal) {
-            $data['email'][] = $normal->customer_email;
-        }
-        $coupon = array(
-
-            'start_coupon' => $start_coupon,
-            'end_coupon' => $end_coupon,
-            'coupon_time' => $coupon_time,
-            'coupon_condition' => $coupon_condition,
-            'coupon_number' => $coupon_number,
-            'coupon_code' => $coupon_code
-        );
-        Mail::send('pages.send_coupon',  ['coupon' => $coupon], function ($message) use ($title_mail, $data) {
-            $message->to($data['email'])->subject($title_mail); //send this mail with subject
-            $message->from($data['email'], $title_mail); //send from this mail
-        });
-
-        return redirect()->back()->with('message', 'Gửi mã khuyến mãi khách thường thành công');
+        return view('admin.mail.preview', [
+            'previews' => $previews,
+            'selectedPreviewKey' => $selectedKey,
+            'selectedPreview' => $previews[$selectedKey],
+            'selectedRenderUrl' => route('admin.mail.preview.render', ['preview' => $selectedKey]),
+        ]);
     }
 
-    public function send_coupon_vip($coupon_time, $coupon_condition, $coupon_number, $coupon_code)
+    public function preview_render(Request $request): Response
     {
-        //get customer
-        $customer_vip = Customer::where('customer_vip', 1)->get();
+        $previewKey = (string) $request->query('preview', 'coupon-standard');
+        $previews = $this->mailPreviewDefinitions();
 
-        $coupon = Coupon::where('coupon_code', $coupon_code)->first();
-        $start_coupon = $coupon->coupon_date_start;
-        $end_coupon = $coupon->coupon_date_end;
+        abort_unless(array_key_exists($previewKey, $previews), 404);
 
-        $now = Carbon::now('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
+        return response($this->renderPreviewHtml($previewKey), 200, [
+            'Content-Type' => 'text/html; charset=UTF-8',
+        ]);
+    }
 
-        $title_mail = "Mã khuyến mãi ngày" . ' ' . $now;
-
-        $data = [];
-        foreach ($customer_vip as $vip) {
-            $data['email'][] = $vip->customer_email;
-        }
-        $coupon = array(
-            'start_coupon' => $start_coupon,
-            'end_coupon' => $end_coupon,
-            'coupon_time' => $coupon_time,
-            'coupon_condition' => $coupon_condition,
-            'coupon_number' => $coupon_number,
-            'coupon_code' => $coupon_code
+    public function send_coupon(SendCouponCampaignRequest $request, $coupon_time, $coupon_condition, $coupon_number, $coupon_code)
+    {
+        $result = app(LegacyMailWorkflowService::class)->sendCouponCampaign(
+            (string) $request->validated('coupon_code'),
+            false
         );
 
-        Mail::send('pages.send_coupon_vip', ['coupon' => $coupon], function ($message) use ($title_mail, $data) {
-            $message->to($data['email'])->subject($title_mail); //send this mail with subject
-            $message->from($data['email'], $title_mail); //send from this mail
-        });
-
-
-        return redirect()->back()->with('message', 'Gửi mã khuyến mãi khách vip thành công');
+        return $this->mailRedirectResponse($result);
     }
-    public function recover_pass(Request $request)
+
+    public function send_coupon_vip(SendCouponCampaignRequest $request, $coupon_time, $coupon_condition, $coupon_number, $coupon_code)
     {
-        $data = $request->all();
-        $now = Carbon::now('Asia/Ho_Chi_Minh')->format('d-m-Y');
-        $title_mail = "Lấy lại mật khẩu hieutantutorial.com" . ' ' . $now;
-        $customer = Customer::where('customer_email', '=', $data['email_account'])->get();
-        foreach ($customer as $key => $value) {
-            $customer_id = $value->customer_id;
-        }
+        $result = app(LegacyMailWorkflowService::class)->sendCouponCampaign(
+            (string) $request->validated('coupon_code'),
+            true
+        );
 
-        if ($customer) {
-            $count_customer = $customer->count();
-            if ($count_customer == 0) {
-                return redirect()->back()->with('error', 'Email chưa được đăng ký để khôi phục mật khẩu');
-            } else {
-                $token_random = Str::random();
-                $customer = Customer::find($customer_id);
-                $customer->customer_token = $token_random;
-                $customer->save();
-                //send mail
-
-                $to_email = $data['email_account']; //send to this email
-                $link_reset_pass = url('/update-new-pass?email=' . $to_email . '&token=' . $token_random);
-
-                $data = array("name" => $title_mail, "body" => $link_reset_pass, 'email' => $data['email_account']); //body of mail.blade.php
-
-                Mail::send('pages.checkout.forget_pass_notify', ['data' => $data], function ($message) use ($title_mail, $data) {
-                    $message->to($data['email'])->subject($title_mail); //send this mail with subject
-                    $message->from($data['email'], $title_mail); //send from this mail
-                });
-                //--send mail
-                return redirect()->back()->with('message', 'Gửi mail thành công,vui lòng vào email để reset password');
-            }
-        }
+        return $this->mailRedirectResponse($result);
     }
-    public function reset_new_pass(Request $request)
+    public function recover_pass(RecoverPasswordRequest $request)
     {
-        $data = $request->all();
-        $token_random = Str::random();
-        $customer = Customer::where('customer_email', '=', $data['email'])->where('customer_token', '=', $data['token'])->get();
-        $count = $customer->count();
-        if ($count > 0) {
-            foreach ($customer as $key => $cus) {
-                $customer_id = $cus->customer_id;
-            }
-            $reset = Customer::find($customer_id);
-            $reset->customer_password = md5($data['password_account']);
-            $reset->customer_token = $token_random;
-            $reset->save();
-            return redirect('dang-nhap')->with('message', 'Mật khẩu đã cập nhật mới,vui lòng đăng nhập');
-        } else {
+        $result = app(LegacyMailWorkflowService::class)->sendPasswordRecovery(
+            (string) $request->validated('email_account')
+        );
+
+        return $this->mailRedirectResponse($result);
+    }
+    public function reset_new_pass(ResetPasswordRequest $request)
+    {
+        $result = app(LegacyMailWorkflowService::class)->resetPassword(
+            (string) $request->validated('email'),
+            (string) $request->validated('token'),
+            (string) $request->validated('password_account')
+        );
+
+        if (! $result['ok']) {
             return redirect('quen-mat-khau')->with('error', 'Vui lòng nhập lại email vì link đã quá hạn');
         }
+
+        return redirect('dang-nhap')->with('message', $result['message']);
     }
     public function update_new_pass(Request $request)
     {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'max:255'],
+            'token' => ['required', 'string', 'min:10', 'max:255'],
+        ], [
+            'email.required' => 'Thiếu email khôi phục mật khẩu.',
+            'email.email' => 'Email khôi phục không hợp lệ.',
+            'token.required' => 'Thiếu mã xác thực đặt lại mật khẩu.',
+            'token.min' => 'Mã xác thực đặt lại mật khẩu không hợp lệ.',
+        ]);
 
-        //category post
-        $category_post = CatePost::orderBy('cate_post_id', 'DESC')->get();
-
-        //slide
-        $slider = Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
-        //seo 
-        $meta_desc = "Quên mật khẩu";
-        $meta_keywords = "Quên mật khẩu";
-        $meta_title = "Quên mật khẩu";
-        $url_canonical = $request->url();
-        //--seo
-
-        $cate_product = DB::table('tbl_category_product')->where('category_status', '0')->orderby('category_parent', 'desc')->orderby('category_order', 'ASC')->get();
-
-        $brand_product = DB::table('tbl_brand')->where('brand_status', '0')->orderby('brand_id', 'desc')->get();
-
-
-        $all_product = DB::table('tbl_product')->where('product_status', '0')->orderby(DB::raw('RAND()'))->paginate(6);
-
-        $cate_pro_tabs = CategoryProductModel::where('category_parent', '<>', 0)->orderBy('category_order', 'ASC')->get();
-
-        return view('pages.checkout.new_pass')->with('category', $cate_product)->with('brand', $brand_product)->with('all_product', $all_product)->with('meta_desc', $meta_desc)->with('meta_keywords', $meta_keywords)->with('meta_title', $meta_title)->with('url_canonical', $url_canonical)->with('slider', $slider)->with('category_post', $category_post)->with('cate_pro_tabs', $cate_pro_tabs); //1
-    }
-    public function mail_example()
-    {
-        return view('pages.send_coupon_vip');
-    }
-
-    public function mail_order()
-    {
-        return view('pages.mail.mail_order');
+        return view('pages.checkout.new_pass', array_merge(
+            $this->passwordPageContext($request, 'Quên mật khẩu'),
+            [
+                'resetPasswordEmail' => $validated['email'],
+                'resetPasswordToken' => $validated['token'],
+            ]
+        ));
     }
     public function quen_mat_khau(Request $request)
     {
-        //category post
-        $category_post = CatePost::orderBy('cate_post_id', 'DESC')->get();
+        return view('pages.checkout.forget_pass', $this->passwordPageContext($request, 'Quên mật khẩu'));
+    }
 
-        //slide
-        $slider = Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
-        //seo 
-        $meta_desc = "Quên mật khẩu";
-        $meta_keywords = "Quên mật khẩu";
-        $meta_title = "Quên mật khẩu";
-        $url_canonical = $request->url();
-        //--seo
+    protected function passwordPageContext(Request $request, string $title): array
+    {
+        $categoryPost = Schema::hasTable('tbl_category_post')
+            ? CatePost::orderBy('cate_post_id', 'DESC')->get()
+            : collect();
 
-        $cate_product = DB::table('tbl_category_product')->where('category_status', '0')->orderby('category_parent', 'desc')->orderby('category_order', 'ASC')->get();
+        $slider = Schema::hasTable('tbl_slider')
+            ? Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get()
+            : collect();
 
-        $brand_product = DB::table('tbl_brand')->where('brand_status', '0')->orderby('brand_id', 'desc')->get();
+        $categories = Schema::hasTable('tbl_category_product')
+            ? DB::table('tbl_category_product')->where('category_status', '0')->orderby('category_parent', 'desc')->orderby('category_order', 'ASC')->get()
+            : collect();
 
+        $brands = Schema::hasTable('tbl_brand')
+            ? DB::table('tbl_brand')->where('brand_status', '0')->orderby('brand_id', 'desc')->get()
+            : collect();
 
-        $all_product = DB::table('tbl_product')->where('product_status', '0')->orderby(DB::raw('RAND()'))->paginate(6);
+        $allProducts = Schema::hasTable('tbl_product')
+            ? DB::table('tbl_product')->where('product_status', '0')->orderby(DB::raw('RAND()'))->paginate(6)
+            : new LengthAwarePaginator([], 0, 6, 1, ['path' => $request->url()]);
 
-        $cate_pro_tabs = CategoryProductModel::where('category_parent', '<>', 0)->orderBy('category_order', 'ASC')->get();
+        $categoryTabs = Schema::hasTable('tbl_category_product')
+            ? CategoryProductModel::where('category_parent', '<>', 0)->orderBy('category_order', 'ASC')->get()
+            : collect();
 
-        return view('pages.checkout.forget_pass')->with('category', $cate_product)->with('brand', $brand_product)->with('all_product', $all_product)->with('meta_desc', $meta_desc)->with('meta_keywords', $meta_keywords)->with('meta_title', $meta_title)->with('url_canonical', $url_canonical)->with('slider', $slider)->with('category_post', $category_post)->with('cate_pro_tabs', $cate_pro_tabs); //1
+        return [
+            'category' => $categories,
+            'brand' => $brands,
+            'all_product' => $allProducts,
+            'meta_desc' => $title,
+            'meta_keywords' => $title,
+            'meta_title' => $title,
+            'url_canonical' => $request->url(),
+            'slider' => $slider,
+            'category_post' => $categoryPost,
+            'cate_pro_tabs' => $categoryTabs,
+        ];
+    }
 
+    protected function mailRedirectResponse(array $result)
+    {
+        if ($result['ok']) {
+            return redirect()->back()->with('message', $result['message']);
+        }
+
+        return redirect()->back()->with('error', $result['message']);
+    }
+
+    protected function mailPreviewDefinitions(): array
+    {
+        return [
+            'coupon-standard' => [
+                'label' => 'Coupon khách thường',
+                'category' => 'Khuyến mãi',
+                'description' => 'Mail giảm giá phần trăm cho nhóm khách hàng phổ thông.',
+                'snapshot' => 'coupon-campaign.standard',
+            ],
+            'coupon-vip' => [
+                'label' => 'Coupon khách thân thiết',
+                'category' => 'Khuyến mãi',
+                'description' => 'Mail giảm giá theo tiền cho nhóm khách hàng thân thiết.',
+                'snapshot' => 'coupon-campaign.vip',
+            ],
+            'password-recovery' => [
+                'label' => 'Khôi phục mật khẩu',
+                'category' => 'Tài khoản',
+                'description' => 'Mail đặt lại mật khẩu cho khách hàng storefront.',
+                'snapshot' => 'password-recovery',
+            ],
+            'order-cod' => [
+                'label' => 'Xác nhận đơn COD',
+                'category' => 'Đơn hàng',
+                'description' => 'Biến thể xác nhận đơn hàng mặc định với thanh toán tiền mặt.',
+                'snapshot' => 'order-confirmation',
+            ],
+            'order-atm' => [
+                'label' => 'Xác nhận đơn chuyển khoản',
+                'category' => 'Đơn hàng',
+                'description' => 'Biến thể xác nhận đơn hàng với chuyển khoản ATM và không áp mã.',
+                'snapshot' => 'order-confirmation.atm',
+            ],
+        ];
+    }
+
+    protected function renderPreviewHtml(string $previewKey): string
+    {
+        return match ($previewKey) {
+            'coupon-standard' => (new LegacyCouponCampaignMail(
+                mailData: new CouponCampaignMailData(
+                    couponCode: 'SPRING15',
+                    couponTime: 25,
+                    couponCondition: 1,
+                    couponNumber: 15,
+                    startCoupon: '01-03-2026',
+                    endCoupon: '31-03-2026',
+                    audienceLabel: 'khách hàng thường',
+                    shopName: 'Laravel Shop',
+                    shopUrl: url('/'),
+                    loginUrl: url('/dang-nhap')
+                ),
+                subjectLine: 'Mã khuyến mãi ngày 23-03-2026 10:00:00'
+            ))->render(),
+            'coupon-vip' => (new LegacyCouponCampaignMail(
+                mailData: new CouponCampaignMailData(
+                    couponCode: 'VIP25',
+                    couponTime: 10,
+                    couponCondition: 2,
+                    couponNumber: 250000,
+                    startCoupon: '01-03-2026',
+                    endCoupon: '30-04-2026',
+                    audienceLabel: 'khách hàng thân thiết',
+                    shopName: 'Laravel Shop',
+                    shopUrl: url('/'),
+                    loginUrl: url('/dang-nhap')
+                ),
+                subjectLine: 'Mã khuyến mãi VIP ngày 23-03-2026 10:00:00'
+            ))->render(),
+            'password-recovery' => (new LegacyPasswordRecoveryMail(
+                mailData: new PasswordRecoveryMailData(
+                    title: 'Lấy lại mật khẩu Laravel Shop',
+                    email: 'recover@example.com',
+                    resetUrl: url('/update-new-pass?email=recover%40example.com&token=secure-token-123'),
+                    shopName: 'Laravel Shop'
+                ),
+                subjectLine: 'Lấy lại mật khẩu Laravel Shop'
+            ))->render(),
+            'order-cod' => $this->renderOrderPreview($this->makeOrderPreviewData()),
+            'order-atm' => $this->renderOrderPreview($this->makeOrderPreviewData([
+                'shipping_method' => 0,
+                'shipping_notes' => '',
+            ], [
+                'coupon_code' => null,
+            ])),
+            default => abort(404),
+        };
+    }
+
+    protected function renderOrderPreview(OrderConfirmationMailData $mailData): string
+    {
+        return app(Markdown::class)
+            ->render('mail.legacy.order-confirmation', [
+                'mailData' => $mailData,
+            ])
+            ->toHtml();
+    }
+
+    protected function makeOrderPreviewData(array $shippingOverrides = [], array $codeOverrides = []): OrderConfirmationMailData
+    {
+        $shipping = array_merge([
+            'customer_name' => 'Nguyễn Văn A',
+            'shipping_name' => 'Nguyễn Văn A',
+            'shipping_email' => 'customer@example.com',
+            'shipping_address' => '123 Lê Lợi, Quận 1',
+            'shipping_phone' => '0909000001',
+            'shipping_notes' => 'Giao giờ hành chính',
+            'shipping_method' => 1,
+            'fee_ship' => 30000,
+        ], $shippingOverrides);
+
+        $code = array_merge([
+            'order_code' => 'ORD-TEST-001',
+            'coupon_code' => 'SALE30',
+        ], $codeOverrides);
+
+        if (blank(Arr::get($code, 'coupon_code'))) {
+            $code['coupon_code'] = 'Không áp dụng';
+        }
+
+        return OrderConfirmationMailData::fromLegacyPayload(
+            shipping: $shipping,
+            cartItems: [
+                [
+                    'product_name' => 'Laptop Gaming',
+                    'product_price' => 15000000,
+                    'product_qty' => 1,
+                ],
+                [
+                    'product_name' => 'Chuột không dây',
+                    'product_price' => 450000,
+                    'product_qty' => 2,
+                ],
+            ],
+            code: $code
+        );
     }
 }

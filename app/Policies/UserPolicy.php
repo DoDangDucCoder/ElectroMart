@@ -11,31 +11,26 @@ class UserPolicy
 
     public function viewAny(User $user): bool
     {
-        // TODO: Implement view any policy
-        return true;
+        return false;
     }
 
     public function view(User $user, $model): bool
     {
-        // TODO: Implement view policy
-        return true;
+        return false;
     }
 
     public function create(User $user): bool
     {
-        // TODO: Implement create policy
-        return true;
+        return false;
     }
 
     public function update(User $user, $model): bool
     {
-        // TODO: Implement update policy
-        return true;
+        return false;
     }
 
     public function delete(User $user, $model): bool
     {
-        // TODO: Implement delete policy
-        return true;
+        return false;
     }
 }

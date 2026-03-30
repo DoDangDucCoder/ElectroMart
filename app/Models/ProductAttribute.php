@@ -14,7 +14,8 @@ class ProductAttribute extends Model
         'price',
         'quantity',
         'image',
-        'name'
+        'name',
+        'description',
     ];
     protected $table = 'tbl_product_attribute';
 

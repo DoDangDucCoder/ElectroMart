@@ -2,6 +2,7 @@
 
 namespace App\Infrastructure\Persistence\Eloquent\Catalog;
 
+use App\Application\Catalog\Services\ProductPricingService;
 use App\Infrastructure\Persistence\Eloquent\BaseModel;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -19,6 +20,7 @@ class Product extends BaseModel
         'price' => 'float',
         'sale_price' => 'float',
         'cost_price' => 'float',
+        'sale_value' => 'float',
     ];
 
     protected $appends = [
@@ -37,6 +39,10 @@ class Product extends BaseModel
         'product_file',
         'category_name',
         'brand_name',
+        'sale_amount',
+        'final_price',
+        'profit_per_unit',
+        'sale_explanation',
     ];
 
     public function getProductIdAttribute(): int
@@ -66,7 +72,7 @@ class Product extends BaseModel
 
     public function getProductPriceAttribute(): float
     {
-        return $this->price ?? 0.0;
+        return $this->final_price;
     }
 
     public function getProductQuantityAttribute(): int
@@ -103,6 +109,32 @@ class Product extends BaseModel
     public function getPriceCostAttribute(): ?float
     {
         return $this->cost_price;
+    }
+
+    public function getSaleAmountAttribute(): float
+    {
+        return (float) $this->pricingPayload()['sale_amount'];
+    }
+
+    public function getFinalPriceAttribute(): float
+    {
+        return (float) $this->pricingPayload()['final_price'];
+    }
+
+    public function getProfitPerUnitAttribute(): float
+    {
+        return $this->pricing()->calculateProfit($this->final_price, $this->cost_price);
+    }
+
+    public function getSaleExplanationAttribute(): ?string
+    {
+        $pricingPayload = $this->pricingPayload();
+
+        return $this->pricing()->buildSaleExplanation(
+            (float) ($this->price ?? 0),
+            $pricingPayload['sale_type'],
+            $pricingPayload['sale_value']
+        );
     }
 
     public function getProductFileAttribute(): ?string
@@ -145,8 +177,28 @@ class Product extends BaseModel
         return $this->hasMany(ProductMedia::class);
     }
 
+    public function views(): HasMany
+    {
+        return $this->hasMany(ProductView::class);
+    }
+
     public function primaryImage(): HasOne
     {
         return $this->hasOne(ProductMedia::class)->where('collection', 'thumbnail');
+    }
+
+    protected function pricing(): ProductPricingService
+    {
+        return app(ProductPricingService::class);
+    }
+
+    protected function pricingPayload(): array
+    {
+        return $this->pricing()->derivePricingPayload(
+            (float) ($this->price ?? 0),
+            $this->sale_type,
+            $this->sale_value,
+            $this->sale_price
+        );
     }
 }

@@ -24,14 +24,14 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (!Auth::attempt($request->only('email', 'password'))) {
+        if (!Auth::guard('customer')->attempt($request->only('email', 'password'))) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid credentials',
             ], 401);
         }
 
-        $user = Auth::user();
+        $user = Auth::guard('customer')->user();
         $token = $user->createToken('API Token')->plainTextToken;
 
         return response()->json([
@@ -84,9 +84,9 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function user(): JsonResponse
+    public function user(Request $request): JsonResponse
     {
-        $user = Auth::user();
+        $user = $request->user();
 
         return response()->json([
             'success' => true,
@@ -105,7 +105,7 @@ class AuthController extends Controller
 
     public function updateProfile(Request $request): JsonResponse
     {
-        $user = Auth::user();
+        $user = $request->user();
 
         $request->validate([
             'name' => 'sometimes|required|string|max:255',
@@ -144,7 +144,8 @@ class AuthController extends Controller
 
     public function logout(): JsonResponse
     {
-        Auth::user()->currentAccessToken()->delete();
+        $user = request()->user();
+        $user?->currentAccessToken()?->delete();
 
         return response()->json([
             'success' => true,
@@ -154,14 +155,14 @@ class AuthController extends Controller
 
     public function refresh(): JsonResponse
     {
-        $user = Auth::user();
-        $user->currentAccessToken()->delete();
-        $token = $user->createToken('API Token')->plainTextToken;
+        $user = request()->user();
+        $user?->currentAccessToken()?->delete();
+        $token = $user?->createToken('API Token')->plainTextToken;
 
         return response()->json([
             'success' => true,
             'data' => [
-                'token' => $token,
+                'token' => $token ?? '',
                 'token_type' => 'Bearer',
             ],
         ]);

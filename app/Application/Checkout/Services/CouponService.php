@@ -4,6 +4,7 @@ namespace App\Application\Checkout\Services;
 
 use App\Domain\Checkout\Repositories\CouponRepositoryInterface;
 use App\Infrastructure\Persistence\Eloquent\Marketing\Coupon;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Session;
 use RuntimeException;
 
@@ -19,6 +20,55 @@ class CouponService
     public function current(): ?array
     {
         return Session::get(self::SESSION_KEY);
+    }
+
+    public function paginateCoupons(array $filters = [], int $perPage = 15): LengthAwarePaginator
+    {
+        return $this->coupons->paginate($filters, $perPage);
+    }
+
+    public function findByCode(string $code): ?Coupon
+    {
+        return $this->coupons->findByCode($code);
+    }
+
+    public function validateCoupon(string $code, float $totalAmount, ?int $customerId = null): array
+    {
+        $coupon = $this->coupons->findActiveByCode($code);
+
+        if (! $coupon) {
+            return [
+                'valid' => false,
+                'message' => 'Coupon not found or inactive',
+            ];
+        }
+
+        if ($coupon->min_order_total !== null && $totalAmount < (float) $coupon->min_order_total) {
+            return [
+                'valid' => false,
+                'message' => 'Order total does not meet minimum requirement',
+            ];
+        }
+
+        try {
+            $this->assertUsageAvailable($coupon, $customerId);
+        } catch (RuntimeException $exception) {
+            return [
+                'valid' => false,
+                'message' => $exception->getMessage(),
+            ];
+        }
+
+        $discount = $this->calculateDiscount($coupon, $totalAmount);
+        $finalAmount = max(0, $totalAmount - $discount);
+
+        return [
+            'valid' => true,
+            'message' => 'Coupon is valid',
+            'coupon' => $coupon,
+            'discount_amount' => $discount,
+            'final_amount' => $finalAmount,
+        ];
     }
 
     public function clear(): void

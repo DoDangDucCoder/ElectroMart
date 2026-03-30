@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Storefront\Product\InsertRatingRequest;
+use App\Http\Requests\Storefront\Product\LoadCommentRequest;
+use App\Http\Requests\Storefront\Product\QuickviewRequest;
+use App\Http\Requests\Storefront\Product\SendCommentRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Validation\Rule;
@@ -13,52 +18,47 @@ use App\Models\Slider;
 use App\Models\CatePost;
 use App\Models\ProductAttribute;
 use App\Application\Catalog\Services\ProductService;
+use App\Application\Catalog\Services\ProductPricingService;
 use App\Application\Catalog\Services\ProductReviewService;
 use App\Domain\Catalog\Repositories\BrandRepositoryInterface;
 use App\Domain\Catalog\Repositories\CategoryRepositoryInterface;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
+use Illuminate\Support\Facades\Schema;
 
 class ProductController extends Controller
 {
     public function __construct(
         private readonly ProductService $productService,
+        private readonly ProductPricingService $pricingService,
         private readonly ProductReviewService $productReviewService,
         private readonly CategoryRepositoryInterface $categoryRepository,
         private readonly BrandRepositoryInterface $brandRepository
     ) {
     }
 
-    public function AuthLogin()
-    {
-
-        // if (Session::get('login_normal')) {
-
-        //     $admin_id = Session::get('admin_id');
-        // } else {
-        //     $admin_id = Auth::id();
-        // }
-        // if ($admin_id) {
-        //     return Redirect::to('dashboard');
-        // } else {
-        //     return Redirect::to('admin')->send();
-        // }
-    }
     public function file_browser(Request $request)
     {
-        $paths = glob(public_path('uploads/ckeditor/*'));
+        $funcNum = max(0, (int) $request->query('CKEditorFuncNum', 0));
+        $paths = collect(glob(public_path('uploads/ckeditor/*')) ?: [])
+            ->filter(fn ($path) => is_file($path))
+            ->sortByDesc(fn ($path) => filemtime($path) ?: 0)
+            ->values();
 
-        $fileNames = array();
+        return view('admin.images.file_browser', [
+            'funcNum' => $funcNum,
+            'files' => $paths->map(function (string $path) {
+                $fileName = basename($path);
 
-        foreach ($paths as $path) {
-            array_push($fileNames, basename($path));
-        }
-        $data = array(
-            'fileNames' => $fileNames
-        );
-
-        return view('admin.images.file_browser')->with($data);
+                return [
+                    'name' => $fileName,
+                    'url' => asset('uploads/ckeditor/' . $fileName),
+                    'size_label' => number_format((int) ceil(filesize($path) / 1024)) . ' KB',
+                    'updated_label' => date('d/m/Y H:i', filemtime($path) ?: time()),
+                ];
+            }),
+        ]);
     }
     public function reply_comment(Request $request): JsonResponse
     {
@@ -105,123 +105,75 @@ class ProductController extends Controller
         ]);
     }
 
-    public function send_comment(Request $request): JsonResponse
+    public function send_comment(SendCommentRequest $request): JsonResponse
     {
-        $productId = (int) $request->input('product_id');
-        $author = trim((string) $request->input('comment_name'));
-        $content = trim((string) $request->input('comment_content'));
-
-        if (! $productId || $author === '' || $content === '') {
-            return response()->json(['message' => 'Invalid data'], 422);
-        }
+        $validated = $request->validated();
+        $productId = (int) $validated['product_id'];
+        $author = trim($validated['comment_name']);
+        $content = trim($validated['comment_content']);
 
         $this->productReviewService->createCustomerComment($productId, $author, $content);
 
         return response()->json(['message' => 'ok']);
     }
-    public function load_comment(Request $request): JsonResponse
+    public function load_comment(LoadCommentRequest $request)
     {
-        $productId = (int) $request->input('product_id');
-        $threads = $this->productReviewService->getApprovedThread($productId);
+        $productId = (int) $request->validated('product_id');
 
-        $output = '';
-
-        foreach ($threads as $review) {
-            $output .= '
-            <div class="row style_comment">
-
-                                        <div class="col-md-2">
-                                            <img width="100%" src="' . url('frontend/images/batman-icon.png') . '" class="img img-responsive img-thumbnail">
-                                        </div>
-                                        <div class="col-md-10">
-                                            <p style="color:green;">@' . e($review->comment_name) . '</p>
-                                            <p style="color:#000;">' . e($review->comment_date) . '</p>
-                                            <p>' . e($review->comment) . '</p>
-                                        </div>
-                                    </div><p></p>
-                                    ';
-
-            foreach ($review->children as $reply) {
-                $output .= ' <div class="row style_comment" style="margin:5px 40px;background: aquamarine;">
-
-                                        <div class="col-md-2">
-                                            <img width="80%" src="' . url('frontend/images/businessman.jpg') . '" class="img img-responsive img-thumbnail">
-                                        </div>
-                                        <div class="col-md-10">
-                                            <p style="color:blue;">@' . e($reply->comment_name) . '</p>
-                                            <p style="color:#000;">' . e($reply->comment) . '</p>
-                                            <p></p>
-                                        </div>
-                                    </div><p></p>';
-            }
+        try {
+            $threads = $this->productReviewService->getApprovedThread($productId);
+        } catch (\Throwable $e) {
+            return response('');
         }
 
-        return response($output);
-    }
-    public function local_storage()
-    {
-        return view('pages.local_storage.storage');
+        return response()->view('pages.sanpham.partials.review_thread', [
+            'threads' => $threads,
+        ]);
     }
 
-    public function quickview(Request $request): JsonResponse
+    public function quickview(QuickviewRequest $request): JsonResponse
     {
-        $productId = (int) $request->input('product_id');
+        $productId = (int) $request->validated('product_id');
         $product = $this->productService->findProductById($productId);
 
         if (! $product) {
             return response()->json(['message' => 'Product not found'], 404);
         }
 
-        $galleryHtml = '';
         $mediaItems = $product->media ?? collect();
-
-        foreach ($mediaItems as $media) {
-            $imagePath = $media->file_path ?? $product->product_image;
-
-            if (! $imagePath) {
-                continue;
-            }
-
-            $galleryHtml .= '<p><img width="100%" src="'.asset($imagePath).'"></p>';
-        }
-
-        if ($galleryHtml === '') {
-            $fallbackImage = $product->product_image ? asset($product->product_image) : asset('frontend/images/no-image.png');
-            $galleryHtml = '<p><img width="100%" src="'.$fallbackImage.'"></p>';
-        }
-
-        $displayPrice = number_format($product->product_price, 0, ',', '.').' VND';
-        $primaryImage = $product->product_image ? asset($product->product_image) : asset('frontend/images/no-image.png');
-
+        $fallbackPath = $product->product_image ?: 'uploads/product/no-image.svg';
+        $fallbackImage = asset($fallbackPath);
         $output = [
-            'product_gallery' => $galleryHtml,
+            'product_gallery' => view('pages.sanpham.partials.quickview_gallery', [
+                'mediaItems' => $mediaItems,
+                'fallbackPath' => $fallbackPath,
+                'fallbackImage' => $fallbackImage,
+            ])->render(),
             'product_name' => $product->product_name,
             'product_id' => $product->product_id,
             'product_desc' => $product->product_desc,
             'product_content' => $product->product_content,
-            'product_price' => $displayPrice,
-            'product_image' => '<p><img width="100%" src="'.$primaryImage.'"></p>',
-            'product_button' => '<input type="button" value="Mua ngay" class="btn btn-primary btn-sm add-to-cart-quickview" id="buy_quickview" data-id_product="'.$product->product_id.'"  name="add-to-cart">',
-            'product_quickview_value' => '
-
-        <input type="hidden" value="'.$product->product_id.'" class="cart_product_id_'.$product->product_id.'">
-                                            
-        <input type="hidden" value="'.$product->product_name.'" class="cart_product_name_'.$product->product_id.'">
-                                          
-        <input type="hidden" value="'.$product->product_quantity.'" class="cart_product_quantity_'.$product->product_id.'">
-                                            
-        <input type="hidden" value="'.$product->product_image.'" class="cart_product_image_'.$product->product_id.'">
-
-        <input type="hidden" value="'.$product->product_price.'" class="cart_product_price_'.$product->product_id.'">
-
-        <input type="hidden" value="1" class="cart_product_qty_'.$product->product_id.'">',
+            'product_price' => view('partials.storefront.product-price', [
+                'product' => $product,
+                'currency' => 'VND',
+                'showExplanation' => true,
+                'compact' => true,
+            ])->render(),
+            'product_image' => view('pages.sanpham.partials.quickview_image', [
+                'imageUrl' => $fallbackImage,
+            ])->render(),
+            'product_button' => view('pages.sanpham.partials.quickview_button', [
+                'product' => $product,
+            ])->render(),
+            'product_quickview_value' => view('pages.sanpham.partials.quickview_value_fields', [
+                'product' => $product,
+            ])->render(),
         ];
 
         return response()->json($output);
     }
     public function add_product()
     {
-        $this->AuthLogin();
         $cate_product = $this->categoryRepository->all();
         $brand_product = $this->brandRepository->all();
 
@@ -231,15 +183,12 @@ class ProductController extends Controller
     }
     public function all_product()
     {
-        $this->AuthLogin();
         $all_product = $this->productService->paginateForAdmin(['only_active' => false], 20);
         $manager_product  = view('admin.all_product')->with('all_product', $all_product);
         return view('admin_layout')->with('admin.all_product', $manager_product);
     }
     public function save_product(Request $request)
     {
-        $this->AuthLogin();
-
         $validated = $this->validateProductRequest($request);
 
         $payload = $this->mapProductData($validated);
@@ -256,8 +205,6 @@ class ProductController extends Controller
     }
     public function unactive_product(int $product_id)
     {
-        $this->AuthLogin();
-
         $product = $this->productService->findProductById($product_id);
 
         if (! $product) {
@@ -272,8 +219,6 @@ class ProductController extends Controller
     }
     public function active_product(int $product_id)
     {
-        $this->AuthLogin();
-
         $product = $this->productService->findProductById($product_id);
 
         if (! $product) {
@@ -288,8 +233,6 @@ class ProductController extends Controller
     }
     public function edit_product(int $product_id)
     {
-        $this->AuthLogin();
-
         $product = $this->productService->findProductById($product_id);
 
         if (! $product) {
@@ -308,8 +251,6 @@ class ProductController extends Controller
     }
     public function update_product(Request $request, int $product_id)
     {
-        $this->AuthLogin();
-
         $product = $this->productService->findProductById($product_id);
 
         if (! $product) {
@@ -347,8 +288,6 @@ class ProductController extends Controller
     }
     public function delete_product(int $product_id)
     {
-        $this->AuthLogin();
-
         $product = $this->productService->findProductById($product_id);
 
         if (! $product) {
@@ -363,11 +302,13 @@ class ProductController extends Controller
     }
     protected function validateProductRequest(Request $request, ?int $productId = null): array
     {
-        return $request->validate([
+        $validator = validator($request->all(), [
             'product_name' => ['required', 'string', 'max:255'],
             'product_slug' => ['nullable', 'string', 'max:255', Rule::unique('products', 'slug')->ignore($productId)],
             'product_price' => ['required'],
             'price_cost' => ['nullable'],
+            'sale_type' => ['nullable', Rule::in(['percent', 'fixed'])],
+            'sale_value' => ['nullable'],
             'product_quantity' => ['required', 'integer', 'min:0'],
             'product_desc' => ['nullable', 'string'],
             'product_content' => ['nullable', 'string'],
@@ -378,6 +319,34 @@ class ProductController extends Controller
             'product_image' => ['nullable', 'image', 'max:4096'],
             'document' => ['nullable', 'file', 'max:5120'],
         ]);
+
+        $validator->after(function ($validator) use ($request) {
+            $price = $this->normalizeCurrency($request->input('product_price')) ?? 0.0;
+            $saleType = $this->pricingService->normalizeSaleType($request->input('sale_type'));
+            $saleValue = $saleType === 'percent'
+                ? $this->normalizeDecimal($request->input('sale_value'))
+                : $this->normalizeCurrency($request->input('sale_value'));
+
+            if (! $saleType && $saleValue === null) {
+                return;
+            }
+
+            if (! $saleType || $saleValue === null || $saleValue <= 0) {
+                $validator->errors()->add('sale_value', 'Kiểu sale và giá trị sale phải được nhập đầy đủ.');
+
+                return;
+            }
+
+            if ($saleType === 'percent' && $saleValue > 100) {
+                $validator->errors()->add('sale_value', 'Sale phần trăm không được vượt quá 100.');
+            }
+
+            if ($saleType === 'fixed' && $saleValue >= $price) {
+                $validator->errors()->add('sale_value', 'Sale số tiền phải nhỏ hơn giá bán gốc.');
+            }
+        });
+
+        return $validator->validate();
     }
 
     protected function mapProductData(array $data, ?Product $existing = null): array
@@ -390,6 +359,11 @@ class ProductController extends Controller
         $cost = array_key_exists('price_cost', $data)
             ? $this->normalizeCurrency($data['price_cost'])
             : ($existing?->price_cost ?? null);
+        $saleType = $this->pricingService->normalizeSaleType($data['sale_type'] ?? $existing?->sale_type);
+        $saleValue = $saleType === 'percent'
+            ? $this->normalizeDecimal($data['sale_value'] ?? ($existing?->sale_value ?? null))
+            : $this->normalizeCurrency($data['sale_value'] ?? ($existing?->sale_value ?? null));
+        $pricingPayload = $this->pricingService->derivePricingPayload($price, $saleType, $saleValue);
 
         $categoryId = isset($data['product_cate'])
             ? (int) $data['product_cate']
@@ -416,7 +390,9 @@ class ProductController extends Controller
             'brand_id' => $brandId ?: null,
             'primary_category_id' => $categoryId ?: null,
             'price' => $price,
-            'sale_price' => null,
+            'sale_type' => $pricingPayload['sale_type'],
+            'sale_value' => $pricingPayload['sale_value'],
+            'sale_price' => $pricingPayload['sale_price'],
             'cost_price' => $cost,
             'stock_quantity' => $quantity,
             'stock_alert_threshold' => $existing?->stock_alert_threshold ?? 0,
@@ -461,6 +437,32 @@ class ProductController extends Controller
 
         return null;
     }
+
+    protected function normalizeDecimal($value): ?float
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_string($value)) {
+            $trimmed = trim($value);
+
+            if ($trimmed === '') {
+                return null;
+            }
+
+            $normalized = preg_replace('/[^0-9.,]/', '', $trimmed);
+            $normalized = str_replace(',', '.', $normalized);
+
+            return $normalized === '' ? null : (float) $normalized;
+        }
+
+        if (is_numeric($value)) {
+            return (float) $value;
+        }
+
+        return null;
+    }
     //End Admin Page
     public function details_product($product_slug, Request $request)
     {
@@ -470,8 +472,8 @@ class ProductController extends Controller
             abort(404);
         }
 
-        $slider = Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
-        $category_post = CatePost::orderBy('cate_post_id', 'DESC')->get();
+        $slider = $this->legacyActiveSliders();
+        $category_post = $this->legacyCategoryPosts();
 
         $cate_product = ProductCategory::where('is_active', true)
             ->orderBy('display_order')
@@ -483,7 +485,12 @@ class ProductController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        $this->productService->incrementProductViews($product);
+        $this->productService->recordProductView(
+            $product,
+            (int) Session::get('customer_id') ?: null,
+            $request->ip(),
+            $request->userAgent()
+        );
 
         $primaryCategory = $product->primaryCategory ?? $product->categories->first();
         $product_cate = $primaryCategory?->category_name;
@@ -493,11 +500,18 @@ class ProductController extends Controller
         $meta_keywords = $product->product_slug;
         $meta_title = $product->product_name;
         $url_canonical = $request->url();
-        $share_images = $product->product_image ? asset($product->product_image) : asset('frontend/images/no-image.png');
+        $share_image = $product->product_image ? asset($product->product_image) : asset('uploads/product/no-image.svg');
 
         $gallery = $product->media ?? collect();
-        $product_attribute = ProductAttribute::where('product_id', $product->product_id)->get();
+        $product_attribute = $this->legacyProductAttributes($product->product_id);
         $related_product = $this->productService->getRelatedProducts($product, 6);
+        $recommendedProducts = $this->productService->getRecommendedProducts(
+            (int) Session::get('customer_id') ?: null,
+            $request->ip(),
+            $product->id,
+            4,
+            'product_detail'
+        );
         $rating = $this->productReviewService->getAverageRating($product->id);
 
         return view('pages.sanpham.show_details')
@@ -515,13 +529,16 @@ class ProductController extends Controller
             ->with('gallery', $gallery)
             ->with('product_cate', $product_cate)
             ->with('cate_slug', $cate_slug)
+            ->with('recommended_products', $recommendedProducts['products'])
+            ->with('recommendation_description', $recommendedProducts['description'])
             ->with('rating', $rating)
-            ->with('share_images', $share_images);
+            ->with('share_image', $share_image)
+            ->with('share_images', $share_image);
     }
     public function tag(Request $request, $product_tag)
     {
-        $category_post = CatePost::orderBy('cate_post_id', 'DESC')->get();
-        $slider = Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
+        $category_post = $this->legacyCategoryPosts();
+        $slider = $this->legacyActiveSliders();
 
         $cate_product = ProductCategory::where('is_active', true)
             ->orderBy('display_order')
@@ -553,14 +570,11 @@ class ProductController extends Controller
             ->with('product_tag', $product_tag)
             ->with('pro_tag', $pro_tag);
     }
-    public function insert_rating(Request $request): JsonResponse
+    public function insert_rating(InsertRatingRequest $request): JsonResponse
     {
-        $productId = (int) $request->input('product_id');
-        $rating = (int) $request->input('index');
-
-        if (! $productId || ! $rating) {
-            return response()->json('error', 422);
-        }
+        $validated = $request->validated();
+        $productId = (int) $validated['product_id'];
+        $rating = (int) $validated['index'];
 
         $this->productReviewService->createRating($productId, $rating);
 
@@ -568,21 +582,78 @@ class ProductController extends Controller
     }
     public function ckeditor_image(Request $request)
     {
-        if ($request->hasFile('upload')) {
+        $funcNum = max(0, (int) $request->input('CKEditorFuncNum', 0));
 
-            $originName = $request->file('upload')->getClientOriginalName();
-            $fileName = pathinfo($originName, PATHINFO_FILENAME);
-            $extension = $request->file('upload')->getClientOriginalExtension();
-            $fileName = $fileName . '_' . time() . '.' . $extension;
-            $request->file('upload')->move('uploads/ckeditor', $fileName);
+        $validator = validator($request->all(), [
+            'upload' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
+        ], [
+            'upload.required' => 'Vui lòng chọn hình ảnh để tải lên.',
+            'upload.image' => 'Tệp tải lên phải là hình ảnh hợp lệ.',
+            'upload.mimes' => 'Chỉ hỗ trợ định dạng JPG, JPEG, PNG, GIF hoặc WEBP.',
+            'upload.max' => 'Kích thước ảnh không được vượt quá 5MB.',
+        ]);
 
-            $CKEditorFuncNum = $request->input('CKEditorFuncNum');
-            $url = asset('uploads/ckeditor/' . $fileName);
-            $msg = 'Tß║úi ß║únh th├ánh c├┤ng';
-            $response = "<script>window.parent.CKEDITOR.tools.callFunction($CKEditorFuncNum, '$url', '$msg')</script>";
-            @header('Content-type: text/html; charset=utf-8');
-            echo $response;
+        if ($validator->fails()) {
+            return $this->ckeditorCallbackResponse($funcNum, '', $validator->errors()->first('upload'));
         }
+
+        $file = $request->file('upload');
+        $directory = public_path('uploads/ckeditor');
+
+        if (! File::isDirectory($directory)) {
+            File::makeDirectory($directory, 0755, true);
+        }
+
+        $originName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        $safeBaseName = Str::slug($originName) ?: 'ckeditor-image';
+        $fileName = $safeBaseName . '_' . time() . '.' . strtolower($file->getClientOriginalExtension());
+
+        $file->move($directory, $fileName);
+
+        return $this->ckeditorCallbackResponse(
+            $funcNum,
+            asset('uploads/ckeditor/' . $fileName),
+            'Tải ảnh thành công.'
+        );
+    }
+
+    protected function ckeditorCallbackResponse(int $funcNum, string $url, string $message)
+    {
+        $script = sprintf(
+            "<script>window.parent.CKEDITOR.tools.callFunction(%d, %s, %s);</script>",
+            $funcNum,
+            json_encode($url, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            json_encode($message, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        );
+
+        return response($script, 200)->header('Content-Type', 'text/html; charset=utf-8');
+    }
+
+    protected function legacyActiveSliders()
+    {
+        if (! Schema::hasTable('tbl_slider')) {
+            return collect();
+        }
+
+        return Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
+    }
+
+    protected function legacyCategoryPosts()
+    {
+        if (! Schema::hasTable('tbl_category_post')) {
+            return collect();
+        }
+
+        return CatePost::orderBy('cate_post_id', 'DESC')->get();
+    }
+
+    protected function legacyProductAttributes(int $productId)
+    {
+        if (! Schema::hasTable('tbl_product_attribute')) {
+            return collect();
+        }
+
+        return ProductAttribute::where('product_id', $productId)->get();
     }
 }
 

@@ -4,19 +4,133 @@ namespace App\Application\Checkout\Services;
 
 use App\Infrastructure\Persistence\Eloquent\Customer\Address;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
+use App\Infrastructure\Persistence\Eloquent\Checkout\CartItem;
 use App\Infrastructure\Persistence\Eloquent\Order\Order;
 use App\Infrastructure\Persistence\Eloquent\Order\OrderItem;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
 use RuntimeException;
 
 class CheckoutService
 {
     public function __construct(
         private readonly CartService $cartService,
+        private readonly CustomerCartService $customerCartService,
         private readonly CouponService $couponService,
         private readonly ShippingService $shippingService,
     ) {
+    }
+
+    public function getCustomerOrders(int $customerId): Collection
+    {
+        return Order::with(['items', 'shipping', 'payments'])
+            ->where('customer_id', $customerId)
+            ->orderByDesc('id')
+            ->get();
+    }
+
+    public function createOrder(
+        int $customerId,
+        int $addressId,
+        string $paymentMethod,
+        ?string $notes = null,
+        ?string $couponCode = null
+    ): Order {
+        $cart = $this->customerCartService->getCart($customerId);
+        $items = $cart->items;
+
+        if ($items->isEmpty()) {
+            throw new RuntimeException('Cart is empty.');
+        }
+
+        return DB::transaction(function () use ($customerId, $addressId, $paymentMethod, $notes, $couponCode, $cart, $items) {
+            $address = Address::where('customer_id', $customerId)->find($addressId);
+
+            $shippingFee = $this->shippingService->calculateFee(
+                $address?->location_city_id,
+                $address?->location_province_id,
+                $address?->location_ward_id,
+                0
+            );
+
+            $couponData = null;
+            $couponModel = null;
+
+            if ($couponCode) {
+                $validation = $this->couponService->validateCoupon($couponCode, (float) $cart->subtotal, $customerId);
+                if (! $validation['valid']) {
+                    throw new RuntimeException($validation['message']);
+                }
+                $couponModel = $validation['coupon'];
+                $couponData = [
+                    'code' => $couponModel->code,
+                    'discount_amount' => $validation['discount_amount'],
+                ];
+            }
+
+            $totals = [
+                'subtotal' => (float) $cart->subtotal,
+                'discount' => (float) ($couponData['discount_amount'] ?? 0),
+                'shipping' => (float) $shippingFee,
+                'total' => max(0, (float) $cart->subtotal - (float) ($couponData['discount_amount'] ?? 0) + (float) $shippingFee),
+            ];
+
+            $payload = [
+                'shipping_name' => $address?->recipient_name,
+                'shipping_phone' => $address?->recipient_phone,
+                'shipping_email' => $address?->email,
+                'shipping_address' => $address?->address_line1 ?? '',
+                'shipping_notes' => $address?->address_line2,
+                'postal_code' => $address?->postal_code,
+                'city_id' => $address?->location_city_id,
+                'province_id' => $address?->location_province_id,
+                'ward_id' => $address?->location_ward_id,
+                'shipping_method' => null,
+                'source' => 'api',
+                'order_note' => $notes,
+                'payment_method' => $paymentMethod,
+            ];
+
+            $order = $this->createOrderRecord($payload, $customerId, $address?->id, $totals, $couponData);
+
+            $this->createOrderItemsFromCart($order, $items);
+            $this->createOrderShipping($order, $payload, $shippingFee);
+            $this->createOrderPayment($order, $payload, $totals['total']);
+
+            if ($couponModel) {
+                $this->couponService->redeem($couponModel, $customerId, $order->id, $totals['discount']);
+            }
+
+            $this->customerCartService->clearCart($customerId);
+
+            return $order->fresh(['items', 'shipping', 'payments']);
+        });
+    }
+
+    public function getOrderById(int $orderId, int $customerId): ?Order
+    {
+        return Order::with(['items', 'shipping', 'payments', 'address'])
+            ->where('customer_id', $customerId)
+            ->where('id', $orderId)
+            ->first();
+    }
+
+    public function cancelOrder(int $orderId, int $customerId): ?Order
+    {
+        $order = Order::where('customer_id', $customerId)
+            ->where('id', $orderId)
+            ->first();
+
+        if (! $order) {
+            return null;
+        }
+
+        $order->status = 'cancelled';
+        $order->cancelled_at = now();
+        $order->save();
+
+        return $order->fresh(['items', 'shipping', 'payments']);
     }
 
     public function confirmOrder(array $payload, ?int $customerId = null): Order
@@ -118,6 +232,10 @@ class CheckoutService
     {
         /** @var \Illuminate\Support\Collection $items */
         $items->each(function (array $item) use ($order) {
+            $unitPrice = (float) ($item['product_price'] ?? 0);
+            $quantity = (int) ($item['product_qty'] ?? 1);
+            $unitSaleAmount = (float) ($item['product_sale_amount'] ?? 0);
+
             $order->items()->create([
                 'product_id' => $item['product_id'] ?? null,
                 'product_variant_id' => $item['product_attribute_id'] ?? null,
@@ -126,15 +244,52 @@ class CheckoutService
                 'attributes' => $item['product_attribute']
                     ? ['attribute' => $item['product_attribute']]
                     : null,
-                'price' => (float) $item['product_price'],
-                'sale_price' => null,
-                'discount_amount' => 0,
-                'quantity' => (int) $item['product_qty'],
-                'subtotal' => (float) $item['product_price'] * (int) $item['product_qty'],
+                'original_price' => (float) ($item['product_original_price'] ?? $unitPrice),
+                'price' => $unitPrice,
+                'sale_price' => $item['product_sale_price'] ?? ($unitSaleAmount > 0 ? $unitPrice : null),
+                'cost_price' => (float) ($item['product_cost_price'] ?? 0),
+                'sale_type' => $item['product_sale_type'] ?? null,
+                'sale_value' => $item['product_sale_value'] ?? null,
+                'sale_amount' => $unitSaleAmount,
+                'discount_amount' => round($unitSaleAmount * $quantity, 2),
+                'quantity' => $quantity,
+                'subtotal' => (float) ($item['product_price'] ?? 0) * $quantity,
                 'tax_amount' => 0,
                 'meta' => [
                     'session_id' => $item['session_id'] ?? null,
                     'thumbnail' => $item['product_image'] ?? null,
+                ],
+            ]);
+        });
+    }
+
+    protected function createOrderItemsFromCart(Order $order, Collection $items): void
+    {
+        $items->each(function (CartItem $item) use ($order) {
+            $meta = (array) ($item->meta ?? []);
+            $unitPrice = (float) $item->price;
+            $quantity = (int) $item->quantity;
+            $unitSaleAmount = (float) ($meta['sale_amount'] ?? 0);
+
+            $order->items()->create([
+                'product_id' => $item->product_id,
+                'product_variant_id' => $item->product_variant_id,
+                'product_name' => $item->product?->name ?? 'Unknown',
+                'sku' => $item->variant?->sku,
+                'attributes' => $item->variant?->attributes,
+                'original_price' => (float) ($meta['original_price'] ?? $unitPrice),
+                'price' => $unitPrice,
+                'sale_price' => $meta['sale_price'] ?? ($unitSaleAmount > 0 ? $unitPrice : null),
+                'cost_price' => (float) ($meta['cost_price'] ?? 0),
+                'sale_type' => $meta['sale_type'] ?? null,
+                'sale_value' => $meta['sale_value'] ?? null,
+                'sale_amount' => $unitSaleAmount,
+                'discount_amount' => round($unitSaleAmount * $quantity, 2),
+                'quantity' => $quantity,
+                'subtotal' => (float) $item->subtotal,
+                'tax_amount' => 0,
+                'meta' => [
+                    'cart_item_id' => $item->id,
                 ],
             ]);
         });

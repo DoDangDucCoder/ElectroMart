@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Application\Catalog\Services\CategoryService;
 use App\Application\Catalog\Services\ProductService;
+use App\Http\Requests\Storefront\Home\ProductTabsRequest;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
 use App\Models\CatePost;
 use App\Models\Slider;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 
 class CategoryProduct extends Controller
 {
@@ -26,8 +28,8 @@ class CategoryProduct extends Controller
             abort(404);
         }
 
-        $categoryPost = CatePost::orderBy('cate_post_id', 'DESC')->get();
-        $slider = Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
+        $categoryPost = $this->legacyCategoryPosts();
+        $slider = $this->legacyActiveSliders();
 
         $allCategories = $this->categoryService->listAll(['is_active' => true]);
         $brands = Brand::where('is_active', true)
@@ -44,8 +46,10 @@ class CategoryProduct extends Controller
 
         $priceRange = $this->productService->getCategoryPriceRange($slug);
 
-        $minPrice = $priceRange['min'] ?? 0;
-        $maxPrice = $priceRange['max'] ?? 0;
+        $rangeMin = (float) ($priceRange['min'] ?? 0);
+        $rangeMax = (float) ($priceRange['max'] ?? 0);
+        $selectedMin = $request->filled('start_price') ? (float) $request->input('start_price') : $rangeMin;
+        $selectedMax = $request->filled('end_price') ? (float) $request->input('end_price') : $rangeMax;
 
         $metaDesc = $category->category_desc;
         $metaKeywords = $category->meta_keywords;
@@ -63,19 +67,21 @@ class CategoryProduct extends Controller
             'url_canonical' => $canonicalUrl,
             'slider' => $slider,
             'category_post' => $categoryPost,
-            'min_price' => $minPrice,
-            'max_price' => $maxPrice,
-            'max_price_range' => $maxPrice > 0 ? $maxPrice + 10000000 : 0,
-            'min_price_range' => $minPrice > 0 ? $minPrice + 500000 : 0,
+            'min_price' => $selectedMin,
+            'max_price' => $selectedMax,
+            'max_price_range' => $rangeMax > 0 ? $rangeMax + 10000000 : 0,
+            'min_price_range' => $rangeMin > 0 ? $rangeMin + 500000 : 0,
+            'range_min_price' => $rangeMin,
+            'range_max_price' => $rangeMax,
             'selected_sort' => $request->input('sort_by', 'none'),
             'filter_start_price' => $request->input('start_price'),
             'filter_end_price' => $request->input('end_price'),
         ]);
     }
 
-    public function product_tabs(Request $request)
+    public function product_tabs(ProductTabsRequest $request)
     {
-        $categoryId = (int) $request->input('cate_id');
+        $categoryId = (int) $request->validated('cate_id');
         $category = ProductCategory::where('is_active', true)->find($categoryId);
 
         if (! $category) {
@@ -88,11 +94,9 @@ class CategoryProduct extends Controller
 
         $products = $this->productService->getProductsByCategoryIds($categoryIds, 8);
 
-        $html = view('pages.category.partials.product_tab_content', [
+        return response()->view('pages.category.partials.product_tab_content', [
             'products' => $products,
-        ])->render();
-
-        return response($html);
+        ]);
     }
 
     protected function buildSortAndFilterOptions(Request $request): array
@@ -112,10 +116,35 @@ class CategoryProduct extends Controller
         }
 
         if ($request->filled('start_price') && $request->filled('end_price')) {
-            $filters['price_min'] = (float) $request->input('start_price');
-            $filters['price_max'] = (float) $request->input('end_price');
+            $min = (float) $request->input('start_price');
+            $max = (float) $request->input('end_price');
+
+            if ($min > $max) {
+                [$min, $max] = [$max, $min];
+            }
+
+            $filters['price_min'] = $min;
+            $filters['price_max'] = $max;
         }
 
         return $filters;
+    }
+
+    protected function legacyCategoryPosts()
+    {
+        if (! Schema::hasTable('tbl_category_post')) {
+            return collect();
+        }
+
+        return CatePost::orderBy('cate_post_id', 'DESC')->get();
+    }
+
+    protected function legacyActiveSliders()
+    {
+        if (! Schema::hasTable('tbl_slider')) {
+            return collect();
+        }
+
+        return Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
     }
 }

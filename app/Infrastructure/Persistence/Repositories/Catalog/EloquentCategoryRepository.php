@@ -25,6 +25,11 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
             ->get();
     }
 
+    public function findById(int $id): ?ProductCategory
+    {
+        return ProductCategory::find($id);
+    }
+
     public function create(array $data): ProductCategory
     {
         return ProductCategory::create($data);

@@ -8,11 +8,20 @@ use App\Application\Checkout\Services\CartService;
 use App\Application\Checkout\Services\CouponService;
 use App\Application\Checkout\Services\ShippingService;
 use App\Application\Cms\Services\BlogCategoryService;
+use App\Http\Requests\Storefront\Cart\AddCartAjaxRequest;
+use App\Http\Requests\Storefront\Cart\ApplyCouponRequest;
+use App\Http\Requests\Storefront\Cart\RemoveCartItemRequest;
+use App\Http\Requests\Storefront\Cart\SaveCartRequest;
+use App\Http\Requests\Storefront\Cart\UpdateCartQuantityRequest;
+use App\Http\Requests\Storefront\Cart\UpdateCartRequest;
+use App\Http\Requests\Storefront\Cart\UpdateQuickCartRequest;
 use App\Models\Slider;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Schema;
 use RuntimeException;
 
 class CartController extends Controller
@@ -27,51 +36,23 @@ class CartController extends Controller
     ) {
     }
 
-    public function show_cart_menu(): string
+    public function show_cart_menu(): Response
     {
         $count = $this->cartService->count();
 
-        return '<span class="badges">' . $count . '</span>';
+        return $this->renderCartPartial('pages.cart.partials.cart_badge', compact('count'));
     }
 
-    public function hover_cart(): string
+    public function hover_cart(): Response
     {
         $items = $this->cartService->items();
-        $output = '';
 
-        if ($items->isEmpty()) {
-            return $output;
-        }
-
-        $output .= '<ul class="hover-cart">';
-        foreach ($items as $item) {
-            $image = $item['product_image'] ? asset($item['product_image']) : asset('frontend/images/no-image.png');
-            $output .= '<li>
-                    <a href="#">
-                        <img src="' . $image . '">
-                        <p>' . e($item['product_name']) . '</p>
-                        <p>' . number_format($item['product_price'], 0, ',', '.') . ' VND</p>
-                        <p>Số lượng: ' . $item['product_qty'] . '</p>
-                    </a>
-                    <p>
-                        <a style="text-align:center;font-size:20px" class="delele-hover-cart" href="' . url('/del-product/' . $item['session_id']) . '">
-                            <i class="fa fa-times"></i>
-                        </a>
-                    </p>
-                </li>';
-        }
-        $output .= '</ul>';
-
-        return $output;
+        return $this->renderCartPartial('pages.cart.partials.hover_cart', compact('items'));
     }
 
-    public function check_coupon(Request $request)
+    public function check_coupon(ApplyCouponRequest $request)
     {
-        $request->validate([
-            'coupon' => ['required', 'string', 'max:50'],
-        ]);
-
-        $code = trim($request->input('coupon'));
+        $code = trim((string) $request->validated('coupon'));
 
         try {
             $this->couponService->apply(
@@ -100,13 +81,9 @@ class CartController extends Controller
         ));
     }
 
-    public function add_cart_ajax(Request $request): JsonResponse
+    public function add_cart_ajax(AddCartAjaxRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'id_product' => ['required', 'integer'],
-            'id_attribute' => ['nullable', 'integer'],
-            'cart_product_qty' => ['nullable', 'integer', 'min:1'],
-        ]);
+        $validated = $request->validated();
 
         $productId = (int) $validated['id_product'];
         $attributeId = (int) ($validated['id_attribute'] ?? 0) ?: null;
@@ -130,111 +107,53 @@ class CartController extends Controller
         ]);
     }
 
-    public function show_quick_cart(): string
+    public function show_quick_cart(): Response
     {
         $items = $this->cartService->items();
         $coupon = $this->couponService->current();
         $fee = $this->shippingService->getFee();
         $totals = $this->cartService->totals($coupon, $fee);
 
-        $html = '
-            <form>
-                ' . csrf_field() . '
-                <table class="table table-condensed">
-                    <thead>
-                        <tr class="cart_menu">
-                            <td class="image">Hình ảnh</td>
-                            <td class="description">Tên sản phẩm</td>
-                            <td class="description">Thuộc tính</td>
-                            <td class="price">Giá</td>
-                            <td class="quantity">Số lượng</td>
-                            <td class="total">Thành tiền</td>
-                            <td></td>
-                        </tr>
-                    </thead>
-                    <tbody>';
-
-        if ($items->isEmpty()) {
-            $html .= '<tr><td colspan="7" class="text-center">Giỏ hàng trống.</td></tr>';
-        } else {
-            foreach ($items as $item) {
-                $image = $item['product_image'] ? asset($item['product_image']) : asset('frontend/images/no-image.png');
-                $subtotal = (float) $item['product_price'] * (int) $item['product_qty'];
-
-                $html .= '<tr>
-                        <td><img src="' . $image . '" alt="' . e($item['product_name']) . '" width="80"></td>
-                        <td>' . e($item['product_name']) . '</td>
-                        <td>' . e($item['product_attribute'] ?? '-') . '</td>
-                        <td>' . number_format($item['product_price'], 0, ',', '.') . ' VND</td>
-                        <td><input type="number" class="cart_quantity_input" name="cart_qty[' . $item['session_id'] . ']" value="' . $item['product_qty'] . '" min="1"></td>
-                        <td>' . number_format($subtotal, 0, ',', '.') . ' VND</td>
-                        <td><a href="' . url('/del-product/' . $item['session_id']) . '" class="btn btn-danger btn-sm">Xóa</a></td>
-                    </tr>';
-            }
-
-            $html .= '<tr class="cart_timing">
-                    <td colspan="7">
-                        <strong>Tạm tính:</strong> ' . number_format($totals['subtotal'], 0, ',', '.') . ' VND<br>
-                        <strong>Giảm giá:</strong> -' . number_format($totals['discount'], 0, ',', '.') . ' VND<br>
-                        <strong>Phí vận chuyển:</strong> ' . number_format($totals['shipping'], 0, ',', '.') . ' VND<br>
-                        <strong>Tổng:</strong> ' . number_format($totals['total'], 0, ',', '.') . ' VND
-                    </td>
-                </tr>';
-        }
-
-        $html .= '
-                    </tbody>
-                </table>
-            </form>';
-
-        return $html;
+        return $this->renderCartPartial('pages.cart.partials.quick_cart', compact('items', 'totals'));
     }
 
-    public function delete_product(string $sessionId)
+    public function delete_product(Request $request, string $sessionId)
     {
         $this->cartService->removeBySessionId($sessionId);
+
+        if ($request->expectsJson() || $request->wantsJson() || $request->ajax()) {
+            return response()->json(['message' => 'Đã xóa sản phẩm khỏi giỏ hàng.']);
+        }
 
         return Redirect::back()->with('message', 'Đã xóa sản phẩm khỏi giỏ hàng.');
     }
 
-    public function cart_session(): string
+    public function cart_session(): Response
     {
         $items = $this->cartService->items();
-        $output = '';
 
-        foreach ($items as $item) {
-            $output .= '<input type="hidden" class="cart_id" value="' . $item['product_id'] . '">';
-        }
-
-        return $output;
+        return $this->renderCartPartial('pages.cart.partials.cart_session_inputs', compact('items'));
     }
 
-    public function remove_item(Request $request): JsonResponse
+    public function remove_item(RemoveCartItemRequest $request): JsonResponse
     {
-        $request->validate([
-            'id' => ['required', 'integer'],
-        ]);
-
-        $this->cartService->removeByProductId((int) $request->input('id'));
+        $this->cartService->removeByProductId((int) $request->validated('id'));
 
         return response()->json(['message' => 'Đã xóa sản phẩm khỏi giỏ hàng.']);
     }
 
-    public function update_cart(Request $request)
+    public function update_cart(UpdateCartRequest $request)
     {
-        $quantities = (array) $request->input('cart_qty', []);
+        $quantities = (array) $request->validated('cart_qty');
         $messages = $this->cartService->updateQuantities($quantities);
         $message = implode('<br>', $messages);
 
         return Redirect::back()->with('message', $message ?: 'Đã cập nhật giỏ hàng.');
     }
 
-    public function update_quick_cart(Request $request): JsonResponse
+    public function update_quick_cart(UpdateQuickCartRequest $request): JsonResponse
     {
-        $validated = $request->validate([
-            'session_id' => ['required', 'string'],
-            'quantity' => ['required', 'integer', 'min:1'],
-        ]);
+        $validated = $request->validated();
 
         $this->cartService->updateQuantity($validated['session_id'], (int) $validated['quantity']);
 
@@ -250,12 +169,9 @@ class CartController extends Controller
         return Redirect::back()->with('message', 'Đã xóa giỏ hàng.');
     }
 
-    public function save_cart(Request $request)
+    public function save_cart(SaveCartRequest $request)
     {
-        $validated = $request->validate([
-            'productid_hidden' => ['required', 'integer'],
-            'qty' => ['required', 'integer', 'min:1'],
-        ]);
+        $validated = $request->validated();
 
         try {
             $this->cartService->addItem((int) $validated['productid_hidden'], (int) $validated['qty']);
@@ -266,22 +182,21 @@ class CartController extends Controller
         return Redirect::to('/gio-hang')->with('message', 'Đã thêm sản phẩm vào giỏ hàng.');
     }
 
-    public function show_cart()
+    public function show_cart(): Response
     {
-        return Redirect::to('/gio-hang');
+        $count = $this->cartService->count();
+
+        return $this->renderCartPartial('pages.cart.partials.cart_badge', compact('count'));
     }
 
-    public function delete_to_cart(string $sessionId)
+    public function delete_to_cart(Request $request, string $sessionId)
     {
-        return $this->delete_product($sessionId);
+        return $this->delete_product($request, $sessionId);
     }
 
-    public function update_cart_quantity(Request $request)
+    public function update_cart_quantity(UpdateCartQuantityRequest $request)
     {
-        $validated = $request->validate([
-            'rowId_cart' => ['required', 'string'],
-            'cart_quantity' => ['required', 'integer', 'min:1'],
-        ]);
+        $validated = $request->validated();
 
         $this->cartService->updateQuantity($validated['rowId_cart'], (int) $validated['cart_quantity']);
 
@@ -305,9 +220,23 @@ class CartController extends Controller
     {
         return [
             'category_post' => $this->blogCategoryService->listAll(['is_active' => true]),
-            'slider' => Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get(),
+            'slider' => $this->legacyActiveSliders(),
             'category' => $this->categoryService->listAll(['is_active' => true]),
             'brand' => $this->brandService->listAll(['is_active' => true]),
         ];
+    }
+
+    protected function legacyActiveSliders()
+    {
+        if (! Schema::hasTable('tbl_slider')) {
+            return collect();
+        }
+
+        return Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
+    }
+
+    protected function renderCartPartial(string $view, array $data = []): Response
+    {
+        return response()->view($view, $data);
     }
 }

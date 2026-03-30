@@ -24,6 +24,30 @@ class BlogPostService
         return $this->posts->paginate($filters, $perPage);
     }
 
+    public function paginatePosts(array $filters = [], int $perPage = 12): LengthAwarePaginator
+    {
+        $queryFilters = [
+            'status' => 'published',
+        ];
+
+        if (! empty($filters['category'])) {
+            $category = $this->categories->findBySlug($filters['category'], true);
+            if ($category) {
+                $queryFilters['category_id'] = $category->id;
+            }
+        }
+
+        if (array_key_exists('featured', $filters)) {
+            $queryFilters['is_featured'] = (bool) $filters['featured'];
+        }
+
+        if (! empty($filters['search'])) {
+            $queryFilters['search'] = $filters['search'];
+        }
+
+        return $this->posts->paginate($queryFilters, $perPage);
+    }
+
     public function getPublishedByCategorySlug(string $slug, int $perPage = 10): LengthAwarePaginator
     {
         return $this->posts->paginatePublishedByCategorySlug($slug, $perPage);
@@ -32,6 +56,32 @@ class BlogPostService
     public function latestPublished(int $limit = 5): Collection
     {
         return $this->posts->latestPublished($limit);
+    }
+
+    public function getFeaturedPosts(int $limit = 6): Collection
+    {
+        $paginator = $this->posts->paginate([
+            'status' => 'published',
+            'is_featured' => true,
+        ], $limit);
+
+        return collect($paginator->items());
+    }
+
+    public function getLatestPosts(int $limit = 8): Collection
+    {
+        return $this->posts->latestPublished($limit);
+    }
+
+    public function searchPosts(string $keyword, ?int $limit = null): Collection
+    {
+        $perPage = $limit ?? 20;
+        $paginator = $this->posts->paginate([
+            'status' => 'published',
+            'search' => $keyword,
+        ], $perPage);
+
+        return collect($paginator->items());
     }
 
     public function getRelatedPosts(BlogPost $post, int $limit = 5): Collection

@@ -2,14 +2,20 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
+use App\Support\AdminAccess;
+use App\Support\AdminPermissions;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class AdminProductCrudTest extends TestCase
@@ -21,7 +27,8 @@ class AdminProductCrudTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
+        $this->withoutMiddleware(VerifyCsrfToken::class);
+        $this->authenticateAsAdmin();
     }
 
     protected function tearDown(): void
@@ -54,6 +61,11 @@ class AdminProductCrudTest extends TestCase
         $this->assertEquals($category->id, $product->primary_category_id);
         $this->assertEquals($brand->id, $product->brand_id);
         $this->assertTrue((bool) $product->is_active);
+        $this->assertSame('fixed', $product->sale_type);
+        $this->assertSame(150000.0, (float) $product->sale_value);
+        $this->assertSame(1350000.0, (float) $product->sale_price);
+        $this->assertSame(150000.0, (float) $product->sale_amount);
+        $this->assertSame(150000.0, (float) $product->profit_per_unit);
         $this->assertTrue(Str::startsWith($product->product_file, 'manual'));
         $this->assertTrue(Str::endsWith($product->product_file, '.pdf'));
 
@@ -77,6 +89,8 @@ class AdminProductCrudTest extends TestCase
             'product_slug' => 'updated-product',
             'product_price' => '2500000',
             'price_cost' => '2000000',
+            'sale_type' => 'percent',
+            'sale_value' => '10',
             'product_quantity' => 3,
             'product_desc' => 'Updated description',
             'product_content' => 'Updated content',
@@ -95,6 +109,11 @@ class AdminProductCrudTest extends TestCase
         $this->assertEquals('Updated Product', $product->product_name);
         $this->assertEquals($newCategory->id, $product->primary_category_id);
         $this->assertFalse((bool) $product->is_active);
+        $this->assertSame('percent', $product->sale_type);
+        $this->assertSame(10.0, (float) $product->sale_value);
+        $this->assertSame(2250000.0, (float) $product->sale_price);
+        $this->assertSame(250000.0, (float) $product->sale_amount);
+        $this->assertSame(250000.0, (float) $product->profit_per_unit);
         $this->assertTrue(Str::startsWith($product->product_file, 'specs'));
         $this->assertTrue(Str::endsWith($product->product_file, '.pdf'));
 
@@ -114,7 +133,7 @@ class AdminProductCrudTest extends TestCase
         $imagePath = $product->product_image;
         $documentPath = 'uploads/document/' . $product->product_file;
 
-        $response = $this->get("/delete-product/{$product->product_id}");
+        $response = $this->delete("/delete-product/{$product->product_id}");
         $response->assertRedirect('all-product');
 
         $this->assertDatabaseCount('products', 0);
@@ -136,6 +155,8 @@ class AdminProductCrudTest extends TestCase
             'product_slug' => 'test-product-' . uniqid(),
             'product_price' => '1500000',
             'price_cost' => '1200000',
+            'sale_type' => 'fixed',
+            'sale_value' => '150000',
             'product_quantity' => 5,
             'product_desc' => 'Sample description',
             'product_content' => 'Sample content',
@@ -191,5 +212,30 @@ class AdminProductCrudTest extends TestCase
         if ($path) {
             $this->filesToCleanup[] = $path;
         }
+    }
+
+    protected function authenticateAsAdmin(): User
+    {
+        foreach (AdminPermissions::all() as $permissionName) {
+            Permission::firstOrCreate([
+                'name' => $permissionName,
+                'guard_name' => AdminAccess::guardName(),
+            ]);
+        }
+
+        $adminRole = Role::firstOrCreate([
+            'name' => 'Admin',
+            'guard_name' => AdminAccess::guardName(),
+        ]);
+        $adminRole->syncPermissions(AdminPermissions::defaultsForRole('Admin'));
+
+        $user = User::factory()->create([
+            'password' => bcrypt('password'),
+        ]);
+        $user->assignRole($adminRole);
+
+        $this->actingAs($user, 'web');
+
+        return $user;
     }
 }

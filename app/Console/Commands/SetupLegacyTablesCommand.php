@@ -33,9 +33,11 @@ class SetupLegacyTablesCommand extends Command
                 CREATE TABLE IF NOT EXISTS `tbl_slider` (
                     `slider_id` int(11) NOT NULL,
                     `slider_name` varchar(100) NOT NULL,
+                    `slider_alt` varchar(255) DEFAULT NULL,
                     `slider_image` varchar(255) NOT NULL,
                     `slider_status` int(11) NOT NULL,
                     `slider_desc` varchar(255) NOT NULL,
+                    `slider_tone` varchar(30) DEFAULT NULL,
                     PRIMARY KEY (`slider_id`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
             ",
@@ -92,8 +94,8 @@ class SetupLegacyTablesCommand extends Command
         // Insert sample data for tbl_slider
         if (DB::table('tbl_slider')->count() == 0) {
             DB::table('tbl_slider')->insert([
-                ['slider_id' => 1, 'slider_name' => 'Slider 1', 'slider_image' => 'slider1.jpg', 'slider_status' => 1, 'slider_desc' => 'Main slider'],
-                ['slider_id' => 2, 'slider_name' => 'Slider 2', 'slider_image' => 'slider2.jpg', 'slider_status' => 1, 'slider_desc' => 'Secondary slider']
+                ['slider_id' => 1, 'slider_name' => 'Slider 1', 'slider_alt' => 'Điện thoại nổi bật trong tuần', 'slider_image' => 'slider1.jpg', 'slider_status' => 1, 'slider_desc' => 'Gợi ý smartphone đang được quan tâm nhiều trên storefront', 'slider_tone' => 'mobile'],
+                ['slider_id' => 2, 'slider_name' => 'Slider 2', 'slider_alt' => 'Hiệu năng tốt cho học tập và chơi game', 'slider_image' => 'slider2.jpg', 'slider_status' => 1, 'slider_desc' => 'Tập trung vào các deal laptop và cấu hình gaming dễ chọn', 'slider_tone' => 'gaming']
             ]);
             $this->info("Inserted sample data for tbl_slider");
         }

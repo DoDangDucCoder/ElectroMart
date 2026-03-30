@@ -2,100 +2,117 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-
+use App\Application\Shared\Services\NumericInputNormalizer;
+use App\Http\Requests\Admin\Legacy\Delivery\SelectDeliveryRequest;
+use App\Http\Requests\Admin\Legacy\Delivery\StoreDeliveryRequest;
+use App\Http\Requests\Admin\Legacy\Delivery\UpdateDeliveryRequest;
 use App\Models\City;
 use App\Models\Province;
 use App\Models\Wards;
 use App\Models\Feeship;
+use Illuminate\Support\Facades\Schema;
 
 class DeliveryController extends Controller
 {
+	public function __construct(
+		private readonly NumericInputNormalizer $numericInputNormalizer,
+	) {
+	}
+
 	// public function __construct()
 	// {
 	// 	$this->middleware('permission:add delivery', ['only' => ['delivery']]);
 	// }
-	public function update_delivery(Request $request)
+	public function update_delivery(UpdateDeliveryRequest $request)
 	{
-		$data = $request->all();
+		if (! Schema::hasTable((new Feeship())->getTable())) {
+			return response()->noContent();
+		}
+
+		$data = $request->validated();
+
 		$fee_ship = Feeship::find($data['feeship_id']);
-		$fee_value = rtrim($data['fee_value'], '.');
+		if (! $fee_ship) {
+			return response()->noContent();
+		}
+
+		$fee_value = $this->numericInputNormalizer->digitsOnly($data['fee_value']);
 		$fee_ship->fee_feeship = $fee_value;
 		$fee_ship->save();
+
+		return response()->noContent();
 	}
 	public function select_feeship()
 	{
-		$feeship = Feeship::orderby('fee_id', 'DESC')->get();
-		$output = '';
-		$output .= '<div class="table-responsive">  
-			<table class="table table-bordered">
-				<thread> 
-					<tr>
-						<th>Tên thành phố</th>
-						<th>Tên quận huyện</th> 
-						<th>Tên xã phường</th>
-						<th>Phí ship</th>
-					</tr>  
-				</thread>
-				<tbody>
-				';
-
-		foreach ($feeship as $key => $fee) {
-
-			$output .= '
-					<tr>
-						<td>' . $fee->city->name_city . '</td>
-						<td>' . $fee->province->name_quanhuyen . '</td>
-						<td>' . $fee->wards->name_xaphuong . '</td>
-						<td contenteditable data-feeship_id="' . $fee->fee_id . '" class="fee_feeship_edit">' . number_format($fee->fee_feeship, 0, ',', '.') . '</td>
-					</tr>
-					';
+		if (! Schema::hasTable((new Feeship())->getTable())) {
+			return response('<div class="g-admin-empty-state">Chưa có cấu hình phí vận chuyển nào trên môi trường này.</div>');
 		}
 
-		$output .= '		
-				</tbody>
-				</table></div>
-				';
+		$feeship = Feeship::orderby('fee_id', 'DESC')->get();
 
-		echo $output;
+		return response()->view('admin.delivery.partials.feeship_table', compact('feeship'));
 	}
-	public function insert_delivery(Request $request)
+	public function insert_delivery(StoreDeliveryRequest $request)
 	{
-		$data = $request->all();
+		if (! Schema::hasTable((new Feeship())->getTable())) {
+			return response()->noContent();
+		}
+
+		$data = $request->validated();
+
 		$fee_ship = new Feeship();
 		$fee_ship->fee_matp = $data['city'];
 		$fee_ship->fee_maqh = $data['province'];
 		$fee_ship->fee_xaid = $data['wards'];
-		$fee_ship->fee_feeship = $data['fee_ship'];
+		$fee_ship->fee_feeship = $this->numericInputNormalizer->digitsOnly($data['fee_ship']);
 		$fee_ship->save();
-	}
-	public function delivery(Request $request)
-	{
 
-		$city = City::orderby('matp', 'ASC')->get();
+		return response()->noContent();
+	}
+	public function delivery()
+	{
+		$city = Schema::hasTable((new City())->getTable())
+			? City::orderby('matp', 'ASC')->get()
+			: collect();
 
 		return view('admin.delivery.add_delivery')->with(compact('city'));
 	}
-	public function select_delivery(Request $request)
+	public function select_delivery(SelectDeliveryRequest $request)
 	{
-		$data = $request->all();
-		if ($data['action']) {
-			$output = '';
-			if ($data['action'] == "city") {
-				$select_province = Province::where('matp', $data['ma_id'])->orderby('maqh', 'ASC')->get();
-				$output .= '<option>---Chọn quận huyện---</option>';
-				foreach ($select_province as $key => $province) {
-					$output .= '<option value="' . $province->maqh . '">' . $province->name_quanhuyen . '</option>';
-				}
-			} else {
+		$data = $request->validated();
 
-				$select_wards = Wards::where('maqh', $data['ma_id'])->orderby('xaid', 'ASC')->get();
-				$output .= '<option>---Chọn xã phường---</option>';
-				foreach ($select_wards as $key => $ward) {
-					$output .= '<option value="' . $ward->xaid . '">' . $ward->name_xaphuong . '</option>';
-				}
+		if ($data['action'] === 'city') {
+			if (! Schema::hasTable((new Province())->getTable())) {
+				return response()->view('admin.delivery.partials.select_options', [
+					'placeholder' => '---Không có dữ liệu quận huyện---',
+					'options' => collect(),
+					'valueField' => 'maqh',
+					'labelField' => 'name_quanhuyen',
+				]);
 			}
-			echo $output;
+
+			return response()->view('admin.delivery.partials.select_options', [
+				'placeholder' => '---Chọn quận huyện---',
+				'options' => Province::where('matp', $data['ma_id'])->orderby('maqh', 'ASC')->get(),
+				'valueField' => 'maqh',
+				'labelField' => 'name_quanhuyen',
+			]);
 		}
+
+		if (! Schema::hasTable((new Wards())->getTable())) {
+			return response()->view('admin.delivery.partials.select_options', [
+				'placeholder' => '---Không có dữ liệu xã phường---',
+				'options' => collect(),
+				'valueField' => 'xaid',
+				'labelField' => 'name_xaphuong',
+			]);
+		}
+
+		return response()->view('admin.delivery.partials.select_options', [
+			'placeholder' => '---Chọn xã phường---',
+			'options' => Wards::where('maqh', $data['ma_id'])->orderby('xaid', 'ASC')->get(),
+			'valueField' => 'xaid',
+			'labelField' => 'name_xaphuong',
+		]);
 	}
 }

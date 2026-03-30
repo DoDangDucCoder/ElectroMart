@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Http\Requests\Admin\Legacy\Users\StoreAdminUserRequest;
+use App\Http\Requests\Admin\Legacy\Users\SyncAdminRolesRequest;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Route;
-use App\Models\Roles;
-use App\Models\Admin;
+use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Support\AdminAccess;
 use Auth;
 use Session;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -21,8 +22,12 @@ class UserController extends Controller
     public function index()
     {
         $admin = User::with('roles')->orderBy('id', 'DESC')->paginate(5);
-        $roles = Roles::orderBy('id', 'DESC')->get();
-        return view('admin.users.all_users')->with(compact('admin', 'roles'));;
+        $roles = Role::query()
+            ->where('guard_name', AdminAccess::guardName())
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.users.all_users')->with(compact('admin', 'roles'));
     }
 
     public function add_users()
@@ -31,7 +36,7 @@ class UserController extends Controller
     }
     public function delete_user_roles($admin_id)
     {
-        if (User::find($admin_id)) {
+        if ((int) Auth::id() === (int) $admin_id) {
             return redirect()->back()->with('message', 'Bạn không được quyền xóa chính mình');
         }
         $admin = User::find($admin_id);
@@ -42,46 +47,56 @@ class UserController extends Controller
         }
         return redirect()->back()->with('message', 'Xóa user thành công');
     }
-    public function assign_roles(Request $request)
+    public function assign_roles(SyncAdminRolesRequest $request)
     {
-        // Prevent assigning roles to the current authenticated user
-        if (User::find($request->admin_id)) {
+        $validated = $request->validated();
+
+        if ((int) Auth::id() === (int) $validated['admin_id']) {
             return redirect()->back()->with('message', 'Bạn không được phân quyền chính mình');
         }
 
-        // Fetch the user by email
-        $user = User::where('email', $request->admin_email)->first();
+        $user = User::find($validated['admin_id']);
 
         if (!$user) {
             return redirect()->back()->with('error', 'User not found');
         }
 
-        // Detach existing roles
-        $user->roles()->detach();
+        $roleNames = collect($validated['roles'] ?? [])
+            ->filter()
+            ->values()
+            ->all();
 
-        // Attach new roles dynamically based on the submitted checkboxes
-        if ($request->has('roles')) {
-            foreach ($request->roles as $role) {
-                $roleModel = Roles::where('name', $role)->first();
-                if ($roleModel) {
-                    $user->roles()->attach($roleModel);
-                }
-            }
-        }
+        $validRoleNames = Role::query()
+            ->where('guard_name', AdminAccess::guardName())
+            ->whereIn('name', $roleNames)
+            ->pluck('name')
+            ->all();
+
+        $user->syncRoles($validRoleNames);
 
         return redirect()->back()->with('message', 'Cấp quyền thành công');
     }
 
-    public function store_users(Request $request)
+    public function store_users(StoreAdminUserRequest $request)
     {
-        $data = $request->all();
+        $data = $request->validated();
+
         $admin = new User();
         $admin->name = $data['admin_name'];
-        $admin->phone = $data['admin_phone'];
+        $admin->phone = $data['admin_phone'] ?? null;
         $admin->email = $data['admin_email'];
-        $admin->password = md5($data['admin_password']);
-        $admin->roles()->attach(Roles::where('name', 'user')->first());
+        $admin->password = Hash::make($data['admin_password']);
         $admin->save();
+
+        $defaultRole = Role::query()
+            ->where('guard_name', AdminAccess::guardName())
+            ->where('name', 'user')
+            ->first();
+
+        if ($defaultRole) {
+            $admin->assignRole($defaultRole);
+        }
+
         Session::put('message', 'Thêm users thành công');
         return Redirect::to('users');
     }

@@ -9,6 +9,35 @@ class CartResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        if (is_array($this->resource)) {
+            $items = collect($this->resource['items'] ?? []);
+
+            return [
+                'id' => $this->resource['id'] ?? null,
+                'customer_id' => $this->resource['customer_id'] ?? null,
+                'items' => $items->map(function ($item) {
+                    $price = (float) ($item['product_price'] ?? 0);
+                    $quantity = (int) ($item['product_qty'] ?? 0);
+
+                    return [
+                        'id' => $item['session_id'] ?? null,
+                        'session_id' => $item['session_id'] ?? null,
+                        'product_id' => $item['product_id'] ?? null,
+                        'product_name' => $item['product_name'] ?? null,
+                        'product_image' => ! empty($item['product_image']) ? asset($item['product_image']) : null,
+                        'price' => $price,
+                        'quantity' => $quantity,
+                        'subtotal' => $price * $quantity,
+                    ];
+                }),
+                'subtotal' => (float) ($this->resource['subtotal'] ?? 0),
+                'shipping_fee' => (float) ($this->resource['shipping_fee'] ?? 0),
+                'discount_amount' => (float) ($this->resource['discount_amount'] ?? 0),
+                'total' => (float) ($this->resource['total'] ?? 0),
+                'items_count' => (int) ($this->resource['items_count'] ?? $items->sum('product_qty')),
+            ];
+        }
+
         return [
             'id' => $this->id,
             'customer_id' => $this->customer_id,

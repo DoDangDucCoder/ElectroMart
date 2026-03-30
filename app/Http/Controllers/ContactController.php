@@ -2,201 +2,205 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use DB;
-use Session;
-use App\Models\CatePost;
-use App\Models\Slider;
+use App\Application\Catalog\Services\BrandService;
+use App\Application\Catalog\Services\CategoryService;
+use App\Application\Cms\Services\BlogCategoryService;
+use App\Application\Shared\Services\PublicUploadService;
+use App\Http\Requests\Admin\Legacy\Media\StoreContactInfoRequest;
+use App\Http\Requests\Admin\Legacy\Media\StoreIconRequest;
+use App\Http\Requests\Admin\Legacy\Media\UpdateContactInfoRequest;
 use App\Models\Contact;
 use App\Models\Icons;
-use App\Http\Requests;
+use App\Models\Slider;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Schema;
 
 class ContactController extends Controller
 {
+    public function __construct(
+        private readonly CategoryService $categoryService,
+        private readonly BrandService $brandService,
+        private readonly BlogCategoryService $blogCategoryService,
+        private readonly PublicUploadService $publicUploadService,
+    ) {
+    }
 
-    public function add_doitac(Request $request)
+    public function add_doitac(StoreIconRequest $request)
     {
-        $data = $request->all();
-        $icons = new Icons();
-        $name = $data['name'];
-        $link = $data['link'];
-        $get_image = $request->file('file');
+        if (! Schema::hasTable((new Icons())->getTable())) {
+            return response()->json(['message' => 'Bảng icon chưa sẵn sàng.'], 422);
+        }
 
-        $path = 'uploads/icons/';
+        $data = $request->validated();
+
+        $icons = new Icons();
+        $get_image = $request->file('file');
 
         //them hinh anh
         if ($get_image) {
-
-            $get_name_image = $get_image->getClientOriginalName();
-            $name_image = current(explode('.', $get_name_image));
-            $new_image =  $name_image . rand(0, 99) . '.' . $get_image->getClientOriginalExtension();
-            $get_image->move($path, $new_image);
-            $icons->image = $new_image;
+            $icons->image = $this->publicUploadService->storeLegacyImage($get_image, 'uploads/icons');
         }
-        $icons->name = $name;
-        $icons->link = $link;
+        $icons->name = $data['name'];
+        $icons->link = $data['link'] ?? null;
         $icons->category = 'doitac';
 
         $icons->save();
-    }
-    public function add_nut(Request $request)
-    {
-        $data = $request->all();
-        $icons = new Icons();
-        $name = $data['name'];
-        $link = $data['link'];
-        $get_image = $request->file('file');
 
-        $path = 'uploads/icons/';
+        return response()->noContent();
+    }
+    public function add_nut(StoreIconRequest $request)
+    {
+        if (! Schema::hasTable((new Icons())->getTable())) {
+            return response()->json(['message' => 'Bảng icon chưa sẵn sàng.'], 422);
+        }
+
+        $data = $request->validated();
+
+        $icons = new Icons();
+        $get_image = $request->file('file');
 
         //them hinh anh
         if ($get_image) {
-
-            $get_name_image = $get_image->getClientOriginalName();
-            $name_image = current(explode('.', $get_name_image));
-            $new_image =  $name_image . rand(0, 99) . '.' . $get_image->getClientOriginalExtension();
-            $get_image->move($path, $new_image);
-            $icons->image = $new_image;
+            $icons->image = $this->publicUploadService->storeLegacyImage($get_image, 'uploads/icons');
         }
-        $icons->name = $name;
-        $icons->link = $link;
+        $icons->name = $data['name'];
+        $icons->link = $data['link'] ?? null;
         $icons->category = 'icons';
 
         $icons->save();
+
+        return response()->noContent();
     }
-    public function delete_icons()
+    public function delete_icons(Request $request)
     {
-        $id = $_GET['id'];
-        $icons = Icons::find($id);
-        $icons->delete();
+        $icons = Icons::find($request->integer('id'));
+
+        if ($icons) {
+            $icons->delete();
+        }
+
+        return response()->noContent();
     }
 
     public function list_doitac()
     {
-        $icons = Icons::where('category', 'doitac')->orderBy('id_icons', 'DESC')->get();
-        // dd($icons);
-        $output = '';
-        $output .= '<table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Tên đối tác</th>
-                <th>Hình ảnh đối tác</th>
-                <th>Link đối tác</th>
-                <th>Quản lý</th>
-              </tr>
-              </tr>
-            </thead>
-            <tbody>';
-        foreach ($icons as $ico) {
-
-            $output .= ' <tr>
-                <td>' . $ico->name . '</td>
-                <td><img height="80px" width="150px" src="' . url('uploads/icons/' . $ico->image) . '"></td>
-                <td>' . $ico->link . '</td>
-                 <td><button id="' . $ico->id_icons . '" class="btn btn-warning" onclick="delete_icons(this.id)">Xóa đối tác</button></td>
-              </tr>';
+        if (! Schema::hasTable((new Icons())->getTable())) {
+            return response('<div class="g-admin-empty-state">Chưa có bảng đối tác/icons trên môi trường này.</div>');
         }
-        $output .= '</tbody>
-          </table>';
-        echo $output;
+
+        $icons = Icons::where('category', 'doitac')->orderBy('id_icons', 'DESC')->get();
+
+        return response()->view('admin.information.partials.icons_table', [
+            'icons' => $icons,
+            'nameLabel' => 'Tên đối tác',
+            'imageLabel' => 'Hình ảnh đối tác',
+            'linkLabel' => 'Link đối tác',
+            'imageHeight' => 80,
+            'imageWidth' => 150,
+            'buttonClass' => 'btn-warning',
+            'buttonLabel' => 'Xóa đối tác',
+        ]);
     }
     public function list_nut()
     {
-        $icons = Icons::where('category', 'icons')->orderBy('id_icons', 'DESC')->get();
-        // dd($icons);
-        $output = '';
-        $output .= '<table class="table table-hover">
-            <thead>
-              <tr>
-                <th>Tên nút</th>
-                <th>Hình ảnh</th>
-                <th>Link</th>
-                <th>Quản lý</th>
-              </tr>
-              </tr>
-            </thead>
-            <tbody>';
-        foreach ($icons as $ico) {
-
-            $output .= ' <tr>
-                <td>' . $ico->name . '</td>
-                <td><img height="32px" width="32px" src="' . url('uploads/icons/' . $ico->image) . '"></td>
-                <td>' . $ico->link . '</td>
-                 <td><button id="' . $ico->id_icons . '" class="btn btn-danger" onclick="delete_icons(this.id)">Xóa</button></td>
-              </tr>';
+        if (! Schema::hasTable((new Icons())->getTable())) {
+            return response('<div class="g-admin-empty-state">Chưa có bảng đối tác/icons trên môi trường này.</div>');
         }
-        $output .= '</tbody>
-          </table>';
-        echo $output;
+
+        $icons = Icons::where('category', 'icons')->orderBy('id_icons', 'DESC')->get();
+
+        return response()->view('admin.information.partials.icons_table', [
+            'icons' => $icons,
+            'nameLabel' => 'Tên nút',
+            'imageLabel' => 'Hình ảnh',
+            'linkLabel' => 'Link',
+            'imageHeight' => 32,
+            'imageWidth' => 32,
+            'buttonClass' => 'btn-danger',
+            'buttonLabel' => 'Xóa',
+        ]);
     }
     public function lien_he(Request $request)
     {
-        //category post
-        $category_post = CatePost::orderBy('cate_post_id', 'DESC')->get();
+        $contact = Schema::hasTable((new Contact())->getTable())
+            ? Contact::where('info_id', 1)->get()
+            : collect();
 
-        //slide
-        $slider = Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
-        //seo 
-        $meta_desc = "Liên hệ";
-        $meta_keywords = "Liên hệ";
-        $meta_title = "Liên hệ chúng tôi";
-        $url_canonical = $request->url();
-        //--seo
-
-        $cate_product = DB::table('tbl_category_product')->where('category_status', '0')->orderby('category_id', 'desc')->get();
-        $brand_product = DB::table('tbl_brand')->where('brand_status', '0')->orderby('brand_id', 'desc')->get();
-
-        $contact = Contact::where('info_id', 1)->get();
-
-        return view('pages.lienhe.contact')->with('category', $cate_product)->with('brand', $brand_product)->with('meta_desc', $meta_desc)->with('meta_keywords', $meta_keywords)->with('meta_title', $meta_title)->with('url_canonical', $url_canonical)->with('slider', $slider)->with('category_post', $category_post)->with('contact', $contact);
+        return view('pages.lienhe.contact', [
+            'category' => $this->categoryService->listAll(['is_active' => true]),
+            'brand' => $this->brandService->listAll(['is_active' => true]),
+            'meta_desc' => 'Liên hệ',
+            'meta_keywords' => 'Liên hệ',
+            'meta_title' => 'Liên hệ chúng tôi',
+            'url_canonical' => $request->url(),
+            'slider' => $this->legacyActiveSliders(),
+            'category_post' => $this->blogCategoryService->listAll(['is_active' => true]),
+            'contact' => $contact,
+        ]);
     }
     public function information()
     {
-        $contact = Contact::where('info_id', 1)->get();
+        $contact = Schema::hasTable((new Contact())->getTable())
+            ? Contact::where('info_id', 1)->get()
+            : collect();
 
         return view('admin.information.add_information')->with(compact('contact'));
     }
-    public function update_info(Request $request, $info_id)
+    public function update_info(UpdateContactInfoRequest $request, $info_id)
     {
-        $data = $request->all();
+        if (! Schema::hasTable((new Contact())->getTable())) {
+            return redirect()->back()->with('message', 'Bảng thông tin website chưa sẵn sàng.');
+        }
+
+        $data = $request->validated();
+
         $contact = Contact::find($info_id);
+        if (! $contact) {
+            return redirect()->back()->with('message', 'Không tìm thấy thông tin website cần cập nhật');
+        }
+
         $contact->info_contact = $data['info_contact'];
-        $contact->slogan_logo = $data['slogan_logo'];
-        $contact->info_map = $data['info_map'];
-        $contact->info_fanpage = $data['info_fanpage'];
+        $contact->slogan_logo = $data['slogan_logo'] ?? null;
+        $contact->info_map = $data['info_map'] ?? null;
+        $contact->info_fanpage = $data['info_fanpage'] ?? null;
         $get_image = $request->file('info_image');
-        $path = 'uploads/contact/';
         if ($get_image) {
-            unlink($path . $contact->info_logo);
-            $get_name_image = $get_image->getClientOriginalName();
-            $name_image = current(explode('.', $get_name_image));
-            $new_image =  $name_image . rand(0, 99) . '.' . $get_image->getClientOriginalExtension();
-            $get_image->move($path, $new_image);
-            $contact->info_logo = $new_image;
+            $this->publicUploadService->deletePublicFile('uploads/contact/' . $contact->info_logo);
+            $contact->info_logo = $this->publicUploadService->storeLegacyImage($get_image, 'uploads/contact');
         }
 
         $contact->save();
         return redirect()->back()->with('message', 'Cập nhật thông tin website thành công');
     }
-    public function save_info(Request $request)
+    public function save_info(StoreContactInfoRequest $request)
     {
-        $data = $request->all();
+        if (! Schema::hasTable((new Contact())->getTable())) {
+            return redirect()->back()->with('message', 'Bảng thông tin website chưa sẵn sàng.');
+        }
+
+        $data = $request->validated();
+
         $contact = new Contact();
         $contact->info_contact = $data['info_contact'];
-        $contact->info_map = $data['info_map'];
-        $contact->info_fanpage = $data['info_fanpage'];
+        $contact->info_map = $data['info_map'] ?? null;
+        $contact->info_fanpage = $data['info_fanpage'] ?? null;
         $get_image = $request->file('info_image');
-        $path = 'uploads/contact/';
         if ($get_image) {
-            $get_name_image = $get_image->getClientOriginalName();
-            $name_image = current(explode('.', $get_name_image));
-            $new_image =  $name_image . rand(0, 99) . '.' . $get_image->getClientOriginalExtension();
-            $get_image->move($path, $new_image);
-            $contact->info_logo = $new_image;
+            $contact->info_logo = $this->publicUploadService->storeLegacyImage($get_image, 'uploads/contact');
         }
 
         $contact->save();
         return redirect()->back()->with('message', 'Cập nhật thông tin website thành công');
+    }
+
+    protected function legacyActiveSliders()
+    {
+        if (! Schema::hasTable('tbl_slider')) {
+            return collect();
+        }
+
+        return Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
     }
 }

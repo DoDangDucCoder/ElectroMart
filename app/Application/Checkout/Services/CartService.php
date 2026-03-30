@@ -2,6 +2,7 @@
 
 namespace App\Application\Checkout\Services;
 
+use App\Application\Catalog\Services\ProductPricingService;
 use App\Application\Catalog\Services\ProductService;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Models\ProductAttribute;
@@ -17,6 +18,7 @@ class CartService
 
     public function __construct(
         private readonly ProductService $productService,
+        private readonly ProductPricingService $pricingService,
     ) {
     }
 
@@ -26,6 +28,22 @@ class CartService
     public function items(): Collection
     {
         return collect(Session::get(self::SESSION_KEY, []));
+    }
+
+    public function getCart(?int $customerId = null): array
+    {
+        $items = $this->items()->values();
+        $totals = $this->totals();
+
+        return [
+            'customer_id' => $customerId,
+            'items' => $items->all(),
+            'subtotal' => $totals['subtotal'],
+            'discount_amount' => $totals['discount'],
+            'shipping_fee' => 0.0,
+            'total' => $totals['total'],
+            'items_count' => $items->sum('product_qty'),
+        ];
     }
 
     public function count(): int
@@ -52,6 +70,8 @@ class CartService
 
         $cart = $this->items();
 
+        $pricingData = $this->buildSessionPricingData($product, $attributeData);
+
         $existingKey = $cart->search(function (array $item) use ($productId, $attributeId) {
             return (int) $item['product_id'] === $productId
                 && (int) ($item['product_attribute_id'] ?? 0) === (int) ($attributeId ?? 0);
@@ -61,9 +81,13 @@ class CartService
             $cart[$existingKey]['product_qty'] += $quantity;
             $cart[$existingKey]['product_qty'] = max(1, $cart[$existingKey]['product_qty']);
             $cart[$existingKey]['product_quantity'] = $attributeData['stock'] ?? $product->product_quantity;
-            if (! empty($attributeData['price'])) {
-                $cart[$existingKey]['product_price'] = $attributeData['price'];
-            }
+            $cart[$existingKey]['product_price'] = $pricingData['product_price'];
+            $cart[$existingKey]['product_original_price'] = $pricingData['product_original_price'];
+            $cart[$existingKey]['product_cost_price'] = $pricingData['product_cost_price'];
+            $cart[$existingKey]['product_sale_price'] = $pricingData['product_sale_price'];
+            $cart[$existingKey]['product_sale_type'] = $pricingData['product_sale_type'];
+            $cart[$existingKey]['product_sale_value'] = $pricingData['product_sale_value'];
+            $cart[$existingKey]['product_sale_amount'] = $pricingData['product_sale_amount'];
             if (! empty($attributeData['image'])) {
                 $cart[$existingKey]['product_image'] = $attributeData['image'];
             }
@@ -83,7 +107,13 @@ class CartService
             'product_id' => $productId,
             'product_name' => $product->product_name,
             'product_image' => $attributeData['image'] ?? $product->product_image,
-            'product_price' => $attributeData['price'] ?? $product->product_price,
+            'product_price' => $pricingData['product_price'],
+            'product_original_price' => $pricingData['product_original_price'],
+            'product_cost_price' => $pricingData['product_cost_price'],
+            'product_sale_price' => $pricingData['product_sale_price'],
+            'product_sale_type' => $pricingData['product_sale_type'],
+            'product_sale_value' => $pricingData['product_sale_value'],
+            'product_sale_amount' => $pricingData['product_sale_amount'],
             'product_qty' => $quantity,
             'product_quantity' => $attributeData['stock'] ?? $product->product_quantity,
             'product_attribute_id' => $attributeId,
@@ -119,6 +149,29 @@ class CartService
         });
 
         $this->persist($cart);
+    }
+
+    public function updateItem(?int $customerId, string $sessionId, int $quantity): array
+    {
+        if ($quantity <= 0) {
+            $this->removeBySessionId($sessionId);
+        } else {
+            $this->updateQuantity($sessionId, $quantity);
+        }
+
+        return $this->getCart($customerId);
+    }
+
+    public function removeItem(?int $customerId, string $sessionId): array
+    {
+        $this->removeBySessionId($sessionId);
+
+        return $this->getCart($customerId);
+    }
+
+    public function clearCart(?int $customerId): void
+    {
+        $this->clear();
     }
 
     /**
@@ -201,6 +254,39 @@ class CartService
             'stock' => (int) $attribute->quantity,
             'image' => $attribute->image ?: null,
             'label' => $attribute->name ?: optional($attribute->attribute)->attribute_name,
+        ];
+    }
+
+    /**
+     * @param  array<string,mixed>  $attributeData
+     * @return array<string,mixed>
+     */
+    protected function buildSessionPricingData(Product $product, array $attributeData = []): array
+    {
+        if (isset($attributeData['price']) && $attributeData['price'] !== null) {
+            $attributePrice = (float) $attributeData['price'];
+
+            return [
+                'product_price' => $attributePrice,
+                'product_original_price' => $attributePrice,
+                'product_cost_price' => 0.0,
+                'product_sale_price' => null,
+                'product_sale_type' => null,
+                'product_sale_value' => null,
+                'product_sale_amount' => 0.0,
+            ];
+        }
+
+        $snapshot = $this->pricingService->buildOrderItemSnapshot($product);
+
+        return [
+            'product_price' => $snapshot['price'],
+            'product_original_price' => $snapshot['original_price'],
+            'product_cost_price' => $snapshot['cost_price'],
+            'product_sale_price' => $snapshot['sale_price'],
+            'product_sale_type' => $snapshot['sale_type'],
+            'product_sale_value' => $snapshot['sale_value'],
+            'product_sale_amount' => $snapshot['sale_amount'],
         ];
     }
 

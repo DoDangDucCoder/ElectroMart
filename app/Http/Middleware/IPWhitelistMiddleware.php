@@ -10,21 +10,35 @@ class IPWhitelistMiddleware
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // TODO: Implement security middleware logic
-        
-        // Security check
-        if (!$this->isSecure($request)) {
+        if (!$this->allowsRequest($request)) {
             return response()->json([
-                'error' => 'Security violation detected'
+                'error' => 'IP address is not allowed'
             ], 403);
         }
 
         return $next($request);
     }
 
-    private function isSecure(Request $request): bool
+    private function allowsRequest(Request $request): bool
     {
-        // TODO: Implement security validation
-        return true;
+        $enabled = filter_var(
+            (string) env('IP_WHITELIST_ENABLED', false),
+            FILTER_VALIDATE_BOOL
+        );
+
+        if (!$enabled) {
+            return true;
+        }
+
+        $allowedIps = array_values(array_filter(array_map(
+            static fn (string $ip): string => trim($ip),
+            explode(',', (string) env('IP_WHITELIST', ''))
+        )));
+
+        if ($allowedIps === []) {
+            return true;
+        }
+
+        return in_array((string) $request->ip(), $allowedIps, true);
     }
 }

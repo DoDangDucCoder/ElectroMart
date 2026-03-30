@@ -11,6 +11,9 @@ use App\Http\Controllers\Api\ProductReviewController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\ChatController as ChatbotController;
+use App\Http\Controllers\Api\Admin\AuthController as AdminAuthController;
+use App\Support\AdminPermissions;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,6 +34,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/products/latest', [ProductController::class, 'latest']);
     Route::get('/products/featured', [ProductController::class, 'featured']);
     Route::get('/products/search', [ProductController::class, 'search']);
+    Route::get('/products/recommendations', [ProductController::class, 'recommendations']);
     Route::get('/products/{slug}', [ProductController::class, 'show']);
     Route::get('/products/category/{categorySlug}', [ProductController::class, 'byCategory']);
     Route::get('/products/brand/{brandSlug}', [ProductController::class, 'byBrand']);
@@ -78,6 +82,13 @@ Route::prefix('v1')->group(function () {
     Route::get('/settings/{key}', [SettingsController::class, 'show']);
     Route::get('/settings/contact', [SettingsController::class, 'contact']);
     Route::get('/settings/seo', [SettingsController::class, 'seo']);
+
+    // Chatbot
+    Route::get('/chatbot/conversation', [ChatbotController::class, 'conversation']);
+    Route::post('/chatbot/messages', [ChatbotController::class, 'store']);
+
+    // Admin authentication
+    Route::post('/admin/auth/login', [AdminAuthController::class, 'login']);
 });
 
 // Protected API routes
@@ -108,28 +119,38 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
 });
 
 // Admin API routes
-Route::prefix('v1/admin')->middleware(['auth:sanctum', 'role:admin'])->group(function () {
-    
-    // Admin products
-    Route::apiResource('products', \App\Http\Controllers\Api\Admin\ProductController::class);
-    Route::post('products/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\ProductController::class, 'toggleStatus']);
-    
-    // Admin categories
-    Route::apiResource('categories', \App\Http\Controllers\Api\Admin\CategoryController::class);
-    
-    // Admin brands
-    Route::apiResource('brands', \App\Http\Controllers\Api\Admin\BrandController::class);
-    
-    // Admin orders
-    Route::get('orders', [\App\Http\Controllers\Api\Admin\OrderController::class, 'index']);
-    Route::get('orders/{id}', [\App\Http\Controllers\Api\Admin\OrderController::class, 'show']);
-    Route::put('orders/{id}/status', [\App\Http\Controllers\Api\Admin\OrderController::class, 'updateStatus']);
-    
-    // Admin statistics
-    Route::get('statistics', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'index']);
-    Route::get('statistics/sales', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'sales']);
-    Route::get('statistics/products', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'products']);
-    Route::post('statistics/optimize-database', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'optimizeDatabase']);
-    Route::post('statistics/add-indexes', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'addIndexes']);
-    Route::get('statistics/slow-queries', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'slowQueries']);
+Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin.access:sanctum'])->group(function () {
+    Route::get('auth/me', [AdminAuthController::class, 'me']);
+    Route::post('auth/logout', [AdminAuthController::class, 'logout']);
+
+    Route::middleware('admin.permission:' . AdminPermissions::MANAGE_PRODUCTS)->group(function () {
+        // Admin products
+        Route::apiResource('products', \App\Http\Controllers\Api\Admin\ProductController::class);
+        Route::post('products/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\ProductController::class, 'toggleStatus']);
+
+        // Admin categories
+        Route::apiResource('categories', \App\Http\Controllers\Api\Admin\CategoryController::class);
+
+        // Admin brands
+        Route::apiResource('brands', \App\Http\Controllers\Api\Admin\BrandController::class);
+    });
+
+    Route::middleware('admin.permission:' . AdminPermissions::MANAGE_ORDERS)->group(function () {
+        // Admin orders
+        Route::get('orders', [\App\Http\Controllers\Api\Admin\OrderController::class, 'index']);
+        Route::get('orders/{id}', [\App\Http\Controllers\Api\Admin\OrderController::class, 'show']);
+        Route::put('orders/{id}/status', [\App\Http\Controllers\Api\Admin\OrderController::class, 'updateStatus']);
+        Route::get('statistics/products-profit', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'productsProfit']);
+    });
+
+    Route::middleware('admin.permission:' . AdminPermissions::MANAGE_SYSTEM)->group(function () {
+        // Admin statistics
+        Route::get('statistics', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'index']);
+        Route::get('statistics/sales', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'sales']);
+        Route::get('statistics/products', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'products']);
+        Route::get('statistics/product-discovery', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'productDiscovery']);
+        Route::post('statistics/optimize-database', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'optimizeDatabase']);
+        Route::post('statistics/add-indexes', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'addIndexes']);
+        Route::get('statistics/slow-queries', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'slowQueries']);
+    });
 });

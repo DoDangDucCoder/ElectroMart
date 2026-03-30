@@ -11,14 +11,15 @@ class OrderResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'order_number' => $this->order_number,
+            'code' => $this->code,
             'status' => $this->status,
-            'status_label' => $this->status->getLabel(),
+            'status_label' => $this->formatStatusLabel($this->status),
             'subtotal' => $this->subtotal,
-            'shipping_fee' => $this->shipping_fee,
-            'discount_amount' => $this->discount_amount,
-            'total_amount' => $this->total_amount,
-            'notes' => $this->notes,
+            'shipping_total' => $this->shipping_total,
+            'discount_total' => $this->discount_total,
+            'tax_total' => $this->tax_total,
+            'total' => $this->total,
+            'note' => $this->note,
             'coupon_code' => $this->coupon_code,
             'placed_at' => $this->placed_at,
             'confirmed_at' => $this->confirmed_at,
@@ -33,12 +34,11 @@ class OrderResource extends JsonResource
             ]),
             'address' => $this->whenLoaded('address', fn() => [
                 'id' => $this->address->id,
-                'name' => $this->address->name,
-                'phone' => $this->address->phone,
-                'address_line_1' => $this->address->address_line_1,
-                'address_line_2' => $this->address->address_line_2,
-                'city' => $this->address->city,
-                'state' => $this->address->state,
+                'recipient_name' => $this->address->recipient_name,
+                'recipient_phone' => $this->address->recipient_phone,
+                'email' => $this->address->email,
+                'address_line1' => $this->address->address_line1,
+                'address_line2' => $this->address->address_line2,
                 'postal_code' => $this->address->postal_code,
                 'country' => $this->address->country,
             ]),
@@ -47,31 +47,48 @@ class OrderResource extends JsonResource
                     'id' => $item->id,
                     'product_id' => $item->product_id,
                     'product_name' => $item->product_name,
-                    'product_slug' => $item->product_slug,
-                    'unit_price' => $item->unit_price,
+                    'original_price' => $item->original_price,
+                    'price' => $item->price,
+                    'sale_price' => $item->sale_price,
+                    'cost_price' => $item->cost_price,
+                    'sale_type' => $item->sale_type,
+                    'sale_value' => $item->sale_value,
+                    'sale_amount' => $item->sale_amount,
+                    'discount_amount' => $item->discount_amount,
                     'quantity' => $item->quantity,
                     'subtotal' => $item->subtotal,
+                    'revenue' => $item->revenue,
+                    'profit' => $item->profit,
                 ])
             ),
             'shipping' => $this->whenLoaded('shipping', fn() => [
                 'id' => $this->shipping->id,
-                'method' => $this->shipping->method,
+                'method' => $this->shipping->shipping_method,
                 'tracking_number' => $this->shipping->tracking_number,
-                'estimated_delivery' => $this->shipping->estimated_delivery,
-                'actual_delivery' => $this->shipping->actual_delivery,
+                'shipping_fee' => $this->shipping->shipping_fee,
+                'insurance_fee' => $this->shipping->insurance_fee,
             ]),
             'payments' => $this->whenLoaded('payments', fn() => 
                 $this->payments->map(fn($payment) => [
                     'id' => $payment->id,
-                    'method' => $payment->method,
+                    'provider' => $payment->provider,
                     'amount' => $payment->amount,
                     'status' => $payment->status,
-                    'transaction_id' => $payment->transaction_id,
+                    'reference' => $payment->reference,
                     'paid_at' => $payment->paid_at,
                 ])
             ),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
+    }
+
+    protected function formatStatusLabel(?string $status): string
+    {
+        if (! $status) {
+            return '';
+        }
+
+        return ucwords(str_replace('_', ' ', $status));
     }
 }

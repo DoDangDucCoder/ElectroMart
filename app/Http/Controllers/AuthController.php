@@ -2,75 +2,69 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
-use App\Models\Admin;
 use App\Models\User;
-use App\Models\Roles;
-use Auth;
-use Hash;
-use Session;
+use App\Support\AdminAccess;
+use App\Support\AdminAuthenticator;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function register_auth()
-    {
-        return view('admin.custom_auth.register');
-    }
     public function login_auth()
     {
         return view('admin.custom_auth.login_auth');
     }
-    public function logout_auth()
+
+    public function logout_auth(Request $request): RedirectResponse
     {
-        Auth::logout();
-        return redirect('/login-auth')->with('message', 'Đăng xuất authentication thành công');
+        Auth::guard('web')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/admin')->with('message', 'Đăng xuất thành công');
     }
-    public function login(Request $request)
+
+    public function login(Request $request): RedirectResponse
     {
-        // $data = $request->validate([
-        //     'email' => ['required'],
-        //     'password' => ['required'],
-        // ]);
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required', 'string'],
+            'remember' => ['nullable', 'boolean'],
+        ]);
 
-        $result = User::where('email', $request->email)->where('password', md5($request->password))->first();
+        $remember = $request->boolean('remember');
+        $user = AdminAuthenticator::resolveUser($credentials['email'], $credentials['password']);
 
-        if ($result) {
-            Session::put('admin_id', $result->id);
-            return redirect()->route('show_dashboard');
-        } else {
-            return redirect()->to('login-auth');
+        if ($user) {
+            Auth::guard('web')->login($user, $remember);
+            $request->session()->regenerate();
+
+            return $this->completeAdminLogin($request);
         }
-        Session::save();
-        // if (Auth::attempt([
-        //     "email" => $request->email,
-        //     "password" => Hash::make($request->password)
-        // ])) {
 
-        //     return redirect()->route('show_dashboard');
-        // } else {
-        //     return redirect()->to('login-auth');
-        // }
+        return redirect('/admin')
+            ->withErrors([
+                'email' => 'Thông tin đăng nhập không hợp lệ hoặc tài khoản không có quyền truy cập admin.',
+            ])
+            ->withInput($request->only('email'));
     }
-    public function register_auth_dashboard(Request $request)
-    {
-        //$this->validation($request);
-        $data = $request->all();
 
-        $admin = new User();
-        $admin->name = $data['admin_name'];
-        $admin->email = $data['admin_email'];
-        $admin->password = md5($data['admin_password']);
-        $admin->save();
-        return redirect('/login-auth')->with('message', 'Đăng ký user thành công');
-    }
-    public function validation($request)
+    protected function completeAdminLogin(Request $request): RedirectResponse
     {
-        return $this->validate($request, [
-            'admin_name' => 'required|max:255',
-            'admin_phone' => 'required|max:255',
-            'admin_email' => 'required|email|max:255',
-            'admin_password' => 'required|max:255',
+        $user = Auth::guard('web')->user();
+
+        if (AdminAccess::canAccess($user)) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/admin')->withErrors([
+            'email' => 'Tài khoản này không có quyền truy cập admin.',
         ]);
     }
 }

@@ -2,24 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Application\Order\Services\LegacyOrderWorkflowService;
+use App\Application\Order\Services\LegacyOrderPresentationService;
+use App\Application\Order\Services\LegacyOrderHistoryService;
 use Illuminate\Http\Request;
 
-use App\Models\Feeship;
-use App\Models\Shipping;
 use App\Models\Order;
 use App\Models\OrderDetails;
-use App\Models\Customer;
-use App\Models\Coupon;
-use App\Models\Product;
-use App\Models\Brand;
 use App\Models\CatePost;
 use App\Models\Slider;
+use App\Infrastructure\Persistence\Eloquent\Catalog\Brand as StorefrontBrand;
+use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory as StorefrontCategory;
+use App\Infrastructure\Persistence\Eloquent\Customer\Customer as StorefrontCustomer;
+use App\Infrastructure\Persistence\Eloquent\Order\Order as StorefrontOrder;
 use Carbon\Carbon;
-use App\Models\Statistic;
-use PDF;
-use Mail;
 use Session;
 use DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class OrderController extends Controller
 {
@@ -29,375 +29,149 @@ class OrderController extends Controller
 	// }
 	public function huy_don_hang(Request $request)
 	{
-		$data = $request->all();
-		$order = Order::where('order_code', $data['order_code'])->first();
+		$data = $request->validate([
+			'order_code' => ['required', 'string'],
+			'lydo' => ['required', 'string', 'max:1000'],
+		]);
+
+		$sessionCustomerId = (int) Session::get('customer_id');
+		if ($sessionCustomerId <= 0) {
+			return response()->json(['message' => 'Vui lòng đăng nhập để hủy đơn hàng.'], 401);
+		}
+
+		$modernCustomer = $this->resolveStorefrontCustomer();
+		if ($this->expectsModernStorefrontCustomerSession() && ! $modernCustomer) {
+			return response()->json(['message' => 'Phiên đăng nhập không còn hợp lệ.'], 401);
+		}
+
+		if ($modernCustomer) {
+			$order = StorefrontOrder::where('customer_id', $modernCustomer->id)
+				->where('code', $data['order_code'])
+				->first();
+
+			if (! $order) {
+				return response()->json(['message' => 'Không tìm thấy đơn hàng cần hủy.'], 404);
+			}
+
+			if (! $this->canCancelModernOrder($order)) {
+				return response()->json(['message' => 'Đơn hàng này không thể hủy ở trạng thái hiện tại.'], 422);
+			}
+
+			$meta = $order->meta ?? [];
+			$meta['cancel_reason'] = $data['lydo'];
+			$meta['cancelled_from'] = 'storefront_history';
+
+			$order->status = 'cancelled';
+			$order->cancelled_at = now();
+			$order->meta = $meta;
+			$order->note = trim(implode("\n", array_filter([
+				$order->note,
+				'Khách hủy đơn: ' . $data['lydo'],
+			])));
+			$order->save();
+
+			return response()->json([
+				'message' => 'Hủy đơn hàng thành công.',
+				'order_code' => $order->code,
+			]);
+		}
+
+		$order = Order::where('order_code', $data['order_code'])
+			->where('customer_id', $sessionCustomerId)
+			->first();
+
+		if (! $order) {
+			return response()->json(['message' => 'Không tìm thấy đơn hàng cần hủy.'], 404);
+		}
+
+		if (! $this->canCancelLegacyOrder($order)) {
+			return response()->json(['message' => 'Đơn hàng này không thể hủy ở trạng thái hiện tại.'], 422);
+		}
 
 		$order->order_destroy = $data['lydo'];
 		$order->order_status = 3;
 		$order->save();
+
+		return response()->json([
+			'message' => 'Hủy đơn hàng thành công.',
+			'order_code' => $order->order_code,
+		]);
 	}
 	public function order_code(Request $request, $order_code)
 	{
-		$order = Order::where('order_code', $order_code)->first();
-		$order->delete();
-		Session::put('message', 'Xóa đơn hàng thành công');
-		return redirect()->back();
+		$result = app(LegacyOrderWorkflowService::class)->deleteOrderByCode($order_code);
+
+		return $this->orderActionResponse($request, $result['message'], $result['status']);
 	}
 	public function update_qty(Request $request)
 	{
-		$data = $request->all();
-		$order_details = OrderDetails::where('product_id', $data['order_product_id'])->where('order_code', $data['order_code'])->first();
-		$order_details->product_sales_quantity = $data['order_qty'];
-		$order_details->save();
+		$data = $request->validate([
+			'order_product_id' => ['required', 'integer', 'min:1'],
+			'order_code' => ['required', 'string'],
+			'order_qty' => ['required', 'integer', 'min:1'],
+		]);
+
+		$result = app(LegacyOrderWorkflowService::class)->updateOrderLineQuantity(
+			$data['order_code'],
+			(int) $data['order_product_id'],
+			(int) $data['order_qty']
+		);
+
+		return response()->json(['message' => $result['message']], $result['status']);
 	}
 	public function update_order_qty(Request $request)
 	{
-		//update order
-		$data = $request->all();
-		$order = Order::find($data['order_id']);
-		$order->order_status = $data['order_status'];
-		$order->save();
-		//send mail confirm
-		$now = Carbon::now('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
-		$title_mail = "Đơn hàng đã đặt được xác nhận" . ' ' . $now;
-		$customer = Customer::where('customer_id', $order->customer_id)->first();
-		$data['email'][] = $customer->customer_email;
+		$data = $request->validate([
+			'order_id' => ['required', 'integer', 'min:1'],
+			'order_status' => ['required', 'integer', 'in:1,2,3'],
+			'quantity' => ['required', 'array', 'min:1'],
+			'quantity.*' => ['required', 'integer', 'min:1'],
+			'order_product_id' => ['required', 'array', 'min:1'],
+			'order_product_id.*' => ['required', 'integer', 'min:1'],
+		]);
 
-
-		//lay san pham
-
-		foreach ($data['order_product_id'] as $key => $product) {
-			$product_mail = Product::find($product);
-			foreach ($data['quantity'] as $key2 => $qty) {
-
-				if ($key == $key2) {
-
-					$cart_array[] = array(
-						'product_name' => $product_mail['product_name'],
-						'product_price' => $product_mail['product_price'],
-						'product_qty' => $qty
-					);
-				}
-			}
-		}
-
-
-		//lay shipping
-		$details = OrderDetails::where('order_code', $order->order_code)->first();
-
-		$fee_ship = $details->product_feeship;
-		$coupon_mail = $details->product_coupon;
-
-		$shipping = Shipping::where('shipping_id', $order->shipping_id)->first();
-
-		$shipping_array = array(
-			'fee_ship' =>  $fee_ship,
-			'customer_name' => $customer->customer_name,
-			'shipping_name' => $shipping->shipping_name,
-			'shipping_email' => $shipping->shipping_email,
-			'shipping_phone' => $shipping->shipping_phone,
-			'shipping_address' => $shipping->shipping_address,
-			'shipping_notes' => $shipping->shipping_notes,
-			'shipping_method' => $shipping->shipping_method
-
-		);
-		//lay ma giam gia, lay coupon code
-		$ordercode_mail = array(
-			'coupon_code' => $coupon_mail,
-			'order_code' => $details->order_code
+		$result = app(LegacyOrderWorkflowService::class)->updateOrderStatus(
+			(int) $data['order_id'],
+			(int) $data['order_status'],
+			$data['quantity'],
+			$data['order_product_id']
 		);
 
-		// Mail::send('admin.confirm_order',  ['cart_array'=>$cart_array, 'shipping_array'=>$shipping_array ,'code'=>$ordercode_mail] , function($message) use ($title_mail,$data){
-		// 	      $message->to($data['email'])->subject($title_mail);//send this mail with subject
-		// 	      $message->from($data['email'],$title_mail);//send from this mail
-		// });
-
-
-		//order date
-		$order_date = $order->order_date;
-
-		$statistic = Statistic::where('order_date', $order_date)->get();
-		if ($statistic) {
-			$statistic_count = $statistic->count();
-		} else {
-			$statistic_count = 0;
-		}
-
-		if ($order->order_status == 2) {
-			//them
-			$total_order = 0;
-			$sales = 0;
-			$profit = 0;
-			$quantity = 0;
-
-			foreach ($data['order_product_id'] as $key => $product_id) {
-
-				$product = Product::find($product_id);
-				$product_quantity = $product->product_quantity;
-				$product_sold = $product->product_sold;
-				//them
-				$product_price = $product->product_price;
-				$product_cost = $product->price_cost;
-				$now = Carbon::now('Asia/Ho_Chi_Minh')->toDateString();
-
-				foreach ($data['quantity'] as $key2 => $qty) {
-
-					if ($key == $key2) {
-						$pro_remain = $product_quantity - $qty;
-						$product->product_quantity = $pro_remain;
-						$product->product_sold = $product_sold + $qty;
-						$product->save();
-						//update doanh thu
-						$quantity += $qty;
-						$total_order += 1;
-						$sales += $product_price * $qty;
-						$profit = $sales - ($product_cost * $qty);
-					}
-				}
-			}
-			//update doanh so db
-			if ($statistic_count > 0) {
-				$statistic_update = Statistic::where('order_date', $order_date)->first();
-				$statistic_update->sales = $statistic_update->sales + $sales;
-				$statistic_update->profit =  $statistic_update->profit + $profit;
-				$statistic_update->quantity =  $statistic_update->quantity + $quantity;
-				$statistic_update->total_order = $statistic_update->total_order + $total_order;
-				$statistic_update->save();
-			} else {
-
-				$statistic_new = new Statistic();
-				$statistic_new->order_date = $order_date;
-				$statistic_new->sales = $sales;
-				$statistic_new->profit =  $profit;
-				$statistic_new->quantity =  $quantity;
-				$statistic_new->total_order = $total_order;
-				$statistic_new->save();
-			}
-		}
+		return response()->json(['message' => $result['message']], $result['status']);
 	}
 
 	public function print_order($checkout_code)
 	{
+		$html = app(LegacyOrderPresentationService::class)->renderPrintableHtml($checkout_code);
+		if (! $html) {
+			abort(404);
+		}
+
 		$pdf = \App::make('dompdf.wrapper');
-		$pdf->loadHTML($this->print_order_convert($checkout_code));
+		$pdf->loadHTML($html);
 
 		return $pdf->stream();
 	}
-	public function print_order_convert($checkout_code)
-	{
-		$order_details = OrderDetails::where('order_code', $checkout_code)->get();
-		$order = Order::where('order_code', $checkout_code)->get();
-		foreach ($order as $key => $ord) {
-			$customer_id = $ord->customer_id;
-			$shipping_id = $ord->shipping_id;
-		}
-		$customer = Customer::where('customer_id', $customer_id)->first();
-		$shipping = Shipping::where('shipping_id', $shipping_id)->first();
-
-		$order_details_product = OrderDetails::with('product')->where('order_code', $checkout_code)->get();
-
-		foreach ($order_details_product as $key => $order_d) {
-
-			$product_coupon = $order_d->product_coupon;
-		}
-		if ($product_coupon != 'no') {
-			$coupon = Coupon::where('coupon_code', $product_coupon)->first();
-
-			$coupon_condition = $coupon->coupon_condition;
-			$coupon_number = $coupon->coupon_number;
-
-			if ($coupon_condition == 1) {
-				$coupon_echo = $coupon_number . '%';
-			} elseif ($coupon_condition == 2) {
-				$coupon_echo = number_format($coupon_number, 0, ',', '.') . 'đ';
-			}
-		} else {
-			$coupon_condition = 2;
-			$coupon_number = 0;
-
-			$coupon_echo = '0';
-		}
-
-		$output = '';
-
-		$output .= '<style>body{
-			font-family: DejaVu Sans;
-		}
-		.table-styling{
-			border:1px solid #000;
-		}
-		.table-styling tbody tr td{
-			border:1px solid #000;
-		}
-		</style>
-		<h1><centerCông ty TNHH một thành viên ABCD</center></h1>
-		<h4><center>Độc lập - Tự do - Hạnh phúc</center></h4>
-		<p>Người đặt hàng</p>
-		<table class="table-styling">
-		<thead>
-		<tr>
-		<th>Tên khách đặt</th>
-		<th>Số điện thoại</th>
-		<th>Email</th>
-		</tr>
-		</thead>
-		<tbody>';
-
-		$output .= '		
-		<tr>
-		<td>' . $customer->customer_name . '</td>
-		<td>' . $customer->customer_phone . '</td>
-		<td>' . $customer->customer_email . '</td>
-
-		</tr>';
-
-
-		$output .= '				
-		</tbody>
-
-		</table>
-
-		<p>Ship hàng tới</p>
-		<table class="table-styling">
-		<thead>
-		<tr>
-		<th>Tên người nhận</th>
-		<th>Địa chỉ</th>
-		<th>Sdt</th>
-		<th>Email</th>
-		<th>Ghi chú</th>
-		</tr>
-		</thead>
-		<tbody>';
-
-		$output .= '		
-		<tr>
-		<td>' . $shipping->shipping_name . '</td>
-		<td>' . $shipping->shipping_address . '</td>
-		<td>' . $shipping->shipping_phone . '</td>
-		<td>' . $shipping->shipping_email . '</td>
-		<td>' . $shipping->shipping_notes . '</td>
-
-		</tr>';
-
-
-		$output .= '				
-		</tbody>
-
-		</table>
-
-		<p>Đơn hàng đặt</p>
-		<table class="table-styling">
-		<thead>
-		<tr>
-		<th>Tên sản phẩm</th>
-		<th>Thuộc tính sản phẩm</th>
-		<th>Mã giảm giá</th>
-		<th>Phí ship</th>
-		<th>Số lượng</th>
-		<th>Giá sản phẩm</th>
-		<th>Thành tiền</th>
-		</tr>
-		</thead>
-		<tbody>';
-
-		$total = 0;
-
-		foreach ($order_details_product as $key => $product) {
-
-			$subtotal = $product->product_price * $product->product_sales_quantity;
-			$total += $subtotal;
-
-			if ($product->product_coupon != 'no') {
-				$product_coupon = $product->product_coupon;
-			} else {
-				$product_coupon = 'không mã';
-			}
-
-			$output .= '		
-			<tr>
-			<td>' . $product->product_name . '</td>
-			<td>' . $product->product_attribute . '</td>
-			<td>' . $product_coupon . '</td>
-			<td>' . number_format($product->product_feeship, 0, ',', '.') . 'đ' . '</td>
-			<td>' . $product->product_sales_quantity . '</td>
-			<td>' . number_format($product->product_price, 0, ',', '.') . 'đ' . '</td>
-			<td>' . number_format($subtotal, 0, ',', '.') . 'đ' . '</td>
-
-			</tr>';
-		}
-
-		if ($coupon_condition == 1) {
-			$total_after_coupon = ($total * $coupon_number) / 100;
-			$total_coupon = $total - $total_after_coupon;
-		} else {
-			$total_coupon = $total - $coupon_number;
-		}
-
-		$output .= '<tr>
-		<td colspan="2">
-		<p>Tổng giảm: ' . $coupon_echo . '</p>
-		<p>Phí ship: ' . number_format($product->product_feeship, 0, ',', '.') . 'đ' . '</p>
-		<p>Thanh toán : ' . number_format($total_coupon + $product->product_feeship, 0, ',', '.') . 'đ' . '</p>
-		</td>
-		</tr>';
-		$output .= '				
-		</tbody>
-
-		</table>
-
-		<p>Ký tên</p>
-		<table>
-		<thead>
-		<tr>
-		<th width="200px">Người lập phiếu</th>
-		<th width="800px">Người nhận</th>
-
-		</tr>
-		</thead>
-		<tbody>';
-
-		$output .= '				
-		</tbody>
-
-		</table>
-
-		';
-
-
-		return $output;
-	}
 	public function view_order($order_code)
 	{
-		$order_details = OrderDetails::with('product')->where('order_code', $order_code)->get();
-		$getorder = Order::where('order_code', $order_code)->get();
-		foreach ($getorder as $key => $ord) {
-			$customer_id = $ord->customer_id;
-			$shipping_id = $ord->shipping_id;
-			$order_status = $ord->order_status;
-		}
-		$customer = Customer::where('customer_id', $customer_id)->first();
-		$shipping = Shipping::where('shipping_id', $shipping_id)->first();
+		$result = app(LegacyOrderWorkflowService::class)->buildAdminOrderViewData($order_code);
 
-		$order_details_product = OrderDetails::with('product')->where('order_code', $order_code)->get();
-
-		foreach ($order_details_product as $key => $order_d) {
-
-			$product_coupon = $order_d->product_coupon;
-		}
-		if ($product_coupon != 'no') {
-			$coupon = Coupon::where('coupon_code', $product_coupon)->first();
-			$coupon_condition = $coupon->coupon_condition;
-			$coupon_number = $coupon->coupon_number;
-		} else {
-			$coupon_condition = 2;
-			$coupon_number = 0;
+		if (! $result['ok']) {
+			return redirect('/manage-order')->with('message', $result['message']);
 		}
 
-		return view('admin.view_order')->with(compact('order_details', 'customer', 'shipping', 'coupon_condition', 'coupon_number', 'getorder', 'order_status'));
+		return view('admin.view_order')->with($result['data']);
 	}
 	public function manage_order()
 	{
+		if (! Schema::hasTable((new Order())->getTable())) {
+			$getorder = new LengthAwarePaginator([], 0, 5, 1, [
+				'path' => request()->url(),
+			]);
+
+			return view('admin.manage_order')->with(compact('getorder'));
+		}
+
 		$getorder = Order::orderby('order_id', 'DESC')->paginate(5);
 		return view('admin.manage_order')->with(compact('getorder'));
 	}
@@ -405,80 +179,419 @@ class OrderController extends Controller
 	{
 		if (!Session::get('customer_id')) {
 			return redirect('dang-nhap')->with('error', 'Vui lòng đăng nhập để xem lịch sử mua hàng');
-		} else {
-
-
-			//category post
-			$category_post = CatePost::orderBy('cate_post_id', 'DESC')->get();
-
-			//slide
-			$slider = Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
-			//seo 
-			$meta_desc = "Lịch sử đơn hàng";
-			$meta_keywords = "Lịch sử đơn hàng";
-			$meta_title = "Lịch sử đơn hàng";
-			$url_canonical = $request->url();
-			//--seo
-
-			$cate_product = DB::table('tbl_category_product')->where('category_status', '0')->orderby('category_parent', 'desc')->orderby('category_order', 'ASC')->get();
-
-			$brand_product = DB::table('tbl_brand')->where('brand_status', '0')->orderby('brand_id', 'desc')->get();
-
-			$getorder = Order::where('customer_id', Session::get('customer_id'))->orderby('order_id', 'DESC')->paginate(10);
-
-			return view('pages.history.history')->with('category', $cate_product)->with('brand', $brand_product)->with('meta_desc', $meta_desc)->with('meta_keywords', $meta_keywords)->with('meta_title', $meta_title)->with('url_canonical', $url_canonical)->with('slider', $slider)->with('category_post', $category_post)->with('getorder', $getorder); //1
 		}
+
+		$modernCustomer = $this->resolveStorefrontCustomer();
+		if ($this->expectsModernStorefrontCustomerSession() && ! $modernCustomer) {
+			return redirect('dang-nhap')->with('error', 'Phiên đăng nhập không còn hợp lệ.');
+		}
+		$orders = $modernCustomer
+			? $this->modernHistoryOrders($modernCustomer->id)
+			: $this->legacyHistoryOrders((int) Session::get('customer_id'));
+
+		return view('pages.history.history', array_merge(
+			$this->storefrontPageContext($request, 'Lịch sử đơn hàng'),
+			[
+				'orders' => $orders,
+				'historyStats' => $this->buildHistoryStats($orders),
+			]
+		));
 	}
 	public function view_history_order(Request $request, $order_code)
 	{
 		if (!Session::get('customer_id')) {
 			return redirect('dang-nhap')->with('error', 'Vui lòng đăng nhập để xem lịch sử mua hàng');
-		} else {
-
-			//category post
-			$category_post = CatePost::orderBy('cate_post_id', 'DESC')->get();
-
-			//slide
-			$slider = Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
-			//seo 
-			$meta_desc = "Lịch sử đơn hàng";
-			$meta_keywords = "Lịch sử đơn hàng";
-			$meta_title = "Lịch sử đơn hàng";
-			$url_canonical = $request->url();
-			//--seo
-
-			$cate_product = DB::table('tbl_category_product')->where('category_status', '0')->orderby('category_parent', 'desc')->orderby('category_order', 'ASC')->get();
-
-			$brand_product = DB::table('tbl_brand')->where('brand_status', '0')->orderby('brand_id', 'desc')->get();
-
-
-			//xem lich sử
-			$order_details = OrderDetails::with('product')->where('order_code', $order_code)->get();
-			$getorder = Order::where('order_code', $order_code)->first();
-
-			$customer_id = $getorder->customer_id;
-			$shipping_id = $getorder->shipping_id;
-			$order_status = $getorder->order_status;
-
-			$customer = Customer::where('customer_id', $customer_id)->first();
-			$shipping = Shipping::where('shipping_id', $shipping_id)->first();
-
-			$order_details_product = OrderDetails::with('product')->where('order_code', $order_code)->get();
-
-			foreach ($order_details_product as $key => $order_d) {
-
-				$product_coupon = $order_d->product_coupon;
-			}
-			if ($product_coupon != 'no') {
-				$coupon = Coupon::where('coupon_code', $product_coupon)->first();
-				$coupon_condition = $coupon->coupon_condition;
-				$coupon_number = $coupon->coupon_number;
-			} else {
-				$coupon_condition = 2;
-				$coupon_number = 0;
-			}
-
-			return view('pages.history.view_history_order')->with('category', $cate_product)->with('brand', $brand_product)->with('meta_desc', $meta_desc)->with('meta_keywords', $meta_keywords)->with('meta_title', $meta_title)->with('url_canonical', $url_canonical)->with('slider', $slider)->with('category_post', $category_post)->with('order_details', $order_details)->with('customer', $customer)->with('shipping', $shipping)->with('coupon_condition', $coupon_condition)->with('coupon_number', $coupon_number)->with('getorder', $getorder)->with('order_status', $order_status)->with('order_code', $order_code); //1
 		}
+
+		$modernCustomer = $this->resolveStorefrontCustomer();
+		if ($this->expectsModernStorefrontCustomerSession() && ! $modernCustomer) {
+			return redirect('dang-nhap')->with('error', 'Phiên đăng nhập không còn hợp lệ.');
+		}
+
+		if ($modernCustomer) {
+			$order = StorefrontOrder::with([
+				'customer',
+				'items.product',
+				'shipping.city',
+				'shipping.province',
+				'shipping.ward',
+				'payments',
+			])
+				->where('customer_id', $modernCustomer->id)
+				->where('code', $order_code)
+				->first();
+
+			if (! $order) {
+				abort(404);
+			}
+
+			return view('pages.history.view_history_order', array_merge(
+				$this->storefrontPageContext($request, 'Chi tiết đơn hàng'),
+				[
+					'orderView' => $this->buildModernOrderDetailView($order),
+				]
+			));
+		}
+
+		$order = Order::where('customer_id', Session::get('customer_id'))
+			->where('order_code', $order_code)
+			->first();
+
+		if (! $order) {
+			abort(404);
+		}
+
+		return view('pages.history.view_history_order', array_merge(
+			$this->storefrontPageContext($request, 'Chi tiết đơn hàng'),
+			[
+				'orderView' => $this->buildLegacyOrderDetailView($order),
+			]
+		));
 	}
+
+	protected function storefrontPageContext(Request $request, string $title): array
+	{
+		return [
+			'category_post' => $this->legacyCategoryPosts(),
+			'slider' => $this->legacyActiveSliders(),
+			'category' => $this->storefrontCategories(),
+			'brand' => $this->storefrontBrands(),
+			'meta_desc' => $title,
+			'meta_keywords' => $title,
+			'meta_title' => $title,
+			'url_canonical' => $request->url(),
+		];
+	}
+
+	protected function legacyCategoryPosts()
+	{
+		if (! Schema::hasTable('tbl_category_post')) {
+			return collect();
+		}
+
+		return CatePost::orderBy('cate_post_id', 'DESC')->get();
+	}
+
+	protected function legacyActiveSliders()
+	{
+		if (! Schema::hasTable('tbl_slider')) {
+			return collect();
+		}
+
+		return Slider::orderBy('slider_id', 'DESC')
+			->where('slider_status', '1')
+			->take(4)
+			->get();
+	}
+
+	protected function storefrontCategories()
+	{
+		if (Schema::hasTable('product_categories')) {
+			return StorefrontCategory::where('is_active', true)
+				->orderBy('parent_id')
+				->orderBy('display_order')
+				->get();
+		}
+
+		if (Schema::hasTable('tbl_category_product')) {
+			return DB::table('tbl_category_product')
+				->where('category_status', '0')
+				->orderby('category_parent', 'desc')
+				->orderby('category_order', 'ASC')
+				->get();
+		}
+
+		return collect();
+	}
+
+	protected function storefrontBrands()
+	{
+		if (Schema::hasTable('brands')) {
+			return StorefrontBrand::where('is_active', true)
+				->orderByDesc('id')
+				->get();
+		}
+
+		if (Schema::hasTable('tbl_brand')) {
+			return DB::table('tbl_brand')
+				->where('brand_status', '0')
+				->orderby('brand_id', 'desc')
+				->get();
+		}
+
+		return collect();
+	}
+
+	protected function resolveStorefrontCustomer(): ?StorefrontCustomer
+	{
+		$customerId = (int) Session::get('customer_id');
+
+		if ($customerId <= 0 || ! $this->supportsModernStorefrontOrders()) {
+			return null;
+		}
+
+		if (Session::has('customer_name') || Session::has('customer_picture')) {
+			return null;
+		}
+
+		return StorefrontCustomer::find($customerId);
+	}
+
+	protected function expectsModernStorefrontCustomerSession(): bool
+	{
+		$customerId = (int) Session::get('customer_id');
+
+		return $customerId > 0
+			&& $this->supportsModernStorefrontOrders()
+			&& ! Session::has('customer_name')
+			&& ! Session::has('customer_picture');
+	}
+
+	protected function supportsModernStorefrontOrders(): bool
+	{
+		return Schema::hasTable('customers')
+			&& Schema::hasTable('orders')
+			&& Schema::hasTable('order_items')
+			&& Schema::hasTable('order_shipping')
+			&& Schema::hasTable('payments');
+	}
+
+	protected function modernHistoryOrders(int $customerId)
+	{
+		$orders = StorefrontOrder::with(['items', 'shipping', 'payments'])
+			->where('customer_id', $customerId)
+			->orderByDesc('id')
+			->paginate(10);
+
+		$orders->setCollection(
+			$orders->getCollection()->map(fn(StorefrontOrder $order) => $this->mapModernHistoryOrder($order))
+		);
+
+		return $orders;
+	}
+
+	protected function legacyHistoryOrders(int $customerId)
+	{
+		return app(LegacyOrderHistoryService::class)->paginateCustomerOrders($customerId);
+	}
+
+	protected function buildHistoryStats($orders): array
+	{
+		$collection = collect($orders->items());
+		$latestOrder = $collection->first();
+
+		return [
+			'total_orders' => $orders->total(),
+			'active_orders' => $collection->where('can_cancel', true)->count(),
+			'cancelled_orders' => $collection->where('status', 'cancelled')->count(),
+			'latest_order_code' => $latestOrder['code'] ?? null,
+		];
+	}
+
+	protected function mapModernHistoryOrder(StorefrontOrder $order): array
+	{
+		$placedAt = $order->placed_at ?: $order->created_at;
+		$payment = $order->payments->first();
+
+		return [
+			'code' => $order->code,
+			'placed_at_label' => $placedAt ? $placedAt->format('d/m/Y H:i') : 'Chưa xác định',
+			'status' => $order->status,
+			'status_label' => $this->formatModernOrderStatusLabel($order->status),
+			'payment_label' => $this->formatPaymentProviderLabel($payment?->provider),
+			'payment_status_label' => $this->formatPaymentStatusLabel($payment?->status),
+			'items_count' => (int) $order->items->sum('quantity'),
+			'total' => (float) $order->total,
+			'can_cancel' => $this->canCancelModernOrder($order),
+			'cancel_reason' => data_get($order->meta, 'cancel_reason'),
+		];
+	}
+
+	protected function buildModernOrderDetailView(StorefrontOrder $order): array
+	{
+		$shipping = $order->shipping;
+		$payment = $order->payments->first();
+		$placedAt = $order->placed_at ?: $order->created_at;
+
+		return [
+			'code' => $order->code,
+			'placed_at_label' => $placedAt ? $placedAt->format('d/m/Y H:i') : 'Chưa xác định',
+			'status' => $order->status,
+			'status_label' => $this->formatModernOrderStatusLabel($order->status),
+			'can_cancel' => $this->canCancelModernOrder($order),
+			'cancel_reason' => data_get($order->meta, 'cancel_reason'),
+			'customer' => [
+				'name' => $order->customer?->name ?? $shipping?->recipient_name ?? 'Khách hàng',
+				'phone' => $order->customer?->phone ?? $shipping?->recipient_phone,
+				'email' => $order->customer?->email ?? $shipping?->email,
+			],
+			'shipping' => [
+				'name' => $shipping?->recipient_name,
+				'phone' => $shipping?->recipient_phone,
+				'email' => $shipping?->email,
+				'address' => $this->formatModernShippingAddress($shipping),
+				'notes' => $shipping?->address_line2,
+				'method_label' => $this->formatShippingMethodLabel($shipping?->shipping_method ?: data_get($order->meta, 'shipping_method')),
+				'tracking_number' => $shipping?->tracking_number,
+				'shipping_fee' => (float) $order->shipping_total,
+			],
+			'payment' => [
+				'provider_label' => $this->formatPaymentProviderLabel($payment?->provider),
+				'status_label' => $this->formatPaymentStatusLabel($payment?->status),
+				'amount' => (float) ($payment?->amount ?? $order->total),
+				'reference' => $payment?->reference,
+			],
+			'items' => $order->items->map(function ($item) {
+				return [
+					'name' => $item->product_name,
+					'attributes' => $this->formatOrderItemAttributes($item->attributes),
+					'quantity' => (int) $item->quantity,
+					'price' => (float) $item->price,
+					'subtotal' => (float) $item->subtotal,
+					'image' => $item->product?->product_image ?: data_get($item->meta, 'thumbnail'),
+				];
+			}),
+			'totals' => [
+				'subtotal' => (float) $order->subtotal,
+				'discount' => (float) $order->discount_total,
+				'shipping' => (float) $order->shipping_total,
+				'total' => (float) $order->total,
+			],
+			'coupon_code' => $order->coupon_code,
+			'note' => $order->note,
+			'source' => $order->source,
+		];
+	}
+
+	protected function buildLegacyOrderDetailView(Order $order): array
+	{
+		return app(LegacyOrderHistoryService::class)->buildDetailView($order);
+	}
+
+	protected function calculateLegacyTotals(string $orderCode, $details = null): array
+	{
+		return app(LegacyOrderPresentationService::class)->calculateTotals($orderCode, $details);
+	}
+
+	protected function formatModernShippingAddress($shipping): string
+	{
+		if (! $shipping) {
+			return 'Chưa có địa chỉ giao hàng';
+		}
+
+		$parts = array_filter([
+			$shipping->address_line1,
+			$shipping->ward?->name,
+			$shipping->province?->name,
+			$shipping->city?->name,
+			$shipping->country,
+		]);
+
+		return implode(', ', $parts);
+	}
+
+	protected function formatOrderItemAttributes($attributes): string
+	{
+		if (empty($attributes)) {
+			return 'Mặc định';
+		}
+
+		if (is_string($attributes)) {
+			return $attributes;
+		}
+
+		if (isset($attributes['attribute']) && is_string($attributes['attribute'])) {
+			return $attributes['attribute'];
+		}
+
+		$parts = [];
+
+		foreach ((array) $attributes as $key => $value) {
+			if (is_array($value)) {
+				$value = implode(', ', $value);
+			}
+
+			$parts[] = is_string($key)
+				? ucfirst(str_replace('_', ' ', $key)) . ': ' . $value
+				: $value;
+		}
+
+		return implode(' | ', array_filter($parts)) ?: 'Mặc định';
+	}
+
+	protected function canCancelModernOrder(StorefrontOrder $order): bool
+	{
+		return ! in_array($order->status, ['cancelled', 'completed', 'refunded'], true);
+	}
+
+	protected function canCancelLegacyOrder(Order $order): bool
+	{
+		return app(LegacyOrderHistoryService::class)->canCancel($order);
+	}
+
+	protected function orderActionResponse(Request $request, string $message, int $status = 200)
+	{
+		if ($request->expectsJson() || $request->ajax()) {
+			return response()->json(['message' => $message], $status);
+		}
+
+		if ($status >= 400) {
+			return redirect()->back()->with('error', $message);
+		}
+
+		return redirect()->back()->with('message', $message);
+	}
+
+	protected function formatModernOrderStatusLabel(?string $status): string
+	{
+		return match ($status) {
+			'pending' => 'Đơn hàng mới',
+			'confirmed' => 'Đã xác nhận',
+			'processing' => 'Đang xử lý',
+			'shipped' => 'Đang giao hàng',
+			'completed' => 'Hoàn tất',
+			'cancelled' => 'Đã hủy',
+			'refunded' => 'Đã hoàn tiền',
+			default => 'Chưa xác định',
+		};
+	}
+
+	protected function formatPaymentProviderLabel(?string $provider): string
+	{
+		return match ($provider) {
+			'cod', 'cash' => 'Thanh toán khi nhận hàng',
+			'bank_transfer' => 'Chuyển khoản ngân hàng',
+			'card' => 'Thanh toán thẻ',
+			'paypal' => 'PayPal',
+			'momo' => 'MoMo',
+			'vnpay' => 'VNPay',
+			null, '' => 'Chưa xác định',
+			default => strtoupper($provider),
+		};
+	}
+
+	protected function formatPaymentStatusLabel(?string $status): string
+	{
+		return match ($status) {
+			'pending' => 'Chờ thanh toán',
+			'processing' => 'Đang xử lý',
+			'succeeded', 'paid' => 'Đã thanh toán',
+			'failed' => 'Thanh toán thất bại',
+			'refunded' => 'Đã hoàn tiền',
+			null, '' => 'Chưa xác định',
+			default => ucfirst($status),
+		};
+	}
+
+	protected function formatShippingMethodLabel(?string $method): string
+	{
+		return match ($method) {
+			'cod' => 'Thanh toán khi nhận hàng',
+			'bank_transfer' => 'Chuyển khoản ngân hàng',
+			'standard', null, '' => 'Giao hàng tiêu chuẩn',
+			'express' => 'Giao hàng nhanh',
+			default => ucwords(str_replace('_', ' ', $method)),
+		};
+	}
+
 }

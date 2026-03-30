@@ -15,11 +15,18 @@ class ProductResource extends JsonResource
             'slug' => $this->slug,
             'sku' => $this->sku,
             'price' => $this->price,
+            'original_price' => $this->price,
+            'sale_type' => $this->sale_type,
+            'sale_value' => $this->sale_value,
+            'sale_amount' => $this->sale_amount,
             'sale_price' => $this->sale_price,
             'cost_price' => $this->cost_price,
-            'final_price' => $this->sale_price ?? $this->price,
-            'discount_percentage' => $this->sale_price ? 
-                round((($this->price - $this->sale_price) / $this->price) * 100) : null,
+            'final_price' => $this->final_price,
+            'profit_per_unit' => $this->profit_per_unit,
+            'sale_explanation' => $this->sale_explanation,
+            'discount_percentage' => $this->sale_amount > 0 && $this->price > 0
+                ? round((($this->price - $this->final_price) / $this->price) * 100)
+                : null,
             'stock_quantity' => $this->stock_quantity,
             'is_in_stock' => $this->stock_quantity > 0,
             'is_low_stock' => $this->stock_quantity <= $this->stock_alert_threshold,

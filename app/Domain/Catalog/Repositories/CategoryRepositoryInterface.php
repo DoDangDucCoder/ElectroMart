@@ -12,6 +12,8 @@ interface CategoryRepositoryInterface
 
     public function all(array $filters = []): Collection;
 
+    public function findById(int $id): ?ProductCategory;
+
     public function create(array $data): ProductCategory;
 
     public function update(ProductCategory $category, array $data): ProductCategory;
