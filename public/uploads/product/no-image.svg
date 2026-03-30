@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="360" viewBox="0 0 480 360" role="img" aria-label="No image">
+  <rect width="100%" height="100%" fill="#f2f2f2"/>
+  <rect x="20" y="20" width="440" height="320" fill="#ffffff" stroke="#cccccc" stroke-width="2"/>
+  <text x="240" y="190" text-anchor="middle" fill="#999999" font-family="Arial, sans-serif" font-size="20">No image</text>
+</svg>
