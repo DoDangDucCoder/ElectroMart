@@ -24,7 +24,7 @@
             case 'https:':
                 break;
             case 'file:':
-                alert('Just a heads-up, events will not work when run locally.');
+                console.warn('Lịch sự kiện sẽ không hoạt động đầy đủ khi mở trực tiếp từ file cục bộ.');
         }
     });
 </script>

@@ -78,10 +78,13 @@ class StorefrontLoginAndSearchPageTest extends TestCase
 
         $this->withSession([
             'customer_id' => $customer->id,
-        ])->get('/dang-nhap')
+        ])->get('/dang-nhap?redirect=checkout')
             ->assertOk()
+            ->assertSee('Bạn đã đăng nhập thành công')
+            ->assertSee('Tài khoản đã xác thực')
             ->assertSee('Tiếp tục thanh toán')
-            ->assertSee($customer->email);
+            ->assertSee($customer->email)
+            ->assertSee('shopw-auth-switcher', false);
     }
 
     public function test_search_page_renders_live_result_cards(): void
@@ -102,6 +105,30 @@ class StorefrontLoginAndSearchPageTest extends TestCase
             ->assertSee('1 sản phẩm đang được hiển thị trong danh sách này.')
             ->assertSee('Tên: Gaming')
             ->assertSee('shopw-recommendation-section', false);
+    }
+
+    public function test_storefront_autocomplete_results_render_keyword_markers_for_safe_selection(): void
+    {
+        $product = $this->createProduct('Gaming Beast Laptop');
+
+        $this->post('/autocomplete-ajax', [
+            'query' => 'Gaming',
+        ])->assertOk()
+            ->assertSee('shopw-search-suggest-layout', false)
+            ->assertSee('Sản phẩm phù hợp')
+            ->assertSee('data-search-keyword="Gaming Beast Laptop"', false)
+            ->assertSee('/chi-tiet/' . $product->product_slug);
+    }
+
+    public function test_storefront_autocomplete_no_result_state_keeps_search_cta_visible(): void
+    {
+        $this->post('/autocomplete-ajax', [
+            'query' => 'KhongCoSanPhamNao',
+        ])->assertOk()
+            ->assertSeeText('Chưa thấy sản phẩm khớp với')
+            ->assertSeeText('KhongCoSanPhamNao')
+            ->assertSee('shopw-search-suggest-footer', false)
+            ->assertSee('/tim-kiem?keywords_submit=KhongCoSanPhamNao');
     }
 
     public function test_search_page_renders_empty_state_when_no_match(): void

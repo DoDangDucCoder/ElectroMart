@@ -299,16 +299,17 @@ class SecurityMonitoringService
     private function getAlertRecipients(string $severity): array
     {
         $recipients = [];
+        $primaryAdminEmail = (string) config('admin-auth.seed_defaults.primary_email', 'admin@shop.com');
         
         if ($severity === 'critical') {
             $recipients = [
-                'admin@example.com',
+                $primaryAdminEmail,
                 'security@example.com',
                 'cto@example.com',
             ];
         } elseif ($severity === 'high') {
             $recipients = [
-                'admin@example.com',
+                $primaryAdminEmail,
                 'security@example.com',
             ];
         }

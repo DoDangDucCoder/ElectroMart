@@ -196,6 +196,7 @@
             if (hasProducts) {
                 return;
             }
+            var currentIds = new URLSearchParams(window.location.search).get('ids') || '';
 
             var raw = localStorage.getItem('compare');
             if (!raw) {
@@ -213,6 +214,10 @@
                 }).filter(Boolean).join(',');
 
                 if (!ids) {
+                    return;
+                }
+
+                if (ids === currentIds) {
                     return;
                 }
 

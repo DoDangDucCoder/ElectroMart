@@ -32,6 +32,11 @@ class CouponService
         return $this->coupons->findByCode($code);
     }
 
+    public function findActiveByCode(string $code): ?Coupon
+    {
+        return $this->coupons->findActiveByCode($code);
+    }
+
     public function validateCoupon(string $code, float $totalAmount, ?int $customerId = null): array
     {
         $coupon = $this->coupons->findActiveByCode($code);

@@ -14,6 +14,9 @@ use App\Application\Catalog\Services\CategoryService;
 use App\Application\Catalog\Services\ProductDiscoveryTrackingService;
 use App\Application\Catalog\Services\ProductService;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class HomeController extends Controller
@@ -76,6 +79,7 @@ class HomeController extends Controller
             'homepage'
         );
         $heroRatio = $this->calculateHeroRatio($slider);
+        $flashSale = $this->resolveFlashSaleSection();
 
         $categoriesByParent = $cate_product->groupBy(static function ($category) {
             return $category->category_parent ?? 0;
@@ -183,6 +187,7 @@ class HomeController extends Controller
             'icons' => $icons,
             'mega_menu_data' => $megaMenuData,
             'hero_ratio' => $heroRatio,
+            'flash_sale' => $flashSale,
             'recommended_products' => $recommendationData['products'],
             'recommendation_description' => $recommendationData['description'],
         ]);
@@ -278,20 +283,26 @@ class HomeController extends Controller
 
     public function autocomplete_ajax(AutocompleteProductsRequest $request)
     {
-        $keyword = $request->validated('query');
+        $keyword = (string) ($request->validated('query') ?? '');
+        $searchSuggest = $this->resolveSearchSuggestPayload($keyword);
+        $maxProducts = max(1, (int) config('storefront.search_suggest.max_products', 6));
+        $product = mb_strlen($keyword) >= 2
+            ? $this->productService->searchSuggestions($keyword, $maxProducts)
+            : collect();
 
-        if (! $keyword) {
-            return response('');
-        }
-
-        $product = $this->productService->searchSuggestions($keyword, 8);
-
-        if ($product->isEmpty()) {
+        if (
+            $product->isEmpty() &&
+            empty($searchSuggest['trending_keywords']) &&
+            empty($searchSuggest['shortcut_links']) &&
+            empty($searchSuggest['utility_links']) &&
+            blank($keyword)
+        ) {
             return response('');
         }
 
         return response()->view('pages.home.partials.autocomplete_results', [
             'products' => $product,
+            'searchSuggest' => $searchSuggest,
         ]);
     }
 
@@ -442,6 +453,267 @@ class HomeController extends Controller
         $median = max(1.8, min(2.05, $median));
 
         return round($median, 3);
+    }
+
+    private function resolveFlashSaleSection(): ?array
+    {
+        $config = config('storefront.flash_sale', []);
+
+        if (! ($config['enabled'] ?? false)) {
+            return null;
+        }
+
+        $productSlugs = collect($config['product_slugs'] ?? [])
+            ->map(static fn ($slug) => trim((string) $slug))
+            ->filter()
+            ->values();
+
+        if ($productSlugs->isEmpty()) {
+            return null;
+        }
+
+        $productsBySlug = Product::query()
+            ->with(['brand', 'primaryCategory'])
+            ->where('is_active', true)
+            ->whereIn('slug', $productSlugs->all())
+            ->get()
+            ->keyBy('slug');
+
+        $orderedProducts = $productSlugs
+            ->map(fn ($slug) => $productsBySlug->get($slug))
+            ->filter()
+            ->values();
+
+        if ($orderedProducts->isEmpty()) {
+            return null;
+        }
+
+        $soldQuantities = $this->resolveFlashSaleSoldQuantities($orderedProducts->pluck('id')->all());
+        $hasSoldMetrics = $soldQuantities !== null;
+
+        $cards = $orderedProducts
+            ->map(function (Product $product) use ($soldQuantities, $hasSoldMetrics) {
+                return $this->mapFlashSaleCard(
+                    $product,
+                    (int) ($soldQuantities[$product->id] ?? 0),
+                    $hasSoldMetrics
+                );
+            })
+            ->filter()
+            ->values();
+
+        if ($cards->isEmpty()) {
+            return null;
+        }
+
+        $countdownEndsAt = $this->parseStorefrontDate($config['countdown_ends_at'] ?? null);
+
+        return [
+            'kicker' => trim((string) ($config['kicker'] ?? 'Hot deal')),
+            'title' => trim((string) ($config['title'] ?? 'Flash Sale')),
+            'cta_label' => trim((string) ($config['cta_label'] ?? 'Xem tất cả deal')),
+            'cta_url' => $this->resolveStorefrontUrl($config['cta_url'] ?? '/tim-kiem', url('/tim-kiem')),
+            'countdown_ends_at' => $countdownEndsAt?->toIso8601String(),
+            'products' => $cards,
+        ];
+    }
+
+    private function mapFlashSaleCard(Product $product, int $soldQuantity, bool $hasSoldMetrics): ?array
+    {
+        $originalPrice = (float) ($product->getRawOriginal('price') ?? $product->price ?? 0);
+        $finalPrice = (float) ($product->final_price ?? $originalPrice);
+
+        if ($finalPrice <= 0) {
+            return null;
+        }
+
+        $discountPercent = $originalPrice > 0 && $finalPrice < $originalPrice
+            ? (int) round((($originalPrice - $finalPrice) / $originalPrice) * 100)
+            : 0;
+
+        $stockQuantity = max(0, (int) ($product->stock_quantity ?? 0));
+        $progressMax = max(1, $soldQuantity + $stockQuantity);
+
+        $specs = collect([
+            [
+                'icon' => 'fa-industry',
+                'label' => $product->brand_name,
+            ],
+            [
+                'icon' => 'fa-folder-open-o',
+                'label' => $product->category_name,
+            ],
+            [
+                'icon' => $stockQuantity > 0 ? 'fa-cubes' : 'fa-bell-o',
+                'label' => $stockQuantity > 0 ? 'Còn ' . $stockQuantity : 'Sắp cháy hàng',
+            ],
+        ])->filter(fn ($item) => filled($item['label']))->take(3)->values()->all();
+
+        return [
+            'id' => $product->id,
+            'name' => $product->name,
+            'slug' => $product->slug,
+            'url' => url('/chi-tiet/' . $product->slug),
+            'image' => $this->resolvePublicAssetUrl($product->product_image),
+            'price' => $originalPrice,
+            'final_price' => $finalPrice,
+            'discount_percent' => $discountPercent,
+            'specs' => $specs,
+            'sold_quantity' => $hasSoldMetrics ? $soldQuantity : null,
+            'sold_progress' => $hasSoldMetrics ? (int) round(($soldQuantity / $progressMax) * 100) : null,
+        ];
+    }
+
+    private function resolveFlashSaleSoldQuantities(array $productIds): ?Collection
+    {
+        if (
+            $productIds === [] ||
+            ! Schema::hasTable('orders') ||
+            ! Schema::hasTable('order_items') ||
+            ! Schema::hasColumn('orders', 'status') ||
+            ! Schema::hasColumn('order_items', 'order_id') ||
+            ! Schema::hasColumn('order_items', 'product_id') ||
+            ! Schema::hasColumn('order_items', 'quantity')
+        ) {
+            return null;
+        }
+
+        return DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.status', 'completed')
+            ->whereIn('order_items.product_id', $productIds)
+            ->groupBy('order_items.product_id')
+            ->selectRaw('order_items.product_id, SUM(order_items.quantity) as sold_quantity')
+            ->pluck('sold_quantity', 'order_items.product_id');
+    }
+
+    private function resolveSearchSuggestPayload(?string $query = null): array
+    {
+        $query = trim((string) $query);
+        $config = config('storefront.search_suggest', []);
+        $trendingKeywords = collect($config['trending_keywords'] ?? [])
+            ->map(static fn ($keyword) => trim((string) $keyword))
+            ->filter()
+            ->take(6)
+            ->values()
+            ->all();
+
+        return [
+            'query' => $query,
+            'search_results_url' => $this->buildSearchResultUrl($query),
+            'trending_keywords' => $trendingKeywords,
+            'shortcut_links' => $this->resolveSearchShortcutLinks($config['shortcut_category_slugs'] ?? []),
+            'utility_links' => [
+                [
+                    'label' => 'Xem bài viết công nghệ',
+                    'url' => url('/video-shop'),
+                    'icon' => 'fa-newspaper-o',
+                ],
+                [
+                    'label' => config('storefront.labels.recommend_for_you', 'Gợi ý cho bạn'),
+                    'url' => url('/goi-y-san-pham'),
+                    'icon' => 'fa-compass',
+                ],
+            ],
+        ];
+    }
+
+    private function resolveSearchShortcutLinks(array $slugs): array
+    {
+        $categoryIcons = [
+            'laptop' => 'fa-laptop',
+            'laptop-gaming' => 'fa-gamepad',
+            'laptop-van-phong' => 'fa-briefcase',
+            'dien-thoai' => 'fa-mobile',
+            'iphone' => 'fa-apple',
+            'samsung-galaxy' => 'fa-android',
+            'android-khac' => 'fa-android',
+            'phu-kien' => 'fa-headphones',
+            'sac-cap' => 'fa-plug',
+            'op-lung-kinh-cuong-luc' => 'fa-shield',
+        ];
+
+        $normalizedSlugs = collect($slugs)
+            ->map(static fn ($slug) => trim((string) $slug))
+            ->filter()
+            ->values();
+
+        if ($normalizedSlugs->isEmpty()) {
+            return [];
+        }
+
+        $categories = $this->categoryService->listActive()
+            ->filter(fn ($item) => ! empty($item->slug_category_product))
+            ->keyBy('slug_category_product');
+
+        return $normalizedSlugs
+            ->map(function (string $slug) use ($categories, $categoryIcons) {
+                $category = $categories->get($slug);
+
+                if (! $category) {
+                    return null;
+                }
+
+                return [
+                    'label' => \App\Support\StorefrontLabel::category(
+                        $category->category_name,
+                        $category->slug_category_product
+                    ),
+                    'url' => url('/danh-muc/' . $category->slug_category_product),
+                    'icon' => $categoryIcons[$slug] ?? 'fa-tag',
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    private function resolveStorefrontUrl(?string $path, string $fallback): string
+    {
+        $path = trim((string) $path);
+
+        if ($path === '') {
+            return $fallback;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        return url($path);
+    }
+
+    private function buildSearchResultUrl(string $query): string
+    {
+        if ($query === '') {
+            return url('/tim-kiem');
+        }
+
+        return url('/tim-kiem?' . http_build_query([
+            'keywords_submit' => $query,
+        ]));
+    }
+
+    private function parseStorefrontDate(?string $value): ?Carbon
+    {
+        if (blank($value)) {
+            return null;
+        }
+
+        try {
+            return Carbon::parse($value);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function resolvePublicAssetUrl(?string $path, string $fallback = 'uploads/product/no-image.svg'): string
+    {
+        if (filled($path) && file_exists(public_path($path))) {
+            return asset($path);
+        }
+
+        return asset($fallback);
     }
 
     private function legacyIcons()

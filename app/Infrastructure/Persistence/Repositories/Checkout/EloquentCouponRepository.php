@@ -38,9 +38,18 @@ class EloquentCouponRepository implements CouponRepositoryInterface
     public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
         $query = Coupon::query();
+        $now = Carbon::now();
 
         if (isset($filters['is_active'])) {
             $query->where('is_active', (bool) $filters['is_active']);
+        }
+
+        if (! empty($filters['currently_valid'])) {
+            $query->where(function ($builder) use ($now) {
+                $builder->whereNull('starts_at')->orWhere('starts_at', '<=', $now);
+            })->where(function ($builder) use ($now) {
+                $builder->whereNull('expires_at')->orWhere('expires_at', '>=', $now);
+            });
         }
 
         if (! empty($filters['type'])) {

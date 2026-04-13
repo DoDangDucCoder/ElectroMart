@@ -14,6 +14,7 @@ class LegacyMailSnapshotTest extends TestCase
 {
     public function test_coupon_campaign_mail_matches_snapshot(): void
     {
+        $brandName = (string) config('services.storefront_brand.name', 'ShopW');
         $mail = new LegacyCouponCampaignMail(
             mailData: new CouponCampaignMailData(
                 couponCode: 'SPRING15',
@@ -23,7 +24,7 @@ class LegacyMailSnapshotTest extends TestCase
                 startCoupon: '01-03-2026',
                 endCoupon: '31-03-2026',
                 audienceLabel: 'khách hàng thường',
-                shopName: 'Laravel Shop',
+                shopName: $brandName,
                 shopUrl: url('/'),
                 loginUrl: url('/dang-nhap')
             ),
@@ -35,6 +36,7 @@ class LegacyMailSnapshotTest extends TestCase
 
     public function test_coupon_campaign_vip_mail_matches_snapshot(): void
     {
+        $brandName = (string) config('services.storefront_brand.name', 'ShopW');
         $mail = new LegacyCouponCampaignMail(
             mailData: new CouponCampaignMailData(
                 couponCode: 'VIP25',
@@ -44,7 +46,7 @@ class LegacyMailSnapshotTest extends TestCase
                 startCoupon: '01-03-2026',
                 endCoupon: '30-04-2026',
                 audienceLabel: 'khách hàng thân thiết',
-                shopName: 'Laravel Shop',
+                shopName: $brandName,
                 shopUrl: url('/'),
                 loginUrl: url('/dang-nhap')
             ),
@@ -56,14 +58,15 @@ class LegacyMailSnapshotTest extends TestCase
 
     public function test_password_recovery_mail_matches_snapshot(): void
     {
+        $brandName = (string) config('services.storefront_brand.name', 'ShopW');
         $mail = new LegacyPasswordRecoveryMail(
             mailData: new PasswordRecoveryMailData(
-                title: 'Lấy lại mật khẩu Laravel Shop',
+                title: 'Lấy lại mật khẩu ' . $brandName,
                 email: 'recover@example.com',
                 resetUrl: url('/update-new-pass?email=recover%40example.com&token=secure-token-123'),
-                shopName: 'Laravel Shop'
+                shopName: $brandName
             ),
-            subjectLine: 'Lấy lại mật khẩu Laravel Shop'
+            subjectLine: 'Lấy lại mật khẩu ' . $brandName
         );
 
         $this->assertHtmlSnapshot('password-recovery', $mail->render());
@@ -72,6 +75,7 @@ class LegacyMailSnapshotTest extends TestCase
     public function test_order_confirmation_preview_matches_snapshot(): void
     {
         config()->set('mail.markdown.theme', 'laravel-shop');
+        $brandName = (string) config('services.storefront_brand.name', 'ShopW');
 
         $html = app(Markdown::class)->render('mail.legacy.order-confirmation', [
             'mailData' => OrderConfirmationMailData::fromLegacyPayload(
@@ -101,6 +105,9 @@ class LegacyMailSnapshotTest extends TestCase
                     'order_code' => 'ORD-TEST-001',
                     'coupon_code' => 'SALE30',
                 ],
+                overrides: [
+                    'brandName' => $brandName,
+                ],
             ),
         ])->toHtml();
 
@@ -110,6 +117,7 @@ class LegacyMailSnapshotTest extends TestCase
     public function test_order_confirmation_atm_preview_matches_snapshot(): void
     {
         config()->set('mail.markdown.theme', 'laravel-shop');
+        $brandName = (string) config('services.storefront_brand.name', 'ShopW');
 
         $html = app(Markdown::class)->render('mail.legacy.order-confirmation', [
             'mailData' => OrderConfirmationMailData::fromLegacyPayload(
@@ -138,6 +146,9 @@ class LegacyMailSnapshotTest extends TestCase
                 code: [
                     'order_code' => 'ORD-ATM-002',
                     'coupon_code' => 'Không áp dụng',
+                ],
+                overrides: [
+                    'brandName' => $brandName,
                 ],
             ),
         ])->toHtml();

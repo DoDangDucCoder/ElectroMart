@@ -12,7 +12,12 @@
         $supportConfig = config('services.storefront_support', []);
         $supportPhoneDisplay = $supportConfig['phone_display'] ?? '1900.0000';
         $supportPhoneHref = $supportConfig['phone_href'] ?? 'tel:19000000';
-        $checkoutUrl = Session::get('customer_id') ? url('/checkout') : url('/dang-nhap');
+        $checkoutUrl = Session::get('customer_id')
+            ? url('/checkout')
+            : (url('/dang-nhap') . '?' . http_build_query([
+                'redirect' => 'checkout',
+                'redirect_to' => url('/checkout'),
+            ]));
         $cartFlowSteps = [
             ['label' => 'Giỏ hàng', 'state' => 'is-active'],
             ['label' => 'Thanh toán', 'state' => ''],
@@ -216,7 +221,7 @@
                         @endif
 
                         <a class="shopw-cart-primary-link" href="{{ $checkoutUrl }}">
-                            <i class="fa fa-credit-card"></i>{{ Session::get('customer_id') ? 'Tiến hành thanh toán' : 'Đăng nhập để đặt hàng' }}
+                            <i class="fa fa-credit-card"></i>{{ Session::get('customer_id') ? 'Tiến hành thanh toán' : 'Đăng nhập để thanh toán' }}
                         </a>
                     </div>
 

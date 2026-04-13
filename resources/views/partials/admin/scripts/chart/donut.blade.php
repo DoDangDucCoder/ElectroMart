@@ -15,24 +15,24 @@
                 '#4842f5'
             ],
             data: [{
-                    label: "San pham",
-                    value: {{ data_get($dashboard_totals ?? [], 'products', $app_product) }}
+                    label: "Sản phẩm",
+                    value: {{ data_get($dashboard_totals ?? [], 'products', 0) }}
                 },
                 {
-                    label: "Bai viet",
-                    value: {{ data_get($dashboard_totals ?? [], 'posts', $app_post) }}
+                    label: "Bài viết",
+                    value: {{ data_get($dashboard_totals ?? [], 'posts', 0) }}
                 },
                 {
-                    label: "Don hang",
-                    value: {{ data_get($dashboard_totals ?? [], 'orders', $app_order) }}
+                    label: "Đơn hàng",
+                    value: {{ data_get($dashboard_totals ?? [], 'orders', 0) }}
                 },
                 {
                     label: "Video",
-                    value: {{ data_get($dashboard_totals ?? [], 'videos', $app_video) }}
+                    value: {{ data_get($dashboard_totals ?? [], 'videos', 0) }}
                 },
                 {
-                    label: "Khach hang",
-                    value: {{ data_get($dashboard_totals ?? [], 'customers', $app_customer) }}
+                    label: "Khách hàng",
+                    value: {{ data_get($dashboard_totals ?? [], 'customers', 0) }}
                 }
             ]
         });

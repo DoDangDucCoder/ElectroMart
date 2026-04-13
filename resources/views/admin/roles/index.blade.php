@@ -31,6 +31,10 @@
                     <div class="alert alert-success">{{ session('message') }}</div>
                 @endif
 
+                @if (session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
+
                 @if ($user->isEmpty())
                     <div class="g-admin-empty-state">Chưa có user nào để hiển thị ma trận phân quyền.</div>
                 @else
@@ -58,7 +62,7 @@
                                                 @forelse ($u->roles as $roleItem)
                                                     <span class="g-admin-status-chip is-info">{{ $roleItem->name }}</span>
                                                 @empty
-                                                    <span class="g-admin-status-chip">Chưa có role</span>
+                                                    <span class="g-admin-status-chip">Chưa có vai trò</span>
                                                 @endforelse
                                             </div>
                                         </td>

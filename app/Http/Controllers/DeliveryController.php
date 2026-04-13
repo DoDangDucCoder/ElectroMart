@@ -60,10 +60,11 @@ class DeliveryController extends Controller
 
 		$data = $request->validated();
 
-		$fee_ship = new Feeship();
-		$fee_ship->fee_matp = $data['city'];
-		$fee_ship->fee_maqh = $data['province'];
-		$fee_ship->fee_xaid = $data['wards'];
+		$fee_ship = Feeship::firstOrNew([
+			'fee_matp' => $data['city'],
+			'fee_maqh' => $data['province'],
+			'fee_xaid' => $data['wards'],
+		]);
 		$fee_ship->fee_feeship = $this->numericInputNormalizer->digitsOnly($data['fee_ship']);
 		$fee_ship->save();
 

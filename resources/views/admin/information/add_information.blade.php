@@ -33,6 +33,22 @@
             <div class="alert alert-success">{{ session('message') }}</div>
         @endif
 
+        @if (session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <div id="site_info_notice" class="alert alert-info" hidden></div>
+
         <div class="g-admin-panel-grid two-col">
             <section class="g-admin-panel-card">
                 <header class="g-admin-panel-head">

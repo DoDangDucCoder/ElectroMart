@@ -56,7 +56,7 @@ class VideoController extends Controller
         }
 
         if (! $this->usesLegacyVideoTable()) {
-            return response()->json(['message' => 'Video storage is unavailable.'], 422);
+            return response()->json(['message' => 'Chưa có nơi lưu video trên môi trường này.'], 422);
         }
 
         $video = new LegacyVideo();
@@ -77,23 +77,28 @@ class VideoController extends Controller
 
         if ($this->usesModernVideoTable()) {
             $video = ModernVideo::find($videoId);
-            if ($video) {
-                $this->publicUploadService->deletePublicFile($video->thumbnail_path);
-                $video->delete();
+
+            if (! $video) {
+                return response()->json(['message' => 'Không tìm thấy video cần xóa.'], 404);
             }
+
+            $this->publicUploadService->deletePublicFile($video->thumbnail_path);
+            $video->delete();
 
             return response()->noContent();
         }
 
         if (! $this->usesLegacyVideoTable()) {
-            return response()->noContent();
+            return response()->json(['message' => 'Chưa có nơi lưu video trên môi trường này.'], 422);
         }
 
         $video = LegacyVideo::find($videoId);
-        if ($video) {
-            $this->publicUploadService->deletePublicFile($video->video_image ? 'uploads/videos/' . $video->video_image : null);
-            $video->delete();
+        if (! $video) {
+            return response()->json(['message' => 'Không tìm thấy video cần xóa.'], 404);
         }
+
+        $this->publicUploadService->deletePublicFile($video->video_image ? 'uploads/videos/' . $video->video_image : null);
+        $video->delete();
 
         return response()->noContent();
     }
@@ -110,7 +115,7 @@ class VideoController extends Controller
             $video = ModernVideo::find($videoId);
 
             if (! $video) {
-                return response()->noContent();
+                return response()->json(['message' => 'Không tìm thấy video cần cập nhật.'], 404);
             }
 
             if ($videoCheck === 'video_title') {
@@ -129,13 +134,13 @@ class VideoController extends Controller
         }
 
         if (! $this->usesLegacyVideoTable()) {
-            return response()->noContent();
+            return response()->json(['message' => 'Chưa có nơi lưu video trên môi trường này.'], 422);
         }
 
         $video = LegacyVideo::find($videoId);
 
         if (! $video) {
-            return response()->noContent();
+            return response()->json(['message' => 'Không tìm thấy video cần cập nhật.'], 404);
         }
 
         if ($videoCheck === 'video_title') {
@@ -161,32 +166,42 @@ class VideoController extends Controller
         $imagePath = $this->publicUploadService->storeSluggedImage($request->file('file'), 'uploads/videos');
 
         if (! $imagePath) {
-            return response()->noContent();
+            return response()->json(['message' => 'Không thể lưu hình ảnh video mới.'], 422);
         }
 
         if ($this->usesModernVideoTable()) {
             $video = ModernVideo::find($videoId);
 
-            if ($video) {
-                $this->publicUploadService->deletePublicFile($video->thumbnail_path);
-                $video->thumbnail_path = $imagePath;
-                $video->save();
+            if (! $video) {
+                $this->publicUploadService->deletePublicFile($imagePath);
+
+                return response()->json(['message' => 'Không tìm thấy video cần cập nhật hình ảnh.'], 404);
             }
+
+            $this->publicUploadService->deletePublicFile($video->thumbnail_path);
+            $video->thumbnail_path = $imagePath;
+            $video->save();
 
             return response()->noContent();
         }
 
         if (! $this->usesLegacyVideoTable()) {
-            return response()->noContent();
+            $this->publicUploadService->deletePublicFile($imagePath);
+
+            return response()->json(['message' => 'Chưa có nơi lưu video trên môi trường này.'], 422);
         }
 
         $video = LegacyVideo::find($videoId);
 
-        if ($video) {
-            $this->publicUploadService->deletePublicFile($video->video_image ? 'uploads/videos/' . $video->video_image : null);
-            $video->video_image = basename($imagePath);
-            $video->save();
+        if (! $video) {
+            $this->publicUploadService->deletePublicFile($imagePath);
+
+            return response()->json(['message' => 'Không tìm thấy video cần cập nhật hình ảnh.'], 404);
         }
+
+        $this->publicUploadService->deletePublicFile($video->video_image ? 'uploads/videos/' . $video->video_image : null);
+        $video->video_image = basename($imagePath);
+        $video->save();
 
         return response()->noContent();
     }

@@ -6,6 +6,8 @@ use App\Models\User;
 use App\Support\AdminAccess;
 use App\Support\AdminPermissions;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -67,6 +69,47 @@ class AdminApiSecurityTest extends TestCase
         $this->getJson('/api/v1/admin/statistics/product-discovery')
             ->assertOk()
             ->assertJsonPath('success', true);
+    }
+
+    public function test_admin_statistics_api_falls_back_when_core_tables_are_missing(): void
+    {
+        $admin = $this->createAdminUser();
+
+        Sanctum::actingAs($admin);
+
+        Schema::partialMock()
+            ->shouldReceive('hasTable')
+            ->andReturnUsing(static function (string $table): bool {
+                return ! in_array($table, [
+                    'settings',
+                    'orders',
+                    'products',
+                    'product_categories',
+                    'brands',
+                    'customers',
+                ], true);
+            });
+
+        Cache::forget('site_statistics');
+        Cache::forget('all_settings');
+
+        $this->getJson('/api/v1/admin/statistics')
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.total_products', 0)
+            ->assertJsonPath('data.total_orders', 0);
+
+        $this->getJson('/api/v1/admin/statistics/sales')
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('tables_ready', false)
+            ->assertJsonCount(0, 'data');
+
+        $this->getJson('/api/v1/admin/statistics/products')
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('tables_ready', false)
+            ->assertJsonPath('data.total_products', 0);
     }
 
     protected function createAdminUser(array $attributes = []): User

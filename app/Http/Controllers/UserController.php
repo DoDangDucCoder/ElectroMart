@@ -6,10 +6,13 @@ use App\Http\Requests\Admin\Legacy\Users\StoreAdminUserRequest;
 use App\Http\Requests\Admin\Legacy\Users\SyncAdminRolesRequest;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 use App\Models\User;
 use App\Support\AdminAccess;
+use App\Support\AdminPermissions;
 use Auth;
 use Session;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
@@ -41,10 +44,13 @@ class UserController extends Controller
         }
         $admin = User::find($admin_id);
 
-        if ($admin) {
-            $admin->roles()->detach();
-            $admin->delete();
+        if (! $admin) {
+            return redirect()->back()->with('error', 'Không tìm thấy người dùng cần xóa');
         }
+
+        $admin->roles()->detach();
+        $admin->delete();
+
         return redirect()->back()->with('message', 'Xóa user thành công');
     }
     public function assign_roles(SyncAdminRolesRequest $request)
@@ -58,7 +64,7 @@ class UserController extends Controller
         $user = User::find($validated['admin_id']);
 
         if (!$user) {
-            return redirect()->back()->with('error', 'User not found');
+            return redirect()->back()->with('error', 'Không tìm thấy người dùng cần cập nhật vai trò');
         }
 
         $roleNames = collect($validated['roles'] ?? [])
@@ -83,21 +89,58 @@ class UserController extends Controller
 
         $admin = new User();
         $admin->name = $data['admin_name'];
-        $admin->phone = $data['admin_phone'] ?? null;
+        if (Schema::hasColumn($admin->getTable(), 'phone')) {
+            $admin->phone = $data['admin_phone'] ?? null;
+        }
         $admin->email = $data['admin_email'];
         $admin->password = Hash::make($data['admin_password']);
         $admin->save();
 
-        $defaultRole = Role::query()
-            ->where('guard_name', AdminAccess::guardName())
-            ->where('name', 'user')
-            ->first();
+        $defaultRole = $this->resolveProvisioningRole();
 
         if ($defaultRole) {
             $admin->assignRole($defaultRole);
         }
 
-        Session::put('message', 'Thêm users thành công');
+        Session::put('message', $defaultRole
+            ? 'Thêm users thành công và đã gán vai trò ' . $defaultRole->name
+            : 'Thêm users thành công');
         return Redirect::to('users');
+    }
+
+    protected function resolveProvisioningRole(): ?Role
+    {
+        $configuredRole = (string) config('admin-auth.provisioning.default_role', 'Staff');
+        $roleName = AdminAccess::normalizeRoleName($configuredRole);
+
+        if (! in_array($roleName, AdminAccess::canonicalRoleNames(), true)) {
+            $roleName = 'Staff';
+        }
+
+        foreach (AdminPermissions::all() as $permissionName) {
+            Permission::firstOrCreate([
+                'name' => $permissionName,
+                'guard_name' => AdminAccess::guardName(),
+            ]);
+        }
+
+        $role = Role::firstOrCreate([
+            'name' => $roleName,
+            'guard_name' => AdminAccess::guardName(),
+        ]);
+
+        $missingPermissions = array_diff(
+            AdminPermissions::defaultsForRole($roleName),
+            $role->permissions()
+                ->where('guard_name', AdminAccess::guardName())
+                ->pluck('name')
+                ->all()
+        );
+
+        if ($missingPermissions !== []) {
+            $role->givePermissionTo($missingPermissions);
+        }
+
+        return $role;
     }
 }

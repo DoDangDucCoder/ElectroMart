@@ -38,10 +38,29 @@ final class AdminAccess
 
     public static function allowedRoleNames(): array
     {
-        return array_values(array_unique([
-            ...self::CANONICAL_ROLE_NAMES,
-            ...array_keys(self::ROLE_ALIASES),
-        ]));
+        return self::queryableRoleNames();
+    }
+
+    public static function queryableRoleNames(): array
+    {
+        $names = [];
+
+        foreach (self::CANONICAL_ROLE_NAMES as $role) {
+            $normalized = Str::lower($role);
+
+            $names[] = $role;
+            $names[] = $normalized;
+            $names[] = str_replace(' ', '_', $normalized);
+            $names[] = str_replace(' ', '-', $normalized);
+        }
+
+        foreach (array_keys(self::ROLE_ALIASES) as $alias) {
+            $names[] = $alias;
+            $names[] = str_replace(' ', '_', $alias);
+            $names[] = str_replace(' ', '-', $alias);
+        }
+
+        return array_values(array_unique($names));
     }
 
     public static function normalizeRoleName(string $role): string

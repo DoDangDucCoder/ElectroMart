@@ -35,7 +35,29 @@ class AdminSecurityTest extends TestCase
             ->assertSee('Đăng nhập khu vực quản trị')
             ->assertSee('Đăng nhập quản trị')
             ->assertSee('Ghi nhớ đăng nhập trên thiết bị này')
-            ->assertSee('Quay lại trang chủ website');
+            ->assertSee('Quay lại trang chủ website')
+            ->assertDontSee('Dữ liệu seed local');
+    }
+
+    public function test_admin_login_page_shows_seed_hint_only_in_local_environment(): void
+    {
+        $originalEnvironment = $this->app['env'];
+
+        $this->app->instance('env', 'local');
+        config()->set('admin-auth.seed_defaults.primary_email', 'seed-admin@example.com');
+        config()->set('admin-auth.seed_defaults.primary_password', 'seed-secret-123');
+        config()->set('admin-auth.seed_defaults.editor_email', 'seed-editor@example.com');
+        config()->set('admin-auth.seed_defaults.editor_password', 'seed-editor-456');
+
+        $this->get('/admin')
+            ->assertOk()
+            ->assertSee('Dữ liệu seed local')
+            ->assertSee('seed-admin@example.com')
+            ->assertSee('seed-secret-123')
+            ->assertSee('seed-editor@example.com')
+            ->assertSee('seed-editor-456');
+
+        $this->app->instance('env', $originalEnvironment);
     }
 
     public function test_removed_public_admin_routes_are_not_available(): void

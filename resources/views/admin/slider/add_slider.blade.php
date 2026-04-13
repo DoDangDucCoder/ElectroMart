@@ -4,18 +4,18 @@
     <div class="g-admin-page-shell g-admin-slider-create">
         <section class="g-admin-page-hero">
             <div>
-                <span class="g-admin-page-eyebrow">Nội dung / Slider</span>
-                <h1>Thêm slider</h1>
-                <p>Tạo banner cho trang chủ và các khu vực cần hiển thị nổi bật trên website.</p>
+                <span class="g-admin-page-eyebrow">Nội dung / Trình chiếu</span>
+                <h1>Thêm trình chiếu</h1>
+                <p>Tạo ảnh trình chiếu cho trang chủ và các khu vực cần hiển thị nổi bật trên website.</p>
             </div>
             <div class="g-admin-page-stats">
                 <article>
-                    <strong>Hero</strong>
-                    <span>Banner chính storefront</span>
+                    <strong>Nổi bật</strong>
+                    <span>Khối trình chiếu chính của giao diện cửa hàng</span>
                 </article>
                 <article>
-                    <strong>Media</strong>
-                    <span>Ảnh và mô tả ngắn</span>
+                    <strong>Hình ảnh</strong>
+                    <span>Ảnh và mô tả ngắn gọn</span>
                 </article>
             </div>
         </section>
@@ -24,11 +24,21 @@
             <div class="alert alert-success">{{ session('message') }}</div>
         @endif
 
+        @if (session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                {{ $errors->first() }}
+            </div>
+        @endif
+
         <section class="g-admin-panel-card">
             <header class="g-admin-panel-head">
                 <div>
-                    <strong>Thông tin slider</strong>
-                    <p>Ảnh slider nên đúng tỷ lệ storefront hiện tại để tránh crop không mong muốn.</p>
+                    <strong>Thông tin trình chiếu</strong>
+                    <p>Ảnh trình chiếu nên đúng tỷ lệ giao diện cửa hàng hiện tại để tránh bị cắt ngoài ý muốn.</p>
                 </div>
             </header>
             <div class="g-admin-panel-body">
@@ -41,12 +51,12 @@
                             value="{{ old('slider_name') }}" placeholder="Tên slide">
                     </div>
                     <div class="form-group">
-                        <label for="slider_alt">Alt text / tiêu đề hero</label>
+                        <label for="slider_alt">Văn bản thay thế / tiêu đề nổi bật</label>
                         <input type="text" name="slider_alt" class="form-control" id="slider_alt"
                             value="{{ old('slider_alt') }}"
                             placeholder="Ví dụ: iPhone mới lên kệ với ưu đãi tốt trong tuần">
                         <span class="g-admin-cell-note">
-                            Dùng làm headline và alt text cho banner. Nên viết ngắn, đúng chiến dịch và dễ đọc trên storefront.
+                            Dùng làm tiêu đề và văn bản thay thế cho ảnh trình chiếu. Nên viết ngắn, đúng chiến dịch và dễ đọc trên giao diện cửa hàng.
                         </span>
                     </div>
                     <div class="form-group">
@@ -56,29 +66,32 @@
                     <div class="form-group">
                         <label for="slider_desc">Mô tả chiến dịch</label>
                         <textarea style="resize:none" rows="8" class="form-control" name="slider_desc" id="slider_desc"
-                            placeholder="Mô tả ngắn sẽ hiển thị dưới headline trong hero">{{ old('slider_desc') }}</textarea>
+                            placeholder="Mô tả ngắn sẽ hiển thị dưới tiêu đề nổi bật">{{ old('slider_desc') }}</textarea>
                     </div>
                     <div class="form-group">
-                        <label for="slider_tone">Tone hiển thị</label>
+                        <label for="slider_tone">Phong cách hiển thị</label>
                         <select name="slider_tone" id="slider_tone" class="form-control input-sm m-bot15">
                             <option value="auto" @selected(old('slider_tone', 'auto') === 'auto')>Tự động theo nội dung</option>
                             <option value="mobile" @selected(old('slider_tone') === 'mobile')>Điện thoại / di động</option>
-                            <option value="gaming" @selected(old('slider_tone') === 'gaming')>Gaming / hiệu năng</option>
-                            <option value="lifestyle" @selected(old('slider_tone') === 'lifestyle')>Khuyến mãi / lifestyle</option>
-                            <option value="accessory" @selected(old('slider_tone') === 'accessory')>Phụ kiện / combo</option>
+                            <option value="gaming" @selected(old('slider_tone') === 'gaming')>Hiệu năng / chơi game</option>
+                            <option value="lifestyle" @selected(old('slider_tone') === 'lifestyle')>Khuyến mãi / phong cách sống</option>
+                            <option value="accessory" @selected(old('slider_tone') === 'accessory')>Phụ kiện / bộ kèm</option>
                         </select>
                         <span class="g-admin-cell-note">
-                            Tone giúp storefront tự chọn overlay, meta chip và ngữ điệu copy phù hợp với từng banner.
+                            Phong cách giúp giao diện cửa hàng tự chọn lớp phủ, nhãn phụ và lời dẫn phù hợp với từng ảnh trình chiếu.
                         </span>
                     </div>
                     <div class="form-group">
-                        <label for="slider_status">Hiển thị</label>
+                        <label for="slider_status">Trạng thái hiển thị</label>
                         <select name="slider_status" id="slider_status" class="form-control input-sm m-bot15">
-                            <option value="0" @selected(old('slider_status', '0') === '0')>Hiển thị</option>
-                            <option value="1" @selected(old('slider_status') === '1')>Ẩn</option>
+                            <option value="1" @selected(old('slider_status', '1') === '1')>Hiển thị ngay trên giao diện cửa hàng</option>
+                            <option value="0" @selected(old('slider_status') === '0')>Ẩn tạm thời</option>
                         </select>
+                        <span class="g-admin-cell-note">
+                            Trình chiếu chỉ xuất hiện ở giao diện cửa hàng khi trạng thái là <strong>Hiển thị</strong>.
+                        </span>
                     </div>
-                    <button type="submit" name="add_slider" class="btn btn-info">Thêm slider</button>
+                    <button type="submit" name="add_slider" class="btn btn-info">Thêm trình chiếu</button>
                 </form>
             </div>
         </section>

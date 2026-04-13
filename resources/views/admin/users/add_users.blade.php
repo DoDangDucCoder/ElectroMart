@@ -8,7 +8,8 @@
                 <h1>Thêm người dùng quản trị</h1>
                 <p>
                     Tạo tài khoản admin mới để bàn giao cho nhân sự hoặc phân tách quyền vận hành.
-                    Vai trò mặc định hiện vẫn theo logic controller đang chạy.
+                    Tài khoản mới sẽ được gán vai trò mặc định <strong>{{ config('admin-auth.provisioning.default_role', 'Staff') }}</strong>
+                    để có thể đăng nhập an toàn trước khi phân quyền chi tiết.
                 </p>
             </div>
 
@@ -18,8 +19,8 @@
                     <span>Guard quản trị đang sử dụng</span>
                 </article>
                 <article>
-                    <strong>1 bước</strong>
-                    <span>Tạo user rồi phân quyền ở màn tiếp theo</span>
+                    <strong>{{ config('admin-auth.provisioning.default_role', 'Staff') }}</strong>
+                    <span>Vai trò mặc định khi tạo mới</span>
                 </article>
             </div>
         </section>
@@ -28,7 +29,7 @@
             <div class="g-admin-panel-head">
                 <div>
                     <div>Thông tin tài khoản</div>
-                    <p>Tạo tài khoản trước, sau đó gán vai trò và quyền ở các màn quản trị tương ứng.</p>
+                    <p>Tạo tài khoản trước, hệ thống sẽ tự gán vai trò mặc định rồi bạn có thể tinh chỉnh thêm ở màn danh sách người dùng.</p>
                 </div>
             </div>
             <div class="g-admin-panel-body">
@@ -46,7 +47,7 @@
 
                     <div class="form-group">
                         <label for="admin_email">Email</label>
-                        <input type="text" name="admin_email" class="form-control" id="admin_email" placeholder="admin@example.com">
+                        <input type="text" name="admin_email" class="form-control" id="admin_email" placeholder="quantri@congty.com">
                     </div>
 
                     <div class="form-group">

@@ -222,7 +222,7 @@ class OrderController extends Controller
 				->first();
 
 			if (! $order) {
-				abort(404);
+				return redirect('/history')->with('error', 'Không tìm thấy đơn hàng bạn cần xem.');
 			}
 
 			return view('pages.history.view_history_order', array_merge(
@@ -238,7 +238,7 @@ class OrderController extends Controller
 			->first();
 
 		if (! $order) {
-			abort(404);
+			return redirect('/history')->with('error', 'Không tìm thấy đơn hàng bạn cần xem.');
 		}
 
 		return view('pages.history.view_history_order', array_merge(

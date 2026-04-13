@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Support\AdminPermissions;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\AdminWorkspaceController;
+use App\Http\Controllers\CategoryProductAdminController;
 use App\Http\Controllers\AttributeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\Catalog\BrandController as AdminBrandController;
@@ -29,6 +31,12 @@ use App\Http\Controllers\VideoController;
 
 Route::middleware('guest:web')->group(function () {
     Route::get('/admin', [AuthController::class, 'login_auth'])->name('admin.login');
+    Route::get('/admin/register', [AuthController::class, 'showRegisterForm'])->name('admin.register');
+    Route::post('/admin/register', [AuthController::class, 'register'])->name('admin.register.store');
+    Route::get('/admin/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('admin.password.request');
+    Route::post('/admin/forgot-password', [AuthController::class, 'sendResetLink'])->name('admin.password.email');
+    Route::get('/admin/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('admin.password.reset');
+    Route::post('/admin/reset-password', [AuthController::class, 'resetPassword'])->name('admin.password.update');
     Route::post('/auth-login', [AuthController::class, 'login'])
         ->middleware('throttle:5,1')
         ->name('admin.login.attempt');
@@ -37,6 +45,10 @@ Route::middleware('guest:web')->group(function () {
 Route::middleware(['auth:web', 'admin.access'])->group(function () {
     // Admin dashboard
     Route::get('/dashboard', [AdminController::class, 'show_dashboard'])->name('admin.dashboard');
+    Route::get('/admin/quick-search', [AdminWorkspaceController::class, 'search'])->name('admin.tools.search');
+    Route::get('/admin/profile', [AdminWorkspaceController::class, 'profile'])->name('admin.profile.show');
+    Route::put('/admin/profile', [AdminWorkspaceController::class, 'updateProfile'])->name('admin.profile.update');
+    Route::get('/admin/settings', [AdminWorkspaceController::class, 'settings'])->name('admin.settings');
     Route::post('/logout-auth', [AuthController::class, 'logout_auth'])->name('admin.logout');
     Route::post('/dashboard-filter', [AdminController::class, 'dashboard_filter']);
     Route::post('/filter-by-date', [AdminController::class, 'filter_by_date']);
@@ -87,6 +99,11 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
             Route::delete('{brand}', [AdminBrandController::class, 'destroy'])->name('destroy');
             Route::patch('{brand}/status', [AdminBrandController::class, 'updateStatus'])->name('status');
         });
+
+        // Product category management (legacy blade interface, read-only safe routes)
+        Route::get('/add-category-product', [CategoryProductAdminController::class, 'add_category_product']);
+        Route::get('/all-category-product', [CategoryProductAdminController::class, 'all_category_product']);
+        Route::get('/edit-category-product/{category_id}', [CategoryProductAdminController::class, 'edit_category_product']);
 
         // Brand management (legacy blade interface)
         Route::get('/add-brand-product', [BrandProduct::class, 'add_brand_product']);

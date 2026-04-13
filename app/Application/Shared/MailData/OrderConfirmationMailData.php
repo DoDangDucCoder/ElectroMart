@@ -35,7 +35,7 @@ class OrderConfirmationMailData
         $shippingMethod = (string) ($shipping['shipping_method'] ?? '1');
 
         return new self(
-            brandName: (string) ($overrides['brandName'] ?? 'Laravel Shop'),
+            brandName: (string) ($overrides['brandName'] ?? 'ShopW'),
             orderCode: (string) ($code['order_code'] ?? 'N/A'),
             couponCode: (string) ($code['coupon_code'] ?? 'Không áp dụng'),
             feeShip: (int) ($overrides['feeShip'] ?? $shipping['fee_ship'] ?? $shipping['fee'] ?? 0),

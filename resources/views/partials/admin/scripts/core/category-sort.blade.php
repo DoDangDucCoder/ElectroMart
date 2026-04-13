@@ -1,16 +1,33 @@
 <script type="text/javascript">
     $(function() {
-        if (!$('#category_order').length) {
+        var $categoryOrder = $('#category_order');
+
+        if (!$categoryOrder.length) {
             return;
         }
 
-        $('#category_order').sortable({
+        function renderCategorySortNotice(message, type) {
+            var $target = $('#category_sort_notice');
+
+            if (!$target.length) {
+                return;
+            }
+
+            var alertClass = type === 'error' ? 'alert-danger' : 'alert-success';
+            $target.html('<div class="alert ' + alertClass + '">' + message + '</div>');
+        }
+
+        if (String($categoryOrder.data('categorySortEnabled')) !== 'true') {
+            return;
+        }
+
+        $categoryOrder.sortable({
             placeholder: 'ui-state-highlight',
             update: function() {
                 var page_id_array = [];
                 var _token = $('input[name="_token"]').val();
 
-                $('#category_order tr').each(function() {
+                $categoryOrder.find('tr').each(function() {
                     page_id_array.push($(this).attr('id'));
                 });
 
@@ -22,7 +39,16 @@
                         _token: _token
                     },
                     success: function(data) {
-                        alert(data);
+                        renderCategorySortNotice(data || 'Đã cập nhật thứ tự danh mục.', 'success');
+                    },
+                    error: function(xhr) {
+                        var message = 'Không thể cập nhật thứ tự danh mục lúc này.';
+
+                        if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+
+                        renderCategorySortNotice(message, 'error');
                     }
                 });
             }

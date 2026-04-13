@@ -13,7 +13,7 @@ class RegisterCustomerRequest extends BaseFormRequest
             'customer_name' => ['required', 'string', 'max:255'],
             'customer_email' => ['required', 'email', 'max:255', Rule::unique('customers', 'email')],
             'customer_password' => ['required', 'string', 'min:6'],
-            'customer_phone' => ['nullable', 'string', 'max:30'],
+            'customer_phone' => ['nullable', 'string', 'max:30', Rule::unique('customers', 'phone')],
         ];
     }
 
@@ -29,6 +29,7 @@ class RegisterCustomerRequest extends BaseFormRequest
             'customer_password.required' => 'Vui lòng nhập mật khẩu.',
             'customer_password.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
             'customer_phone.max' => 'Số điện thoại không được vượt quá 30 ký tự.',
+            'customer_phone.unique' => 'Số điện thoại này đã được sử dụng.',
         ];
     }
 }

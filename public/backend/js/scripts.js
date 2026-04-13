@@ -2,7 +2,9 @@
     "use strict";
     $(document).ready(function () {
         /*==Left Navigation Accordion ==*/
-        if ($.fn.dcAccordion) {
+        var $adminSidebarNav = $('[data-admin-sidebar-nav]');
+
+        if ($.fn.dcAccordion && ! $adminSidebarNav.length) {
             $('#nav-accordion').dcAccordion({
                 eventType: 'click',
                 autoClose: true,
@@ -195,33 +197,261 @@
 
         /*==Sidebar Toggle==*/
 
-        $(".leftside-navigation .sub-menu > a").click(function () {
-            var o = ($(this).offset());
-            var diff = 80 - o.top;
-            if (diff > 0)
-                $(".leftside-navigation").scrollTo("-=" + Math.abs(diff), 500);
-            else
-                $(".leftside-navigation").scrollTo("+=" + Math.abs(diff), 500);
+        var adminSidebarBreakpoint = 991;
+        var $body = $('body');
+        var $adminShell = $('[data-admin-shell]');
+        var $adminSidebar = $('#sidebar');
+        var $adminSidebarToggle = $('[data-admin-sidebar-toggle]');
+        var adminSidebarGroupStorageKey = 'g-admin-sidebar-open-group';
+        var adminShellCollapsedStorageKey = 'g-admin-shell-collapsed';
+        var $adminSidebarGroups = $adminSidebarNav.find('[data-admin-sidebar-group]');
+
+        function isAdminSidebarMobileMode() {
+            return window.matchMedia('(max-width: ' + adminSidebarBreakpoint + 'px)').matches;
+        }
+
+        function getStoredAdminSidebarGroup() {
+            try {
+                return window.sessionStorage.getItem(adminSidebarGroupStorageKey);
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function setStoredAdminSidebarGroup(groupKey) {
+            try {
+                if (groupKey) {
+                    window.sessionStorage.setItem(adminSidebarGroupStorageKey, groupKey);
+                } else {
+                    window.sessionStorage.removeItem(adminSidebarGroupStorageKey);
+                }
+            } catch (error) {
+                // Ignore storage failures and keep navigation functional.
+            }
+        }
+
+        function getStoredAdminShellCollapsed() {
+            try {
+                return window.sessionStorage.getItem(adminShellCollapsedStorageKey) === 'true';
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function setStoredAdminShellCollapsed(isCollapsed) {
+            try {
+                window.sessionStorage.setItem(adminShellCollapsedStorageKey, isCollapsed ? 'true' : 'false');
+            } catch (error) {
+                // Ignore storage failures and keep shell navigation functional.
+            }
+        }
+
+        function findRouteActiveAdminSidebarGroup() {
+            var $currentGroup = $adminSidebarNav.find('[aria-current="page"]').closest('[data-admin-sidebar-group]');
+
+            return $currentGroup.length ? $currentGroup.data('admin-sidebar-group') : null;
+        }
+
+        function getAdminSidebarGroup(groupKey) {
+            return $adminSidebarGroups.filter('[data-admin-sidebar-group="' + groupKey + '"]');
+        }
+
+        function setAdminSidebarGroupState($group, isOpen, animate) {
+            if (! $group.length) {
+                return;
+            }
+
+            var $button = $group.children('[data-admin-sidebar-trigger]');
+            var $submenu = $group.children('ul.sub');
+
+            $group.toggleClass('is-open', isOpen);
+            $button.attr('aria-expanded', isOpen ? 'true' : 'false');
+
+            if (! $submenu.length) {
+                return;
+            }
+
+            if (animate) {
+                $submenu.stop(true, true)[isOpen ? 'slideDown' : 'slideUp'](180);
+                return;
+            }
+
+            $submenu.css('display', isOpen ? 'block' : 'none');
+        }
+
+        function syncAdminSidebarGroups() {
+            if (! $adminSidebarGroups.length) {
+                return;
+            }
+
+            var routeActiveGroup = findRouteActiveAdminSidebarGroup();
+
+            $adminSidebarGroups.each(function () {
+                var $group = $(this);
+                var groupKey = $group.data('admin-sidebar-group');
+                var shouldOpen = !!routeActiveGroup && groupKey === routeActiveGroup;
+
+                setAdminSidebarGroupState($group, shouldOpen, false);
+            });
+
+            setStoredAdminSidebarGroup(routeActiveGroup);
+        }
+
+        function toggleAdminSidebarGroup(groupKey) {
+            var $targetGroup = getAdminSidebarGroup(groupKey);
+
+            if (! $targetGroup.length) {
+                return;
+            }
+
+            var shouldOpen = ! $targetGroup.hasClass('is-open');
+
+            $adminSidebarGroups.each(function () {
+                var $group = $(this);
+                setAdminSidebarGroupState($group, shouldOpen && $group.is($targetGroup), true);
+            });
+
+            setStoredAdminSidebarGroup(shouldOpen ? groupKey : null);
+
+            if (shouldOpen) {
+                var groupTop = $targetGroup.position();
+                if (groupTop && typeof groupTop.top !== 'undefined') {
+                    $(".leftside-navigation").scrollTo(groupTop.top - 80, 300);
+                }
+            }
+        }
+
+        function updateAdminSidebarToggleState(isExpanded) {
+            $adminSidebarToggle.attr('aria-expanded', isExpanded ? 'true' : 'false');
+        }
+
+        function updateAdminSidebarToggleLabel() {
+            if (! $adminSidebarToggle.length) {
+                return;
+            }
+
+            var isMobile = isAdminSidebarMobileMode();
+            var isExpanded = isMobile
+                ? $body.hasClass('g-admin-sidebar-mobile-open')
+                : ! $adminShell.hasClass('is-collapsed');
+            var nextLabel = '';
+
+            if (isMobile) {
+                nextLabel = isExpanded
+                    ? $adminSidebarToggle.attr('data-admin-sidebar-label-mobile-open')
+                    : $adminSidebarToggle.attr('data-admin-sidebar-label-mobile-closed');
+            } else {
+                nextLabel = isExpanded
+                    ? $adminSidebarToggle.attr('data-admin-sidebar-label-expanded')
+                    : $adminSidebarToggle.attr('data-admin-sidebar-label-collapsed');
+            }
+
+            if (nextLabel) {
+                $adminSidebarToggle.attr('aria-label', nextLabel);
+            }
+        }
+
+        function showAdminSidebarScrollbar() {
+            if ($.fn.niceScroll && $(".leftside-navigation").length) {
+                $(".leftside-navigation").getNiceScroll().show();
+            }
+        }
+
+        function hideAdminSidebarScrollbar() {
+            if ($.fn.niceScroll && $(".leftside-navigation").length) {
+                $(".leftside-navigation").getNiceScroll().hide();
+            }
+        }
+
+        function closeAdminMobileSidebar() {
+            $body.removeClass('g-admin-sidebar-mobile-open');
+            updateAdminSidebarToggleState(false);
+            updateAdminSidebarToggleLabel();
+            hideAdminSidebarScrollbar();
+        }
+
+        function setAdminShellCollapsed(isCollapsed) {
+            if (! $adminShell.length) {
+                return;
+            }
+
+            $adminShell.toggleClass('is-collapsed', isCollapsed);
+            updateAdminSidebarToggleState(!isCollapsed);
+            updateAdminSidebarToggleLabel();
+
+            if (isCollapsed) {
+                hideAdminSidebarScrollbar();
+            } else {
+                showAdminSidebarScrollbar();
+            }
+        }
+
+        function syncAdminSidebarMode() {
+            if (isAdminSidebarMobileMode()) {
+                $adminShell.removeClass('is-collapsed');
+                $adminSidebar.removeClass('hide-left-bar');
+                if ($body.hasClass('g-admin-sidebar-mobile-open')) {
+                    showAdminSidebarScrollbar();
+                } else {
+                    hideAdminSidebarScrollbar();
+                }
+                updateAdminSidebarToggleState($body.hasClass('g-admin-sidebar-mobile-open'));
+                updateAdminSidebarToggleLabel();
+                return;
+            }
+
+            $body.removeClass('g-admin-sidebar-mobile-open');
+            $adminSidebar.removeClass('hide-left-bar');
+            setAdminShellCollapsed(getStoredAdminShellCollapsed());
+        }
+
+        $(document).on('click', '[data-admin-sidebar-trigger]', function (e) {
+            var groupKey = $(this).data('admin-sidebar-trigger');
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            toggleAdminSidebarGroup(groupKey);
+        });
+
+        $(document).on('click', '[data-admin-sidebar-group] a[data-admin-sidebar-key]', function () {
+            var groupKey = $(this).closest('[data-admin-sidebar-group]').data('admin-sidebar-group');
+
+            if (groupKey) {
+                setStoredAdminSidebarGroup(groupKey);
+            }
         });
 
 
 
-        $('.sidebar-toggle-box .fa-bars').click(function (e) {
-
-            $(".leftside-navigation").niceScroll({
-                cursorcolor: "#1FB5AD",
-                cursorborder: "0px solid #fff",
-                cursorborderradius: "0px",
-                cursorwidth: "3px"
-            });
-
-            $('#sidebar').toggleClass('hide-left-bar');
-            if ($('#sidebar').hasClass('hide-left-bar')) {
-                $(".leftside-navigation").getNiceScroll().hide();
+        $adminSidebarToggle.click(function (e) {
+            if ($.fn.niceScroll) {
+                $(".leftside-navigation").niceScroll({
+                    cursorcolor: "#1FB5AD",
+                    cursorborder: "0px solid #fff",
+                    cursorborderradius: "0px",
+                    cursorwidth: "3px"
+                });
             }
-            $(".leftside-navigation").getNiceScroll().show();
-            $('#main-content').toggleClass('merge-left');
+
+            if (isAdminSidebarMobileMode()) {
+                $body.toggleClass('g-admin-sidebar-mobile-open');
+                updateAdminSidebarToggleState($body.hasClass('g-admin-sidebar-mobile-open'));
+                updateAdminSidebarToggleLabel();
+
+                if ($body.hasClass('g-admin-sidebar-mobile-open')) {
+                    showAdminSidebarScrollbar();
+                } else {
+                    hideAdminSidebarScrollbar();
+                }
+            } else {
+                var shouldCollapseShell = ! $adminShell.hasClass('is-collapsed');
+                setAdminShellCollapsed(shouldCollapseShell);
+                setStoredAdminShellCollapsed(shouldCollapseShell);
+            }
+
             e.stopPropagation();
+            e.preventDefault();
             if ($('#container').hasClass('open-right-panel')) {
                 $('#container').removeClass('open-right-panel')
             }
@@ -257,6 +487,29 @@
 
 
         });
+
+        $(document).click(function (e) {
+            if (! isAdminSidebarMobileMode() || ! $body.hasClass('g-admin-sidebar-mobile-open')) {
+                return;
+            }
+
+            if ($(e.target).closest('#sidebar, [data-admin-sidebar-toggle]').length === 0) {
+                closeAdminMobileSidebar();
+            }
+        });
+
+        $(document).on('keydown', function (e) {
+            if (e.key === 'Escape' && isAdminSidebarMobileMode()) {
+                closeAdminMobileSidebar();
+            }
+        });
+
+        $(window).on('resize.adminSidebar', function () {
+            syncAdminSidebarMode();
+        });
+
+        syncAdminSidebarMode();
+        syncAdminSidebarGroups();
 
 
         $('.panel .tools .fa').click(function () {

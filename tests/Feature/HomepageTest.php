@@ -183,6 +183,84 @@ class HomepageTest extends TestCase
             ->assertSee('/video-shop');
     }
 
+    public function test_homepage_renders_flash_sale_when_curated_products_are_configured(): void
+    {
+        $flashBrand = Brand::create([
+            'name' => 'Flash Brand',
+            'slug' => 'flash-brand',
+            'description' => 'Brand for flash sale test',
+            'is_active' => true,
+            'display_order' => 10,
+            'meta' => null,
+        ]);
+
+        $flashOne = $this->productService->createProduct([
+            'name' => 'Flash Sale Product One',
+            'slug' => 'flash-sale-product-one',
+            'brand_id' => $flashBrand->id,
+            'primary_category_id' => $this->category->id,
+            'price' => 24000000,
+            'sale_price' => 21990000,
+            'cost_price' => 18000000,
+            'stock_quantity' => 10,
+            'description' => 'Flash sale product one',
+            'content' => 'Flash sale product one',
+            'category_ids' => [$this->category->id],
+            'is_active' => true,
+        ]);
+
+        $flashTwo = $this->productService->createProduct([
+            'name' => 'Flash Sale Product Two',
+            'slug' => 'flash-sale-product-two',
+            'brand_id' => $flashBrand->id,
+            'primary_category_id' => $this->category->id,
+            'price' => 18000000,
+            'sale_price' => 15990000,
+            'cost_price' => 12000000,
+            'stock_quantity' => 8,
+            'description' => 'Flash sale product two',
+            'content' => 'Flash sale product two',
+            'category_ids' => [$this->category->id],
+            'is_active' => true,
+        ]);
+
+        config()->set('storefront.flash_sale', [
+            'enabled' => true,
+            'kicker' => 'Hot deal',
+            'title' => 'Flash Sale',
+            'cta_label' => 'Xem tất cả deal',
+            'cta_url' => '/tim-kiem',
+            'countdown_ends_at' => now()->addDay()->toDateTimeString(),
+            'product_slugs' => [$flashOne->slug, $flashTwo->slug],
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('shopw-flash-sale-shell', false)
+            ->assertSee('data-flash-sale-countdown=', false)
+            ->assertSee('Flash Sale Product One')
+            ->assertSee('Flash Sale Product Two')
+            ->assertSee('Xem tất cả deal');
+    }
+
+    public function test_homepage_hides_flash_sale_when_curated_products_are_missing(): void
+    {
+        config()->set('storefront.flash_sale', [
+            'enabled' => true,
+            'kicker' => 'Hot deal',
+            'title' => 'Flash Sale',
+            'cta_label' => 'Xem tất cả deal',
+            'cta_url' => '/tim-kiem',
+            'countdown_ends_at' => now()->addDay()->toDateTimeString(),
+            'product_slugs' => ['missing-flash-sale-product'],
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertDontSee('shopw-flash-sale-shell', false)
+            ->assertDontSee('Flash Sale');
+    }
+
     public function test_product_tabs_returns_home_cards_fragment(): void
     {
         $this->post('/product-tabs', [
@@ -276,7 +354,15 @@ class HomepageTest extends TestCase
             'query' => 'Test Product',
         ])->assertOk()
             ->assertSee('dropdown-menu')
+            ->assertSee('shopw-search-suggest-layout', false)
+            ->assertSee('shopw-search-suggest-footer', false)
             ->assertSee('Test Product 7');
+
+        $this->post('/autocomplete-ajax', [
+            'query' => '',
+        ])->assertOk()
+            ->assertSee('Từ khóa nổi bật')
+            ->assertSee('shopw-search-suggest-chip', false);
 
         $this->postJson('/autocomplete-ajax', [
             'query' => str_repeat('a', 101),

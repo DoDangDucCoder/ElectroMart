@@ -29,6 +29,10 @@
                     <div class="alert alert-success">{{ session('message') }}</div>
                 @endif
 
+                @if (session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
+
                 @if ($order->isEmpty())
                     <div class="g-admin-empty-state">Không có đơn hàng nào khớp với ngày đã chọn.</div>
                 @else

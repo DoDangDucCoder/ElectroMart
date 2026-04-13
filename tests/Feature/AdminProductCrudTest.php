@@ -142,6 +142,21 @@ class AdminProductCrudTest extends TestCase
         $this->assertFalse(File::exists(public_path('uploads/gallery/' . basename($imagePath))));
     }
 
+    public function test_product_forms_render_session_error_feedback_consistently(): void
+    {
+        [$product] = $this->createProductThroughForm();
+
+        $this->withSession(['error' => 'Không thể lưu sản phẩm lúc này.'])
+            ->get('/add-product')
+            ->assertOk()
+            ->assertSee('Không thể lưu sản phẩm lúc này.');
+
+        $this->withSession(['error' => 'Không thể tải sản phẩm cần cập nhật.'])
+            ->get('/edit-product/' . $product->product_id)
+            ->assertOk()
+            ->assertSee('Không thể tải sản phẩm cần cập nhật.');
+    }
+
     /**
      * @return array{0: Product, 1: ProductCategory, 2: Brand}
      */

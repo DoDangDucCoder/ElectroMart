@@ -20,6 +20,17 @@
             </div>
         </section>
 
+        @unless ($summary['tables_ready'] ?? false)
+            <section class="g-admin-panel-card">
+                <div class="g-admin-panel-body">
+                    <div class="alert alert-warning" style="margin-bottom: 0;">
+                        Bảng dữ liệu đơn hàng của báo cáo lợi nhuận chưa sẵn sàng. Trang đang hiển thị ở chế độ an toàn cho đến khi
+                        <code>orders</code> và <code>order_items</code> được tạo trong cơ sở dữ liệu.
+                    </div>
+                </div>
+            </section>
+        @endunless
+
         <section class="g-admin-panel-card">
             <header class="g-admin-panel-head">
                 <div>

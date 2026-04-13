@@ -34,18 +34,18 @@ class SliderController extends Controller
     public function unactive_slide($slide_id)
     {
         if (! $this->sliderTableExists()) {
-            Session::put('message', 'Bảng slider chưa được cấu hình.');
-
-            return Redirect::to('manage-slider');
+            return Redirect::to('manage-slider')->with('error', 'Bảng trình chiếu chưa được cấu hình.');
         }
 
         $slider = Slider::find($slide_id);
-        if ($slider) {
-            $slider->slider_status = 0;
-            $slider->save();
+        if (! $slider) {
+            return Redirect::to('manage-slider')->with('error', 'Không tìm thấy mục trình chiếu cần cập nhật.');
         }
 
-        Session::put('message', 'Không kích hoạt slider thành công');
+        $slider->slider_status = 0;
+        $slider->save();
+
+        Session::put('message', 'Đã ẩn trình chiếu thành công');
 
         return Redirect::to('manage-slider');
     }
@@ -53,18 +53,18 @@ class SliderController extends Controller
     public function active_slide($slide_id)
     {
         if (! $this->sliderTableExists()) {
-            Session::put('message', 'Bảng slider chưa được cấu hình.');
-
-            return Redirect::to('manage-slider');
+            return Redirect::to('manage-slider')->with('error', 'Bảng trình chiếu chưa được cấu hình.');
         }
 
         $slider = Slider::find($slide_id);
-        if ($slider) {
-            $slider->slider_status = 1;
-            $slider->save();
+        if (! $slider) {
+            return Redirect::to('manage-slider')->with('error', 'Không tìm thấy mục trình chiếu cần cập nhật.');
         }
 
-        Session::put('message', 'Kích hoạt slider thành công');
+        $slider->slider_status = 1;
+        $slider->save();
+
+        Session::put('message', 'Đã bật hiển thị trình chiếu thành công');
 
         return Redirect::to('manage-slider');
     }
@@ -72,9 +72,9 @@ class SliderController extends Controller
     public function insert_slider(StoreSliderRequest $request)
     {
         if (! $this->sliderTableExists()) {
-            Session::put('message', 'Bảng slider chưa được cấu hình.');
-
-            return Redirect::to('add-slider');
+            return Redirect::to('add-slider')
+                ->withInput()
+                ->with('error', 'Bảng trình chiếu chưa được cấu hình.');
         }
 
         $data = $request->validated();
@@ -85,7 +85,7 @@ class SliderController extends Controller
         $slider = new Slider();
         $slider->slider_name = $data['slider_name'];
         $slider->slider_image = $new_image;
-        $slider->slider_status = $data['slider_status'];
+        $slider->slider_status = (int) $data['slider_status'];
         $slider->slider_desc = $data['slider_desc'] ?? null;
 
         if (Schema::hasColumn((new Slider())->getTable(), 'slider_alt')) {
@@ -99,7 +99,7 @@ class SliderController extends Controller
 
         $slider->save();
 
-        Session::put('message', 'Thêm slider thành công');
+        Session::put('message', 'Thêm trình chiếu thành công');
 
         return Redirect::to('add-slider');
     }
@@ -107,18 +107,18 @@ class SliderController extends Controller
     public function delete_slide($slide_id)
     {
         if (! $this->sliderTableExists()) {
-            Session::put('message', 'Bảng slider chưa được cấu hình.');
-
-            return redirect()->back();
+            return redirect()->back()->with('error', 'Bảng trình chiếu chưa được cấu hình.');
         }
 
         $slider = Slider::find($slide_id);
-        if ($slider) {
-            $this->publicUploadService->deletePublicFile('uploads/slider/' . $slider->slider_image);
-            $slider->delete();
+        if (! $slider) {
+            return redirect()->back()->with('error', 'Không tìm thấy mục trình chiếu cần xóa.');
         }
 
-        Session::put('message', 'Xóa slider thành công');
+        $this->publicUploadService->deletePublicFile('uploads/slider/' . $slider->slider_image);
+        $slider->delete();
+
+        Session::put('message', 'Xóa trình chiếu thành công');
 
         return redirect()->back();
     }

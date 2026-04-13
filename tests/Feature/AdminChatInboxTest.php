@@ -9,6 +9,7 @@ use App\Support\AdminAccess;
 use App\Support\AdminPermissions;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -173,6 +174,32 @@ class AdminChatInboxTest extends TestCase
             ->assertSee('data-admin-chat-dashboard-card', false)
             ->assertSee('Hộp thư chat')
             ->assertSee('Xem hội thoại của tôi');
+    }
+
+    public function test_admin_chat_inbox_falls_back_gracefully_when_chat_tables_are_missing(): void
+    {
+        $admin = $this->createAdminUser('Admin');
+
+        Schema::dropIfExists('chat_messages');
+        Schema::dropIfExists('chat_conversations');
+
+        $this->actingAs($admin, 'web')
+            ->get('/chat-inbox')
+            ->assertOk()
+            ->assertSee('Hộp thư chatbot')
+            ->assertSee('Bảng dữ liệu chat chưa sẵn sàng');
+
+        $this->actingAs($admin, 'web')
+            ->getJson('/chat-inbox/conversations')
+            ->assertOk()
+            ->assertJsonPath('data.tables_ready', false)
+            ->assertJsonPath('data.summary.total_conversations', 0)
+            ->assertJsonCount(0, 'data.items');
+
+        $this->actingAs($admin, 'web')
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertDontSee('data-admin-chat-unread-badge', false);
     }
 
     protected function createAdminUser(string $roleName): User

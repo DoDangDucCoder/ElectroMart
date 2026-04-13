@@ -40,6 +40,11 @@
                     {{ Session::put('message', null) }}
                 @endif
 
+                @if (session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                    {{ Session::put('error', null) }}
+                @endif
+
                 <div class="table-responsive">
                     <table class="table table-striped b-t b-light g-admin-data-table" id="myTable">
                         <thead>

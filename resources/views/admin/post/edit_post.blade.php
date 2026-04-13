@@ -1,6 +1,12 @@
 @extends('admin_layout')
 
 @section('admin_content')
+    @php
+        $featuredImagePreview = $post->featured_image_path && file_exists(public_path($post->featured_image_path))
+            ? asset($post->featured_image_path)
+            : asset('uploads/product/no-image.svg');
+    @endphp
+
     <div class="g-admin-page-shell g-admin-post-edit">
         <section class="g-admin-page-hero">
             <div>
@@ -78,8 +84,13 @@
                             @if ($post->featured_image_path)
                                 <div class="g-admin-surface" style="margin-top:12px;">
                                     <h3>Ảnh hiện tại</h3>
-                                    <img src="{{ asset($post->featured_image_path) }}" alt="{{ $post->post_title }}"
+                                    <img src="{{ $featuredImagePreview }}" alt="{{ $post->post_title }}"
                                         style="height:100px;width:auto;">
+                                    <label class="g-admin-check-card" style="margin-top:12px;">
+                                        <input type="checkbox" name="remove_image" value="1"
+                                            {{ old('remove_image') ? 'checked' : '' }}>
+                                        <span>Gỡ ảnh đại diện hiện tại khi lưu</span>
+                                    </label>
                                 </div>
                             @endif
                         </div>

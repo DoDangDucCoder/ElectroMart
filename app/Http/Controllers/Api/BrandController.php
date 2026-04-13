@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Application\Catalog\Services\BrandService;
 use App\Application\Shared\Services\CacheService;
 use App\Http\Resources\BrandResource;
 use Illuminate\Http\JsonResponse;
@@ -11,7 +10,6 @@ use Illuminate\Http\JsonResponse;
 class BrandController extends Controller
 {
     public function __construct(
-        private readonly BrandService $brandService,
         private readonly CacheService $cacheService
     ) {
     }
@@ -29,7 +27,7 @@ class BrandController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $brand = $this->brandService->findBySlug($slug);
+        $brand = $this->cacheService->getBrandBySlug($slug);
 
         if (!$brand) {
             return response()->json([

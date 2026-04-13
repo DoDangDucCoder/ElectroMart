@@ -15,8 +15,10 @@ use App\Http\Requests\Storefront\Checkout\RegisterCustomerRequest;
 use App\Http\Requests\Storefront\Checkout\SelectDeliveryHomeRequest;
 use App\Models\CatePost;
 use App\Models\Slider;
+use App\Support\StorefrontCustomerAuth;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use App\Infrastructure\Persistence\Eloquent\Geo\Location;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,6 +41,8 @@ class CheckoutController extends Controller
     public function login_checkout(Request $request)
     {
         $currentCustomer = $this->sessionCustomer();
+        $authRedirect = StorefrontCustomerAuth::rememberIntendedDestination($request, 'checkout');
+        $authRedirectKey = $authRedirect['key'];
 
         return view('pages.checkout.login_checkout', array_merge(
             $this->seoContext($request),
@@ -46,6 +50,10 @@ class CheckoutController extends Controller
             $this->cartContext(),
             [
                 'currentCustomer' => $currentCustomer,
+                'authRedirectKey' => $authRedirectKey,
+                'authRedirectUrl' => $authRedirect['url'],
+                'authRedirectLabel' => $this->redirectLabel($authRedirectKey),
+                'storefrontCustomerPicture' => Session::get(StorefrontCustomerAuth::SESSION_PICTURE_KEY),
             ]
         ));
     }
@@ -54,21 +62,45 @@ class CheckoutController extends Controller
     {
         $data = $request->validated();
 
-        /** @var Customer $customer */
-        $customer = Customer::create([
-            'name' => $data['customer_name'],
-            'email' => $data['customer_email'],
-            'password' => bcrypt($data['customer_password']),
-            'phone' => $data['customer_phone'] ?? null,
-            'is_active' => true,
-            'meta' => [
-                'legacy_source' => 'form_checkout',
-            ],
-        ]);
+        try {
+            /** @var Customer $customer */
+            $customer = Customer::create([
+                'name' => $data['customer_name'],
+                'email' => $data['customer_email'],
+                'password' => bcrypt($data['customer_password']),
+                'phone' => $data['customer_phone'] ?? null,
+                'is_active' => true,
+                'meta' => [
+                    'legacy_source' => 'form_checkout',
+                ],
+            ]);
+        } catch (QueryException $exception) {
+            $input = collect($request->except('customer_password'))->toArray();
+
+            if ($this->isDuplicateCustomerKey($exception, 'customers_phone_unique')) {
+                return Redirect::back()
+                    ->withInput($input)
+                    ->withErrors([
+                        'customer_phone' => 'Số điện thoại này đã được sử dụng.',
+                    ]);
+            }
+
+            if ($this->isDuplicateCustomerKey($exception, 'customers_email_unique')) {
+                return Redirect::back()
+                    ->withInput($input)
+                    ->withErrors([
+                        'customer_email' => 'Email này đã được sử dụng.',
+                    ]);
+            }
+
+            throw $exception;
+        }
 
         Session::put('customer_id', $customer->id);
+        StorefrontCustomerAuth::clearDisplaySession();
 
-        return Redirect::to('/checkout')->with('message', 'Registration successful.');
+        return Redirect::to($this->intendedCustomerRedirectUrl($request))
+            ->with('message', 'Đăng ký tài khoản thành công.');
     }
 
     public function login_customer(LoginCustomerRequest $request): RedirectResponse
@@ -77,31 +109,55 @@ class CheckoutController extends Controller
 
         $customer = Customer::where('email', $credentials['email_account'])->first();
 
-        if (! $customer || ! password_verify($credentials['password_account'], $customer->password)) {
+        if (
+            ! $customer ||
+            ! $customer->is_active ||
+            ! password_verify($credentials['password_account'], $customer->password)
+        ) {
             return Redirect::back()
                 ->withInput($request->safe()->only('email_account'))
-                ->with('error', 'Invalid login credentials.');
+                ->with('error', 'Thông tin đăng nhập không chính xác.');
         }
 
         Session::put('customer_id', $customer->id);
+        StorefrontCustomerAuth::clearDisplaySession();
 
-        return Redirect::to('/checkout')->with('message', 'Logged in successfully.');
+        return Redirect::to($this->intendedCustomerRedirectUrl($request))
+            ->with('message', 'Đăng nhập thành công.');
     }
 
-    public function dang_xuat_khachhang(): RedirectResponse
+    public function dang_xuat_khachhang(Request $request): RedirectResponse
     {
-        Session::forget('customer_id');
+        $redirectKey = StorefrontCustomerAuth::normalizeRedirectKey($request->query('redirect'), 'login');
 
-        return Redirect::back()->with('message', 'Logged out.');
+        $this->clearCustomerSession();
+
+        if (in_array($redirectKey, ['checkout', 'payment', 'history'], true)) {
+            StorefrontCustomerAuth::rememberIntendedRedirect($redirectKey, $redirectKey);
+
+            return Redirect::to(
+                StorefrontCustomerAuth::destinationUrl('login') . '?redirect=' . $redirectKey
+            )->with('message', 'Đăng xuất thành công.');
+        }
+
+        return Redirect::to(StorefrontCustomerAuth::destinationUrl($redirectKey, 'login'))
+            ->with('message', 'Đăng xuất thành công.');
     }
 
     public function checkout(Request $request)
     {
         if ($this->cartService->items()->isEmpty()) {
-            return Redirect::to('/gio-hang')->with('error', 'Your cart is empty.');
+            return Redirect::to('/gio-hang')->with('error', 'Giỏ hàng của bạn đang trống.');
         }
 
         $currentCustomer = $this->sessionCustomer();
+        if (! $currentCustomer) {
+            $this->clearCustomerSession();
+            StorefrontCustomerAuth::rememberIntendedRedirect('checkout', 'checkout');
+
+            return Redirect::to(StorefrontCustomerAuth::destinationUrl('login') . '?redirect=checkout')
+                ->with('error', 'Vui lòng đăng nhập để tiếp tục thanh toán.');
+        }
 
         return view('pages.checkout.show_checkout', array_merge(
             $this->seoContext($request, 'Checkout', 'checkout'),
@@ -110,12 +166,22 @@ class CheckoutController extends Controller
             [
                 'cities' => Location::where('type', 'city')->orderBy('name')->get(),
                 'currentCustomer' => $currentCustomer,
+                'storefrontCustomerPicture' => Session::get(StorefrontCustomerAuth::SESSION_PICTURE_KEY),
             ]
         ));
     }
 
     public function payment(Request $request)
     {
+        $currentCustomer = $this->sessionCustomer();
+        if (! $currentCustomer) {
+            $this->clearCustomerSession();
+            StorefrontCustomerAuth::rememberIntendedRedirect('payment', 'payment');
+
+            return Redirect::to(StorefrontCustomerAuth::destinationUrl('login') . '?redirect=payment')
+                ->with('error', 'Vui lòng đăng nhập để tiếp tục thanh toán.');
+        }
+
         return view('pages.checkout.payment', array_merge(
             $this->seoContext($request, 'Checkout', 'payment'),
             $this->catalogContext(),
@@ -148,17 +214,17 @@ class CheckoutController extends Controller
         $action = $validated['action'];
         $parentId = (int) $validated['ma_id'];
 
-        $options = '<option value="">---Select---</option>';
+        $options = '<option value="">--- Chọn ---</option>';
         $locations = collect();
 
         if ($action === 'city') {
-            $options = '<option value="">---Select district---</option>';
+            $options = '<option value="">--- Chọn quận / huyện ---</option>';
             $locations = Location::where('type', 'province')
                 ->where('parent_id', $parentId)
                 ->orderBy('name')
                 ->get();
         } elseif ($action === 'province') {
-            $options = '<option value="">---Select ward---</option>';
+            $options = '<option value="">--- Chọn phường / xã ---</option>';
             $locations = Location::where('type', 'ward')
                 ->where('parent_id', $parentId)
                 ->orderBy('name')
@@ -176,7 +242,7 @@ class CheckoutController extends Controller
     {
         $this->shippingService->clearFee();
 
-        return Redirect::back()->with('message', 'Shipping fee cleared.');
+        return Redirect::back()->with('message', 'Đã xóa phí vận chuyển tạm tính.');
     }
 
     public function confirm_order(ConfirmOrderRequest $request): JsonResponse
@@ -185,7 +251,7 @@ class CheckoutController extends Controller
 
         $customer = $this->sessionCustomer();
         if (! $customer) {
-            return response()->json(['message' => 'Please sign in before placing an order.'], 401);
+            return response()->json(['message' => 'Vui lòng đăng nhập trước khi đặt hàng.'], 401);
         }
 
         try {
@@ -197,14 +263,14 @@ class CheckoutController extends Controller
         }
 
         return response()->json([
-            'message' => 'Order confirmed successfully.',
+            'message' => 'Xác nhận đơn hàng thành công.',
             'order_code' => $order->code,
         ]);
     }
 
-    public function logout_checkout(): RedirectResponse
+    public function logout_checkout(Request $request): RedirectResponse
     {
-        return $this->dang_xuat_khachhang();
+        return $this->dang_xuat_khachhang($request);
     }
 
     public function momo_payment(Request $request): RedirectResponse
@@ -264,6 +330,49 @@ class CheckoutController extends Controller
             ->first();
     }
 
+    protected function intendedCustomerRedirectUrl(Request $request, string $default = 'checkout'): string
+    {
+        $redirectKey = StorefrontCustomerAuth::fromRequest($request, $default);
+
+        $redirectTo = StorefrontCustomerAuth::normalizeInternalUrl(
+            $request->input('redirect_to'),
+            $redirectKey
+        );
+
+        if ($request->filled('redirect_to')) {
+            StorefrontCustomerAuth::forgetIntendedRedirect();
+
+            return $redirectTo;
+        }
+
+        $sessionUrl = StorefrontCustomerAuth::pullIntendedUrl($redirectKey);
+        $redirectKey = StorefrontCustomerAuth::pullIntendedRedirect($redirectKey);
+
+        return $sessionUrl ?: StorefrontCustomerAuth::destinationUrl($redirectKey, $default);
+    }
+
+    protected function clearCustomerSession(): void
+    {
+        Session::forget([
+            'customer_id',
+            'shipping_id',
+            'customer_name',
+            'customer_picture',
+        ]);
+
+        StorefrontCustomerAuth::clearDisplaySession();
+        StorefrontCustomerAuth::forgetIntendedRedirect();
+    }
+
+    protected function redirectLabel(string $redirectKey): string
+    {
+        return match ($redirectKey) {
+            'history' => 'đơn hàng của bạn',
+            'payment' => 'bước thanh toán',
+            default => 'bước checkout',
+        };
+    }
+
     protected function legacyCategoryPosts()
     {
         if (! Schema::hasTable('tbl_category_post')) {
@@ -280,5 +389,12 @@ class CheckoutController extends Controller
         }
 
         return Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
+    }
+
+    protected function isDuplicateCustomerKey(QueryException $exception, string $keyName): bool
+    {
+        $message = strtolower($exception->getMessage());
+
+        return str_contains($message, 'duplicate entry') && str_contains($message, strtolower($keyName));
     }
 }

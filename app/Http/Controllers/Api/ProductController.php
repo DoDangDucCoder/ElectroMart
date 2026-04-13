@@ -22,13 +22,9 @@ class ProductController extends Controller
     public function index(Request $request): JsonResponse
     {
         $filters = $request->only(['category', 'brand', 'min_price', 'max_price', 'search', 'sort']);
-        $perPage = min($request->get('per_page', 12), 50); // Max 50 items per page
+        $perPage = max(1, min((int) $request->get('per_page', 12), 50));
 
-        $products = $this->cacheService->remember(
-            'api_products_' . md5(serialize($filters)) . "_{$perPage}",
-            fn() => $this->productService->getProducts($filters, $perPage),
-            300 // 5 minutes cache
-        );
+        $products = $this->cacheService->getProductsForApi($filters, $perPage);
 
         return response()->json([
             'success' => true,
@@ -104,7 +100,7 @@ class ProductController extends Controller
     public function search(Request $request): JsonResponse
     {
         $keyword = trim((string) $request->get('q', ''));
-        $limit = min($request->get('limit', 20), 50);
+        $limit = max(1, min((int) $request->get('limit', 20), 50));
         $filters = [
             'keyword' => $keyword !== '' ? $keyword : null,
             'product_code' => $request->filled('sku') ? trim((string) $request->get('sku')) : null,
@@ -134,7 +130,7 @@ class ProductController extends Controller
 
     public function recommendations(Request $request): JsonResponse
     {
-        $limit = min((int) $request->get('limit', 12), 24);
+        $limit = max(1, min((int) $request->get('limit', 12), 24));
         $excludeProductId = $request->filled('exclude_product_id') ? (int) $request->get('exclude_product_id') : null;
         $recommendationData = $this->productService->getRecommendedProducts(
             optional($request->user('sanctum'))->id,
@@ -155,7 +151,16 @@ class ProductController extends Controller
     public function byCategory(string $categorySlug, Request $request): JsonResponse
     {
         $filters = $request->only(['brand', 'min_price', 'max_price', 'sort']);
-        $perPage = min($request->get('per_page', 12), 50);
+        $perPage = max(1, min((int) $request->get('per_page', 12), 50));
+
+        $category = $this->cacheService->getCategoryBySlug($categorySlug);
+
+        if (! $category) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Category not found',
+            ], 404);
+        }
 
         $products = $this->cacheService->getProductsByCategory($categorySlug, $filters, $perPage);
 
@@ -176,9 +181,18 @@ class ProductController extends Controller
     public function byBrand(string $brandSlug, Request $request): JsonResponse
     {
         $filters = $request->only(['category', 'min_price', 'max_price', 'sort']);
-        $perPage = min($request->get('per_page', 12), 50);
+        $perPage = max(1, min((int) $request->get('per_page', 12), 50));
 
-        $products = $this->productService->getProductsByBrandSlug($brandSlug, $filters, $perPage);
+        $brand = $this->cacheService->getBrandBySlug($brandSlug);
+
+        if (! $brand) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Brand not found',
+            ], 404);
+        }
+
+        $products = $this->cacheService->getProductsByBrand($brandSlug, $filters, $perPage);
 
         return response()->json([
             'success' => true,

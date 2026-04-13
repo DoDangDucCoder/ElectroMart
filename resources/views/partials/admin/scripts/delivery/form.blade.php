@@ -19,9 +19,14 @@
             success: function() {
                 $('.city').val('');
                 $('.province').val('');
-                $('.wards').val('');
+                $('#province').html('<option value="">--Chọn quận huyện--</option>');
+                $('#wards').html('<option value="">--Chọn xã phường--</option>');
                 $('.fee_ship').val('');
                 fetch_delivery();
+                renderDeliveryNotice('success', 'Đã lưu phí vận chuyển cho khu vực đã chọn.');
+            },
+            error: function(xhr) {
+                renderDeliveryNotice('error', resolveDeliveryError(xhr, 'Không thể lưu phí vận chuyển trên môi trường này.'));
             }
         });
     });
@@ -42,6 +47,14 @@
             },
             success: function(data) {
                 $('#' + result).html(data);
+            },
+            error: function(xhr) {
+                $('#' + result).html(
+                    result === 'province'
+                        ? '<option value="">--Chọn quận huyện--</option>'
+                        : '<option value="">--Chọn xã phường--</option>'
+                );
+                renderDeliveryNotice('error', resolveDeliveryError(xhr, 'Không thể tải danh sách địa giới trên môi trường này.'));
             }
         });
     });

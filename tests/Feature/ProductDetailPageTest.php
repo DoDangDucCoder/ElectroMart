@@ -56,10 +56,17 @@ class ProductDetailPageTest extends TestCase
             ->assertSee('id="imageGallery"', false)
             ->assertSee('shopw-pdp-gallery-head', false)
             ->assertSee('shopw-pdp-service-grid', false)
+            ->assertSee('shopw-pdp-review-thread-shell', false)
+            ->assertSee('shopw-pdp-review-form-shell', false)
             ->assertSee('Đội ngũ cửa hàng hỗ trợ chính sách bảo hành và hậu mãi theo từng nhóm hàng.')
             ->assertDontSee('Đội ngũ storefront hỗ trợ chính sách bảo hành và hậu mãi theo từng nhóm hàng.')
+            ->assertSee('Hỗ trợ nhanh')
+            ->assertDontSee('>Slug<', false)
             ->assertSee('class="product_id"', false)
             ->assertSee('class="comment_product_id"', false)
+            ->assertSee('data-default-stock="8"', false)
+            ->assertSee('shopw-pdp-purchase-status', false)
+            ->assertDontSee('<form action="#">', false)
             ->assertSee('Sản phẩm liên quan');
 
         $this->assertSame(1, $product->fresh()->views_count);

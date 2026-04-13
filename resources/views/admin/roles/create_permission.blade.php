@@ -9,13 +9,13 @@
         <section class="g-admin-page-hero">
             <div>
                 <span class="g-admin-page-eyebrow">Quyền hạn</span>
-                <h1>Cấp quyền cho {{ $user->name }}</h1>
-                <p>Chọn các quyền cần cấp cho vai trò hiện tại của tài khoản này.</p>
+                <h1>Cập nhật quyền cho {{ $user->name }}</h1>
+                <p>Trang này cập nhật quyền cho vai trò hiện tại của tài khoản, không gán quyền trực tiếp riêng lẻ lên user.</p>
             </div>
 
             <div class="g-admin-page-stats">
                 <article>
-                    <strong>{{ $name_roles ?? 'Chưa có role' }}</strong>
+                    <strong>{{ $name_roles ?? 'Chưa có vai trò' }}</strong>
                     <span>Vai trò đang áp dụng</span>
                 </article>
                 <article>
@@ -37,6 +37,16 @@
                     <div class="alert alert-success">{{ session('message') }}</div>
                 @endif
 
+                @if (session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
+
+                @unless ($hasRole ?? false)
+                    <div class="alert alert-warning">
+                        Tài khoản này chưa có vai trò. Hãy gán một vai trò trước khi cập nhật quyền.
+                    </div>
+                @endunless
+
                 <form action="{{ URL::to('/assign-permission', $user->id) }}" method="post">
                     @csrf
 
@@ -54,7 +64,7 @@
                     </div>
 
                     <div class="g-admin-inline-actions" style="margin-top:18px;">
-                        <button type="submit" class="btn btn-info">Cập nhật quyền</button>
+                        <button type="submit" class="btn btn-info" @disabled(! ($hasRole ?? false))>Cập nhật quyền</button>
                         <a href="{{ url('/index-spatie') }}" class="btn btn-default">Quay lại ma trận quyền</a>
                     </div>
                 </form>

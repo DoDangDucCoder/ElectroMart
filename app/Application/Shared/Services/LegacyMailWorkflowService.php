@@ -17,9 +17,12 @@ class LegacyMailWorkflowService
 {
     public function sendCouponCampaign(string $couponCode, bool $vipOnly): array
     {
+        $couponTable = (new Coupon())->getTable();
+        $customerTable = (new Customer())->getTable();
+
         if (
-            ! Schema::hasTable((new Coupon())->getTable()) ||
-            ! Schema::hasTable((new Customer())->getTable())
+            ! Schema::hasTable($couponTable) ||
+            ! Schema::hasTable($customerTable)
         ) {
             return $this->result(false, 'Dữ liệu email marketing hiện chưa sẵn sàng trên môi trường này.');
         }
@@ -29,9 +32,31 @@ class LegacyMailWorkflowService
             return $this->result(false, 'Không tìm thấy mã khuyến mãi cần gửi.');
         }
 
+        if ((int) ($coupon->coupon_status ?? 0) !== 1) {
+            return $this->result(false, 'Mã khuyến mãi đang bị khóa, không thể gửi chiến dịch email.');
+        }
+
+        $today = Carbon::now('Asia/Ho_Chi_Minh')->startOfDay();
+        $startDate = $this->parseLegacyCouponDate($coupon->coupon_date_start ?? null);
+        $endDate = $this->parseLegacyCouponDate($coupon->coupon_date_end ?? null);
+
+        if ($startDate && $startDate->gt($today)) {
+            return $this->result(false, 'Mã khuyến mãi chưa đến thời gian hiệu lực để gửi.');
+        }
+
+        if ($endDate && $endDate->lt($today)) {
+            return $this->result(false, 'Mã khuyến mãi đã hết hạn, không thể gửi chiến dịch email.');
+        }
+
+        $hasVipColumn = Schema::hasColumn($customerTable, 'customer_vip');
         $customers = Customer::query()
-            ->when($vipOnly, fn ($query) => $query->where('customer_vip', 1))
-            ->unless($vipOnly, fn ($query) => $query->whereNull('customer_vip'))
+            ->when($vipOnly && $hasVipColumn, fn ($query) => $query->where('customer_vip', 1))
+            ->when(! $vipOnly && $hasVipColumn, function ($query) {
+                $query->where(function ($innerQuery) {
+                    $innerQuery->whereNull('customer_vip')
+                        ->orWhere('customer_vip', 0);
+                });
+            })
             ->get();
 
         $emails = $customers->pluck('customer_email')
@@ -48,9 +73,11 @@ class LegacyMailWorkflowService
 
         $now = Carbon::now('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
         $title = 'Mã khuyến mãi ngày ' . $now;
+        $brandName = (string) config('services.storefront_brand.name', 'ShopW');
         $mailData = CouponCampaignMailData::fromCoupon(
             $coupon,
-            $vipOnly ? 'khách hàng thân thiết' : 'khách hàng thường'
+            $vipOnly ? 'khách hàng thân thiết' : 'khách hàng thường',
+            shopName: $brandName
         );
 
         $mail = new LegacyCouponCampaignMail(
@@ -81,12 +108,14 @@ class LegacyMailWorkflowService
         $customer->save();
 
         $now = Carbon::now('Asia/Ho_Chi_Minh')->format('d-m-Y');
-        $title = 'Lấy lại mật khẩu hieutantutorial.com ' . $now;
+        $brandName = (string) config('services.storefront_brand.name', 'ShopW');
+        $title = 'Lấy lại mật khẩu ' . $brandName . ' ' . $now;
         $link = url('/update-new-pass?email=' . urlencode($email) . '&token=' . urlencode($token));
         $mailData = new PasswordRecoveryMailData(
             title: $title,
             email: $email,
-            resetUrl: $link
+            resetUrl: $link,
+            shopName: $brandName
         );
 
         Mail::to($email)->send(new LegacyPasswordRecoveryMail(
@@ -124,5 +153,27 @@ class LegacyMailWorkflowService
             'ok' => $ok,
             'message' => $message,
         ];
+    }
+
+    protected function parseLegacyCouponDate(mixed $value): ?Carbon
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        foreach (['d/m/Y', 'Y-m-d', 'd-m-Y'] as $format) {
+            try {
+                return Carbon::createFromFormat($format, $value, 'Asia/Ho_Chi_Minh')->startOfDay();
+            } catch (\Throwable) {
+            }
+        }
+
+        try {
+            return Carbon::parse($value, 'Asia/Ho_Chi_Minh')->startOfDay();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }

@@ -17,8 +17,14 @@ class CouponController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $perPage = min($request->get('per_page', 15), 50);
-        $filters = $request->only(['is_active', 'type']);
+        $perPage = max(1, min((int) $request->get('per_page', 15), 50));
+        $filters = array_merge(
+            $request->only(['type']),
+            [
+                'is_active' => true,
+                'currently_valid' => true,
+            ]
+        );
 
         $coupons = $this->couponService->paginateCoupons($filters, $perPage);
 
@@ -36,7 +42,7 @@ class CouponController extends Controller
 
     public function show(string $code): JsonResponse
     {
-        $coupon = $this->couponService->findByCode($code);
+        $coupon = $this->couponService->findActiveByCode($code);
 
         if (!$coupon) {
             return response()->json([

@@ -1,6 +1,10 @@
 @extends('admin_layout')
 
 @section('admin_content')
+    @php
+        $canManageProductAttributes = ($attributeTableReady ?? true) && ($productAttributeTableReady ?? true);
+    @endphp
+
     <div class="g-admin-page-shell g-admin-product-attribute-page">
         <section class="g-admin-page-hero">
             <div>
@@ -30,6 +34,14 @@
             </div>
         @endif
 
+        @unless ($attributeTableReady ?? true)
+            <div class="alert alert-warning">Bảng thuộc tính nền chưa sẵn sàng trên môi trường này. Bạn vẫn có thể xem biến thể hiện có, nhưng chưa thể thêm mới.</div>
+        @endunless
+
+        @unless ($productAttributeTableReady ?? true)
+            <div class="alert alert-warning">Bảng biến thể sản phẩm chưa sẵn sàng trên môi trường này. Danh sách đang được hiển thị ở trạng thái rỗng an toàn.</div>
+        @endunless
+
         <div class="g-admin-panel-grid two-col">
             <section class="g-admin-panel-card">
                 <header class="g-admin-panel-head">
@@ -51,36 +63,42 @@
                         <div class="form-group">
                             <label for="variant_name">Tên thuộc tính</label>
                             <input type="text" required class="form-control" name="name" id="variant_name"
-                                placeholder="Ví dụ: Màu đen 512GB">
+                                placeholder="Ví dụ: Màu đen 512GB" @disabled(! $canManageProductAttributes)>
                         </div>
                         <div class="form-group">
                             <label for="variant_price">Giá</label>
                             <input type="number" required min="1" class="form-control" name="price"
-                                id="variant_price" placeholder="Giá bán">
+                                id="variant_price" placeholder="Giá bán" @disabled(! $canManageProductAttributes)>
                         </div>
                         <div class="form-group">
                             <label for="variant_quantity">Số lượng</label>
                             <input type="number" required min="1" class="form-control" name="quantity"
-                                id="variant_quantity" placeholder="Số lượng">
+                                id="variant_quantity" placeholder="Số lượng" @disabled(! $canManageProductAttributes)>
                         </div>
                         <div class="form-group">
                             <label for="variant_image">Hình ảnh thuộc tính</label>
-                            <input type="file" required name="image" class="form-control" id="variant_image">
+                            <input type="file" required name="image" class="form-control" id="variant_image"
+                                @disabled(! $canManageProductAttributes)>
                         </div>
                         <div class="form-group">
                             <label for="variant_description">Mô tả thuộc tính</label>
                             <textarea style="resize:none" rows="8" class="form-control" name="description" id="variant_description"
-                                required placeholder="Mô tả thuộc tính"></textarea>
+                                required placeholder="Mô tả thuộc tính" @disabled(! $canManageProductAttributes)></textarea>
                         </div>
                         <div class="form-group">
                             <label for="attribute_id">Thuộc tính nền</label>
-                            <select name="attribute_id" id="attribute_id" class="form-control input-sm m-bot15" required>
-                                @foreach ($attribute as $val)
+                            <select name="attribute_id" id="attribute_id" class="form-control input-sm m-bot15" required
+                                @disabled(! $canManageProductAttributes)>
+                                @forelse ($attribute as $val)
                                     <option value="{{ $val->id }}">{{ $val->name }}</option>
-                                @endforeach
+                                @empty
+                                    <option value="">Chưa có bảng thuộc tính nền</option>
+                                @endforelse
                             </select>
                         </div>
-                        <button type="submit" name="add_attribute" class="btn btn-info">Thêm thuộc tính</button>
+                        <button type="submit" name="add_attribute" class="btn btn-info" @disabled(! $canManageProductAttributes)>
+                            Thêm thuộc tính
+                        </button>
                     </form>
                 </div>
             </section>
@@ -108,12 +126,19 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @if (! ($productAttributeTableReady ?? true))
+                                    <tr>
+                                        <td colspan="8">
+                                            <div class="g-admin-empty-state">Bảng biến thể sản phẩm chưa sẵn sàng trên môi trường này.</div>
+                                        </td>
+                                    </tr>
+                                @else
                                 @forelse ($product_attribute as $key => $pro_attr)
                                     <tr>
                                         <td>{{ $key + 1 }}</td>
                                         <td>{{ $pro_attr->product->product_name }}</td>
                                         <td><strong>{{ $pro_attr->name }}</strong></td>
-                                        <td>{{ $pro_attr->attribute->name }}</td>
+                                        <td>{{ $pro_attr->attribute->name ?? 'Thuộc tính nền chưa sẵn sàng' }}</td>
                                         <td>
                                             <img src="{{ asset('/uploads/attribute/' . $pro_attr->image) }}"
                                                 alt="{{ $pro_attr->name }}" style="width:88px;height:88px;">
@@ -137,6 +162,7 @@
                                         </td>
                                     </tr>
                                 @endforelse
+                                @endif
                             </tbody>
                         </table>
                     </div>

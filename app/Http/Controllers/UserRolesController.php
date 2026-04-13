@@ -8,7 +8,7 @@ use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Models\User;
 use App\Support\AdminAccess;
-use Artisan;
+use Illuminate\Support\Facades\Auth;
 
 class UserRolesController extends Controller
 {
@@ -26,7 +26,7 @@ class UserRolesController extends Controller
 
 		$user = User::find($admin_id);
 		if (! $user) {
-			return redirect('/index-spatie')->with('message', 'Không tìm thấy user cần cấp vai trò');
+			return redirect('/index-spatie')->with('message', 'Không tìm thấy người dùng cần cấp vai trò');
 		}
 
 		$user_roles = $user->roles->first();
@@ -40,24 +40,35 @@ class UserRolesController extends Controller
 			->get();
 		$user = User::find($admin_id);
 		if (! $user) {
-			return redirect('/index-spatie')->with('message', 'Không tìm thấy user cần cấp quyền');
+			return redirect('/index-spatie')->with('message', 'Không tìm thấy người dùng cần cấp quyền');
 		}
 
-		$name_roles = optional($user->roles->first())->name;
+		$role = $user->roles->first();
+		$name_roles = optional($role)->name;
 		$pers_role = $user->getPermissionsViaRoles();
-		return view('admin.roles.create_permission', compact('user', 'name_roles', 'permission', 'pers_role'));
+		$hasRole = $role !== null;
+
+		return view('admin.roles.create_permission', compact('user', 'name_roles', 'permission', 'pers_role', 'hasRole'));
 	}
 	public function assign_permission($admin_id, AssignPermissionRequest $request)
 	{
 		$data = $request->validated();
 
+		if ((int) Auth::id() === (int) $admin_id) {
+			return redirect()->back()->with('message', 'Bạn không được cập nhật quyền của chính mình');
+		}
+
 		$user = User::find($admin_id);
 		if (! $user || $user->roles->isEmpty()) {
-			return redirect()->back()->with('message', 'User chưa có vai trò để gán quyền');
+			return redirect()->back()->with('message', 'Tài khoản này chưa có vai trò để cập nhật quyền');
 		}
 
 		$role_id = $user->roles->first()->id;
 		$role = Role::find($role_id);
+		if (! $role) {
+			return redirect()->back()->with('message', 'Không tìm thấy vai trò hiện tại để cập nhật quyền');
+		}
+
 		$permissions = Permission::query()
 			->where('guard_name', AdminAccess::guardName())
 			->whereIn('name', $data['permission'] ?? [])
@@ -67,11 +78,10 @@ class UserRolesController extends Controller
 		$role->syncPermissions($permissions);
 
 		// dd($data['permission']);
-		return redirect()->back()->with('message', 'Thêm quyền user thành công');
+		return redirect()->back()->with('message', 'Đã cập nhật quyền cho vai trò hiện tại');
 	}
 	public function index()
 	{
-		Artisan::call('cache:clear');
 		$user = User::with('roles', 'permissions')->orderby('id', 'desc')->get();
 		// dd($user);
 		return view('admin.roles.index', compact('user'));
@@ -81,9 +91,13 @@ class UserRolesController extends Controller
 	{
 		$data = $request->validated();
 
+		if ((int) Auth::id() === (int) $admin_id) {
+			return redirect()->back()->with('message', 'Bạn không được cập nhật vai trò của chính mình');
+		}
+
 		$admin = User::find($admin_id);
 		if (! $admin) {
-			return redirect('/index-spatie')->with('message', 'Không tìm thấy user cần cấp vai trò');
+			return redirect('/index-spatie')->with('message', 'Không tìm thấy người dùng cần cấp vai trò');
 		}
 
 		$roles = Role::query()
@@ -93,6 +107,6 @@ class UserRolesController extends Controller
 			->all();
 
 		$admin->syncRoles($roles);
-		return redirect()->back()->with('message', 'Thêm vai trò user thành công');
+		return redirect()->back()->with('message', 'Đã cập nhật vai trò cho người dùng');
 	}
 }

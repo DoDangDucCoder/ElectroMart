@@ -2,6 +2,7 @@
 
 namespace App\Application\Catalog\Services;
 
+use App\Application\Shared\Services\CacheService;
 use App\Domain\Catalog\Repositories\BrandRepositoryInterface;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -11,7 +12,8 @@ use Illuminate\Support\Str;
 class BrandService
 {
     public function __construct(
-        private readonly BrandRepositoryInterface $brands
+        private readonly BrandRepositoryInterface $brands,
+        private readonly CacheService $cache
     ) {
     }
 
@@ -49,24 +51,41 @@ class BrandService
     {
         $payload = $this->preparePayload($data);
 
-        return $this->brands->create($payload);
+        $brand = $this->brands->create($payload);
+        $this->cache->invalidateBrandCache($brand->id);
+
+        return $brand;
     }
 
     public function update(Brand $brand, array $data): Brand
     {
+        $previousSlug = $brand->slug;
         $payload = $this->preparePayload($data, $brand);
 
-        return $this->brands->update($brand, $payload);
+        $updated = $this->brands->update($brand, $payload);
+        $this->cache->invalidateBrandCache($updated->id, [
+            'brand_slugs' => [$previousSlug],
+        ]);
+
+        return $updated;
     }
 
     public function delete(Brand $brand): void
     {
+        $brandId = $brand->id;
+        $previousSlug = $brand->slug;
         $this->brands->delete($brand);
+        $this->cache->invalidateBrandCache($brandId, [
+            'brand_slugs' => [$previousSlug],
+        ]);
     }
 
     public function updateStatus(Brand $brand, bool $isActive): Brand
     {
-        return $this->brands->setStatus($brand, $isActive);
+        $updated = $this->brands->setStatus($brand, $isActive);
+        $this->cache->invalidateBrandCache($updated->id);
+
+        return $updated;
     }
 
     protected function preparePayload(array $data, ?Brand $brand = null): array

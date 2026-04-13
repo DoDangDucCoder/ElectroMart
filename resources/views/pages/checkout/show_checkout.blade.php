@@ -7,11 +7,19 @@
         $cartCount = $cartItems->sum('product_qty');
         $hasCoupon = !empty($coupon);
         $discountCode = data_get($coupon, 'code');
-        $customerLoggedIn = (bool) Session::get('customer_id');
+        $customerLoggedIn = (bool) $currentCustomer;
         $checkoutTotal = number_format($cartTotals['total'], 0, ',', '.') . ' VND';
+        $checkoutBaseTotal = max(0, (float) $cartTotals['total'] - (float) $cartTotals['shipping']);
         $supportConfig = config('services.storefront_support', []);
         $supportPhoneDisplay = $supportConfig['phone_display'] ?? '1900.0000';
         $supportPhoneHref = $supportConfig['phone_href'] ?? 'tel:19000000';
+        $checkoutCustomerDisplayName = $currentCustomer?->name ?: ($currentCustomer?->email ?: 'Tài khoản của bạn');
+        $checkoutAvatarInitials = collect(explode(' ', \Illuminate\Support\Str::upper(trim((string) $checkoutCustomerDisplayName))))
+            ->filter()
+            ->take(2)
+            ->map(fn($part) => \Illuminate\Support\Str::substr($part, 0, 1))
+            ->implode('');
+        $checkoutAvatarInitials = $checkoutAvatarInitials !== '' ? $checkoutAvatarInitials : 'TK';
         $checkoutFlowSteps = [
             ['label' => 'Giỏ hàng', 'state' => 'is-complete'],
             ['label' => 'Thanh toán', 'state' => 'is-active'],
@@ -90,11 +98,11 @@
                 </div>
                 <div class="shopw-checkout-stat">
                     <span>Phí vận chuyển</span>
-                    <strong>{{ number_format($cartTotals['shipping'], 0, ',', '.') }} VND</strong>
+                    <strong data-checkout-fee-display="hero">{{ number_format($cartTotals['shipping'], 0, ',', '.') }} VND</strong>
                 </div>
                 <div class="shopw-checkout-stat">
                     <span>Tổng thanh toán</span>
-                    <strong>{{ $checkoutTotal }}</strong>
+                    <strong data-checkout-grand-total-display="hero">{{ $checkoutTotal }}</strong>
                 </div>
             </div>
         </div>
@@ -105,6 +113,36 @@
                     <div class="shopw-checkout-card-head">
                         <h2>Thông tin giao hàng</h2>
                         <p>Điền đầy đủ thông tin để hệ thống tính phí vận chuyển và tạo đơn hàng chính xác.</p>
+                    </div>
+
+                    <div class="shopw-checkout-account-card">
+                        <div class="shopw-checkout-account-main">
+                            <span class="shopw-checkout-account-avatar">
+                                @if (!empty($storefrontCustomerPicture))
+                                    <img src="{{ $storefrontCustomerPicture }}" alt="{{ $checkoutCustomerDisplayName }}">
+                                @else
+                                    <span>{{ $checkoutAvatarInitials }}</span>
+                                @endif
+                            </span>
+                            <div class="shopw-checkout-account-copy">
+                                <span class="shopw-checkout-account-kicker">Tài khoản đang sử dụng</span>
+                                <strong>{{ $checkoutCustomerDisplayName }}</strong>
+                                @if ($currentCustomer?->email)
+                                    <small>{{ $currentCustomer->email }}</small>
+                                @endif
+                                @if ($currentCustomer?->phone)
+                                    <small>{{ $currentCustomer->phone }}</small>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="shopw-checkout-account-actions">
+                            <a href="{{ url('/history') }}" class="shopw-checkout-inline-link">
+                                <i class="fa fa-history"></i>Đơn hàng của tôi
+                            </a>
+                            <a href="{{ url('/dang-xuat-khach-hang?redirect=checkout') }}" class="shopw-checkout-inline-link">
+                                <i class="fa fa-refresh"></i>Đổi tài khoản
+                            </a>
+                        </div>
                     </div>
 
                     <div class="shopw-checkout-assurance-grid">
@@ -120,17 +158,6 @@
                             </div>
                         @endforeach
                     </div>
-
-                    @unless ($customerLoggedIn)
-                        <div class="shopw-checkout-warning">
-                            <i class="fa fa-user-circle-o"></i>
-                            <div>
-                                <strong>Bạn cần đăng nhập trước khi đặt hàng.</strong>
-                                <p>Hệ thống hiện yêu cầu đăng nhập tài khoản trước khi xác nhận đơn hàng.</p>
-                            </div>
-                            <a href="{{ url('/dang-nhap') }}" class="shopw-checkout-inline-link">Đăng nhập</a>
-                        </div>
-                    @endunless
 
                     <form id="checkout-form" method="POST" class="shopw-checkout-form">
                         @csrf
@@ -195,12 +222,13 @@
                                     <i class="fa fa-truck"></i>Tính phí vận chuyển
                                 </button>
                             </div>
+                            <div id="checkout_delivery_notice" aria-live="polite"></div>
 
                             <div class="shopw-checkout-field-grid shopw-checkout-location-grid">
                                 <label class="shopw-checkout-field">
                                     <span>Tỉnh / thành</span>
                                     <select name="city_id" class="form-control choose city" id="city">
-                                        <option value="">---Chọn tỉnh / thành---</option>
+                                        <option value="">--- Chọn tỉnh / thành ---</option>
                                         @foreach ($cities as $city)
                                             <option value="{{ $city->id }}">{{ $city->name }}</option>
                                         @endforeach
@@ -210,19 +238,21 @@
                                 <label class="shopw-checkout-field">
                                     <span>Quận / huyện</span>
                                     <select name="province_id" class="form-control choose province" id="province">
-                                        <option value="">---Chọn quận / huyện---</option>
+                                        <option value="">--- Chọn quận / huyện ---</option>
                                     </select>
                                 </label>
 
                                 <label class="shopw-checkout-field">
                                     <span>Phường / xã</span>
                                     <select name="ward_id" class="form-control wards" id="wards">
-                                        <option value="">---Chọn phường / xã---</option>
+                                        <option value="">--- Chọn phường / xã ---</option>
                                     </select>
                                 </label>
                             </div>
                         </div>
 
+                        <input type="hidden" name="checkout_base_total" class="checkout_base_total"
+                            value="{{ $checkoutBaseTotal }}">
                         <input type="hidden" name="order_fee" class="order_fee" value="{{ $shipping_fee }}">
                         <input type="hidden" name="order_coupon" class="order_coupon"
                             value="{{ $coupon['code'] ?? 'no' }}">
@@ -230,8 +260,7 @@
                             value="{{ $cartTotals['total'] }}">
 
                         <div class="shopw-checkout-submit-row">
-                            <button type="button"
-                                class="btn btn-primary send_order" {{ $customerLoggedIn ? '' : 'disabled' }}>
+                            <button type="button" class="btn btn-primary send_order">
                                 <i class="fa fa-check-circle"></i>Xác nhận đơn hàng
                             </button>
                             <a href="{{ url('/gio-hang') }}" class="shopw-checkout-inline-link">
@@ -260,11 +289,11 @@
                         </li>
                         <li>
                             <span>Phí vận chuyển</span>
-                            <strong>{{ number_format($cartTotals['shipping'], 0, ',', '.') }} VND</strong>
+                            <strong data-checkout-fee-display="summary">{{ number_format($cartTotals['shipping'], 0, ',', '.') }} VND</strong>
                         </li>
                         <li class="is-grand-total">
                             <span>Tổng cộng</span>
-                            <strong>{{ $checkoutTotal }}</strong>
+                            <strong data-checkout-grand-total-display="summary">{{ $checkoutTotal }}</strong>
                         </li>
                     </ul>
 

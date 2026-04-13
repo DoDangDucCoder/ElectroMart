@@ -1,6 +1,16 @@
 @extends('admin_layout')
 
 @section('admin_content')
+    @php
+        $registeredUris = collect(app('router')->getRoutes()->getRoutes())->map(fn ($route) => $route->uri());
+        $hasCategoryAddRoute = $registeredUris->contains('add-category-product');
+        $hasCategoryEditRoute = $registeredUris->contains(fn ($uri) => str_starts_with($uri, 'edit-category-product/'));
+        $hasCategoryDeleteRoute = $registeredUris->contains(fn ($uri) => str_starts_with($uri, 'delete-category-product/'));
+        $hasCategoryToggleRoute = $registeredUris->contains(fn ($uri) => str_starts_with($uri, 'active-category-product/'))
+            && $registeredUris->contains(fn ($uri) => str_starts_with($uri, 'unactive-category-product/'));
+        $categoryLegacyActionsReady = $hasCategoryAddRoute && $hasCategoryEditRoute && $hasCategoryDeleteRoute && $hasCategoryToggleRoute;
+    @endphp
+
     <div class="g-admin-page-shell g-admin-category-product-list">
         <section class="g-admin-page-hero">
             <div>
@@ -35,6 +45,13 @@
                     <div class="alert alert-success">{{ session('message') }}</div>
                     {{ Session::put('message', null) }}
                 @endif
+                <div id="category_sort_notice" aria-live="polite"></div>
+
+                @unless ($categoryLegacyActionsReady)
+                    <div class="alert alert-warning">
+                        Tác vụ quản trị danh mục sản phẩm legacy hiện chưa được nối route trong bản này. Màn hình đang ở chế độ chỉ xem để tránh dẫn tới lỗi 404, nên kéo thả sắp xếp cũng đang được tắt.
+                    </div>
+                @endunless
 
                 <div class="g-admin-toolbar">
                     <div class="form-inline">
@@ -87,7 +104,7 @@
                                 <th style="width:30px;"></th>
                             </tr>
                         </thead>
-                        <tbody id="category_order">
+                        <tbody id="category_order" data-category-sort-enabled="{{ $categoryLegacyActionsReady ? 'true' : 'false' }}">
                             @foreach ($all_category_product as $cate_pro)
                                 <tr id="{{ $cate_pro->category_id }}">
                                     <td>
@@ -111,27 +128,35 @@
                                     <td>{{ $cate_pro->category_order }}</td>
                                     <td>
                                         <span class="text-ellipsis">
-                                            @if ($cate_pro->category_status == 0)
-                                                <a href="{{ URL::to('/unactive-category-product/' . $cate_pro->category_id) }}">
-                                                    <span class="fa-thumb-styling fa fa-thumbs-up"></span>
-                                                </a>
+                                            @if ($categoryLegacyActionsReady)
+                                                @if ($cate_pro->category_status == 0)
+                                                    <a href="{{ URL::to('/unactive-category-product/' . $cate_pro->category_id) }}">
+                                                        <span class="fa-thumb-styling fa fa-thumbs-up"></span>
+                                                    </a>
+                                                @else
+                                                    <a href="{{ URL::to('/active-category-product/' . $cate_pro->category_id) }}">
+                                                        <span class="fa-thumb-styling fa fa-thumbs-down"></span>
+                                                    </a>
+                                                @endif
                                             @else
-                                                <a href="{{ URL::to('/active-category-product/' . $cate_pro->category_id) }}">
-                                                    <span class="fa-thumb-styling fa fa-thumbs-down"></span>
-                                                </a>
+                                                <span class="label label-default">Chỉ xem</span>
                                             @endif
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="{{ URL::to('/edit-category-product/' . $cate_pro->category_id) }}"
-                                            class="active styling-edit" ui-toggle-class="">
-                                            <i class="fa fa-pencil-square-o text-success text-active"></i>
-                                        </a>
-                                        <a onclick="return confirm('Bạn có chắc muốn xóa danh mục này không?')"
-                                            href="{{ URL::to('/delete-category-product/' . $cate_pro->category_id) }}"
-                                            class="active styling-edit" ui-toggle-class="">
-                                            <i class="fa fa-times text-danger text"></i>
-                                        </a>
+                                        @if ($categoryLegacyActionsReady)
+                                            <a href="{{ URL::to('/edit-category-product/' . $cate_pro->category_id) }}"
+                                                class="active styling-edit" ui-toggle-class="">
+                                                <i class="fa fa-pencil-square-o text-success text-active"></i>
+                                            </a>
+                                            <a onclick="return confirm('Bạn có chắc muốn xóa danh mục này không?')"
+                                                href="{{ URL::to('/delete-category-product/' . $cate_pro->category_id) }}"
+                                                class="active styling-edit" ui-toggle-class="">
+                                                <i class="fa fa-times text-danger text"></i>
+                                            </a>
+                                        @else
+                                            <span class="text-muted">Legacy</span>
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -142,18 +167,18 @@
                 <div class="g-admin-panel-grid two-col">
                     <div class="g-admin-surface">
                         <h3>Nhập dữ liệu</h3>
-                        <form action="{{ url('import-csv') }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ $categoryLegacyActionsReady ? url('import-csv') : '#' }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <input type="file" name="file" accept=".xlsx"><br>
-                            <input type="submit" value="Nhập file Excel" name="import_csv" class="btn btn-warning">
+                            <input type="submit" value="Nhập file Excel" name="import_csv" class="btn btn-warning" @disabled(! $categoryLegacyActionsReady)>
                         </form>
                     </div>
 
                     <div class="g-admin-surface">
                         <h3>Xuất dữ liệu</h3>
-                        <form action="{{ url('export-csv') }}" method="POST">
+                        <form action="{{ $categoryLegacyActionsReady ? url('export-csv') : '#' }}" method="POST">
                             @csrf
-                            <input type="submit" value="Xuất file Excel" name="export_csv" class="btn btn-success">
+                            <input type="submit" value="Xuất file Excel" name="export_csv" class="btn btn-success" @disabled(! $categoryLegacyActionsReady)>
                         </form>
                     </div>
                 </div>

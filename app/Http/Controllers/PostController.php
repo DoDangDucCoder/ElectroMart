@@ -64,18 +64,22 @@ class PostController extends Controller
     {
         $post = $this->blogPostService->findById($postId);
 
-        abort_if(! $post, 404);
+        if (! $post) {
+            return redirect()->to('/all-post')->with('error', 'Không tìm thấy bài viết cần xóa.');
+        }
 
         $this->blogPostService->delete($post);
 
         return redirect()->to('/all-post')->with('message', 'Xóa bài viết thành công');
     }
 
-    public function edit_post(int $postId): View
+    public function edit_post(int $postId): View|RedirectResponse
     {
         $post = $this->blogPostService->findById($postId);
 
-        abort_if(! $post, 404);
+        if (! $post) {
+            return redirect()->to('/all-post')->with('error', 'Không tìm thấy bài viết cần chỉnh sửa.');
+        }
 
         $categories = $this->blogCategoryService->listAll();
 
@@ -89,7 +93,9 @@ class PostController extends Controller
     {
         $post = $this->blogPostService->findById($postId);
 
-        abort_if(! $post, 404);
+        if (! $post) {
+            return redirect()->to('/all-post')->with('error', 'Không tìm thấy bài viết cần cập nhật.');
+        }
 
         $this->blogPostService->update($post, $request->validated(), $request->file('post_image'));
 

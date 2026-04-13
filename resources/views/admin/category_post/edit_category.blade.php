@@ -22,6 +22,18 @@
 
         @if (session('message'))
             <div class="alert alert-success">{{ session('message') }}</div>
+        @elseif (session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
         @endif
 
         <section class="g-admin-panel-card">
@@ -37,23 +49,23 @@
                     {{ csrf_field() }}
                     <div class="form-group">
                         <label for="slug">Tên danh mục</label>
-                        <input type="text" name="cate_post_name" value="{{ $category_post->cate_post_name }}"
+                        <input type="text" name="cate_post_name" value="{{ old('cate_post_name', $category_post->cate_post_name) }}"
                             class="form-control" onkeyup="ChangeToSlug();" id="slug" placeholder="Tên danh mục">
                     </div>
                     <div class="form-group">
                         <label for="convert_slug">Slug</label>
-                        <input type="text" name="cate_post_slug" value="{{ $category_post->cate_post_slug }}"
+                        <input type="text" name="cate_post_slug" value="{{ old('cate_post_slug', $category_post->cate_post_slug) }}"
                             class="form-control" id="convert_slug" placeholder="Slug">
                     </div>
                     <div class="form-group">
                         <label for="cate_post_desc">Mô tả danh mục</label>
                         <textarea style="resize:none" rows="8" class="form-control" name="cate_post_desc" id="cate_post_desc"
-                            placeholder="Mô tả danh mục">{{ $category_post->cate_post_desc }}</textarea>
+                            placeholder="Mô tả danh mục">{{ old('cate_post_desc', $category_post->cate_post_desc) }}</textarea>
                     </div>
                     <div class="form-group">
                         <label for="cate_post_status">Hiển thị</label>
                         <select name="cate_post_status" id="cate_post_status" class="form-control input-sm m-bot15">
-                            @if ($category_post->cate_post_status == 0)
+                            @if ((string) old('cate_post_status', (string) $category_post->cate_post_status) === '0')
                                 <option selected value="0">Hiển thị</option>
                                 <option value="1">Ẩn</option>
                             @else

@@ -5,7 +5,7 @@
 @section('content')
     @php
         $cartCount = $cartItems->sum('product_qty');
-        $checkoutUrl = url('/checkout');
+        $checkoutUrl = $authRedirectUrl ?? url('/checkout');
         $supportConfig = config('services.storefront_support', []);
         $supportPhoneDisplay = $supportConfig['phone_display'] ?? '1900.0000';
         $supportPhoneHref = $supportConfig['phone_href'] ?? 'tel:19000000';
@@ -51,6 +51,26 @@
                 'url' => url('/goi-y-san-pham'),
             ],
         ];
+        $authStatusLabel = $currentCustomer ? 'Đã đăng nhập' : 'Chưa đăng nhập';
+        $authHeroTitle = $currentCustomer
+            ? 'Bạn đã đăng nhập thành công'
+            : (($authRedirectKey ?? 'checkout') === 'history'
+                ? 'Đăng nhập để xem đơn hàng của bạn'
+                : 'Đăng nhập để tiếp tục thanh toán');
+        $authHeroDescription = $currentCustomer
+            ? 'Tài khoản của bạn đã sẵn sàng. Bạn có thể tiếp tục sang bước ' . ($authRedirectLabel ?? 'checkout') . ' ngay bây giờ hoặc đổi sang tài khoản khác.'
+            : (($authRedirectKey ?? 'checkout') === 'history'
+                ? 'Đăng nhập để theo dõi lịch sử mua sắm, trạng thái giao hàng và các đơn đã đặt trước đó.'
+                : 'Trang này là bước nối giữa giỏ hàng và thanh toán. Bạn có thể đăng nhập tài khoản hiện có hoặc tạo tài khoản mới để xác nhận đơn hàng.');
+        $authCustomerDisplayName = $currentCustomer?->name ?: ($currentCustomer?->email ?: 'Tài khoản của bạn');
+        $authCustomerEmail = $currentCustomer?->email;
+        $authCustomerPhone = $currentCustomer?->phone;
+        $authAvatarInitials = collect(explode(' ', \Illuminate\Support\Str::upper(trim((string) $authCustomerDisplayName))))
+            ->filter()
+            ->take(2)
+            ->map(fn($part) => \Illuminate\Support\Str::substr($part, 0, 1))
+            ->implode('');
+        $authAvatarInitials = $authAvatarInitials !== '' ? $authAvatarInitials : 'TK';
     @endphp
 
     <section id="form" class="shopw-auth-page">
@@ -77,8 +97,8 @@
         <div class="shopw-auth-hero">
             <div class="shopw-auth-hero-copy">
                 <span class="shopw-auth-kicker">Truy cập tài khoản</span>
-                <h1>Đăng nhập để tiếp tục thanh toán</h1>
-                <p>Trang này là bước nối giữa giỏ hàng và thanh toán. Bạn có thể đăng nhập tài khoản hiện có hoặc tạo tài khoản mới để xác nhận đơn hàng.</p>
+                <h1>{{ $authHeroTitle }}</h1>
+                <p>{{ $authHeroDescription }}</p>
 
                 <div class="shopw-auth-flow" aria-label="Tiến trình mua hàng">
                     @foreach ($authFlowSteps as $step)
@@ -98,7 +118,7 @@
                 </div>
                 <div class="shopw-auth-stat">
                     <span>Trạng thái</span>
-                    <strong>{{ $currentCustomer ? 'Đã đăng nhập' : 'Khách chưa đăng nhập' }}</strong>
+                    <strong>{{ $authStatusLabel }}</strong>
                 </div>
             </div>
         </div>
@@ -119,87 +139,200 @@
 
         @if ($currentCustomer)
             <div class="shopw-auth-logged-in">
-                <div>
-                    <strong>Bạn đang đăng nhập với {{ $currentCustomer->email }}.</strong>
-                    <p>Bạn có thể tiếp tục sang trang thanh toán ngay hoặc đăng xuất để đổi tài khoản.</p>
+                <div class="shopw-auth-identity">
+                    <span class="shopw-auth-identity-avatar">
+                        @if (!empty($storefrontCustomerPicture))
+                            <img src="{{ $storefrontCustomerPicture }}" alt="{{ $authCustomerDisplayName }}">
+                        @else
+                            <span>{{ $authAvatarInitials }}</span>
+                        @endif
+                    </span>
+                    <div class="shopw-auth-identity-copy">
+                        <span class="shopw-auth-identity-kicker">Tài khoản đã xác thực</span>
+                        <strong>{{ $authCustomerDisplayName }}</strong>
+                        @if ($authCustomerEmail)
+                            <small>{{ $authCustomerEmail }}</small>
+                        @endif
+                        @if ($authCustomerPhone)
+                            <small>{{ $authCustomerPhone }}</small>
+                        @endif
+                    </div>
                 </div>
                 <div class="shopw-auth-logged-actions">
                     <a href="{{ $checkoutUrl }}" class="shopw-auth-primary-link">Tiếp tục thanh toán</a>
-                    <a href="{{ url('/dang-xuat-khach-hang') }}" class="shopw-auth-secondary-link">Đăng xuất</a>
+                    <a href="{{ url('/history') }}" class="shopw-auth-secondary-link">Đơn hàng của tôi</a>
+                    <a href="{{ url('/dang-xuat-khach-hang?redirect=' . ($authRedirectKey ?? 'checkout')) }}"
+                        class="shopw-auth-secondary-link">Đăng xuất</a>
                 </div>
             </div>
         @endif
 
-        <div class="shopw-auth-layout">
-            <div class="shopw-auth-card">
-                <div class="shopw-auth-card-head">
-                    <h2>Đăng nhập tài khoản</h2>
-                    <p>Dùng tài khoản hiện có để tiếp tục đặt hàng và theo dõi lịch sử đơn mua.</p>
-                </div>
+        @php
+            $showCompactAuthSwitcher = (bool) $currentCustomer;
+        @endphp
 
-                <form action="{{ url('/login-customer') }}" method="POST" class="shopw-auth-form">
-                    {{ csrf_field() }}
-                    <label class="shopw-auth-field">
-                        <span>Email</span>
-                        <input type="email" name="email_account" value="{{ old('email_account') }}"
-                            placeholder="you@example.com" />
-                    </label>
-                    <label class="shopw-auth-field">
-                        <span>Mật khẩu</span>
-                        <input type="password" name="password_account" placeholder="Nhập mật khẩu" />
-                    </label>
+        @if ($showCompactAuthSwitcher)
+            <details class="shopw-auth-switcher">
+                <summary>Đăng nhập bằng tài khoản khác</summary>
+                <div class="shopw-auth-layout">
+                    <div class="shopw-auth-card">
+                        <div class="shopw-auth-card-head">
+                            <h2>Đăng nhập tài khoản</h2>
+                            <p>Dùng tài khoản hiện có để tiếp tục đặt hàng và theo dõi lịch sử đơn mua.</p>
+                        </div>
 
-                    <div class="shopw-auth-form-meta">
-                        <label class="shopw-auth-check">
-                            <input type="checkbox" class="checkbox">
-                            <span>Ghi nhớ đăng nhập</span>
-                        </label>
-                        <a href="{{ url('/quen-mat-khau') }}" class="shopw-auth-inline-link">Quên mật khẩu</a>
+                        <form action="{{ url('/login-customer') }}" method="POST" class="shopw-auth-form">
+                            {{ csrf_field() }}
+                            <input type="hidden" name="redirect_target" value="{{ $authRedirectKey ?? 'checkout' }}">
+                            <input type="hidden" name="redirect_to" value="{{ $authRedirectUrl ?? url('/checkout') }}">
+                            <label class="shopw-auth-field">
+                                <span>Email</span>
+                                <input type="email" name="email_account" value="{{ old('email_account') }}"
+                                    placeholder="you@example.com" />
+                            </label>
+                            <label class="shopw-auth-field">
+                                <span>Mật khẩu</span>
+                                <input type="password" name="password_account" placeholder="Nhập mật khẩu" />
+                            </label>
+
+                            <div class="shopw-auth-form-meta">
+                                <label class="shopw-auth-check">
+                                    <input type="checkbox" class="checkbox">
+                                    <span>Ghi nhớ đăng nhập</span>
+                                </label>
+                                <a href="{{ url('/quen-mat-khau') }}" class="shopw-auth-inline-link">Quên mật khẩu</a>
+                            </div>
+
+                            <button type="submit" class="btn btn-default shopw-auth-primary-link is-full">Đăng nhập</button>
+                        </form>
+
+                        <div class="shopw-auth-social">
+                            <span>Hoặc dùng phương thức khác</span>
+                            <a href="{{ url('login-customer-google?' . http_build_query([
+                                'redirect' => $authRedirectKey ?? 'checkout',
+                                'redirect_to' => $authRedirectUrl ?? url('/checkout'),
+                            ])) }}"
+                                class="shopw-auth-secondary-link is-full">
+                                <i class="fa fa-google"></i>Đăng nhập bằng Google
+                            </a>
+                        </div>
                     </div>
 
-                    <button type="submit" class="btn btn-default shopw-auth-primary-link is-full">Đăng nhập</button>
-                </form>
+                    <div class="shopw-auth-card">
+                        <div class="shopw-auth-card-head">
+                            <h2>Tạo tài khoản mới</h2>
+                            <p>Nếu chưa có tài khoản, đăng ký nhanh để tiếp tục thanh toán và lưu lịch sử mua hàng.</p>
+                        </div>
 
-                <div class="shopw-auth-social">
-                    <span>Hoặc dùng phương thức khác</span>
-                    <a href="{{ url('login-customer-google') }}" class="shopw-auth-secondary-link is-full">
-                        <i class="fa fa-google"></i>Đăng nhập bằng Google
-                    </a>
+                        <form action="{{ url('/add-customer') }}" method="POST" class="shopw-auth-form">
+                            {{ csrf_field() }}
+                            <input type="hidden" name="redirect_target" value="{{ $authRedirectKey ?? 'checkout' }}">
+                            <input type="hidden" name="redirect_to" value="{{ $authRedirectUrl ?? url('/checkout') }}">
+                            <label class="shopw-auth-field">
+                                <span>Họ và tên</span>
+                                <input type="text" name="customer_name" value="{{ old('customer_name') }}"
+                                    placeholder="Nguyen Van A" />
+                            </label>
+                            <label class="shopw-auth-field">
+                                <span>Email</span>
+                                <input type="email" name="customer_email" value="{{ old('customer_email') }}"
+                                    placeholder="you@example.com" />
+                            </label>
+                            <label class="shopw-auth-field">
+                                <span>Mật khẩu</span>
+                                <input type="password" name="customer_password" placeholder="Tối thiểu 6 ký tự" />
+                            </label>
+                            <label class="shopw-auth-field">
+                                <span>Số điện thoại</span>
+                                <input type="text" name="customer_phone" value="{{ old('customer_phone') }}"
+                                    placeholder="09xxxxxxxx" />
+                            </label>
+
+                            <button type="submit" class="btn btn-default shopw-auth-primary-link is-full">Đăng ký tài khoản</button>
+                        </form>
+                    </div>
+                </div>
+            </details>
+        @else
+            <div class="shopw-auth-layout">
+                <div class="shopw-auth-card">
+                    <div class="shopw-auth-card-head">
+                        <h2>Đăng nhập tài khoản</h2>
+                        <p>Dùng tài khoản hiện có để tiếp tục đặt hàng và theo dõi lịch sử đơn mua.</p>
+                    </div>
+
+                    <form action="{{ url('/login-customer') }}" method="POST" class="shopw-auth-form">
+                        {{ csrf_field() }}
+                        <input type="hidden" name="redirect_target" value="{{ $authRedirectKey ?? 'checkout' }}">
+                        <input type="hidden" name="redirect_to" value="{{ $authRedirectUrl ?? url('/checkout') }}">
+                        <label class="shopw-auth-field">
+                            <span>Email</span>
+                            <input type="email" name="email_account" value="{{ old('email_account') }}"
+                                placeholder="you@example.com" />
+                        </label>
+                        <label class="shopw-auth-field">
+                            <span>Mật khẩu</span>
+                            <input type="password" name="password_account" placeholder="Nhập mật khẩu" />
+                        </label>
+
+                        <div class="shopw-auth-form-meta">
+                            <label class="shopw-auth-check">
+                                <input type="checkbox" class="checkbox">
+                                <span>Ghi nhớ đăng nhập</span>
+                            </label>
+                            <a href="{{ url('/quen-mat-khau') }}" class="shopw-auth-inline-link">Quên mật khẩu</a>
+                        </div>
+
+                        <button type="submit" class="btn btn-default shopw-auth-primary-link is-full">Đăng nhập</button>
+                    </form>
+
+                    <div class="shopw-auth-social">
+                        <span>Hoặc dùng phương thức khác</span>
+                        <a href="{{ url('login-customer-google?' . http_build_query([
+                            'redirect' => $authRedirectKey ?? 'checkout',
+                            'redirect_to' => $authRedirectUrl ?? url('/checkout'),
+                        ])) }}"
+                            class="shopw-auth-secondary-link is-full">
+                            <i class="fa fa-google"></i>Đăng nhập bằng Google
+                        </a>
+                    </div>
+                </div>
+
+                <div class="shopw-auth-card">
+                    <div class="shopw-auth-card-head">
+                        <h2>Tạo tài khoản mới</h2>
+                        <p>Nếu chưa có tài khoản, đăng ký nhanh để tiếp tục thanh toán và lưu lịch sử mua hàng.</p>
+                    </div>
+
+                    <form action="{{ url('/add-customer') }}" method="POST" class="shopw-auth-form">
+                        {{ csrf_field() }}
+                        <input type="hidden" name="redirect_target" value="{{ $authRedirectKey ?? 'checkout' }}">
+                        <input type="hidden" name="redirect_to" value="{{ $authRedirectUrl ?? url('/checkout') }}">
+                        <label class="shopw-auth-field">
+                            <span>Họ và tên</span>
+                            <input type="text" name="customer_name" value="{{ old('customer_name') }}"
+                                placeholder="Nguyen Van A" />
+                        </label>
+                        <label class="shopw-auth-field">
+                            <span>Email</span>
+                            <input type="email" name="customer_email" value="{{ old('customer_email') }}"
+                                placeholder="you@example.com" />
+                        </label>
+                        <label class="shopw-auth-field">
+                            <span>Mật khẩu</span>
+                            <input type="password" name="customer_password" placeholder="Tối thiểu 6 ký tự" />
+                        </label>
+                        <label class="shopw-auth-field">
+                            <span>Số điện thoại</span>
+                            <input type="text" name="customer_phone" value="{{ old('customer_phone') }}"
+                                placeholder="09xxxxxxxx" />
+                        </label>
+
+                        <button type="submit" class="btn btn-default shopw-auth-primary-link is-full">Đăng ký tài khoản</button>
+                    </form>
                 </div>
             </div>
-
-            <div class="shopw-auth-card">
-                <div class="shopw-auth-card-head">
-                    <h2>Tạo tài khoản mới</h2>
-                    <p>Nếu chưa có tài khoản, đăng ký nhanh để tiếp tục thanh toán và lưu lịch sử mua hàng.</p>
-                </div>
-
-                <form action="{{ url('/add-customer') }}" method="POST" class="shopw-auth-form">
-                    {{ csrf_field() }}
-                    <label class="shopw-auth-field">
-                        <span>Họ và tên</span>
-                        <input type="text" name="customer_name" value="{{ old('customer_name') }}"
-                            placeholder="Nguyen Van A" />
-                    </label>
-                    <label class="shopw-auth-field">
-                        <span>Email</span>
-                        <input type="email" name="customer_email" value="{{ old('customer_email') }}"
-                            placeholder="you@example.com" />
-                    </label>
-                    <label class="shopw-auth-field">
-                        <span>Mật khẩu</span>
-                        <input type="password" name="customer_password" placeholder="Tối thiểu 6 ký tự" />
-                    </label>
-                    <label class="shopw-auth-field">
-                        <span>Số điện thoại</span>
-                        <input type="text" name="customer_phone" value="{{ old('customer_phone') }}"
-                            placeholder="09xxxxxxxx" />
-                    </label>
-
-                    <button type="submit" class="btn btn-default shopw-auth-primary-link is-full">Đăng ký tài khoản</button>
-                </form>
-            </div>
-        </div>
+        @endif
 
         <div class="shopw-auth-support-strip">
             @foreach ($authQuickLinks as $quickLink)

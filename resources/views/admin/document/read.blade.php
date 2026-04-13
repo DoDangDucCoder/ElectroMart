@@ -33,6 +33,10 @@
                     <div class="alert alert-success">{{ session('message') }}</div>
                 @endif
 
+                @if (session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
+
                 @if ($contents->isEmpty())
                     <div class="g-admin-empty-state">
                         Chưa có tệp nào trong kho tài liệu hiện tại hoặc nơi lưu trữ chưa có dữ liệu.

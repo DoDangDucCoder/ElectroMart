@@ -4,7 +4,7 @@
     <div class="g-admin-page-shell g-admin-slider-list">
         <section class="g-admin-page-hero">
             <div>
-                <span class="g-admin-page-eyebrow">Nội dung / Slider</span>
+                <span class="g-admin-page-eyebrow">Nội dung / Trình chiếu</span>
                 <h1>Liệt kê banner</h1>
                 <p>Theo dõi trạng thái hiển thị của banner và xóa những mục không còn sử dụng.</p>
             </div>
@@ -24,14 +24,18 @@
             <div class="alert alert-success">{{ session('message') }}</div>
         @endif
 
+        @if (session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
         <section class="g-admin-panel-card">
             <header class="g-admin-panel-head">
                 <div>
-                    <strong>Danh sách slider</strong>
-                    <p>Toggle trạng thái và xóa trực tiếp ngay trên table hiện tại.</p>
+                    <strong>Danh sách trình chiếu</strong>
+                    <p>Bật tắt trạng thái và xóa trực tiếp ngay trên bảng hiện tại.</p>
                 </div>
                 <div class="g-admin-inline-actions">
-                    <a href="{{ url('/add-slider') }}" class="btn btn-info">Thêm slider</a>
+                    <a href="{{ url('/add-slider') }}" class="btn btn-info">Thêm trình chiếu</a>
                 </div>
             </header>
             <div class="g-admin-panel-body">
@@ -44,10 +48,10 @@
                                         <input type="checkbox"><i></i>
                                     </label>
                                 </th>
-                                <th>Tên slide</th>
+                                <th>Tên mục</th>
                                 <th>Hình ảnh</th>
-                                <th>Hero copy</th>
-                                <th>Tone</th>
+                                <th>Tiêu đề nổi bật</th>
+                                <th>Phong cách</th>
                                 <th>Tình trạng</th>
                                 <th style="width:30px;"></th>
                             </tr>
@@ -63,7 +67,7 @@
                                     <td>
                                         <strong>{{ $slide->slider_name }}</strong>
                                         @if (!empty($slide->slider_alt))
-                                            <span class="g-admin-cell-note">Alt / headline: {{ $slide->slider_alt }}</span>
+                                            <span class="g-admin-cell-note">Văn bản thay thế / tiêu đề: {{ $slide->slider_alt }}</span>
                                         @endif
                                     </td>
                                     <td>
@@ -74,9 +78,9 @@
                                             alt="{{ $slide->slider_name }}" height="120" width="240">
                                     </td>
                                     <td>
-                                        <strong>{{ $slide->slider_alt ?: 'Chưa có alt text riêng' }}</strong>
+                                        <strong>{{ $slide->slider_alt ?: 'Chưa có tiêu đề riêng' }}</strong>
                                         <span class="g-admin-cell-note">
-                                            {{ \Illuminate\Support\Str::limit((string) $slide->slider_desc, 120) ?: 'Storefront sẽ dùng copy fallback tự động cho banner này.' }}
+                                            {{ \Illuminate\Support\Str::limit((string) $slide->slider_desc, 120) ?: 'Giao diện cửa hàng sẽ dùng lời dẫn mặc định cho mục trình chiếu này.' }}
                                         </span>
                                     </td>
                                     <td>
@@ -114,7 +118,7 @@
                                     <td>
                                         <form action="{{ url('/delete-slide/' . $slide->slider_id) }}" method="POST"
                                             style="display:inline-block;"
-                                            onsubmit="return confirm('Bạn có chắc muốn xóa slide này không?')">
+                                            onsubmit="return confirm('Bạn có chắc muốn xóa mục trình chiếu này không?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="active styling-edit"
@@ -127,7 +131,7 @@
                             @empty
                                 <tr>
                                     <td colspan="7">
-                                        <div class="g-admin-empty-state">Chưa có slider nào hoặc bảng slider chưa được cấu hình.</div>
+                                        <div class="g-admin-empty-state">Chưa có mục trình chiếu nào hoặc bảng dữ liệu trình chiếu chưa được cấu hình.</div>
                                     </td>
                                 </tr>
                             @endforelse

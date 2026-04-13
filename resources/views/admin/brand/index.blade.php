@@ -38,6 +38,9 @@
                 @if (session('message'))
                     <div class="alert alert-success">{{ session('message') }}</div>
                 @endif
+                @if (session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
 
                 <form class="form-inline mb-3" method="get" action="{{ url('/all-brand-product') }}">
                     <div class="form-group mr-2">

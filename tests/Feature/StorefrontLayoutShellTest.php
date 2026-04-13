@@ -7,6 +7,7 @@ use App\Application\Checkout\Services\CartService;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
+use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -66,16 +67,38 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertSee('shopw-logo-copy', false)
             ->assertSee('shopw-search-hints', false)
             ->assertSee('shopw-search-hints--compact', false)
+            ->assertSee('Bạn cần gì?')
+            ->assertSee('shopw-search-rotator', false)
             ->assertDontSee('shopw-subnav', false)
             ->assertSee('shopw-header-brand', false)
             ->assertSee('shopw-header-center', false)
             ->assertSee('shopw-header-actions', false)
             ->assertSee('shopw-cat-btn-copy', false)
-            ->assertSee('data-desktop-target="#shopw-nav-group-categories"', false)
+            ->assertSee('shopw-header-category-shell', false)
+            ->assertSee('shopw-desktop-category-panel', false)
+            ->assertSee('shopw-desktop-category-nav', false)
+            ->assertSee('shopw-desktop-category-trigger', false)
+            ->assertSee('shopw-desktop-category-pane', false)
+            ->assertSee('shopw-desktop-category-highlights', false)
+            ->assertSee('shopw-desktop-category-section', false)
+            ->assertSee('shopw-desktop-category-rail', false)
+            ->assertSee('shopw-desktop-category-section-link-icon', false)
+            ->assertSee('shopw-desktop-category-promo-icon', false)
+            ->assertSee('shopw-desktop-category-promo-stats', false)
+            ->assertSee('Thương hiệu nổi bật')
+            ->assertSee('Theo tầm giá')
+            ->assertSee('placeholder="Tìm sản phẩm, thương hiệu, cấu hình..."', false)
+            ->assertSee('data-search-trends=', false)
+            ->assertSee('data-desktop-panel="#shopw-desktop-category-panel"', false)
             ->assertDontSee('aria-controls="shopw-mobile-drawer"', false)
+            ->assertSee('data-storefront-nav-parent="categories"', false)
+            ->assertSee('data-storefront-nav-parent="blogs"', false)
             ->assertSee('shopw-utilities--desktop', false)
             ->assertSee('shopw-utilities--compact', false)
             ->assertSee('shopw-util-label', false)
+            ->assertSee('Đăng nhập')
+            ->assertSee('redirect_to=', false)
+            ->assertDontSee('shopw-account-menu', false)
             ->assertDontSee('shopw-util-minor', false)
             ->assertDontSee('shopw-util-text', false)
             ->assertSee('id="sosanh"', false)
@@ -93,7 +116,18 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertSee('shopw-footer-bottom', false)
             ->assertSee('function escapeHtml', false)
             ->assertSee('function add_compare', false)
-            ->assertDontSee('frontend/js/dark-light-mode.js');
+            ->assertDontSee('frontend/js/dark-light-mode.js')
+            ->assertDontSee('href="tel:tel:', false);
+
+        $homeMarkup = $this->get('/')->getContent();
+        $this->assertDoesNotMatchRegularExpression(
+            '/<a[^>]*data-storefront-nav-parent="categories"[^>]*href="#"/',
+            $homeMarkup
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/<a[^>]*data-storefront-nav-parent="blogs"[^>]*href="#"/',
+            $homeMarkup
+        );
     }
 
     public function test_login_route_reuses_same_storefront_shell(): void
@@ -120,7 +154,18 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertSee('shopw-header-center', false)
             ->assertSee('shopw-header-actions', false)
             ->assertSee('shopw-cat-btn-copy', false)
-            ->assertSee('data-desktop-target="#shopw-nav-group-categories"', false)
+            ->assertSee('shopw-header-category-shell', false)
+            ->assertSee('shopw-desktop-category-panel', false)
+            ->assertSee('shopw-desktop-category-nav', false)
+            ->assertSee('shopw-desktop-category-trigger', false)
+            ->assertSee('shopw-desktop-category-pane', false)
+            ->assertSee('shopw-desktop-category-section', false)
+            ->assertSee('shopw-desktop-category-rail', false)
+            ->assertSee('shopw-desktop-category-section-link-icon', false)
+            ->assertSee('shopw-desktop-category-promo-icon', false)
+            ->assertSee('placeholder="Tìm sản phẩm, thương hiệu, cấu hình..."', false)
+            ->assertSee('data-search-trends=', false)
+            ->assertSee('data-desktop-panel="#shopw-desktop-category-panel"', false)
             ->assertDontSee('aria-controls="shopw-mobile-drawer"', false)
             ->assertSee('shopw-utilities--desktop', false)
             ->assertSee('shopw-utilities--compact', false)
@@ -137,6 +182,53 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertSee('function requestQuickview', false)
             ->assertSee('function add_wistlist', false)
             ->assertDontSee('frontend/js/dark-light-mode.js');
+    }
+
+    public function test_logged_in_customer_sees_account_dropdown_in_storefront_header(): void
+    {
+        $product = $this->createProduct('Shell Logged Header Product');
+        $customer = Customer::create([
+            'name' => 'Header Customer',
+            'email' => 'header-customer@example.com',
+            'password' => bcrypt('secret123'),
+            'phone' => '0977000000',
+            'is_active' => true,
+        ]);
+
+        $this->cartService->addItem($product->product_id, 1);
+
+        $this->withSession([
+            'customer_id' => $customer->id,
+        ])->get('/')
+            ->assertOk()
+            ->assertSee('shopw-account-menu', false)
+            ->assertSee('shopw-account-summary--avatar-only', false)
+            ->assertSee('Header Customer')
+            ->assertSee('Đơn hàng của tôi')
+            ->assertSee('Đăng xuất')
+            ->assertSee('/dang-xuat-khach-hang?redirect=login', false);
+    }
+
+    public function test_category_route_marks_storefront_navigation_state_with_real_links(): void
+    {
+        $this->createProduct('Shell Category Product');
+
+        $response = $this->get('/danh-muc/' . $this->category->slug);
+
+        $response
+            ->assertOk()
+            ->assertSee('data-storefront-nav-parent="categories"', false)
+            ->assertSee('data-storefront-nav-parent="blogs"', false)
+            ->assertDontSee('href="tel:tel:', false);
+
+        $this->assertMatchesRegularExpression(
+            '/<a[^>]*data-storefront-nav-parent="categories"[^>]*aria-current="page"/',
+            $response->getContent()
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/<a[^>]*data-storefront-nav-parent="categories"[^>]*href="#"/',
+            $response->getContent()
+        );
     }
 
     protected function createProduct(string $name): Product

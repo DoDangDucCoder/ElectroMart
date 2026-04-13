@@ -1,6 +1,35 @@
 <?php
 
 return [
+    'flash_sale' => [
+        'enabled' => filter_var(env('STOREFRONT_FLASH_SALE_ENABLED', true), FILTER_VALIDATE_BOOL),
+        'kicker' => env('STOREFRONT_FLASH_SALE_KICKER', 'Hot deal'),
+        'title' => env('STOREFRONT_FLASH_SALE_TITLE', 'Flash Sale'),
+        'cta_label' => env('STOREFRONT_FLASH_SALE_CTA_LABEL', 'Xem tất cả deal'),
+        'cta_url' => env('STOREFRONT_FLASH_SALE_CTA_URL', '/tim-kiem'),
+        'countdown_ends_at' => env('STOREFRONT_FLASH_SALE_ENDS_AT', '2026-12-31 23:59:59'),
+        'product_slugs' => array_values(array_filter(array_map(
+            static fn ($slug) => trim((string) $slug),
+            explode(',', (string) env('STOREFRONT_FLASH_SALE_PRODUCT_SLUGS', ''))
+        ))),
+    ],
+    'search_suggest' => [
+        'max_products' => (int) env('STOREFRONT_SEARCH_SUGGEST_MAX_PRODUCTS', 6),
+        'trending_keywords' => array_values(array_filter(array_map(
+            static fn ($keyword) => trim((string) $keyword),
+            explode(',', (string) env(
+                'STOREFRONT_SEARCH_SUGGEST_TRENDING',
+                'Laptop gaming,Iphone,RTX 4060,Màn hình 2K,Bàn phím cơ'
+            ))
+        ))),
+        'shortcut_category_slugs' => array_values(array_filter(array_map(
+            static fn ($slug) => trim((string) $slug),
+            explode(',', (string) env(
+                'STOREFRONT_SEARCH_SUGGEST_SHORTCUT_CATEGORIES',
+                'laptop-gaming,laptop,dien-thoai,phu-kien'
+            ))
+        ))),
+    ],
     'labels' => [
         'utility_hotline' => env('STOREFRONT_LABEL_UTILITY_HOTLINE', 'Hotline'),
         'utility_store' => env('STOREFRONT_LABEL_UTILITY_STORE', 'Cửa hàng'),

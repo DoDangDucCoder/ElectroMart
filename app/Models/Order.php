@@ -12,6 +12,7 @@ class Order extends Model
         'shipping_id',
         'order_status',
         'order_code',
+        'order_destroy',
         'created_at',
         'order_date'
     ];

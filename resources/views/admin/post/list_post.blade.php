@@ -33,6 +33,8 @@
             <div class="g-admin-panel-body">
                 @if (session('message'))
                     <div class="alert alert-success">{{ session('message') }}</div>
+                @elseif (session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
                 @endif
 
                 <div class="g-admin-toolbar">
@@ -84,6 +86,11 @@
                         </thead>
                         <tbody>
                             @forelse ($all_post as $post)
+                                @php
+                                    $postImagePreview = $post->featured_image_path && file_exists(public_path($post->featured_image_path))
+                                        ? asset($post->featured_image_path)
+                                        : asset('uploads/product/no-image.svg');
+                                @endphp
                                 <tr>
                                     <td>
                                         <label class="i-checks m-b-none">
@@ -94,7 +101,7 @@
                                         <strong>{{ $post->post_title }}</strong>
                                     </td>
                                     <td>
-                                        <img src="{{ $post->featured_image_path ? asset($post->featured_image_path) : asset('uploads/product/no-image.svg') }}"
+                                        <img src="{{ $postImagePreview }}"
                                             alt="{{ $post->post_title }}" style="height:80px;width:120px;">
                                     </td>
                                     <td>{{ $post->post_slug }}</td>

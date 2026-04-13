@@ -30,6 +30,7 @@ class ChatInboxController extends Controller
         $filters['scope'] = $filters['scope'] ?? 'all';
 
         $admin = $request->user('web');
+        $chatTablesReady = $this->inbox->tablesReady();
         $conversations = $this->inbox->paginateConversations($filters, $admin, 15);
         $selectedConversation = null;
 
@@ -55,6 +56,7 @@ class ChatInboxController extends Controller
             'conversations' => $conversations,
             'selected_conversation' => $selectedConversation,
             'selected_messages' => $selectedMessages,
+            'chat_tables_ready' => $chatTablesReady,
         ]);
     }
 
@@ -76,6 +78,7 @@ class ChatInboxController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
+                'tables_ready' => $this->inbox->tablesReady(),
                 'summary' => $this->inbox->summary($filters, $admin),
                 'items' => $conversations->getCollection()
                     ->map(fn (ChatConversation $conversation) => $this->inbox->serializeConversationSummary($conversation))
@@ -91,6 +94,13 @@ class ChatInboxController extends Controller
 
     public function show(Request $request, ChatConversation $conversation): JsonResponse
     {
+        if (! $this->inbox->tablesReady()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tính năng hộp thư chat chưa sẵn sàng vì thiếu bảng dữ liệu chat.',
+            ], 503);
+        }
+
         $conversation = $this->inbox->markViewed($conversation, $request->user('web'));
         $afterId = (int) $request->query('after_id', 0);
         $messages = $this->inbox->messages($conversation, $afterId > 0 ? $afterId : null, 80);
@@ -106,6 +116,13 @@ class ChatInboxController extends Controller
 
     public function reply(StoreChatMessageRequest $request, ChatConversation $conversation): JsonResponse
     {
+        if (! $this->inbox->tablesReady()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tính năng hộp thư chat chưa sẵn sàng vì thiếu bảng dữ liệu chat.',
+            ], 503);
+        }
+
         $message = $this->inbox->reply($conversation, $request->user('web'), (string) $request->validated('message'));
 
         return response()->json([
@@ -118,6 +135,13 @@ class ChatInboxController extends Controller
 
     public function assign(Request $request, ChatConversation $conversation): JsonResponse
     {
+        if (! $this->inbox->tablesReady()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tính năng hộp thư chat chưa sẵn sàng vì thiếu bảng dữ liệu chat.',
+            ], 503);
+        }
+
         $conversation = $this->inbox->assignToAdmin($conversation, $request->user('web'));
 
         return response()->json([
@@ -130,6 +154,13 @@ class ChatInboxController extends Controller
 
     public function updateStatus(Request $request, ChatConversation $conversation): JsonResponse
     {
+        if (! $this->inbox->tablesReady()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tính năng hộp thư chat chưa sẵn sàng vì thiếu bảng dữ liệu chat.',
+            ], 503);
+        }
+
         $validated = $request->validate([
             'status' => ['required', 'in:unread,in_progress,resolved'],
         ]);

@@ -7,13 +7,47 @@ use App\Http\Resources\OrderResource;
 use App\Infrastructure\Persistence\Eloquent\Order\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
 {
+    private const ORDER_STATUSES = [
+        'pending',
+        'confirmed',
+        'processing',
+        'shipped',
+        'delivered',
+        'cancelled',
+        'refunded',
+        'completed',
+    ];
+
+    private const PAYMENT_STATUSES = [
+        'pending',
+        'processing',
+        'paid',
+        'succeeded',
+        'failed',
+        'refunded',
+    ];
+
+    private const FULFILLMENT_STATUSES = [
+        'unfulfilled',
+        'fulfilled',
+    ];
+
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['status', 'payment_status', 'fulfillment_status', 'customer_id', 'code']);
-        $perPage = min($request->get('per_page', 15), 100);
+        $validated = $request->validate([
+            'status' => ['nullable', 'string', Rule::in(self::ORDER_STATUSES)],
+            'payment_status' => ['nullable', 'string', Rule::in(self::PAYMENT_STATUSES)],
+            'fulfillment_status' => ['nullable', 'string', Rule::in(self::FULFILLMENT_STATUSES)],
+            'customer_id' => ['nullable', 'integer', 'min:1'],
+            'code' => ['nullable', 'string', 'max:100'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+        $filters = collect($validated)->only(['status', 'payment_status', 'fulfillment_status', 'customer_id', 'code'])->toArray();
+        $perPage = max(1, min((int) ($validated['per_page'] ?? 15), 100));
 
         $query = Order::query()->with(['customer', 'items']);
 
@@ -71,10 +105,20 @@ class OrderController extends Controller
     public function updateStatus(Request $request, int $id): JsonResponse
     {
         $validated = $request->validate([
-            'status' => 'nullable|string',
-            'payment_status' => 'nullable|string',
-            'fulfillment_status' => 'nullable|string',
+            'status' => ['sometimes', 'string', Rule::in(self::ORDER_STATUSES)],
+            'payment_status' => ['sometimes', 'string', Rule::in(self::PAYMENT_STATUSES)],
+            'fulfillment_status' => ['sometimes', 'string', Rule::in(self::FULFILLMENT_STATUSES)],
         ]);
+
+        if ($validated === []) {
+            return response()->json([
+                'success' => false,
+                'message' => 'At least one status field is required',
+                'errors' => [
+                    'status' => ['Provide status, payment_status, or fulfillment_status.'],
+                ],
+            ], 422);
+        }
 
         $order = Order::find($id);
 
@@ -85,11 +129,7 @@ class OrderController extends Controller
             ], 404);
         }
 
-        $order->fill(array_filter([
-            'status' => $validated['status'] ?? null,
-            'payment_status' => $validated['payment_status'] ?? null,
-            'fulfillment_status' => $validated['fulfillment_status'] ?? null,
-        ], static fn ($value) => $value !== null));
+        $order->fill($validated);
 
         $order->save();
 

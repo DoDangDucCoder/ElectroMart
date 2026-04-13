@@ -240,6 +240,12 @@
             ];
         @endphp
 
+        @if (!empty($flash_sale))
+            @include('pages.home.partials.flash_sale', [
+                'flashSale' => $flash_sale,
+            ])
+        @endif
+
         @include('pages.home.partials.discovery_hub', [
             'discoveryCards' => $discoveryCards,
             'cate_pro_tabs' => $tabCategories,

@@ -24,6 +24,16 @@
             <div class="alert alert-success">{{ session('message') }}</div>
         @endif
 
+        @if (session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
+        @endif
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                {{ $errors->first() }}
+            </div>
+        @endif
+
         <section class="g-admin-panel-card">
             <header class="g-admin-panel-head">
                 <div>
@@ -45,6 +55,8 @@
                         </div>
                     </div>
                 </form>
+
+                <div id="gallery_notify" style="margin-top:16px;"></div>
 
                 <div class="g-admin-surface">
                     <h3>Thư viện ảnh hiện tại</h3>

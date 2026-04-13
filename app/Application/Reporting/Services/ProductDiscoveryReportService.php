@@ -5,28 +5,42 @@ namespace App\Application\Reporting\Services;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductRecommendationImpression;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductSearchQuery;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Pagination\LengthAwarePaginator as Paginator;
 
 class ProductDiscoveryReportService
 {
     public function getReport(array $filters = [], int $perPage = 20): array
     {
-        $searchBase = $this->searchQueryBase($filters);
-        $impressionBase = $this->impressionQueryBase($filters);
+        $filters = $this->normalizeDateFilters($filters);
+        $searchTableReady = $this->hasSearchQueryTable();
+        $impressionTableReady = $this->hasImpressionTable();
 
         return [
             'summary' => [
-                'total_searches' => (clone $searchBase)->count(),
-                'unique_keywords' => (clone $searchBase)->whereNotNull('keyword')->distinct('keyword')->count('keyword'),
-                'recommendation_impressions' => (clone $impressionBase)->count(),
-                'recommended_products' => (clone $impressionBase)->distinct('product_id')->count('product_id'),
+                'total_searches' => $searchTableReady ? (clone $this->searchQueryBase($filters))->count() : 0,
+                'unique_keywords' => $searchTableReady
+                    ? (clone $this->searchQueryBase($filters))->whereNotNull('keyword')->distinct('keyword')->count('keyword')
+                    : 0,
+                'recommendation_impressions' => $impressionTableReady ? (clone $this->impressionQueryBase($filters))->count() : 0,
+                'recommended_products' => $impressionTableReady
+                    ? (clone $this->impressionQueryBase($filters))->distinct('product_id')->count('product_id')
+                    : 0,
             ],
-            'top_keywords' => $this->topKeywords($filters),
-            'top_filter_categories' => $this->topSearchCategories($filters),
-            'recommendation_contexts' => $this->recommendationContexts($filters),
-            'recommended_products_rows' => $this->recommendedProducts($filters, $perPage),
+            'top_keywords' => $searchTableReady ? $this->topKeywords($filters) : collect(),
+            'top_filter_categories' => $searchTableReady ? $this->topSearchCategories($filters) : collect(),
+            'recommendation_contexts' => $impressionTableReady ? $this->recommendationContexts($filters) : collect(),
+            'recommended_products_rows' => $impressionTableReady
+                ? $this->recommendedProducts($filters, $perPage)
+                : $this->emptyPaginator($perPage),
+            'discovery_tables_ready' => [
+                'search_queries' => $searchTableReady,
+                'recommendation_impressions' => $impressionTableReady,
+            ],
         ];
     }
 
@@ -64,11 +78,22 @@ class ProductDiscoveryReportService
 
     protected function topSearchCategories(array $filters): Collection
     {
-        return $this->searchQueryBase($filters)
-            ->leftJoin('product_categories', 'product_categories.id', '=', 'product_search_queries.category_id')
-            ->selectRaw('product_search_queries.category_id, product_categories.name as category_name, COUNT(*) as searches_count')
-            ->whereNotNull('product_search_queries.category_id')
-            ->groupBy('product_search_queries.category_id', 'product_categories.name')
+        $query = $this->searchQueryBase($filters)
+            ->whereNotNull('product_search_queries.category_id');
+
+        if (Schema::hasTable((new ProductCategory())->getTable())) {
+            return $query
+                ->leftJoin('product_categories', 'product_categories.id', '=', 'product_search_queries.category_id')
+                ->selectRaw('product_search_queries.category_id, product_categories.name as category_name, COUNT(*) as searches_count')
+                ->groupBy('product_search_queries.category_id', 'product_categories.name')
+                ->orderByDesc('searches_count')
+                ->limit(8)
+                ->get();
+        }
+
+        return $query
+            ->selectRaw('product_search_queries.category_id, NULL as category_name, COUNT(*) as searches_count')
+            ->groupBy('product_search_queries.category_id')
             ->orderByDesc('searches_count')
             ->limit(8)
             ->get();
@@ -85,26 +110,62 @@ class ProductDiscoveryReportService
 
     protected function recommendedProducts(array $filters, int $perPage): LengthAwarePaginator
     {
-        return $this->impressionQueryBase($filters)
-            ->leftJoin('products', 'products.id', '=', 'product_recommendation_impressions.product_id')
-            ->leftJoin('brands', 'brands.id', '=', 'products.brand_id')
-            ->leftJoin('product_categories', 'product_categories.id', '=', 'products.primary_category_id')
+        $query = $this->impressionQueryBase($filters);
+        $brandsTableReady = Schema::hasTable('brands');
+        $categoriesTableReady = Schema::hasTable('product_categories');
+
+        if (! Schema::hasTable('products')) {
+            return $query
+                ->selectRaw('
+                    product_recommendation_impressions.product_id,
+                    NULL as product_name,
+                    NULL as product_slug,
+                    NULL as brand_name,
+                    NULL as category_name,
+                    COUNT(*) as impressions_count,
+                    MAX(product_recommendation_impressions.impressed_at) as last_impressed_at
+                ')
+                ->groupBy('product_recommendation_impressions.product_id')
+                ->orderByDesc('impressions_count')
+                ->orderByDesc('last_impressed_at')
+                ->paginate($perPage);
+        }
+
+        $query->leftJoin('products', 'products.id', '=', 'product_recommendation_impressions.product_id');
+
+        if ($brandsTableReady) {
+            $query->leftJoin('brands', 'brands.id', '=', 'products.brand_id');
+        }
+
+        if ($categoriesTableReady) {
+            $query->leftJoin('product_categories', 'product_categories.id', '=', 'products.primary_category_id');
+        }
+
+        $groupByColumns = [
+            'product_recommendation_impressions.product_id',
+            'products.name',
+            'products.slug',
+        ];
+
+        if ($brandsTableReady) {
+            $groupByColumns[] = 'brands.name';
+        }
+
+        if ($categoriesTableReady) {
+            $groupByColumns[] = 'product_categories.name';
+        }
+
+        return $query
             ->selectRaw('
                 product_recommendation_impressions.product_id,
                 products.name as product_name,
                 products.slug as product_slug,
-                brands.name as brand_name,
-                product_categories.name as category_name,
+                ' . ($brandsTableReady ? 'brands.name' : 'NULL') . ' as brand_name,
+                ' . ($categoriesTableReady ? 'product_categories.name' : 'NULL') . ' as category_name,
                 COUNT(*) as impressions_count,
                 MAX(product_recommendation_impressions.impressed_at) as last_impressed_at
             ')
-            ->groupBy(
-                'product_recommendation_impressions.product_id',
-                'products.name',
-                'products.slug',
-                'brands.name',
-                'product_categories.name'
-            )
+            ->groupBy(...$groupByColumns)
             ->orderByDesc('impressions_count')
             ->orderByDesc('last_impressed_at')
             ->paginate($perPage);
@@ -130,5 +191,51 @@ class ProductDiscoveryReportService
             ->when(! empty($filters['date_to']), function ($query) use ($filters) {
                 $query->whereDate('impressed_at', '<=', $filters['date_to']);
             });
+    }
+
+    protected function hasSearchQueryTable(): bool
+    {
+        return Schema::hasTable((new ProductSearchQuery())->getTable());
+    }
+
+    protected function hasImpressionTable(): bool
+    {
+        return Schema::hasTable((new ProductRecommendationImpression())->getTable());
+    }
+
+    protected function emptyPaginator(int $perPage): LengthAwarePaginator
+    {
+        return new Paginator(
+            items: [],
+            total: 0,
+            perPage: $perPage,
+            currentPage: 1,
+            options: ['path' => request()->url()]
+        );
+    }
+
+    protected function normalizeDateFilters(array $filters): array
+    {
+        foreach (['date_from', 'date_to'] as $key) {
+            if (empty($filters[$key])) {
+                continue;
+            }
+
+            try {
+                $filters[$key] = Carbon::parse($filters[$key])->toDateString();
+            } catch (\Throwable) {
+                unset($filters[$key]);
+            }
+        }
+
+        if (
+            ! empty($filters['date_from'])
+            && ! empty($filters['date_to'])
+            && $filters['date_from'] > $filters['date_to']
+        ) {
+            [$filters['date_from'], $filters['date_to']] = [$filters['date_to'], $filters['date_from']];
+        }
+
+        return $filters;
     }
 }

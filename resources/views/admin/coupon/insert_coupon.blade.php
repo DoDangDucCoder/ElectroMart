@@ -33,46 +33,66 @@
                     <div class="alert alert-success">{{ session('message') }}</div>
                 @endif
 
+                @if (session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <form action="{{ URL::to('/insert-coupon-code') }}" method="post" class="g-admin-form-grid">
                     @csrf
 
                     <div class="form-group">
                         <label for="coupon_name">Tên mã giảm giá</label>
-                        <input type="text" name="coupon_name" class="form-control" id="coupon_name" placeholder="Ví dụ: Flash Sale cuối tuần">
+                        <input type="text" name="coupon_name" class="form-control" id="coupon_name"
+                            value="{{ old('coupon_name') }}" placeholder="Ví dụ: Flash Sale cuối tuần">
                     </div>
 
                     <div class="form-group">
                         <label for="coupon_code">Mã giảm giá</label>
-                        <input type="text" name="coupon_code" class="form-control" id="coupon_code" placeholder="Ví dụ: WEEKEND50">
+                        <input type="text" name="coupon_code" class="form-control" id="coupon_code"
+                            value="{{ old('coupon_code') }}" placeholder="Ví dụ: WEEKEND50">
                     </div>
 
                     <div class="form-group">
                         <label for="start_coupon">Ngày bắt đầu</label>
-                        <input type="text" name="coupon_date_start" class="form-control" id="start_coupon" placeholder="YYYY-MM-DD">
+                        <input type="text" name="coupon_date_start" class="form-control" id="start_coupon"
+                            value="{{ old('coupon_date_start') }}" placeholder="DD/MM/YYYY">
                     </div>
 
                     <div class="form-group">
                         <label for="end_coupon">Ngày kết thúc</label>
-                        <input type="text" name="coupon_date_end" class="form-control" id="end_coupon" placeholder="YYYY-MM-DD">
+                        <input type="text" name="coupon_date_end" class="form-control" id="end_coupon"
+                            value="{{ old('coupon_date_end') }}" placeholder="DD/MM/YYYY">
                     </div>
 
                     <div class="form-group">
                         <label for="coupon_time">Số lượng mã</label>
-                        <input type="text" name="coupon_time" class="form-control" id="coupon_time" placeholder="Ví dụ: 100">
+                        <input type="text" name="coupon_time" class="form-control" id="coupon_time"
+                            value="{{ old('coupon_time') }}" placeholder="Ví dụ: 100">
                     </div>
 
                     <div class="form-group">
                         <label for="coupon_condition">Tính năng mã</label>
                         <select name="coupon_condition" id="coupon_condition" class="form-control input-sm m-bot15">
-                            <option value="0">----Chọn-----</option>
-                            <option value="1">Giảm theo phần trăm</option>
-                            <option value="2">Giảm theo tiền</option>
+                            <option value="0" @selected(old('coupon_condition') === null || old('coupon_condition') === '0')>----Chọn-----</option>
+                            <option value="1" @selected(old('coupon_condition') === '1')>Giảm theo phần trăm</option>
+                            <option value="2" @selected(old('coupon_condition') === '2')>Giảm theo tiền</option>
                         </select>
                     </div>
 
                     <div class="form-group g-admin-form-span-2">
                         <label for="coupon_number">Nhập số % hoặc tiền giảm</label>
-                        <input type="text" name="coupon_number" class="form-control" id="coupon_number" placeholder="Ví dụ: 10 hoặc 50000">
+                        <input type="text" name="coupon_number" class="form-control" id="coupon_number"
+                            value="{{ old('coupon_number') }}" placeholder="Ví dụ: 10 hoặc 50000">
                     </div>
 
                     <div class="g-admin-inline-actions g-admin-form-span-2">

@@ -71,6 +71,14 @@ class StorefrontComparePageTest extends TestCase
             ->assertDontSee('Chưa có sản phẩm để so sánh');
     }
 
+    public function test_compare_page_sync_script_does_not_reload_when_current_ids_already_match_local_storage(): void
+    {
+        $this->get('/so-sanh')
+            ->assertOk()
+            ->assertSee('new URLSearchParams(window.location.search).get(\'ids\') || \'\'', false)
+            ->assertSee('if (ids === currentIds)', false);
+    }
+
     protected function createProduct(string $name): Product
     {
         return $this->productService->createProduct([

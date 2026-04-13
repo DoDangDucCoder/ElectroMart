@@ -1,13 +1,13 @@
 <div class="table-responsive">
     <table class="table table-striped b-t b-light g-admin-data-table">
-        <thread>
+        <thead>
             <tr>
                 <th>Tên thành phố</th>
                 <th>Tên quận huyện</th>
                 <th>Tên xã phường</th>
                 <th>Phí ship</th>
             </tr>
-        </thread>
+        </thead>
         <tbody>
             @forelse ($feeship as $fee)
                 <tr>

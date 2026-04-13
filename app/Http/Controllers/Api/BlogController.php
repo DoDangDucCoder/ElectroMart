@@ -18,7 +18,7 @@ class BlogController extends Controller
     public function index(Request $request): JsonResponse
     {
         $filters = $request->only(['category', 'featured', 'search']);
-        $perPage = min($request->get('per_page', 12), 50);
+        $perPage = max(1, min((int) $request->get('per_page', 12), 50));
 
         $posts = $this->blogService->paginatePosts($filters, $perPage);
 
@@ -36,7 +36,7 @@ class BlogController extends Controller
 
     public function show(string $slug): JsonResponse
     {
-        $post = $this->blogService->findBySlug($slug);
+        $post = $this->blogService->findPublishedBySlug($slug);
 
         if (!$post) {
             return response()->json([
@@ -79,8 +79,8 @@ class BlogController extends Controller
 
     public function search(Request $request): JsonResponse
     {
-        $keyword = $request->get('q');
-        $limit = min($request->get('limit', 20), 50);
+        $keyword = trim((string) $request->get('q', ''));
+        $limit = max(1, min((int) $request->get('limit', 20), 50));
 
         if (empty($keyword)) {
             return response()->json([

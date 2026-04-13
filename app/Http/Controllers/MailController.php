@@ -203,6 +203,8 @@ class MailController extends Controller
 
     protected function renderPreviewHtml(string $previewKey): string
     {
+        $brandName = $this->previewBrandName();
+
         return match ($previewKey) {
             'coupon-standard' => (new LegacyCouponCampaignMail(
                 mailData: new CouponCampaignMailData(
@@ -213,7 +215,7 @@ class MailController extends Controller
                     startCoupon: '01-03-2026',
                     endCoupon: '31-03-2026',
                     audienceLabel: 'khách hàng thường',
-                    shopName: 'Laravel Shop',
+                    shopName: $brandName,
                     shopUrl: url('/'),
                     loginUrl: url('/dang-nhap')
                 ),
@@ -228,7 +230,7 @@ class MailController extends Controller
                     startCoupon: '01-03-2026',
                     endCoupon: '30-04-2026',
                     audienceLabel: 'khách hàng thân thiết',
-                    shopName: 'Laravel Shop',
+                    shopName: $brandName,
                     shopUrl: url('/'),
                     loginUrl: url('/dang-nhap')
                 ),
@@ -236,12 +238,12 @@ class MailController extends Controller
             ))->render(),
             'password-recovery' => (new LegacyPasswordRecoveryMail(
                 mailData: new PasswordRecoveryMailData(
-                    title: 'Lấy lại mật khẩu Laravel Shop',
+                    title: 'Lấy lại mật khẩu ' . $brandName,
                     email: 'recover@example.com',
                     resetUrl: url('/update-new-pass?email=recover%40example.com&token=secure-token-123'),
-                    shopName: 'Laravel Shop'
+                    shopName: $brandName
                 ),
-                subjectLine: 'Lấy lại mật khẩu Laravel Shop'
+                subjectLine: 'Lấy lại mật khẩu ' . $brandName
             ))->render(),
             'order-cod' => $this->renderOrderPreview($this->makeOrderPreviewData()),
             'order-atm' => $this->renderOrderPreview($this->makeOrderPreviewData([
@@ -265,6 +267,8 @@ class MailController extends Controller
 
     protected function makeOrderPreviewData(array $shippingOverrides = [], array $codeOverrides = []): OrderConfirmationMailData
     {
+        $brandName = $this->previewBrandName();
+
         $shipping = array_merge([
             'customer_name' => 'Nguyễn Văn A',
             'shipping_name' => 'Nguyễn Văn A',
@@ -299,7 +303,15 @@ class MailController extends Controller
                     'product_qty' => 2,
                 ],
             ],
-            code: $code
+            code: $code,
+            overrides: [
+                'brandName' => $brandName,
+            ]
         );
+    }
+
+    protected function previewBrandName(): string
+    {
+        return (string) config('services.storefront_brand.name', 'ShopW');
     }
 }

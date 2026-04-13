@@ -20,6 +20,28 @@ class StoreCouponRequest extends BaseFormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'coupon_name.required' => 'Vui lòng nhập tên mã giảm giá.',
+            'coupon_name.max' => 'Tên mã giảm giá không được vượt quá 255 ký tự.',
+            'coupon_date_start.required' => 'Vui lòng nhập ngày bắt đầu.',
+            'coupon_date_start.date_format' => 'Ngày bắt đầu phải theo định dạng DD/MM/YYYY.',
+            'coupon_date_end.required' => 'Vui lòng nhập ngày kết thúc.',
+            'coupon_date_end.date_format' => 'Ngày kết thúc phải theo định dạng DD/MM/YYYY.',
+            'coupon_code.required' => 'Vui lòng nhập mã giảm giá.',
+            'coupon_code.max' => 'Mã giảm giá không được vượt quá 50 ký tự.',
+            'coupon_time.required' => 'Vui lòng nhập số lượng mã.',
+            'coupon_time.integer' => 'Số lượng mã phải là số nguyên.',
+            'coupon_time.min' => 'Số lượng mã phải lớn hơn 0.',
+            'coupon_condition.required' => 'Vui lòng chọn loại mã giảm giá.',
+            'coupon_condition.in' => 'Loại mã giảm giá không hợp lệ.',
+            'coupon_number.required' => 'Vui lòng nhập giá trị giảm.',
+            'coupon_number.numeric' => 'Giá trị giảm phải là số.',
+            'coupon_number.min' => 'Giá trị giảm không được âm.',
+        ];
+    }
+
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {

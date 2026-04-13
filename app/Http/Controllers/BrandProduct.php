@@ -70,7 +70,9 @@ class BrandProduct extends Controller
     {
         $brand = $this->brandService->findById($brandId);
 
-        abort_if(! $brand, 404);
+        if (! $brand) {
+            return redirect()->to('/all-brand-product')->with('error', 'Không tìm thấy thương hiệu cần cập nhật trạng thái');
+        }
 
         $this->brandService->updateStatus($brand, false);
 
@@ -81,18 +83,22 @@ class BrandProduct extends Controller
     {
         $brand = $this->brandService->findById($brandId);
 
-        abort_if(! $brand, 404);
+        if (! $brand) {
+            return redirect()->to('/all-brand-product')->with('error', 'Không tìm thấy thương hiệu cần cập nhật trạng thái');
+        }
 
         $this->brandService->updateStatus($brand, true);
 
         return redirect()->to('/all-brand-product')->with('message', 'Đã kích hoạt hiển thị thương hiệu');
     }
 
-    public function edit_brand_product(int $brandId): View
+    public function edit_brand_product(int $brandId): View|RedirectResponse
     {
         $brand = $this->brandService->findById($brandId);
 
-        abort_if(! $brand, 404);
+        if (! $brand) {
+            return redirect()->to('/all-brand-product')->with('error', 'Không tìm thấy thương hiệu cần chỉnh sửa');
+        }
 
         return view('admin.brand.edit', [
             'brand' => $brand,
@@ -103,7 +109,9 @@ class BrandProduct extends Controller
     {
         $brand = $this->brandService->findById($brandId);
 
-        abort_if(! $brand, 404);
+        if (! $brand) {
+            return redirect()->to('/all-brand-product')->with('error', 'Không tìm thấy thương hiệu cần cập nhật');
+        }
 
         $validated = $request->validate([
             'brand_product_name' => ['required', 'string', 'max:255'],
@@ -128,7 +136,9 @@ class BrandProduct extends Controller
     {
         $brand = $this->brandService->findById($brandId);
 
-        abort_if(! $brand, 404);
+        if (! $brand) {
+            return redirect()->to('/all-brand-product')->with('error', 'Không tìm thấy thương hiệu cần xóa');
+        }
 
         $this->brandService->delete($brand);
 

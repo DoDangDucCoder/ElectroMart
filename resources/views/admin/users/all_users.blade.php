@@ -28,13 +28,27 @@
             <div class="g-admin-panel-head">
                 <div>
                     <div>Danh sách tài khoản quản trị</div>
-                    <p>Vai trò được hiển thị trực tiếp và có thể đồng bộ nhanh theo từng tài khoản.</p>
+                    <p>Vai trò được hiển thị trực tiếp và đồng bộ theo một vai trò chính cho từng tài khoản.</p>
                 </div>
                 <a href="{{ url('/add-users') }}" class="btn btn-primary btn-sm">Thêm người dùng</a>
             </div>
             <div class="g-admin-panel-body">
                 @if (session('message'))
                     <div class="alert alert-success">{{ session('message') }}</div>
+                @endif
+
+                @if (session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
+
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
                 @endif
 
                 @if ($admin->isEmpty())
@@ -77,19 +91,19 @@
                                                 <input type="hidden" name="admin_email" value="{{ $user->email }}">
                                                 <input type="hidden" name="admin_id" value="{{ $user->id }}">
 
-                                                <div class="g-admin-role-option-list">
-                                                    @foreach ($roles as $role)
-                                                        <label class="g-admin-check-card">
-                                                            <input type="checkbox" name="roles[]" value="{{ $role->name }}"
-                                                                {{ $user->roles->contains('name', $role->name) ? 'checked' : '' }}>
-                                                            <span>{{ ucfirst($role->name) }}</span>
-                                                        </label>
-                                                    @endforeach
+                                                <div class="form-group" style="min-width: 220px;">
+                                                    <select name="roles[]" class="form-control input-sm">
+                                                        <option value="">-- Chưa gán vai trò --</option>
+                                                        @foreach ($roles as $role)
+                                                            <option value="{{ $role->name }}"
+                                                                {{ $user->roles->contains('name', $role->name) ? 'selected' : '' }}>
+                                                                {{ ucfirst($role->name) }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
 
-                                                @if (\App\Support\AdminAccess::canAccess($user))
-                                                    <button type="submit" class="btn btn-sm btn-default">Cập nhật vai trò</button>
-                                                @endif
+                                                <button type="submit" class="btn btn-sm btn-default">Cập nhật vai trò</button>
                                             </form>
                                         </td>
                                         <td>

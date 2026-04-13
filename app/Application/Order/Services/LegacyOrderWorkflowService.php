@@ -39,13 +39,23 @@ class LegacyOrderWorkflowService
             return $this->result(false, 404, 'Không tìm thấy đơn hàng cần xóa.');
         }
 
-        $order->delete();
+        DB::transaction(function () use ($order, $orderCode): void {
+            if (Schema::hasTable((new OrderDetails())->getTable())) {
+                OrderDetails::where('order_code', $orderCode)->delete();
+            }
+
+            $order->delete();
+        });
 
         return $this->result(true, 200, 'Xóa đơn hàng thành công');
     }
 
     public function updateOrderLineQuantity(string $orderCode, int $productId, int $quantity): array
     {
+        if (! $this->canManageOrders()) {
+            return $this->result(false, 404, 'Dữ liệu đơn hàng legacy hiện chưa sẵn sàng trên môi trường này.');
+        }
+
         $orderDetails = OrderDetails::where('product_id', $productId)
             ->where('order_code', $orderCode)
             ->first();

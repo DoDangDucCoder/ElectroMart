@@ -68,6 +68,16 @@ class OrderHistoryPageTest extends TestCase
             ->assertSee('SAVE20');
     }
 
+    public function test_missing_modern_order_detail_redirects_back_to_history_with_error(): void
+    {
+        [$customer] = $this->createModernOrder();
+
+        $this->withSession(['customer_id' => $customer->id])
+            ->get('/view-history-order/MISSING-ORDER-CODE')
+            ->assertRedirect('/history')
+            ->assertSessionHas('error', 'Không tìm thấy đơn hàng bạn cần xem.');
+    }
+
     public function test_stale_modern_customer_session_is_redirected_from_history(): void
     {
         $this->withSession(['customer_id' => 999999])
@@ -173,6 +183,18 @@ class OrderHistoryPageTest extends TestCase
         $this->assertSame(3105000.0, (float) $totals['total']);
         $this->assertSame(340000.0, (float) $totals['discount']);
         $this->assertSame(45000.0, (float) $totals['shipping']);
+    }
+
+    public function test_missing_legacy_order_detail_redirects_back_to_history_with_error(): void
+    {
+        $order = $this->createLegacyDetailedOrder();
+
+        $this->withSession([
+            'customer_id' => $order->customer_id,
+            'customer_name' => 'Legacy History Customer',
+        ])->get('/view-history-order/MISSING-LEGACY-CODE')
+            ->assertRedirect('/history')
+            ->assertSessionHas('error', 'Không tìm thấy đơn hàng bạn cần xem.');
     }
 
     public function test_customer_can_view_legacy_history_list_with_fixed_coupon_and_payment_method(): void

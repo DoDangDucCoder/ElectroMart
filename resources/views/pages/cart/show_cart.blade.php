@@ -97,7 +97,11 @@
                                         @if (Session::get('customer_id'))
                                             <a class="btn btn-default check_out" href="{{ url('/checkout') }}">Đặt hàng</a>
                                         @else
-                                            <a class="btn btn-default check_out" href="{{ url('/dang-nhap') }}">Đặt hàng</a>
+                                            <a class="btn btn-default check_out"
+                                                href="{{ url('/dang-nhap') . '?' . http_build_query([
+                                                    'redirect' => 'checkout',
+                                                    'redirect_to' => url('/checkout'),
+                                                ]) }}">Đăng nhập để thanh toán</a>
                                         @endif
                                     </td>
                                     <td colspan="3" class="cart_totals">

@@ -14,7 +14,7 @@ class CouponCampaignMailData
         public readonly string $startCoupon,
         public readonly string $endCoupon,
         public readonly string $audienceLabel = 'khách hàng',
-        public readonly string $shopName = 'Laravel Shop',
+        public readonly string $shopName = 'ShopW',
         public readonly string $shopUrl = '',
         public readonly string $loginUrl = ''
     ) {
@@ -25,7 +25,7 @@ class CouponCampaignMailData
         string $audienceLabel,
         ?string $shopUrl = null,
         ?string $loginUrl = null,
-        string $shopName = 'Laravel Shop'
+        string $shopName = 'ShopW'
     ): self {
         return new self(
             couponCode: (string) ($coupon->coupon_code ?? 'N/A'),

@@ -62,12 +62,20 @@ class HealthController extends Controller
 
     public function cache(): JsonResponse
     {
-        $stats = $this->cacheService->getCacheStats();
+        try {
+            $stats = $this->cacheService->getCacheStats();
 
-        return response()->json([
-            'success' => true,
-            'data' => $stats,
-        ]);
+            return response()->json([
+                'success' => true,
+                'data' => $stats,
+            ]);
+        } catch (\Throwable $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cache statistics are temporarily unavailable',
+                'data' => [],
+            ]);
+        }
     }
 
     public function performance(): JsonResponse

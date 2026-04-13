@@ -75,6 +75,10 @@ class ContactController extends Controller
     }
     public function delete_icons(Request $request)
     {
+        if (! Schema::hasTable((new Icons())->getTable())) {
+            return response()->noContent();
+        }
+
         $icons = Icons::find($request->integer('id'));
 
         if ($icons) {
@@ -184,6 +188,7 @@ class ContactController extends Controller
 
         $contact = new Contact();
         $contact->info_contact = $data['info_contact'];
+        $contact->slogan_logo = $data['slogan_logo'] ?? null;
         $contact->info_map = $data['info_map'] ?? null;
         $contact->info_fanpage = $data['info_fanpage'] ?? null;
         $get_image = $request->file('info_image');

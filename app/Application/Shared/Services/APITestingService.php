@@ -640,8 +640,8 @@ class APITestingService
         
         try {
             $response = Http::timeout(10)->post($url, [
-                'email' => 'admin@example.com',
-                'password' => 'admin_password',
+                'email' => (string) config('admin-auth.seed_defaults.primary_email', 'admin@shop.com'),
+                'password' => (string) config('admin-auth.seed_defaults.primary_password', 'admin123'),
             ]);
 
             if ($response->successful()) {

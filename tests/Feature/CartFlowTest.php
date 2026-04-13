@@ -6,6 +6,7 @@ use App\Application\Catalog\Services\ProductService;
 use App\Application\Checkout\Services\CartService;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
+use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use App\Infrastructure\Persistence\Eloquent\Marketing\Coupon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
@@ -47,6 +48,20 @@ class CartFlowTest extends TestCase
         $this->assertSame(2, $items->first()['product_qty']);
     }
 
+    public function test_user_cannot_add_more_items_than_available_stock_via_ajax(): void
+    {
+        $this->postJson('/add-cart-ajax', [
+            'id_product' => $this->productId,
+            'id_attribute' => null,
+            'cart_product_qty' => 11,
+        ])->assertStatus(422)
+            ->assertJson([
+                'error' => 'Test Product chỉ còn 10 sản phẩm trong kho.',
+            ]);
+
+        $this->assertTrue($this->cartService->items()->isEmpty());
+    }
+
     public function test_user_can_render_live_cart_page(): void
     {
         $this->cartService->addItem($this->productId, 2);
@@ -58,10 +73,33 @@ class CartFlowTest extends TestCase
             ->assertSee('shopw-cart-support-card', false)
             ->assertSee('Giỏ hàng của bạn')
             ->assertSee('Tóm tắt đơn hàng')
-            ->assertSee('Đăng nhập để đặt hàng')
+            ->assertSee('Đăng nhập để thanh toán')
+            ->assertSee('redirect=checkout', false)
+            ->assertSee('redirect_to=', false)
             ->assertDontSee('Tiến hành checkout')
             ->assertSee('Test Product')
             ->assertSee('Áp dụng mã');
+    }
+
+    public function test_logged_in_customer_sees_checkout_cta_on_cart_page(): void
+    {
+        $customer = Customer::create([
+            'name' => 'Cart Customer',
+            'email' => 'cart-customer@example.com',
+            'password' => bcrypt('secret123'),
+            'phone' => '0988000000',
+            'is_active' => true,
+        ]);
+
+        $this->cartService->addItem($this->productId, 1);
+
+        $this->withSession([
+            'customer_id' => $customer->id,
+        ])->get('/gio-hang')
+            ->assertOk()
+            ->assertSee('Tiến hành thanh toán')
+            ->assertSee('/checkout', false)
+            ->assertDontSee('Đăng nhập để thanh toán');
     }
 
     public function test_user_can_update_cart_quantities(): void
@@ -147,13 +185,19 @@ class CartFlowTest extends TestCase
             ->assertOk()
             ->assertSee('hover-cart')
             ->assertSee('Test Product')
-            ->assertSee('delele-hover-cart');
+            ->assertSee('data-hover-cart-remove="true"', false)
+            ->assertSee('data-session-id=', false)
+            ->assertDontSee('href="#"', false);
 
         $this->get('/show_quick_cart')
             ->assertOk()
             ->assertSee('cart_quantity_input')
+            ->assertSee('cart_qty_update', false)
+            ->assertSee('data-session_id=', false)
             ->assertSee('Giảm giá:')
-            ->assertSee('Test Product');
+            ->assertSee('Test Product')
+            ->assertSee('data-quick-cart-remove="true"', false)
+            ->assertDontSee('<form>', false);
 
         $this->get('/cart-session')
             ->assertOk()

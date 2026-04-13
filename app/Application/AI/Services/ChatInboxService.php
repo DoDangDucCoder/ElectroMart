@@ -8,7 +8,9 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator as Paginator;
 use Illuminate\Support\Collection as SupportCollection;
+use Illuminate\Support\Facades\Schema;
 
 class ChatInboxService
 {
@@ -19,6 +21,10 @@ class ChatInboxService
 
     public function paginateConversations(array $filters = [], ?User $admin = null, int $perPage = 20): LengthAwarePaginator
     {
+        if (! $this->tablesReady()) {
+            return $this->emptyPaginator($perPage)->withQueryString();
+        }
+
         return $this->conversationQuery($filters, $admin)
             ->with(['customer:id,name,email,phone', 'latestMessage', 'assignee:id,name,email'])
             ->withCount('messages')
@@ -30,6 +36,21 @@ class ChatInboxService
 
     public function summary(array $filters = [], ?User $admin = null): array
     {
+        if (! $this->tablesReady()) {
+            return [
+                'total_conversations' => 0,
+                'guest_conversations' => 0,
+                'customer_conversations' => 0,
+                'total_messages' => 0,
+                'unread_conversations' => 0,
+                'in_progress_conversations' => 0,
+                'resolved_conversations' => 0,
+                'my_conversations' => 0,
+                'my_unread_conversations' => 0,
+                'tables_ready' => false,
+            ];
+        }
+
         $baseQuery = $this->conversationQuery($filters, $admin);
         $conversationIdsQuery = (clone $baseQuery)->select('id');
 
@@ -43,16 +64,18 @@ class ChatInboxService
             'resolved_conversations' => (clone $baseQuery)->where('status', 'resolved')->count(),
             'my_conversations' => $admin ? (clone $baseQuery)->where('user_id', $admin->id)->count() : 0,
             'my_unread_conversations' => $admin ? (clone $baseQuery)->where('user_id', $admin->id)->where('status', 'unread')->count() : 0,
+            'tables_ready' => true,
         ];
     }
 
     public function sidebarStats(?User $admin = null): array
     {
-        if (! $admin) {
+        if (! $admin || ! $this->tablesReady()) {
             return [
                 'unread_total' => 0,
                 'assigned_total' => 0,
                 'my_unread' => 0,
+                'tables_ready' => false,
             ];
         }
 
@@ -63,11 +86,16 @@ class ChatInboxService
                 ->where('user_id', $admin->id)
                 ->where('status', 'unread')
                 ->count(),
+            'tables_ready' => true,
         ];
     }
 
     public function findConversation(int $conversationId, array $filters = [], ?User $admin = null): ?ChatConversation
     {
+        if (! $this->tablesReady()) {
+            return null;
+        }
+
         return $this->conversationQuery($filters, $admin)
             ->with(['customer', 'latestMessage', 'assignee'])
             ->find($conversationId);
@@ -102,6 +130,10 @@ class ChatInboxService
 
     public function messages(ChatConversation $conversation, ?int $afterId = null, int $limit = 50): Collection
     {
+        if (! $this->messagesTableReady()) {
+            return new Collection();
+        }
+
         $query = $conversation->messages()->orderBy('id');
 
         if ($afterId && $afterId > 0) {
@@ -117,6 +149,11 @@ class ChatInboxService
             ->map(fn (ChatMessage $message) => $this->conversations->serializeMessage($message))
             ->values()
             ->all();
+    }
+
+    public function tablesReady(): bool
+    {
+        return $this->conversationsTableReady() && $this->messagesTableReady();
     }
 
     public function reply(ChatConversation $conversation, User $admin, string $message): ChatMessage
@@ -209,5 +246,29 @@ class ChatInboxService
             ->when(($filters['source'] ?? null) === 'customer', fn (Builder $query) => $query->whereNotNull('customer_id'))
             ->when(! empty($filters['status']) && $filters['status'] !== 'all', fn (Builder $query) => $query->where('status', $filters['status']))
             ->when(($filters['scope'] ?? 'all') === 'mine' && $admin, fn (Builder $query) => $query->where('user_id', $admin->id));
+    }
+
+    protected function conversationsTableReady(): bool
+    {
+        return Schema::hasTable('chat_conversations');
+    }
+
+    protected function messagesTableReady(): bool
+    {
+        return Schema::hasTable('chat_messages');
+    }
+
+    protected function emptyPaginator(int $perPage): Paginator
+    {
+        return new Paginator(
+            items: collect(),
+            total: 0,
+            perPage: $perPage,
+            currentPage: Paginator::resolveCurrentPage(),
+            options: [
+                'path' => Paginator::resolveCurrentPath(),
+                'pageName' => 'page',
+            ]
+        );
     }
 }

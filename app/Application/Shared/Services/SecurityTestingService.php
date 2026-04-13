@@ -1332,7 +1332,10 @@ class SecurityTestingService
     {
         $credentials = [
             'customer' => ['email' => 'customer@example.com', 'password' => 'password'],
-            'admin' => ['email' => 'admin@example.com', 'password' => 'admin_password'],
+            'admin' => [
+                'email' => (string) config('admin-auth.seed_defaults.primary_email', 'admin@shop.com'),
+                'password' => (string) config('admin-auth.seed_defaults.primary_password', 'admin123'),
+            ],
         ];
 
         if (!isset($credentials[$role])) {

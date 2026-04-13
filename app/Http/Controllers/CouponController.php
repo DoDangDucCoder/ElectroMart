@@ -36,14 +36,18 @@ class CouponController extends Controller
     public function delete_coupon($coupon_id)
     {
         if (! Schema::hasTable((new Coupon())->getTable())) {
-            return Redirect::to('list-coupon')->with('message', 'Chưa có bảng mã giảm giá trên môi trường này');
+            return Redirect::to('list-coupon')->with('error', 'Chưa có bảng mã giảm giá trên môi trường này');
         }
 
         $coupon = Coupon::find($coupon_id);
-        if ($coupon) {
-            $coupon->delete();
+        if (! $coupon) {
+            return Redirect::to('list-coupon')->with('error', 'Không tìm thấy mã giảm giá cần xóa.');
         }
+
+        $coupon->delete();
+
         Session::put('message', 'Xóa mã giảm giá thành công');
+
         return Redirect::to('list-coupon');
     }
     public function list_coupon()
@@ -63,7 +67,7 @@ class CouponController extends Controller
     public function insert_coupon_code(StoreCouponRequest $request)
     {
         if (! Schema::hasTable((new Coupon())->getTable())) {
-            return Redirect::to('insert-coupon')->with('message', 'Chưa có bảng mã giảm giá trên môi trường này');
+            return Redirect::to('insert-coupon')->with('error', 'Chưa có bảng mã giảm giá trên môi trường này');
         }
 
         $data = $request->validated();

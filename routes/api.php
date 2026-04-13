@@ -79,9 +79,9 @@ Route::prefix('v1')->group(function () {
 
     // Settings
     Route::get('/settings', [SettingsController::class, 'index']);
-    Route::get('/settings/{key}', [SettingsController::class, 'show']);
     Route::get('/settings/contact', [SettingsController::class, 'contact']);
     Route::get('/settings/seo', [SettingsController::class, 'seo']);
+    Route::get('/settings/{key}', [SettingsController::class, 'show']);
 
     // Chatbot
     Route::get('/chatbot/conversation', [ChatbotController::class, 'conversation']);

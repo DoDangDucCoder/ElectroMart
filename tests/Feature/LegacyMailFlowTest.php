@@ -143,6 +143,10 @@ class LegacyMailFlowTest extends TestCase
             'customer_vip' => null,
         ]);
         $this->createLegacyCustomer([
+            'customer_email' => 'normal-zero@example.com',
+            'customer_vip' => 0,
+        ]);
+        $this->createLegacyCustomer([
             'customer_email' => 'vip@example.com',
             'customer_vip' => 1,
         ]);
@@ -157,6 +161,7 @@ class LegacyMailFlowTest extends TestCase
 
         Mail::assertSent(LegacyCouponCampaignMail::class, function (LegacyCouponCampaignMail $mail) {
             return $mail->hasTo('normal@example.com')
+                && $mail->hasTo('normal-zero@example.com')
                 && ! $mail->hasTo('vip@example.com')
                 && $mail->mailData instanceof CouponCampaignMailData
                 && $mail->mailData->couponCode === 'VIP15'
@@ -172,10 +177,63 @@ class LegacyMailFlowTest extends TestCase
         Mail::assertSent(LegacyCouponCampaignMail::class, function (LegacyCouponCampaignMail $mail) {
             return $mail->hasTo('vip@example.com')
                 && ! $mail->hasTo('normal@example.com')
+                && ! $mail->hasTo('normal-zero@example.com')
                 && $mail->mailData instanceof CouponCampaignMailData
                 && $mail->mailData->couponCode === 'VIP15'
                 && $mail->mailData->audienceLabel === 'khách hàng thân thiết';
         });
+    }
+
+    public function test_admin_coupon_campaign_rejects_locked_and_expired_coupons(): void
+    {
+        $admin = $this->createAdminUser();
+        $this->ensureLegacyCustomerTableExists();
+        $this->ensureLegacyCouponTableExists();
+
+        Coupon::create([
+            'coupon_name' => 'Locked Campaign',
+            'coupon_code' => 'LOCKED15',
+            'coupon_time' => 10,
+            'coupon_number' => 15,
+            'coupon_condition' => 1,
+            'coupon_date_start' => '01/03/2026',
+            'coupon_date_end' => '31/12/2026',
+            'coupon_status' => 0,
+            'coupon_used' => '',
+        ]);
+
+        Coupon::create([
+            'coupon_name' => 'Expired Campaign',
+            'coupon_code' => 'EXPIRED15',
+            'coupon_time' => 10,
+            'coupon_number' => 15,
+            'coupon_condition' => 1,
+            'coupon_date_start' => '01/01/2025',
+            'coupon_date_end' => '02/01/2025',
+            'coupon_status' => 1,
+            'coupon_used' => '',
+        ]);
+
+        $this->createLegacyCustomer([
+            'customer_email' => 'normal@example.com',
+            'customer_vip' => 0,
+        ]);
+
+        Mail::fake();
+
+        $this->actingAs($admin, 'web')
+            ->from('/list-coupon')
+            ->post('/send-coupon/10/1/15/LOCKED15')
+            ->assertRedirect('/list-coupon')
+            ->assertSessionHas('error', 'Mã khuyến mãi đang bị khóa, không thể gửi chiến dịch email.');
+
+        $this->actingAs($admin, 'web')
+            ->from('/list-coupon')
+            ->post('/send-coupon/10/1/15/EXPIRED15')
+            ->assertRedirect('/list-coupon')
+            ->assertSessionHas('error', 'Mã khuyến mãi đã hết hạn, không thể gửi chiến dịch email.');
+
+        Mail::assertNothingSent();
     }
 
     protected function createAdminUser(array $attributes = []): User

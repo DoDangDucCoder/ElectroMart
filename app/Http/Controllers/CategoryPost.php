@@ -26,7 +26,7 @@ class CategoryPost extends Controller
             'cate_post_name' => ['required', 'string', 'max:255'],
             'cate_post_slug' => ['nullable', 'string', 'max:255'],
             'cate_post_desc' => ['nullable', 'string'],
-            'cate_post_status' => ['required'],
+            'cate_post_status' => ['required', 'in:0,1'],
         ]);
 
         $this->blogCategoryService->create([
@@ -52,7 +52,9 @@ class CategoryPost extends Controller
     {
         $category_post = $this->blogCategoryService->findById((int) $category_post_id);
 
-        abort_if(! $category_post, 404);
+        if (! $category_post) {
+            return redirect('/all-category-post')->with('error', 'Không tìm thấy danh mục bài viết cần chỉnh sửa.');
+        }
 
         return view('admin.category_post.edit_category')->with(compact('category_post'));
     }
@@ -63,12 +65,14 @@ class CategoryPost extends Controller
             'cate_post_name' => ['required', 'string', 'max:255'],
             'cate_post_slug' => ['nullable', 'string', 'max:255'],
             'cate_post_desc' => ['nullable', 'string'],
-            'cate_post_status' => ['required'],
+            'cate_post_status' => ['required', 'in:0,1'],
         ]);
 
         $category_post = $this->blogCategoryService->findById((int) $cate_id);
 
-        abort_if(! $category_post, 404);
+        if (! $category_post) {
+            return redirect('/all-category-post')->with('error', 'Không tìm thấy danh mục bài viết cần cập nhật.');
+        }
 
         $this->blogCategoryService->update($category_post, [
             'name' => $data['cate_post_name'],
@@ -86,9 +90,13 @@ class CategoryPost extends Controller
     {
         $category_post = $this->blogCategoryService->findById((int) $cate_id);
 
-        if ($category_post) {
-            $this->blogCategoryService->delete($category_post);
+        if (! $category_post) {
+            Session::put('error', 'Không tìm thấy danh mục bài viết cần xóa.');
+
+            return redirect()->back();
         }
+
+        $this->blogCategoryService->delete($category_post);
 
         Session::put('message', 'Xóa danh mục bài viết thành công');
 

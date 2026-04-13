@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">Admin avatar</title>
+  <desc id="desc">Default administrator avatar</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59eae"/>
+      <stop offset="100%" stop-color="#8b5c7e"/>
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="48" fill="url(#bg)"/>
+  <circle cx="48" cy="36" r="17" fill="#fff3f5"/>
+  <path d="M24 79c2.8-14.6 12.8-23 24-23s21.2 8.4 24 23" fill="#fff3f5"/>
+  <circle cx="48" cy="48" r="46" fill="none" stroke="rgba(255,255,255,0.18)" stroke-width="4"/>
+</svg>

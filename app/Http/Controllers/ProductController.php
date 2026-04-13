@@ -208,7 +208,7 @@ class ProductController extends Controller
         $product = $this->productService->findProductById($product_id);
 
         if (! $product) {
-            abort(404);
+            return $this->redirectMissingAdminProduct('Không tìm thấy sản phẩm cần cập nhật trạng thái.');
         }
 
         $this->productService->setProductStatus($product, false);
@@ -222,7 +222,7 @@ class ProductController extends Controller
         $product = $this->productService->findProductById($product_id);
 
         if (! $product) {
-            abort(404);
+            return $this->redirectMissingAdminProduct('Không tìm thấy sản phẩm cần cập nhật trạng thái.');
         }
 
         $this->productService->setProductStatus($product, true);
@@ -236,7 +236,7 @@ class ProductController extends Controller
         $product = $this->productService->findProductById($product_id);
 
         if (! $product) {
-            abort(404);
+            return $this->redirectMissingAdminProduct('Không tìm thấy sản phẩm cần chỉnh sửa.');
         }
 
         $cate_product = $this->categoryRepository->all();
@@ -254,7 +254,7 @@ class ProductController extends Controller
         $product = $this->productService->findProductById($product_id);
 
         if (! $product) {
-            abort(404);
+            return $this->redirectMissingAdminProduct('Không tìm thấy sản phẩm cần cập nhật.');
         }
 
         $validated = $this->validateProductRequest($request, $product->id);
@@ -291,7 +291,7 @@ class ProductController extends Controller
         $product = $this->productService->findProductById($product_id);
 
         if (! $product) {
-            abort(404);
+            return $this->redirectMissingAdminProduct('Không tìm thấy sản phẩm cần xóa.');
         }
 
         $this->productService->deleteProduct($product);
@@ -462,6 +462,13 @@ class ProductController extends Controller
         }
 
         return null;
+    }
+
+    protected function redirectMissingAdminProduct(string $message)
+    {
+        Session::put('error', $message);
+
+        return Redirect::to('all-product');
     }
     //End Admin Page
     public function details_product($product_slug, Request $request)

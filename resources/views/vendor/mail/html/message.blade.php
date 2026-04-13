@@ -1,5 +1,10 @@
 @php
-    $brandName = config('app.name') !== 'Laravel' ? config('app.name') : 'Laravel Shop';
+    $brandName = (string) config('services.storefront_brand.name', '');
+
+    if ($brandName === '') {
+        $appName = (string) config('app.name', 'ShopW');
+        $brandName = $appName !== 'Laravel' ? $appName : 'ShopW';
+    }
 @endphp
 
 <x-mail::layout>

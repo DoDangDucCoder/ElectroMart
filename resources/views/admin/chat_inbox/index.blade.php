@@ -36,6 +36,17 @@
             </div>
         </section>
 
+        @unless ($chat_tables_ready ?? false)
+            <section class="g-admin-panel-card">
+                <div class="g-admin-panel-body">
+                    <div class="alert alert-warning" style="margin-bottom: 0;">
+                        Bảng dữ liệu chat chưa sẵn sàng. Trang đang hiển thị ở chế độ an toàn cho đến khi
+                        <code>chat_conversations</code> và <code>chat_messages</code> được tạo trong cơ sở dữ liệu.
+                    </div>
+                </div>
+            </section>
+        @endunless
+
         <section class="g-admin-panel-card">
             <div class="g-admin-panel-head">
                 <div>

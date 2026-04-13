@@ -22,6 +22,8 @@
 
         @if (session('message'))
             <div class="alert alert-success">{{ session('message') }}</div>
+        @elseif (session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
 
         <section class="g-admin-panel-card">

@@ -19,19 +19,68 @@
         <div class="container">
             @php
                 $supportConfig = config('services.storefront_support', []);
+                $storefrontLink = \App\Support\StorefrontLink::class;
                 $headerLogo = optional($contact_footer->first())->info_logo ?: 'laptop-symbol-azy3.png';
                 $headerLogoPath = 'uploads/contact/' . $headerLogo;
                 if (!file_exists(public_path($headerLogoPath))) {
                     $headerLogoPath = 'uploads/contact/laptop-symbol-azy3.png';
                 }
                 $headerSlogan = optional($contact_footer->first())->slogan_logo ?: 'Điểm mua công nghệ gọn hơn mỗi ngày';
-                $headerSloganCompact = \Illuminate\Support\Str::limit(\Illuminate\Support\Str::squish(strip_tags($headerSlogan)), 34, '...');
+                $headerSloganCompact = \Illuminate\Support\Str::limit(\Illuminate\Support\Str::squish(strip_tags($headerSlogan)), 24, '...');
                 $customer_id = Session::get('customer_id');
                 $shipping_id = Session::get('shipping_id');
                 $brandConfig = config('services.storefront_brand', []);
                 $supportPhoneDisplay = $supportConfig['contact_phone_display'] ?? '1900.0000';
-                $supportPhoneHref = $supportConfig['contact_phone_href'] ?? '19000000';
+                $supportPhoneHref = $supportConfig['phone_href'] ?? ('tel:' . ($supportConfig['contact_phone_href'] ?? '19000000'));
                 $storefrontLabel = \App\Support\StorefrontLabel::class;
+                $storefrontCustomerAuth = \App\Support\StorefrontCustomerAuth::class;
+                $currentPath = request()->path();
+                $isHomeRoute = $currentPath === '/' || request()->is('trang-chu');
+                $isCategorySection = request()->is('danh-muc/*');
+                $isBlogSection = request()->is('danh-muc-bai-viet/*') || request()->is('bai-viet/*') || request()->is('video') || request()->is('video-shop') || request()->is('xem-video/*');
+                $isCartSection = request()->is('gio-hang');
+                $isContactSection = request()->is('lien-he');
+                $isHistorySection = request()->is('history') || request()->is('view-history-order/*');
+                $isLoginSection = request()->is('dang-nhap');
+                $headerCustomer = null;
+                if ($customer_id && \Illuminate\Support\Facades\Schema::hasTable('customers')) {
+                    $headerCustomer = \App\Infrastructure\Persistence\Eloquent\Customer\Customer::query()
+                        ->select(['id', 'name', 'email', 'phone', 'is_active'])
+                        ->whereKey((int) $customer_id)
+                        ->where('is_active', true)
+                        ->first();
+                }
+                $headerCustomerName = $headerCustomer?->name ?: Session::get($storefrontCustomerAuth::SESSION_NAME_KEY);
+                $headerCustomerEmail = $headerCustomer?->email ?: Session::get($storefrontCustomerAuth::SESSION_EMAIL_KEY);
+                $headerCustomerPhone = $headerCustomer?->phone;
+                $headerCustomerPicture = Session::get($storefrontCustomerAuth::SESSION_PICTURE_KEY);
+                $headerCustomerInitials = collect(explode(' ', \Illuminate\Support\Str::upper(trim((string) $headerCustomerName))))
+                    ->filter()
+                    ->take(2)
+                    ->map(fn($part) => \Illuminate\Support\Str::substr($part, 0, 1))
+                    ->implode('');
+                $headerCustomerInitials = $headerCustomerInitials !== '' ? $headerCustomerInitials : 'TK';
+                $isAuthenticatedCustomer = ! empty($headerCustomerName) || ! empty($headerCustomerEmail);
+                $isAccountSection = $isAuthenticatedCustomer ? $isHistorySection : $isLoginSection;
+                $isStorefrontAuthRoute = request()->is('dang-nhap') ||
+                    request()->is('login-customer') ||
+                    request()->is('add-customer') ||
+                    request()->is('dang-xuat-khach-hang') ||
+                    request()->is('logout-checkout') ||
+                    request()->is('login-facebook-customer') ||
+                    request()->is('customer/facebook/callback') ||
+                    request()->is('login-customer-google') ||
+                    request()->is('customer/google/callback');
+                $currentPageRedirectTo = $isStorefrontAuthRoute ? null : request()->fullUrl();
+                $buildLoginUrl = function (string $redirectKey = 'history', ?string $redirectTo = null) {
+                    $query = ['redirect' => $redirectKey];
+
+                    if ($redirectTo) {
+                        $query['redirect_to'] = $redirectTo;
+                    }
+
+                    return url('/dang-nhap') . '?' . http_build_query($query);
+                };
                 $categoryItems = collect($category ?? [])->filter(fn($item) => ! empty($item->slug_category_product));
                 $rootCategoryItems = $categoryItems
                     ->filter(
@@ -107,6 +156,10 @@
                     $featuredBlogCategory?->cate_post_slug,
                     'Video công nghệ',
                 );
+                $searchTrendingKeywords = collect(config('storefront.search_suggest.trending_keywords', []))
+                    ->filter(fn($keyword) => filled($keyword))
+                    ->take(6)
+                    ->values();
                 $searchHintLinks = [
                     [
                         'href' => $featuredCategoryUrl,
@@ -124,14 +177,473 @@
                         'label' => config('storefront.labels.recommend_for_you', 'Gợi ý cho bạn'),
                     ],
                 ];
-                $headerSearchHintLinks = collect($searchHintLinks)->take(2)->values();
-                $checkoutUrl = match (true) {
-                    $customer_id != null && $shipping_id == null => url('/checkout'),
-                    $customer_id != null && $shipping_id != null => url('/payment'),
-                    default => url('/dang-nhap'),
+                $headerSearchHintLinks = $storefrontLink::normalize($searchHintLinks, 'href')
+                    ->take(2)
+                    ->values();
+                $desktopCategoryIconMap = [
+                    'laptop' => 'fa-laptop',
+                    'laptop-gaming' => 'fa-gamepad',
+                    'pc' => 'fa-desktop',
+                    'pc-gaming' => 'fa-desktop',
+                    'linh-kien' => 'fa-microchip',
+                    'phu-kien' => 'fa-plug',
+                    'dien-thoai' => 'fa-mobile',
+                    'man-hinh' => 'fa-television',
+                    'chuot' => 'fa-mouse-pointer',
+                    'ban-phim' => 'fa-keyboard-o',
+                    'tai-nghe' => 'fa-headphones',
+                    'loa' => 'fa-volume-up',
+                    'camera' => 'fa-camera',
+                    'ghe-gaming' => 'fa-suitcase',
+                    'ban-ghe' => 'fa-suitcase',
+                ];
+                $desktopCategoryUtilityLinks = collect([
+                    [
+                        'url' => url('/so-sanh'),
+                        'icon' => 'fa-random',
+                        'label' => 'So sánh sản phẩm',
+                        'note' => 'Đặt cạnh các lựa chọn để chốt nhanh hơn',
+                    ],
+                    [
+                        'url' => url('/goi-y-san-pham'),
+                        'icon' => 'fa-compass',
+                        'label' => config('storefront.labels.recommend_for_you', 'Gợi ý cho bạn'),
+                        'note' => 'Tìm cấu hình phù hợp với nhu cầu thực tế',
+                    ],
+                    [
+                        'url' => url('/video-shop'),
+                        'icon' => 'fa-play-circle',
+                        'label' => 'Video công nghệ',
+                        'note' => 'Xem review và điểm nhanh đáng chú ý',
+                    ],
+                    [
+                        'url' => url('/lien-he'),
+                        'icon' => 'fa-headphones',
+                        'label' => 'Hỗ trợ mua nhanh',
+                        'note' => 'Nhận tư vấn trực tiếp từ đội ngũ bán hàng',
+                    ],
+                ]);
+                $desktopCategoryNavQuicklinks = $desktopCategoryUtilityLinks->take(2)->values();
+                $desktopCategoryCatalogReady =
+                    \Illuminate\Support\Facades\Schema::hasTable('products') &&
+                    \Illuminate\Support\Facades\Schema::hasTable('brands') &&
+                    \Illuminate\Support\Facades\Schema::hasColumn('products', 'primary_category_id');
+                $desktopCategoryDescendantIds = function (int $rootId) use ($categoryItems) {
+                    $pending = collect([$rootId]);
+                    $seen = collect();
+
+                    while ($pending->isNotEmpty()) {
+                        $currentId = (int) $pending->shift();
+
+                        if ($currentId <= 0 || $seen->contains($currentId)) {
+                            continue;
+                        }
+
+                        $seen->push($currentId);
+
+                        $childIds = $categoryItems
+                            ->filter(fn($entry) => (int) ($entry->category_parent ?? 0) === $currentId)
+                            ->pluck('category_id')
+                            ->map(fn($id) => (int) $id)
+                            ->filter(fn($id) => $id > 0)
+                            ->values();
+
+                        foreach ($childIds as $childId) {
+                            if (! $seen->contains($childId)) {
+                                $pending->push($childId);
+                            }
+                        }
+                    }
+
+                    return $seen->values();
                 };
-                $accountUtilityUrl = $customer_id != null ? url('/history') : url('/dang-nhap');
-                $accountUtilityLabel = $customer_id != null ? 'Đơn hàng' : 'Tài khoản';
+                $formatDesktopCategoryPrice = function (float $amount): string {
+                    $amountInMillions = round($amount / 1000000, 1);
+                    $formatted = number_format($amountInMillions, 1, ',', '.');
+                    $formatted = rtrim(rtrim($formatted, '0'), ',');
+
+                    return $formatted . ' triệu';
+                };
+                $desktopCategoryPriceLinks = function (float $minPrice, float $maxPrice, string $slug) use ($formatDesktopCategoryPrice) {
+                    if ($minPrice <= 0 || $maxPrice <= 0 || blank($slug)) {
+                        return collect();
+                    }
+
+                    if ($minPrice > $maxPrice) {
+                        [$minPrice, $maxPrice] = [$maxPrice, $minPrice];
+                    }
+
+                    if (abs($maxPrice - $minPrice) < 1000000) {
+                        return collect([[
+                            'label' => 'Giá tốt từ ' . $formatDesktopCategoryPrice($minPrice),
+                            'url' => url('/danh-muc/' . $slug) . '?' . http_build_query([
+                                'price_min' => max(0, (int) floor($minPrice)),
+                            ]),
+                            'icon' => 'fa-money',
+                            'note' => 'Lọc nhanh theo tầm giá đang bán',
+                        ]]);
+                    }
+
+                    $start = (int) floor($minPrice / 1000000) * 1000000;
+                    $end = (int) ceil($maxPrice / 1000000) * 1000000;
+                    $span = max(1000000, (int) ceil((($end - $start) / 3) / 1000000) * 1000000);
+
+                    $ranges = collect();
+
+                    for ($index = 0; $index < 3; $index++) {
+                        $rangeStart = $start + ($span * $index);
+
+                        if ($rangeStart >= $end) {
+                            break;
+                        }
+
+                        $rangeEnd = min($end, $rangeStart + $span);
+                        $isLastRange = $index === 2 || $rangeEnd >= $end;
+
+                        $ranges->push([
+                            'label' => $isLastRange
+                                ? 'Từ ' . $formatDesktopCategoryPrice($rangeStart)
+                                : $formatDesktopCategoryPrice($rangeStart) . ' - ' . $formatDesktopCategoryPrice(max($rangeStart, $rangeEnd - 1)),
+                            'url' => url('/danh-muc/' . $slug) . '?' . http_build_query(array_filter([
+                                'price_min' => max(0, (int) floor($rangeStart)),
+                                'price_max' => $isLastRange ? null : max((int) floor($rangeStart), (int) floor($rangeEnd - 1)),
+                            ])),
+                            'icon' => $isLastRange ? 'fa-diamond' : 'fa-money',
+                            'note' => 'Lọc nhanh theo khoảng giá phổ biến',
+                        ]);
+                    }
+
+                    return $ranges->unique('label')->values();
+                };
+                $desktopCategoryThemeForSlug = function (string $slug): string {
+                    $slug = \Illuminate\Support\Str::slug($slug, '-');
+
+                    return match (true) {
+                        \Illuminate\Support\Str::contains($slug, ['dien-thoai', 'tablet', 'ipad', 'iphone']) => 'mobile',
+                        \Illuminate\Support\Str::contains($slug, ['laptop', 'macbook']) => 'laptop',
+                        \Illuminate\Support\Str::contains($slug, ['man-hinh', 'monitor']) => 'display',
+                        \Illuminate\Support\Str::contains($slug, ['linh-kien', 'pc', 'mainboard', 'vga']) => 'hardware',
+                        \Illuminate\Support\Str::contains($slug, ['phu-kien', 'chuot', 'ban-phim', 'tai-nghe', 'loa']) => 'gear',
+                        default => 'core',
+                    };
+                };
+                $currentCategorySlug = request()->is('danh-muc/*') ? request()->segment(2) : null;
+                $desktopCategoryGroups = $rootCategoryItems
+                    ->take(9)
+                    ->map(function ($item) use ($categoryItems, $rootCategoryItems, $storefrontLabel, $desktopCategoryIconMap, $desktopCategoryUtilityLinks, $desktopCategoryCatalogReady, $desktopCategoryDescendantIds, $desktopCategoryPriceLinks, $desktopCategoryThemeForSlug, $currentCategorySlug, $featuredCategoryLabel, $featuredBlogLabel) {
+                        $children = $categoryItems
+                            ->filter(
+                                fn($child) => (int) ($child->category_parent ?? 0) === (int) ($item->category_id ?? 0) &&
+                                    (int) ($child->category_status ?? 0) === 0 &&
+                                    ! empty($child->slug_category_product),
+                            )
+                            ->sortBy(
+                                fn($child) => sprintf(
+                                    '%010d-%010d',
+                                    (int) ($child->category_order ?? 0),
+                                    (int) ($child->category_id ?? 0),
+                                ),
+                            )
+                            ->values();
+
+                        $slug = (string) ($item->slug_category_product ?? '');
+                        $normalizedSlug = \Illuminate\Support\Str::slug($slug, '-');
+                        $label = $storefrontLabel::category($item->category_name, $slug);
+                        $isActive = $currentCategorySlug === $slug || $children->contains(
+                            fn($child) => ($child->slug_category_product ?? null) === $currentCategorySlug,
+                        );
+                        $childLinks = $children
+                            ->take(12)
+                            ->map(fn($child) => [
+                                'label' => $storefrontLabel::category($child->category_name, $child->slug_category_product),
+                                'url' => url('/danh-muc/' . $child->slug_category_product),
+                                'icon' => $desktopCategoryIconMap[\Illuminate\Support\Str::slug((string) $child->slug_category_product, '-')] ?? ($desktopCategoryIconMap[$normalizedSlug] ?? 'fa-angle-right'),
+                                'note' => 'Mở nhanh danh mục con',
+                            ])
+                            ->values();
+                        $relatedRoots = $rootCategoryItems
+                            ->filter(
+                                fn($root) => (int) ($root->category_status ?? 0) === 0 &&
+                                    ! empty($root->slug_category_product) &&
+                                    $root->slug_category_product !== $slug,
+                            )
+                            ->take(6)
+                            ->map(fn($root) => [
+                                'label' => $storefrontLabel::category($root->category_name, $root->slug_category_product),
+                                'url' => url('/danh-muc/' . $root->slug_category_product),
+                                'icon' => $desktopCategoryIconMap[\Illuminate\Support\Str::slug((string) $root->slug_category_product, '-')] ?? 'fa-th-large',
+                                'note' => 'Khám phá nhóm liên quan',
+                            ])
+                            ->values();
+                        $descendantIds = $desktopCategoryDescendantIds((int) ($item->category_id ?? 0));
+                        $brandLinks = collect();
+                        $priceLinks = collect();
+                        $featuredProducts = collect();
+
+                        if ($desktopCategoryCatalogReady && $descendantIds->isNotEmpty()) {
+                            $productsQuery = \App\Infrastructure\Persistence\Eloquent\Catalog\Product::query()
+                                ->where('is_active', true)
+                                ->whereIn('primary_category_id', $descendantIds->all());
+
+                            $brandSummary = (clone $productsQuery)
+                                ->selectRaw('brand_id, COUNT(*) as product_count')
+                                ->whereNotNull('brand_id')
+                                ->groupBy('brand_id')
+                                ->orderByDesc('product_count')
+                                ->limit(6)
+                                ->get();
+
+                            if ($brandSummary->isNotEmpty()) {
+                                $brandMap = \App\Infrastructure\Persistence\Eloquent\Catalog\Brand::query()
+                                    ->where('is_active', true)
+                                    ->whereIn(
+                                        'id',
+                                        $brandSummary->pluck('brand_id')->map(fn($id) => (int) $id)->all(),
+                                    )
+                                    ->get()
+                                    ->keyBy('id');
+
+                                $brandLinks = $brandSummary
+                                    ->map(function ($summary) use ($brandMap) {
+                                        $brand = $brandMap->get((int) $summary->brand_id);
+
+                                        if (! $brand || blank($brand->brand_slug)) {
+                                            return null;
+                                        }
+
+                                        return [
+                                            'label' => $brand->brand_name,
+                                            'url' => url('/thuong-hieu/' . $brand->brand_slug),
+                                            'icon' => 'fa-certificate',
+                                            'note' => (int) ($summary->product_count ?? 0) . ' sản phẩm đang mở bán',
+                                        ];
+                                    })
+                                    ->filter()
+                                    ->values();
+
+                                if ($brandLinks->isEmpty()) {
+                                    $brandLinks = $brandMap
+                                        ->take(6)
+                                        ->map(fn($brand) => [
+                                            'label' => $brand->brand_name,
+                                            'url' => blank($brand->brand_slug) ? url('/danh-muc/' . $slug) : url('/thuong-hieu/' . $brand->brand_slug),
+                                            'icon' => 'fa-certificate',
+                                            'note' => 'Thương hiệu đang có trong nhóm này',
+                                        ])
+                                        ->values();
+                                }
+                            }
+
+                            $priceStats = (clone $productsQuery)
+                                ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
+                                ->first();
+
+                            $priceLinks = $desktopCategoryPriceLinks(
+                                (float) ($priceStats->min_price ?? 0),
+                                (float) ($priceStats->max_price ?? 0),
+                                $slug,
+                            );
+
+                            $featuredProducts = (clone $productsQuery)
+                                ->with('brand')
+                                ->orderByDesc('is_featured')
+                                ->orderByDesc('views_count')
+                                ->limit(3)
+                                ->get()
+                                ->map(function ($product) {
+                                    return [
+                                        'label' => $product->product_name,
+                                        'url' => url('/chi-tiet/' . $product->product_slug),
+                                        'image' => $product->product_image ? asset($product->product_image) : asset('uploads/product/no-image.svg'),
+                                        'brand' => $product->brand_name,
+                                        'price' => (float) $product->final_price,
+                                        'original_price' => (float) ($product->price ?? $product->final_price),
+                                    ];
+                                })
+                                ->values();
+                        }
+
+                        $contextLabel = \Illuminate\Support\Str::lower($label);
+                        $contextUtilityLinks = $desktopCategoryUtilityLinks
+                            ->map(function ($link) use ($contextLabel) {
+                                $contextNote = match ($link['label']) {
+                                    'So sánh sản phẩm' => 'Đặt cạnh các mẫu ' . $contextLabel . ' để chốt nhanh hơn',
+                                    'Gợi ý cho bạn' => 'Tìm cấu hình ' . $contextLabel . ' phù hợp nhu cầu thực tế',
+                                    'Video công nghệ' => 'Xem video mở hộp và đánh giá nhanh cho nhóm ' . $contextLabel,
+                                    'Hỗ trợ mua nhanh' => 'Nhận tư vấn trực tiếp cho nhóm ' . $contextLabel,
+                                    default => $link['note'] ?? 'Lối vào hữu ích cho nhóm ' . $contextLabel,
+                                };
+
+                                return array_merge($link, [
+                                    'note' => $contextNote,
+                                ]);
+                            })
+                            ->values();
+
+                        $sections = collect();
+
+                        if ($childLinks->isNotEmpty()) {
+                            $sections->push([
+                                'title' => 'Danh mục con nổi bật',
+                                'links' => $childLinks->take(6)->values(),
+                            ]);
+                        }
+
+                        if ($brandLinks->isNotEmpty()) {
+                            $sections->push([
+                                'title' => 'Thương hiệu nổi bật',
+                                'links' => $brandLinks->take(4)->values(),
+                            ]);
+                        }
+
+                        if ($priceLinks->isNotEmpty()) {
+                            $sections->push([
+                                'title' => 'Theo tầm giá',
+                                'links' => $priceLinks->take(4)->values(),
+                            ]);
+                        }
+
+                        if ($sections->count() < 4 && $relatedRoots->isNotEmpty()) {
+                            $sections->push([
+                                'title' => 'Khám phá thêm',
+                                'links' => $relatedRoots->take(4)->values(),
+                            ]);
+                        }
+
+                        if ($sections->count() < 4) {
+                            $sections->push([
+                                'title' => 'Mua nhanh & hỗ trợ',
+                                'links' => $contextUtilityLinks->take(4)->values(),
+                            ]);
+                        }
+
+                        $sections = $sections
+                            ->unique('title')
+                            ->take(4)
+                            ->values();
+
+                        $railTitle = 'Lối vào nhanh';
+                        $supportLinks = $priceLinks
+                            ->take(2)
+                            ->merge($brandLinks->take(1))
+                            ->merge($childLinks->take(1))
+                            ->merge($contextUtilityLinks)
+                            ->unique('label')
+                            ->take(4)
+                            ->values();
+
+                        if ($priceLinks->isNotEmpty()) {
+                            $railTitle = 'Mốc chọn nhanh';
+                        } elseif ($brandLinks->isNotEmpty()) {
+                            $railTitle = 'Thương hiệu nên xem';
+                        } elseif ($childLinks->isNotEmpty()) {
+                            $railTitle = 'Nhóm nổi bật';
+                        }
+
+                        $promoTags = $childLinks
+                            ->take(2)
+                            ->pluck('label')
+                            ->merge($brandLinks->take(2)->pluck('label'))
+                            ->values();
+
+                        if ($promoTags->isEmpty()) {
+                            $promoTags = collect([$label, $featuredCategoryLabel, $featuredBlogLabel])
+                                ->filter()
+                                ->unique()
+                                ->take(3)
+                                ->values();
+                        }
+
+                        $highlightCards = collect([
+                            $childLinks->isNotEmpty() ? [
+                                'icon' => 'fa-sitemap',
+                                'value' => min($childLinks->count(), 12),
+                                'label' => 'Nhóm con',
+                                'note' => 'Mở nhanh các nhánh đang bán',
+                            ] : null,
+                            $brandLinks->isNotEmpty() ? [
+                                'icon' => 'fa-certificate',
+                                'value' => $brandLinks->count(),
+                                'label' => 'Thương hiệu',
+                                'note' => 'Các hãng đang có trong nhóm này',
+                            ] : null,
+                            $priceLinks->isNotEmpty() ? [
+                                'icon' => 'fa-money',
+                                'value' => $priceLinks->count(),
+                                'label' => 'Mốc giá',
+                                'note' => 'Lọc nhanh theo ngân sách thực tế',
+                            ] : [
+                                'icon' => 'fa-bolt',
+                                'value' => $supportLinks->count(),
+                                'label' => 'Lối vào',
+                                'note' => 'Các đường tắt hữu ích để mua nhanh',
+                            ],
+                        ])->filter()->take(3)->values();
+
+                        $promoStats = collect([
+                            $childLinks->isNotEmpty() ? [
+                                'value' => min($childLinks->count(), 12),
+                                'label' => 'nhóm con',
+                            ] : null,
+                            $brandLinks->isNotEmpty() ? [
+                                'value' => $brandLinks->count(),
+                                'label' => 'thương hiệu',
+                            ] : null,
+                            $priceLinks->isNotEmpty() ? [
+                                'value' => $priceLinks->count(),
+                                'label' => 'mốc giá',
+                            ] : null,
+                        ])->filter()->take(3)->values();
+
+                        $theme = $desktopCategoryThemeForSlug($slug);
+
+                        return [
+                            'id' => 'shopw-desktop-category-' . ($item->category_id ?? $normalizedSlug ?: uniqid()),
+                            'label' => $label,
+                            'url' => url('/danh-muc/' . $slug),
+                            'icon' => $desktopCategoryIconMap[$normalizedSlug] ?? 'fa-th-large',
+                            'theme' => $theme,
+                            'summary' => $children->isNotEmpty()
+                                ? 'Mở nhanh ' . min($children->count(), 12) . ' nhóm con'
+                                : ($brandLinks->isNotEmpty()
+                                    ? 'Tìm theo thương hiệu và nhóm phổ biến'
+                                    : ($priceLinks->isNotEmpty()
+                                        ? 'Chọn nhanh theo tầm giá phù hợp'
+                                        : 'Mở lối vào mua sắm nhanh')),
+                            'sections' => $sections->values(),
+                            'highlights' => $highlightCards,
+                            'rail_title' => $railTitle,
+                            'support_links' => $supportLinks,
+                            'featured_products' => $featuredProducts,
+                            'promo_title' => 'Chọn nhanh ' . $label,
+                            'promo_note' => 'Đi thẳng vào nhóm sản phẩm đang được quan tâm nhiều và rút ngắn thời gian tìm cấu hình phù hợp.',
+                            'promo_tags' => $promoTags,
+                            'promo_stats' => $promoStats,
+                            'active' => $isActive,
+                        ];
+                    })
+                    ->values();
+
+                if ($desktopCategoryGroups->where('active', true)->isEmpty() && $desktopCategoryGroups->isNotEmpty()) {
+                    $desktopCategoryGroups = $desktopCategoryGroups->map(function ($group, $index) {
+                        $group['active'] = $index === 0;
+
+                        return $group;
+                    });
+                }
+                $checkoutLoginUrl = $buildLoginUrl('checkout', url('/checkout'));
+                $accountLoginUrl = $buildLoginUrl('history', $currentPageRedirectTo);
+                $checkoutUrl = match (true) {
+                    $isAuthenticatedCustomer && $shipping_id == null => url('/checkout'),
+                    $isAuthenticatedCustomer && $shipping_id != null => url('/payment'),
+                    default => $checkoutLoginUrl,
+                };
+                $accountUtilityUrl = $isAuthenticatedCustomer ? url('/history') : $accountLoginUrl;
+                $accountUtilityLabel = $isAuthenticatedCustomer ? 'Đơn hàng của tôi' : 'Đăng nhập';
+                $hasCartInSession = ! empty(Session::get('cart', []));
+                $headerCustomerSummaryTitle = collect([$headerCustomerName, $headerCustomerEmail, $headerCustomerPhone])
+                    ->filter()
+                    ->implode(' • ');
                 $mobileQuicklinks = [
                     [
                         'href' => $featuredCategoryUrl,
@@ -157,15 +669,35 @@
                         'badge' => '24/7',
                         'class' => '',
                     ],
-                    [
-                        'href' => url('/history'),
-                        'icon' => 'fa-shield',
-                        'label' => 'Bảo hành',
-                        'note' => 'Tra cứu đơn và hậu mãi',
-                        'badge' => 'Hậu mãi',
-                        'class' => '',
-                    ],
                 ];
+                if ($isAuthenticatedCustomer) {
+                    $mobileQuicklinks[] = [
+                        'href' => url('/history'),
+                        'icon' => 'fa-user-circle-o',
+                        'label' => 'Đơn hàng của tôi',
+                        'note' => 'Xem lịch sử mua sắm và trạng thái hiện tại',
+                        'badge' => 'Tài khoản',
+                        'class' => '',
+                    ];
+                    $mobileQuicklinks[] = [
+                        'href' => url('/dang-xuat-khach-hang?redirect=login'),
+                        'icon' => 'fa-sign-out',
+                        'label' => 'Đăng xuất',
+                        'note' => 'Thoát khỏi tài khoản hiện tại',
+                        'badge' => 'Thoát',
+                        'class' => '',
+                    ];
+                } else {
+                    $mobileQuicklinks[] = [
+                        'href' => $accountLoginUrl,
+                        'icon' => 'fa-user-circle-o',
+                        'label' => 'Đăng nhập',
+                        'note' => 'Đăng nhập để theo dõi đơn và thanh toán nhanh hơn',
+                        'badge' => 'Tài khoản',
+                        'class' => '',
+                    ];
+                }
+                $mobileQuicklinks = $storefrontLink::normalize($mobileQuicklinks, 'href');
             @endphp
             <div class="shopw-header">
                 <div class="shopw-header-brand">
@@ -178,31 +710,209 @@
                         </div>
                     </div>
                 </div>
-                <div class="shopw-header-center">
-                    <button class="shopw-cat-btn shopw-mobile-nav-toggle" type="button" data-nav-intent="categories"
-                        data-desktop-target="#shopw-nav-group-categories" aria-label="Mở danh mục"
-                        aria-haspopup="menu" aria-expanded="false">
-                        <span class="shopw-cat-btn-icon"><i class="fa fa-bars"></i></span>
-                        <span class="shopw-cat-btn-copy">
-                            <small>Điều hướng</small>
-                            <strong>Danh mục</strong>
-                        </span>
-                    </button>
+                <div class="shopw-header-center shopw-header-center--category-hidden">
+                    <div class="shopw-header-category-shell shopw-header-category-shell--review-hidden" aria-hidden="true">
+                        <button class="shopw-cat-btn shopw-mobile-nav-toggle" type="button" data-nav-intent="categories"
+                            data-desktop-panel="#shopw-desktop-category-panel" aria-label="Mở danh mục"
+                            aria-haspopup="menu" aria-expanded="false">
+                            <span class="shopw-cat-btn-icon"><i class="fa fa-bars"></i></span>
+                            <span class="shopw-cat-btn-copy">
+                                <strong>Danh mục</strong>
+                            </span>
+                        </button>
+
+                        <div class="shopw-desktop-category-panel" id="shopw-desktop-category-panel" hidden>
+                            <div class="shopw-desktop-category-nav" role="tablist" aria-label="Danh mục nhanh">
+                                @foreach ($desktopCategoryGroups as $group)
+                                    <button type="button"
+                                        class="shopw-desktop-category-trigger shopw-desktop-category-trigger--{{ $group['theme'] ?? 'core' }}{{ $group['active'] ? ' is-active' : '' }}"
+                                        data-category-pane="#{{ $group['id'] }}"
+                                        aria-selected="{{ $group['active'] ? 'true' : 'false' }}">
+                                        <span class="shopw-desktop-category-trigger-icon">
+                                            <i class="fa {{ $group['icon'] }}"></i>
+                                        </span>
+                                        <span class="shopw-desktop-category-trigger-copy">
+                                            <strong>{{ $group['label'] }}</strong>
+                                            <small>{{ $group['summary'] }}</small>
+                                        </span>
+                                        <i class="fa fa-angle-right"></i>
+                                    </button>
+                                @endforeach
+
+                                @if ($desktopCategoryNavQuicklinks->isNotEmpty())
+                                    <div class="shopw-desktop-category-nav-foot">
+                                        <span class="shopw-desktop-category-nav-foot-title">Đi nhanh</span>
+                                        <div class="shopw-desktop-category-nav-foot-links">
+                                            @foreach ($desktopCategoryNavQuicklinks as $quicklink)
+                                                <a href="{{ $quicklink['url'] }}" class="shopw-desktop-category-nav-foot-link">
+                                                    <span class="shopw-desktop-category-nav-foot-icon">
+                                                        <i class="fa {{ $quicklink['icon'] }}"></i>
+                                                    </span>
+                                                    <span class="shopw-desktop-category-nav-foot-copy">
+                                                        <strong>{{ $quicklink['label'] }}</strong>
+                                                        <small>{{ $quicklink['note'] }}</small>
+                                                    </span>
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="shopw-desktop-category-content">
+                                @foreach ($desktopCategoryGroups as $group)
+                                    <section class="shopw-desktop-category-pane{{ $group['active'] ? ' is-active' : '' }}"
+                                        id="{{ $group['id'] }}" @if (! $group['active']) hidden @endif>
+                                        <div class="shopw-desktop-category-pane-head">
+                                            <div class="shopw-desktop-category-pane-copy">
+                                                <span>Khám phá theo nhóm</span>
+                                                <strong>{{ $group['label'] }}</strong>
+                                                <p>Chọn nhanh danh mục con và các lối vào phù hợp với nhu cầu mua sắm hiện tại.</p>
+                                            </div>
+                                            <a href="{{ $group['url'] }}" class="shopw-desktop-category-pane-cta">
+                                                <span>Xem tất cả</span>
+                                                <i class="fa fa-arrow-right"></i>
+                                            </a>
+                                        </div>
+
+                                        @if (! empty($group['highlights']))
+                                            <div class="shopw-desktop-category-highlights">
+                                                @foreach ($group['highlights'] as $highlight)
+                                                    <div class="shopw-desktop-category-highlight">
+                                                        <span class="shopw-desktop-category-highlight-icon">
+                                                            <i class="fa {{ $highlight['icon'] }}"></i>
+                                                        </span>
+                                                        <span class="shopw-desktop-category-highlight-copy">
+                                                            <strong>{{ $highlight['value'] }}</strong>
+                                                            <span>{{ $highlight['label'] }}</span>
+                                                            <small>{{ $highlight['note'] }}</small>
+                                                        </span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+
+                                        <div class="shopw-desktop-category-pane-grid">
+                                            <div class="shopw-desktop-category-sections">
+                                                @foreach ($group['sections'] as $section)
+                                                    <section class="shopw-desktop-category-section">
+                                                        <span class="shopw-desktop-category-section-title">{{ $section['title'] }}</span>
+                                                        <div class="shopw-desktop-category-section-list">
+                                                            @foreach ($section['links'] as $link)
+                                                                <a href="{{ $link['url'] }}" class="shopw-desktop-category-section-link">
+                                                                    <span class="shopw-desktop-category-section-link-icon">
+                                                                        <i class="fa {{ $link['icon'] ?? 'fa-angle-right' }}"></i>
+                                                                    </span>
+                                                                    <span class="shopw-desktop-category-section-link-copy">
+                                                                        <strong>{{ $link['label'] }}</strong>
+                                                                        @if (! empty($link['note']))
+                                                                            <small>{{ $link['note'] }}</small>
+                                                                        @endif
+                                                                    </span>
+                                                                </a>
+                                                            @endforeach
+                                                        </div>
+                                                    </section>
+                                                @endforeach
+                                            </div>
+
+                                            <aside class="shopw-desktop-category-rail">
+                                                <div class="shopw-desktop-category-pane-block">
+                                                    <span class="shopw-desktop-category-pane-title">{{ $group['rail_title'] ?? 'Lối vào nhanh' }}</span>
+                                                    <div class="shopw-desktop-category-links">
+                                                        @foreach ($group['support_links'] as $link)
+                                                            <a href="{{ $link['url'] }}" class="shopw-desktop-category-link">
+                                                                <span class="shopw-desktop-category-link-icon">
+                                                                    <i class="fa {{ $link['icon'] }}"></i>
+                                                                </span>
+                                                                <span class="shopw-desktop-category-link-copy">
+                                                                    <strong>{{ $link['label'] }}</strong>
+                                                                    <small>{{ $link['note'] }}</small>
+                                                                </span>
+                                                            </a>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+
+                                                @if (! empty($group['featured_products']))
+                                                    <div class="shopw-desktop-category-pane-block">
+                                                        <span class="shopw-desktop-category-pane-title">Sản phẩm nổi bật</span>
+                                                        <div class="shopw-desktop-category-products">
+                                                            @foreach ($group['featured_products'] as $featuredProduct)
+                                                                <a href="{{ $featuredProduct['url'] }}" class="shopw-desktop-category-product-card">
+                                                                    <span class="shopw-desktop-category-product-thumb">
+                                                                        <img src="{{ $featuredProduct['image'] }}" alt="{{ $group['label'] }} nổi bật">
+                                                                    </span>
+                                                                    <span class="shopw-desktop-category-product-copy">
+                                                                        @if (! empty($featuredProduct['brand']))
+                                                                            <small>{{ $featuredProduct['brand'] }}</small>
+                                                                        @endif
+                                                                        <strong>{{ $group['label'] }} đang được quan tâm</strong>
+                                                                        <span class="shopw-desktop-category-product-price">
+                                                                            {{ number_format((float) $featuredProduct['price'], 0, ',', '.') }}đ
+                                                                        </span>
+                                                                    </span>
+                                                                </a>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @endif
+
+                                                <a href="{{ $group['url'] }}" class="shopw-desktop-category-promo shopw-desktop-category-promo--{{ $group['theme'] ?? 'core' }}">
+                                                    <span class="shopw-desktop-category-promo-visual" aria-hidden="true">
+                                                        <span class="shopw-desktop-category-promo-orb"></span>
+                                                        <span class="shopw-desktop-category-promo-icon">
+                                                            <i class="fa {{ $group['icon'] }}"></i>
+                                                        </span>
+                                                    </span>
+                                                    <span class="shopw-desktop-category-promo-kicker">Đề xuất hôm nay</span>
+                                                    <strong>{{ $group['promo_title'] }}</strong>
+                                                    <small>{{ $group['promo_note'] }}</small>
+                                                    @if (! empty($group['promo_stats']))
+                                                        <span class="shopw-desktop-category-promo-stats">
+                                                            @foreach ($group['promo_stats'] as $stat)
+                                                                <span class="shopw-desktop-category-promo-stat">
+                                                                    <strong>{{ $stat['value'] }}</strong>
+                                                                    <small>{{ $stat['label'] }}</small>
+                                                                </span>
+                                                            @endforeach
+                                                        </span>
+                                                    @endif
+                                                    <span class="shopw-desktop-category-promo-tags">
+                                                        @foreach ($group['promo_tags'] as $tag)
+                                                            <em>{{ $tag }}</em>
+                                                        @endforeach
+                                                    </span>
+                                                </a>
+                                            </aside>
+                                        </div>
+                                    </section>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
                     <div class="shopw-search-shell">
                         <form action="{{ URL::to('/tim-kiem') }}" autocomplete="off" method="POST" class="shopw-search">
                             {{ csrf_field() }}
+                            <span class="shopw-search-rotator is-visible" data-search-rotator aria-hidden="true">
+                                <span class="shopw-search-rotator-prefix">Bạn cần gì?</span>
+                                <span class="shopw-search-rotator-word" data-search-rotator-word>{{ $searchTrendingKeywords->first() ?: 'Laptop gaming' }}</span>
+                            </span>
                             <input type="text" name="keywords_submit" id="keywords"
-                                value="{{ old('keywords_submit') }}" placeholder="Bạn cần tìm gì?">
+                                value="{{ old('keywords_submit') }}"
+                                placeholder="Tìm sản phẩm, thương hiệu, cấu hình..."
+                                data-placeholder-base="Tìm sản phẩm, thương hiệu, cấu hình..."
+                                data-search-trends='@json($searchTrendingKeywords->all())'>
                             <button type="submit" class="shopw-search-btn" aria-label="Tìm kiếm">
                                 <i class="fa fa-search"></i>
                             </button>
                             <div id="search_ajax" class="shopw-search-suggest"></div>
-                            @if ($errors->has('keywords_submit'))
-                                <div class="text-danger" style="margin-top: 8px; font-size: 12px;">
-                                    {{ $errors->first('keywords_submit') }}
-                                </div>
-                            @endif
                         </form>
+                        @if ($errors->has('keywords_submit'))
+                            <div class="shopw-search-error">
+                                {{ $errors->first('keywords_submit') }}
+                            </div>
+                        @endif
                         <div class="shopw-search-hints shopw-search-hints--compact">
                             @foreach ($headerSearchHintLinks as $hint)
                                 <a href="{{ $hint['href'] }}">
@@ -216,31 +926,84 @@
                 <div class="shopw-header-actions">
                     <ul class="shopw-utilities shopw-utilities--desktop shopw-utilities--compact">
                         <li class="shopw-util shopw-hotline">
-                            <a href="tel:{{ $supportPhoneHref }}" title="Hotline {{ $supportPhoneDisplay }}">
+                            <a href="{{ $supportPhoneHref }}" title="Hotline {{ $supportPhoneDisplay }}">
                                 <i class="fa fa-headphones"></i>
                                 <span class="shopw-util-label">{{ $supportPhoneDisplay }}</span>
                             </a>
                         </li>
                         <li class="shopw-util shopw-showroom">
-                            <a href="{{ URL::to('/lien-he') }}" title="{{ config('storefront.labels.utility_store', 'Cửa hàng') }}">
+                            <a href="{{ URL::to('/lien-he') }}" title="{{ config('storefront.labels.utility_store', 'Cửa hàng') }}"
+                                @class(['is-current' => $isContactSection]) @if ($isContactSection) aria-current="page" @endif>
                                 <i class="fa fa-map-marker"></i>
                                 <span class="shopw-util-label">{{ config('storefront.labels.utility_store', 'Cửa hàng') }}</span>
                             </a>
                         </li>
                         <li class="shopw-util cart-hover shopw-cart">
-                            <a href="{{ url('gio-hang') }}" title="Giỏ hàng">
+                            <a href="{{ url('gio-hang') }}" title="Giỏ hàng" @class(['is-current' => $isCartSection])
+                                @if ($isCartSection) aria-current="page" @endif>
                                 <i class="fa fa-shopping-cart"></i>
                                 <span class="shopw-util-label">Giỏ hàng</span>
                                 <span class="show-cart"></span>
                                 <span class="giohang-hover"></span>
                             </a>
                         </li>
-                        <li class="shopw-util shopw-auth">
-                            <a href="{{ $accountUtilityUrl }}" title="{{ $accountUtilityLabel }}">
-                                <i class="fa fa-user"></i>
-                                <span class="shopw-util-label">{{ $accountUtilityLabel }}</span>
-                            </a>
-                        </li>
+                        @if ($isAuthenticatedCustomer)
+                            <li class="shopw-util shopw-auth shopw-auth-menu">
+                                <details class="shopw-account-menu" @if($isAccountSection) open @endif>
+                                    <summary class="shopw-account-summary shopw-account-summary--avatar-only" title="{{ $headerCustomerSummaryTitle }}">
+                                        <span class="shopw-account-avatar">
+                                            @if ($headerCustomerPicture)
+                                                <img src="{{ $headerCustomerPicture }}" alt="{{ $headerCustomerName ?: 'Tài khoản' }}">
+                                            @else
+                                                <span>{{ $headerCustomerInitials }}</span>
+                                            @endif
+                                        </span>
+                                        <span class="shopw-account-caret">
+                                            <i class="fa fa-angle-down"></i>
+                                        </span>
+                                    </summary>
+
+                                    <div class="shopw-account-dropdown">
+                                        <div class="shopw-account-dropdown-head">
+                                            <span class="shopw-account-dropdown-kicker">Tài khoản storefront</span>
+                                            <strong>{{ $headerCustomerName ?: 'Tài khoản của bạn' }}</strong>
+                                            @if ($headerCustomerEmail)
+                                                <small>{{ $headerCustomerEmail }}</small>
+                                            @endif
+                                            @if ($headerCustomerPhone)
+                                                <small>{{ $headerCustomerPhone }}</small>
+                                            @endif
+                                        </div>
+
+                                        <div class="shopw-account-dropdown-links">
+                                            @if ($hasCartInSession)
+                                                <a href="{{ $checkoutUrl }}" class="shopw-account-dropdown-link">
+                                                    <i class="fa fa-credit-card"></i>
+                                                    <span>Tiếp tục thanh toán</span>
+                                                </a>
+                                            @endif
+                                            <a href="{{ url('/history') }}" class="shopw-account-dropdown-link">
+                                                <i class="fa fa-history"></i>
+                                                <span>Đơn hàng của tôi</span>
+                                            </a>
+                                            <a href="{{ url('/dang-xuat-khach-hang?redirect=login') }}"
+                                                class="shopw-account-dropdown-link is-danger">
+                                                <i class="fa fa-sign-out"></i>
+                                                <span>Đăng xuất</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </details>
+                            </li>
+                        @else
+                            <li class="shopw-util shopw-auth">
+                                <a href="{{ $accountUtilityUrl }}" title="{{ $accountUtilityLabel }}"
+                                    @class(['is-current' => $isAccountSection]) @if ($isAccountSection) aria-current="page" @endif>
+                                    <i class="fa fa-user"></i>
+                                    <span class="shopw-util-label">{{ $accountUtilityLabel }}</span>
+                                </a>
+                            </li>
+                        @endif
                     </ul>
                 </div>
             </div>
@@ -264,10 +1027,16 @@
                         <div class="mainmenu pull-left">
                             <ul class="nav navbar-nav shopw-links">
 
-                                <li><a href="{{ URL::to('/trang-chu') }}" class="active">Trang chủ</a></li>
-                                <li class="dropdown shopw-nav-group" id="shopw-nav-group-categories">
+                                <li><a href="{{ URL::to('/trang-chu') }}"
+                                        data-storefront-nav-key="home"
+                                        @class(['active' => $isHomeRoute, 'is-current' => $isHomeRoute])
+                                        @if ($isHomeRoute) aria-current="page" @endif>Trang chủ</a></li>
+                                <li class="dropdown shopw-nav-group {{ $isCategorySection ? 'is-current' : '' }}" id="shopw-nav-group-categories">
                                     <div class="shopw-nav-row">
-                                        <a href="#">
+                                        <a href="{{ $featuredCategoryUrl }}"
+                                            data-storefront-nav-parent="categories"
+                                            @class(['is-current' => $isCategorySection])
+                                            @if ($isCategorySection) aria-current="page" @endif>
                                             <span class="shopw-nav-label">
                                                 <span class="shopw-nav-icon"><i class="fa fa-th-large"></i></span>
                                                 <span class="shopw-nav-text">
@@ -326,9 +1095,12 @@
                                     </ul>
                                 </li>
 
-                                <li class="dropdown shopw-nav-group" id="shopw-nav-group-blogs">
+                                <li class="dropdown shopw-nav-group {{ $isBlogSection ? 'is-current' : '' }}" id="shopw-nav-group-blogs">
                                     <div class="shopw-nav-row">
-                                        <a href="#">
+                                        <a href="{{ $featuredBlogUrl }}"
+                                            data-storefront-nav-parent="blogs"
+                                            @class(['is-current' => $isBlogSection])
+                                            @if ($isBlogSection) aria-current="page" @endif>
                                             <span class="shopw-nav-label">
                                                 <span class="shopw-nav-icon"><i class="fa fa-newspaper-o"></i></span>
                                                 <span class="shopw-nav-text">
@@ -354,7 +1126,10 @@
                                     </ul>
                                 </li>
 
-                                <li><a href="{{ URL::to('/gio-hang') }}">
+                                <li><a href="{{ URL::to('/gio-hang') }}"
+                                            data-storefront-nav-key="cart"
+                                            @class(['active' => $isCartSection, 'is-current' => $isCartSection])
+                                            @if ($isCartSection) aria-current="page" @endif>
                                             <span class="shopw-nav-label">
                                             <span class="shopw-nav-icon"><i class="fa fa-shopping-cart"></i></span>
                                             <span class="shopw-nav-text">
@@ -367,7 +1142,10 @@
 
                                 </li>
 
-                                <li><a href="{{ URL::to('/lien-he') }}">
+                                <li><a href="{{ URL::to('/lien-he') }}"
+                                            data-storefront-nav-key="contact"
+                                            @class(['active' => $isContactSection, 'is-current' => $isContactSection])
+                                            @if ($isContactSection) aria-current="page" @endif>
                                             <span class="shopw-nav-label">
                                             <span class="shopw-nav-icon"><i class="fa fa-headphones"></i></span>
                                             <span class="shopw-nav-text">

@@ -63,10 +63,11 @@ class CartService
         $product = $this->productService->findProductById($productId);
 
         if (! $product) {
-            throw new RuntimeException('Product not found.');
+            throw new RuntimeException('Không tìm thấy sản phẩm.');
         }
 
         $attributeData = $this->resolveAttribute($productId, $attributeId);
+        $availableStock = (int) ($attributeData['stock'] ?? $product->product_quantity ?? 0);
 
         $cart = $this->items();
 
@@ -78,9 +79,12 @@ class CartService
         });
 
         if ($existingKey !== false) {
+            $nextQuantity = (int) ($cart[$existingKey]['product_qty'] ?? 0) + $quantity;
+            $this->ensureAvailableQuantity($availableStock, $nextQuantity, $attributeData['label'] ?? $product->product_name);
+
             $cart[$existingKey]['product_qty'] += $quantity;
             $cart[$existingKey]['product_qty'] = max(1, $cart[$existingKey]['product_qty']);
-            $cart[$existingKey]['product_quantity'] = $attributeData['stock'] ?? $product->product_quantity;
+            $cart[$existingKey]['product_quantity'] = $availableStock;
             $cart[$existingKey]['product_price'] = $pricingData['product_price'];
             $cart[$existingKey]['product_original_price'] = $pricingData['product_original_price'];
             $cart[$existingKey]['product_cost_price'] = $pricingData['product_cost_price'];
@@ -101,6 +105,7 @@ class CartService
         }
 
         $sessionId = Str::random(10);
+        $this->ensureAvailableQuantity($availableStock, $quantity, $attributeData['label'] ?? $product->product_name);
 
         $cart->push([
             'session_id' => $sessionId,
@@ -115,7 +120,7 @@ class CartService
             'product_sale_value' => $pricingData['product_sale_value'],
             'product_sale_amount' => $pricingData['product_sale_amount'],
             'product_qty' => $quantity,
-            'product_quantity' => $attributeData['stock'] ?? $product->product_quantity,
+            'product_quantity' => $availableStock,
             'product_attribute_id' => $attributeId,
             'product_attribute' => $attributeData['label'] ?? null,
             'attribute_label' => $attributeData['label'] ?? null,
@@ -246,7 +251,7 @@ class CartService
             ->first();
 
         if (! $attribute) {
-            throw new RuntimeException('Product attribute not found.');
+            throw new RuntimeException('Không tìm thấy phiên bản sản phẩm.');
         }
 
         return [
@@ -255,6 +260,23 @@ class CartService
             'image' => $attribute->image ?: null,
             'label' => $attribute->name ?: optional($attribute->attribute)->attribute_name,
         ];
+    }
+
+    protected function ensureAvailableQuantity(int $availableStock, int $requestedQuantity, ?string $label = null): void
+    {
+        $itemLabel = trim((string) $label);
+
+        if ($availableStock <= 0) {
+            throw new RuntimeException($itemLabel !== ''
+                ? sprintf('%s hiện đã hết hàng.', $itemLabel)
+                : 'Sản phẩm hiện đã hết hàng.');
+        }
+
+        if ($requestedQuantity > $availableStock) {
+            throw new RuntimeException($itemLabel !== ''
+                ? sprintf('%s chỉ còn %d sản phẩm trong kho.', $itemLabel, $availableStock)
+                : sprintf('Sản phẩm chỉ còn %d sản phẩm trong kho.', $availableStock));
+        }
     }
 
     /**

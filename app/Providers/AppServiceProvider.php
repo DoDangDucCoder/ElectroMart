@@ -52,8 +52,10 @@ use App\Infrastructure\Persistence\Repositories\Checkout\EloquentCouponRepositor
 use App\Infrastructure\Persistence\Repositories\Checkout\EloquentShippingFeeRepository;
 use App\Infrastructure\Persistence\Repositories\Cms\EloquentBlogCategoryRepository;
 use App\Infrastructure\Persistence\Repositories\Cms\EloquentBlogPostRepository;
+use App\Support\DatabaseRuntime;
 use App\Support\AdminPermissions;
 use Illuminate\Support\Facades\Schema;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -62,6 +64,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        DatabaseRuntime::activateLocalFallbacksIfNeeded();
+
         $this->app->bind(CategoryRepositoryInterface::class, EloquentCategoryRepository::class);
         $this->app->bind(BrandRepositoryInterface::class, EloquentBrandRepository::class);
         $this->app->bind(ProductRepositoryInterface::class, EloquentProductRepository::class);
@@ -105,75 +109,131 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         view()->composer('*', function ($view) {
-            $post_footer = collect();
-            $contact_footer = collect();
-            $icons = collect();
-            $icons_doitac = collect();
-            $min_price = 0;
-            $max_price = 0;
-            $app_product = 0;
-            $app_post = 0;
-            $app_order = 0;
-            $app_video = 0;
-            $app_customer = 0;
+            $sharedData = $this->sharedViewDefaults();
 
-            if (Schema::hasTable((new Post())->getTable())) {
-                $post_footer = Post::where('blog_category_id', 7)->get();
-                $app_post = Post::count();
+            if (! DatabaseRuntime::unavailable()) {
+                try {
+                    $post_footer = collect();
+                    $contact_footer = collect();
+                    $icons = collect();
+                    $icons_doitac = collect();
+                    $min_price = 0;
+                    $max_price = 0;
+                    $app_product = 0;
+                    $app_post = 0;
+                    $app_order = 0;
+                    $app_video = 0;
+                    $app_customer = 0;
+
+                    if (Schema::hasTable((new Post())->getTable())) {
+                        $post_footer = Post::where('blog_category_id', 7)->get();
+                        $app_post = Post::count();
+                    }
+
+                    if (Schema::hasTable((new Contact())->getTable())) {
+                        $contact_footer = Contact::where('info_id', 1)->get();
+                    }
+
+                    if (Schema::hasTable((new Icons())->getTable())) {
+                        $icons = Icons::where('category', 'icons')->orderBy('id_icons', 'DESC')->get();
+                        $icons_doitac = Icons::where('category', 'doitac')->orderBy('id_icons', 'DESC')->get();
+                    }
+
+                    if (Schema::hasTable((new Product())->getTable())) {
+                        $min_price = (float) (Product::min('product_price') ?? 0);
+                        $max_price = (float) (Product::max('product_price') ?? 0);
+                        $app_product = Product::count();
+                    }
+
+                    if (Schema::hasTable((new Order())->getTable())) {
+                        $app_order = Order::count();
+                    }
+
+                    if (Schema::hasTable((new Video())->getTable())) {
+                        $app_video = Video::count();
+                    }
+
+                    if (Schema::hasTable((new Customer())->getTable())) {
+                        $app_customer = Customer::count();
+                    }
+
+                    $sharedData = [
+                        'min_price' => $min_price,
+                        'max_price' => $max_price,
+                        'min_price_range' => $min_price + 500000,
+                        'max_price_range' => $max_price + 10000000,
+                        'app_product' => $app_product,
+                        'app_post' => $app_post,
+                        'app_order' => $app_order,
+                        'app_video' => $app_video,
+                        'app_customer' => $app_customer,
+                        'share_image' => '',
+                        'icons' => $icons,
+                        'icons_doitac' => $icons_doitac,
+                        'contact_footer' => $contact_footer,
+                        'post_footer' => $post_footer,
+                    ];
+                } catch (Throwable $e) {
+                    if (! DatabaseRuntime::causedByConnectionFailure($e)) {
+                        throw $e;
+                    }
+
+                    DatabaseRuntime::markUnavailable();
+                }
             }
 
-            if (Schema::hasTable((new Contact())->getTable())) {
-                $contact_footer = Contact::where('info_id', 1)->get();
-            }
-
-            if (Schema::hasTable((new Icons())->getTable())) {
-                $icons = Icons::where('category', 'icons')->orderBy('id_icons', 'DESC')->get();
-                $icons_doitac = Icons::where('category', 'doitac')->orderBy('id_icons', 'DESC')->get();
-            }
-
-            if (Schema::hasTable((new Product())->getTable())) {
-                $min_price = (float) (Product::min('product_price') ?? 0);
-                $max_price = (float) (Product::max('product_price') ?? 0);
-                $app_product = Product::count();
-            }
-
-            if (Schema::hasTable((new Order())->getTable())) {
-                $app_order = Order::count();
-            }
-
-            if (Schema::hasTable((new Video())->getTable())) {
-                $app_video = Video::count();
-            }
-
-            if (Schema::hasTable((new Customer())->getTable())) {
-                $app_customer = Customer::count();
-            }
-
-            $min_price_range = $min_price + 500000;
-            $max_price_range = $max_price + 10000000;
-            $share_image = '';
-
-            $view->with('min_price', $min_price)->with('max_price', $max_price)->with('min_price_range', $min_price_range)->with('max_price_range', $max_price_range)->with('app_product', $app_product)->with('app_post', $app_post)->with('app_order', $app_order)->with('app_video', $app_video)->with('app_customer', $app_customer)->with('share_image', $share_image)->with('icons', $icons)->with('icons_doitac', $icons_doitac)->with('contact_footer', $contact_footer)->with('post_footer', $post_footer);
+            $view->with($sharedData);
         });
 
         view()->composer('partials.admin.sidebar', function ($view) {
-            $admin = auth('web')->user();
             $stats = [
                 'unread_total' => 0,
                 'assigned_total' => 0,
                 'my_unread' => 0,
             ];
 
-            if (
-                $admin
-                && method_exists($admin, 'can')
-                && $admin->can(AdminPermissions::MANAGE_SYSTEM)
-                && Schema::hasTable('chat_conversations')
-            ) {
-                $stats = app(ChatInboxService::class)->sidebarStats($admin);
+            if (! DatabaseRuntime::unavailable()) {
+                try {
+                    $admin = auth('web')->user();
+
+                    if (
+                        $admin
+                        && method_exists($admin, 'can')
+                        && $admin->can(AdminPermissions::MANAGE_SYSTEM)
+                        && app(ChatInboxService::class)->tablesReady()
+                    ) {
+                        $stats = app(ChatInboxService::class)->sidebarStats($admin);
+                    }
+                } catch (Throwable $e) {
+                    if (! DatabaseRuntime::causedByConnectionFailure($e)) {
+                        throw $e;
+                    }
+
+                    DatabaseRuntime::markUnavailable();
+                }
             }
 
             $view->with('admin_chat_sidebar_stats', $stats);
         });
+    }
+
+    protected function sharedViewDefaults(): array
+    {
+        return [
+            'min_price' => 0,
+            'max_price' => 0,
+            'min_price_range' => 500000,
+            'max_price_range' => 10000000,
+            'app_product' => 0,
+            'app_post' => 0,
+            'app_order' => 0,
+            'app_video' => 0,
+            'app_customer' => 0,
+            'share_image' => '',
+            'icons' => collect(),
+            'icons_doitac' => collect(),
+            'contact_footer' => collect(),
+            'post_footer' => collect(),
+        ];
     }
 }

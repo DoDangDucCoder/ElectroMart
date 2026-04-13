@@ -39,6 +39,10 @@
                     <div class="alert alert-success">{{ session('message') }}</div>
                 @endif
 
+                @if (session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
+
                 @if ($errors->any())
                     <div class="alert alert-danger">
                         <ul class="mb-0">
@@ -48,6 +52,8 @@
                         </ul>
                     </div>
                 @endif
+
+                <div id="document_notice" class="alert alert-info" hidden></div>
 
                 @if ($product)
                     <form role="form" action="{{ URL::to('/update-product/' . $product->product_id) }}" method="post"
@@ -94,11 +100,15 @@
                             <input type="file" name="document" id="document"
                                 class="form-control-file @error('document') is-invalid @enderror"
                                 accept=".pdf,.doc,.docx">
+                            <p class="text-muted" style="margin-top:12px;" data-document-empty-state
+                                {{ $product->product_file ? 'hidden' : '' }}>
+                                Không có tài liệu đính kèm.
+                            </p>
                             @if ($product->product_file)
                                 @php
                                     $documentPath = asset('uploads/document/' . $product->product_file);
                                 @endphp
-                                <div class="g-admin-surface" style="margin-top:12px;">
+                                <div class="g-admin-surface" style="margin-top:12px;" data-document-card>
                                     <h3>Tài liệu hiện tại</h3>
                                     <p class="mb-0">
                                         <a target="_blank" href="{{ $documentPath }}">{{ $product->product_file }}</a>
@@ -108,8 +118,6 @@
                                         </button>
                                     </p>
                                 </div>
-                            @else
-                                <p class="text-muted" style="margin-top:12px;">Không có tài liệu đính kèm.</p>
                             @endif
                         </div>
 

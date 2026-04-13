@@ -71,6 +71,8 @@
                         </div>
                     </form>
 
+                    <div id="delivery_notify" style="margin-top:16px;"></div>
+
                     @if ($city->isEmpty())
                         <div class="g-admin-empty-state">
                             Chưa có dữ liệu tỉnh thành để cấu hình phí vận chuyển trên môi trường này.

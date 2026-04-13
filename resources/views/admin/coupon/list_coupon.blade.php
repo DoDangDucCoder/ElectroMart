@@ -4,7 +4,32 @@
     @php
         $couponItems = method_exists($coupon, 'getCollection') ? $coupon->getCollection() : collect($coupon);
         $activeCoupons = $couponItems->where('coupon_status', 1)->count();
-        $expiredCoupons = $couponItems->filter(fn ($item) => $item->coupon_date_end < $today)->count();
+        $todayDate = \Illuminate\Support\Carbon::now('Asia/Ho_Chi_Minh')->startOfDay();
+        $parseCouponDate = static function ($value) {
+            $value = trim((string) $value);
+
+            if ($value === '') {
+                return null;
+            }
+
+            foreach (['d/m/Y', 'Y-m-d'] as $format) {
+                try {
+                    return \Illuminate\Support\Carbon::createFromFormat($format, $value)->startOfDay();
+                } catch (\Throwable) {
+                }
+            }
+
+            try {
+                return \Illuminate\Support\Carbon::parse($value)->startOfDay();
+            } catch (\Throwable) {
+                return null;
+            }
+        };
+        $expiredCoupons = $couponItems->filter(function ($item) use ($parseCouponDate, $todayDate) {
+            $couponEndDate = $parseCouponDate($item->coupon_date_end ?? null);
+
+            return $couponEndDate ? $couponEndDate->lt($todayDate) : false;
+        })->count();
     @endphp
 
     <div class="g-admin-page-shell g-admin-coupon-list">
@@ -58,6 +83,10 @@
                     <div class="alert alert-success">{{ session('message') }}</div>
                 @endif
 
+                @if (session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
+
                 @if ($couponItems->isEmpty())
                     <div class="g-admin-empty-state">Chưa có mã giảm giá nào trên môi trường này.</div>
                 @else
@@ -79,6 +108,14 @@
                             </thead>
                             <tbody>
                                 @foreach ($coupon as $cou)
+                                    @php
+                                        $couponEndDate = $parseCouponDate($cou->coupon_date_end ?? null);
+                                        $couponLocked = (int) ($cou->coupon_status ?? 0) !== 1;
+                                        $couponExpired = ! ($couponEndDate && $couponEndDate->gte($todayDate));
+                                        $campaignBlockedReason = $couponLocked
+                                            ? 'Coupon đang bị khóa'
+                                            : ($couponExpired ? 'Coupon đã hết hạn' : null);
+                                    @endphp
                                     <tr>
                                         <td>
                                             <div class="g-admin-order-line-name">{{ $cou->coupon_name }}</div>
@@ -111,7 +148,7 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if ($cou->coupon_date_end >= $today)
+                                            @if ($couponEndDate && $couponEndDate->gte($todayDate))
                                                 <span class="g-admin-status-chip is-success">Còn hạn</span>
                                             @else
                                                 <span class="g-admin-status-chip is-danger">Đã hết hạn</span>
@@ -129,25 +166,31 @@
                                         </td>
                                         <td>
                                             <div class="g-admin-action-stack">
-                                                <form action="{{ url('/send-coupon-vip', [
-                                                    'coupon_time' => $cou->coupon_time,
-                                                    'coupon_condition' => $cou->coupon_condition,
-                                                    'coupon_number' => $cou->coupon_number,
-                                                    'coupon_code' => $cou->coupon_code,
-                                                ]) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-primary btn-sm">Gửi khách VIP</button>
-                                                </form>
+                                                @if ($campaignBlockedReason)
+                                                    <button type="button" class="btn btn-primary btn-sm" disabled>Gửi khách VIP</button>
+                                                    <button type="button" class="btn btn-default btn-sm" disabled>Gửi khách thường</button>
+                                                    <small class="text-muted">{{ $campaignBlockedReason }}</small>
+                                                @else
+                                                    <form action="{{ url('/send-coupon-vip', [
+                                                        'coupon_time' => $cou->coupon_time,
+                                                        'coupon_condition' => $cou->coupon_condition,
+                                                        'coupon_number' => $cou->coupon_number,
+                                                        'coupon_code' => $cou->coupon_code,
+                                                    ]) }}" method="POST">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-primary btn-sm">Gửi khách VIP</button>
+                                                    </form>
 
-                                                <form action="{{ url('/send-coupon', [
-                                                    'coupon_time' => $cou->coupon_time,
-                                                    'coupon_condition' => $cou->coupon_condition,
-                                                    'coupon_number' => $cou->coupon_number,
-                                                    'coupon_code' => $cou->coupon_code,
-                                                ]) }}" method="POST">
-                                                    @csrf
-                                                    <button type="submit" class="btn btn-default btn-sm">Gửi khách thường</button>
-                                                </form>
+                                                    <form action="{{ url('/send-coupon', [
+                                                        'coupon_time' => $cou->coupon_time,
+                                                        'coupon_condition' => $cou->coupon_condition,
+                                                        'coupon_number' => $cou->coupon_number,
+                                                        'coupon_code' => $cou->coupon_code,
+                                                    ]) }}" method="POST">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-default btn-sm">Gửi khách thường</button>
+                                                    </form>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>

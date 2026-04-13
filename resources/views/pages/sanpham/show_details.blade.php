@@ -30,7 +30,7 @@
         $detailSupportCards = [
             [
                 'icon' => 'fa-truck',
-                'title' => 'Giao nhanh linh hoạt',
+                'title' => 'Giao nhanh',
                 'text' => $stockAvailable
                     ? config('storefront.copy.detail_shipping_in_stock', 'Sản phẩm đang có sẵn để xử lý đơn và giao nhanh trong khung giờ hỗ trợ.')
                     : config('storefront.copy.detail_shipping_out_stock', 'Đăng ký nhận tư vấn để được cập nhật ngay khi hàng về kho.'),
@@ -44,7 +44,7 @@
             ],
             [
                 'icon' => 'fa-comments',
-                'title' => 'Tư vấn trước khi chốt',
+                'title' => 'Tư vấn trước khi mua',
                 'text' => config('storefront.copy.detail_prepurchase_help', 'So sánh sản phẩm, liên hệ nhanh hoặc xem thêm gợi ý phù hợp với nhu cầu hiện tại.'),
             ],
         ];
@@ -184,7 +184,9 @@
                         </div>
                     </div>
 
-                    <div class="shopw-pdp-purchase">
+                    <div class="shopw-pdp-purchase"
+                        data-default-stock="{{ max(0, (int) $product->product_quantity) }}"
+                        data-default-label="{{ $stockAvailable ? 'Thêm giỏ hàng' : 'Tạm hết hàng' }}">
                         @csrf
                         <label for="product-detail-qty" class="shopw-pdp-qty-label">Số lượng</label>
                         <input id="product-detail-qty" name="qty" type="number" min="1"
@@ -193,8 +195,11 @@
                         <button type="button" class="btn btn-default add-to-cart"
                             {{ $stockAvailable ? '' : 'disabled' }}>
                             <i class="fa fa-shopping-cart"></i>
-                            {{ $stockAvailable ? 'Thêm giỏ hàng' : 'Tạm hết hàng' }}
+                            <span class="shopw-pdp-purchase-btn-label">
+                                {{ $stockAvailable ? 'Thêm giỏ hàng' : 'Tạm hết hàng' }}
+                            </span>
                         </button>
+                        <div id="product-detail-purchase-status" class="shopw-pdp-purchase-status" aria-live="polite"></div>
                     </div>
                 </div>
 
@@ -262,8 +267,8 @@
                         <strong>{{ number_format($product->product_quantity) }} sản phẩm</strong>
                     </div>
                     <div class="shopw-pdp-meta-item">
-                        <span>Slug</span>
-                        <strong>{{ $product->product_slug }}</strong>
+                        <span>Hỗ trợ nhanh</span>
+                        <a href="{{ $supportPhoneHref }}">{{ $supportPhoneDisplay }}</a>
                     </div>
                 </div>
 
@@ -325,12 +330,12 @@
                             <span>{{ number_format($rating, 0) }}/5 sao</span>
                         </div>
 
-                        <form>
+                        <div class="shopw-pdp-review-thread-shell">
                             @csrf
                             <input type="hidden" name="comment_product_id" class="comment_product_id"
                                 value="{{ $product->product_id }}">
                             <div id="comment_show" class="shopw-pdp-review-thread"></div>
-                        </form>
+                        </div>
 
                         <div class="shopw-pdp-review-form">
                             <p class="shopw-pdp-block-title">Viết đánh giá của bạn</p>
@@ -347,7 +352,7 @@
                                 @endfor
                             </ul>
 
-                            <form action="#">
+                            <div class="shopw-pdp-review-form-shell">
                                 <div class="shopw-pdp-review-fields">
                                     <input type="text" class="comment_name" placeholder="Tên bình luận" />
                                     <textarea name="comment" class="comment_content" placeholder="Nội dung bình luận"></textarea>
@@ -356,7 +361,7 @@
                                 <button type="button" class="btn btn-default send-comment">
                                     Gửi bình luận
                                 </button>
-                            </form>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -1,4 +1,26 @@
 <script type="text/javascript">
+    window.renderGalleryNotice = function(type, message) {
+        var tone = type === 'error' ? 'danger' : 'success';
+        $('#gallery_notify').html('<span class="text text-' + tone + '">' + message + '</span>');
+    };
+
+    window.resolveGalleryError = function(xhr, fallbackMessage) {
+        if (xhr && xhr.responseJSON) {
+            if (xhr.responseJSON.message) {
+                return xhr.responseJSON.message;
+            }
+
+            if (xhr.responseJSON.errors) {
+                var firstKey = Object.keys(xhr.responseJSON.errors)[0];
+                if (firstKey && xhr.responseJSON.errors[firstKey] && xhr.responseJSON.errors[firstKey][0]) {
+                    return xhr.responseJSON.errors[firstKey][0];
+                }
+            }
+        }
+
+        return fallbackMessage;
+    };
+
     window.load_gallery = function() {
         if (!$('#gallery_load').length || !$('.pro_id').length) {
             return;
@@ -16,6 +38,9 @@
             },
             success: function(data) {
                 $('#gallery_load').html(data);
+            },
+            error: function(xhr) {
+                renderGalleryNotice('error', resolveGalleryError(xhr, 'Không thể tải thư viện ảnh trên môi trường này.'));
             }
         });
     };
@@ -46,8 +71,11 @@
         if (error !== '') {
             $('#file').val('');
             $('#error_gallery').html('<span class="text-danger">' + error + '</span>');
+            renderGalleryNotice('error', 'Dữ liệu ảnh tải lên chưa hợp lệ.');
             return false;
         }
+
+        $('#error_gallery').html('');
     });
 
     $(document).on('blur', '.edit_gal_name', function() {
@@ -65,7 +93,10 @@
             },
             success: function() {
                 load_gallery();
-                $('#error_gallery').html('<span class="text-danger">Cập nhật tên hình ảnh thành công</span>');
+                renderGalleryNotice('success', 'Cập nhật tên hình ảnh thành công.');
+            },
+            error: function(xhr) {
+                renderGalleryNotice('error', resolveGalleryError(xhr, 'Không thể cập nhật tên hình ảnh trên môi trường này.'));
             }
         });
     });
@@ -87,7 +118,10 @@
             },
             success: function() {
                 load_gallery();
-                $('#error_gallery').html('<span class="text-danger">Xóa hình ảnh thành công</span>');
+                renderGalleryNotice('success', 'Xóa hình ảnh thành công.');
+            },
+            error: function(xhr) {
+                renderGalleryNotice('error', resolveGalleryError(xhr, 'Không thể xóa hình ảnh trên môi trường này.'));
             }
         });
     });
@@ -97,7 +131,12 @@
         var fileInput = document.getElementById('file-' + gal_id);
         var form_data = new FormData();
 
-        form_data.append('file', fileInput ? fileInput.files[0] : null);
+        if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+            renderGalleryNotice('error', 'Bạn chưa chọn hình ảnh để cập nhật gallery.');
+            return;
+        }
+
+        form_data.append('file', fileInput.files[0]);
         form_data.append('gal_id', gal_id);
 
         $.ajax({
@@ -112,7 +151,10 @@
             processData: false,
             success: function() {
                 load_gallery();
-                $('#error_gallery').html('<span class="text-danger">Cập nhật hình ảnh thành công</span>');
+                renderGalleryNotice('success', 'Cập nhật hình ảnh thành công.');
+            },
+            error: function(xhr) {
+                renderGalleryNotice('error', resolveGalleryError(xhr, 'Không thể cập nhật hình ảnh trên môi trường này.'));
             }
         });
     });

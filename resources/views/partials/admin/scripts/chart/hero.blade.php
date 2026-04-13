@@ -88,7 +88,7 @@
             xkey: 'period',
             redraw: true,
             ykeys: ['iphone', 'ipad', 'itouch'],
-            labels: ['All Visitors', 'Returning Visitors', 'Unique Visitors'],
+            labels: ['Tổng lượt truy cập', 'Lượt quay lại', 'Khách duy nhất'],
             pointSize: 2,
             hideHover: 'auto',
             resize: true

@@ -12,20 +12,23 @@ class LegacyMailTemplateRenderTest extends TestCase
     public function test_order_confirmation_mail_templates_render_consistently(): void
     {
         config()->set('mail.markdown.theme', 'laravel-shop');
+        $brandName = (string) config('services.storefront_brand.name', 'ShopW');
 
         $html = $this->renderMarkdown('mail.legacy.order-confirmation', [
-            'mailData' => $this->sampleOrderMailData(),
+            'mailData' => $this->sampleOrderMailData($brandName),
         ]);
 
         $this->assertStringContainsString('Xác nhận đơn hàng', $html);
         $this->assertStringContainsString('ORD-TEST-001', $html);
         $this->assertStringContainsString('lịch sử đơn hàng', $html);
         $this->assertStringContainsString('Tổng thanh toán dự kiến', $html);
+        $this->assertStringContainsString($brandName, $html);
     }
 
     public function test_coupon_mail_templates_render_consistently(): void
     {
         config()->set('mail.markdown.theme', 'laravel-shop');
+        $brandName = (string) config('services.storefront_brand.name', 'ShopW');
 
         $payload = [
             'mailData' => new CouponCampaignMailData(
@@ -36,7 +39,7 @@ class LegacyMailTemplateRenderTest extends TestCase
                 startCoupon: '01-03-2026',
                 endCoupon: '31-03-2026',
                 audienceLabel: 'khách hàng thường',
-                shopName: 'Laravel Shop',
+                shopName: $brandName,
                 shopUrl: url('/'),
                 loginUrl: url('/dang-nhap')
             ),
@@ -56,7 +59,7 @@ class LegacyMailTemplateRenderTest extends TestCase
                 startCoupon: '01-03-2026',
                 endCoupon: '31-03-2026',
                 audienceLabel: 'khách hàng thân thiết',
-                shopName: 'Laravel Shop',
+                shopName: $brandName,
                 shopUrl: url('/'),
                 loginUrl: url('/dang-nhap')
             ),
@@ -64,10 +67,10 @@ class LegacyMailTemplateRenderTest extends TestCase
 
         $this->assertStringContainsString('Ưu đãi dành cho khách hàng thân thiết', $vipHtml);
         $this->assertStringContainsString('SPRING15', $vipHtml);
-        $this->assertStringContainsString('Laravel Shop', $vipHtml);
+        $this->assertStringContainsString($brandName, $vipHtml);
     }
 
-    protected function sampleOrderMailData(): OrderConfirmationMailData
+    protected function sampleOrderMailData(string $brandName): OrderConfirmationMailData
     {
         return OrderConfirmationMailData::fromLegacyPayload(
             shipping: [
@@ -96,6 +99,9 @@ class LegacyMailTemplateRenderTest extends TestCase
             code: [
                 'order_code' => 'ORD-TEST-001',
                 'coupon_code' => 'SALE30',
+            ],
+            overrides: [
+                'brandName' => $brandName,
             ],
         );
     }

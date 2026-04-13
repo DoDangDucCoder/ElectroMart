@@ -19,6 +19,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
             'variants.attributeValues.attribute',
         ])
             ->where('slug', $slug)
+            ->where('is_active', true)
             ->first();
     }
 
@@ -42,7 +43,9 @@ class EloquentProductRepository implements ProductRepositoryInterface
     public function paginateByCategorySlug(string $slug, array $filters = [], int $perPage = 12): LengthAwarePaginator
     {
         $query = $this->applyFilters(Product::with(['brand', 'categories']), $filters)
-            ->whereHas('categories', fn (Builder $builder) => $builder->where('slug', $slug));
+            ->whereHas('categories', fn (Builder $builder) => $builder
+                ->where('slug', $slug)
+                ->where('is_active', true));
 
         return $this->applySorting($query, $filters)->paginate($perPage);
     }
@@ -50,7 +53,9 @@ class EloquentProductRepository implements ProductRepositoryInterface
     public function paginateByBrandSlug(string $slug, array $filters = [], int $perPage = 12): LengthAwarePaginator
     {
         $query = $this->applyFilters(Product::with(['brand', 'categories']), $filters)
-            ->whereHas('brand', fn (Builder $builder) => $builder->where('slug', $slug));
+            ->whereHas('brand', fn (Builder $builder) => $builder
+                ->where('slug', $slug)
+                ->where('is_active', true));
 
         return $this->applySorting($query, $filters)->paginate($perPage);
     }
@@ -170,6 +175,14 @@ class EloquentProductRepository implements ProductRepositoryInterface
             $query->where('is_active', true);
         }
 
+        if (array_key_exists('status', $filters)) {
+            $status = $this->normalizeBooleanFilter($filters['status']);
+
+            if ($status !== null) {
+                $query->where('is_active', $status);
+            }
+        }
+
         if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function (Builder $builder) use ($search) {
@@ -179,12 +192,14 @@ class EloquentProductRepository implements ProductRepositoryInterface
             });
         }
 
-        if (! empty($filters['price_min'])) {
-            $query->where('price', '>=', (float) $filters['price_min']);
+        $priceMin = $filters['price_min'] ?? $filters['min_price'] ?? null;
+        if ($priceMin !== null && $priceMin !== '') {
+            $query->where('price', '>=', (float) $priceMin);
         }
 
-        if (! empty($filters['price_max'])) {
-            $query->where('price', '<=', (float) $filters['price_max']);
+        $priceMax = $filters['price_max'] ?? $filters['max_price'] ?? null;
+        if ($priceMax !== null && $priceMax !== '') {
+            $query->where('price', '<=', (float) $priceMax);
         }
 
         if (! empty($filters['category_ids'])) {
@@ -192,8 +207,30 @@ class EloquentProductRepository implements ProductRepositoryInterface
             $query->whereHas('categories', fn (Builder $builder) => $builder->whereIn('id', $categoryIds));
         }
 
+        if (! empty($filters['category'])) {
+            $categorySlug = trim((string) $filters['category']);
+            $query->whereHas('categories', fn (Builder $builder) => $builder
+                ->where('slug', $categorySlug)
+                ->where('is_active', true));
+        }
+
         if (! empty($filters['brand_ids'])) {
             $query->whereIn('brand_id', (array) $filters['brand_ids']);
+        }
+
+        if (! empty($filters['brand'])) {
+            $brandSlug = trim((string) $filters['brand']);
+            $query->whereHas('brand', fn (Builder $builder) => $builder
+                ->where('slug', $brandSlug)
+                ->where('is_active', true));
+        }
+
+        $isFeatured = array_key_exists('is_featured', $filters)
+            ? $this->normalizeBooleanFilter($filters['is_featured'])
+            : $this->normalizeBooleanFilter($filters['featured'] ?? null);
+
+        if ($isFeatured !== null) {
+            $query->where('is_featured', $isFeatured);
         }
 
         return $query;
@@ -207,6 +244,27 @@ class EloquentProductRepository implements ProductRepositoryInterface
             'name_asc' => $query->orderBy('name'),
             'name_desc' => $query->orderByDesc('name'),
             default => $query->orderByDesc('id'),
+        };
+    }
+
+    protected function normalizeBooleanFilter(mixed $value): ?bool
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return (int) $value === 1;
+        }
+
+        return match (strtolower(trim((string) $value))) {
+            '1', 'true', 'yes', 'active', 'featured' => true,
+            '0', 'false', 'no', 'inactive' => false,
+            default => null,
         };
     }
 

@@ -5,9 +5,11 @@ namespace App\Infrastructure\Persistence\Eloquent\Support;
 use App\Infrastructure\Persistence\Eloquent\BaseModel;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Schema;
 
 class ChatConversation extends BaseModel
 {
@@ -44,5 +46,14 @@ class ChatConversation extends BaseModel
     public function latestMessage(): HasOne
     {
         return $this->hasOne(ChatMessage::class, 'conversation_id')->latestOfMany();
+    }
+
+    public function resolveRouteBinding($value, $field = null): ?Model
+    {
+        if (! Schema::hasTable($this->getTable())) {
+            return null;
+        }
+
+        return parent::resolveRouteBinding($value, $field);
     }
 }

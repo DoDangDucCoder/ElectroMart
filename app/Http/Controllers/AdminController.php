@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\StorefrontCustomerAuth;
 use Illuminate\Http\Request;
 use DB;
 use Session;
@@ -18,6 +19,7 @@ use App\Infrastructure\Persistence\Eloquent\Order\Order as StorefrontOrder;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer as StorefrontCustomer;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 use App\Models\Order;
 use App\Http\Requests;
@@ -26,9 +28,11 @@ use App\Support\AdminPermissions;
 
 class AdminController extends Controller
 {
-    public function login_customer_google()
+    public function login_customer_google(Request $request)
     {
         config(['services.google.redirect' => env('GOOGLE_CLIENT_URL')]);
+        StorefrontCustomerAuth::rememberIntendedDestination($request, 'checkout');
+
         return Socialite::driver('google')->redirect();
     }
     public function callback_customer_google()
@@ -37,22 +41,27 @@ class AdminController extends Controller
         config(['services.google.redirect' => env('GOOGLE_CLIENT_URL')]);
 
         $users = Socialite::driver('google')->stateless()->user();
+        $customer = $this->findOrCreateStorefrontSocialCustomer(
+            'google',
+            $this->socialUserId($users),
+            $this->socialUserEmail($users),
+            $this->socialUserName($users),
+            $this->socialUserAvatar($users)
+        );
 
-        $authUser = $this->findOrCreateCustomer($users, 'google');
+        Session::forget(['customer_name', 'customer_picture']);
+        Session::put('customer_id', $customer->id);
+        StorefrontCustomerAuth::storeDisplaySession(
+            $customer->name,
+            $customer->email,
+            $this->socialUserAvatar($users)
+        );
 
-        if ($authUser) {
-            $account_name = Customer::where('customer_id', $authUser->user)->first();
-            Session::put('customer_id', $account_name->customer_id);
-            Session::put('customer_picture', $account_name->customer_picture);
-            Session::put('customer_name', $account_name->customer_name);
-        } elseif ($customer_new) {
-            $account_name = Customer::where('customer_id', $authUser->user)->first();
-            Session::put('customer_id', $account_name->customer_id);
-            Session::put('customer_picture', $account_name->customer_picture);
-            Session::put('customer_name', $account_name->customer_name);
-        }
+        $redirectUrl = StorefrontCustomerAuth::pullIntendedUrl('checkout');
+        $redirectKey = StorefrontCustomerAuth::pullIntendedRedirect('checkout');
 
-        return redirect('/dang-nhap')->with('message', 'Đăng nhập bằng tài khoản google <span style="color:red">' . $account_name->customer_email . '</span> thành công');
+        return redirect($redirectUrl ?: StorefrontCustomerAuth::destinationUrl($redirectKey, 'checkout'))
+            ->with('message', 'Đăng nhập bằng tài khoản Google thành công.');
     }
     public function findOrCreateCustomer($users, $provider)
     {
@@ -85,9 +94,11 @@ class AdminController extends Controller
             return $customer_new;
         }
     }
-    public function login_facebook_customer()
+    public function login_facebook_customer(Request $request)
     {
         config(['services.facebook.redirect' => env('FACEBOOK_CLIENT_REDIRECT')]);
+        StorefrontCustomerAuth::rememberIntendedDestination($request, 'checkout');
+
         return Socialite::driver('facebook')->redirect();
     }
     public function callback_facebook_customer()
@@ -95,43 +106,27 @@ class AdminController extends Controller
         config(['services.facebook.redirect' => env('FACEBOOK_CLIENT_REDIRECT')]);
         $provider = Socialite::driver('facebook')->user();
 
-        $account = SocialCustomers::where('provider', 'facebook')->where('provider_user_id', $provider->getId())->first();
+        $customer = $this->findOrCreateStorefrontSocialCustomer(
+            'facebook',
+            $this->socialUserId($provider),
+            $this->socialUserEmail($provider),
+            $this->socialUserName($provider),
+            $this->socialUserAvatar($provider)
+        );
 
-        if ($account != NULL) {
+        Session::forget(['customer_name', 'customer_picture']);
+        Session::put('customer_id', $customer->id);
+        StorefrontCustomerAuth::storeDisplaySession(
+            $customer->name,
+            $customer->email,
+            $this->socialUserAvatar($provider)
+        );
 
-            $account_name = Customer::where('customer_id', $account->user)->first();
-            Session::put('customer_id', $account_name->customer_id);
-            Session::put('customer_name', $account_name->customer_name);
+        $redirectUrl = StorefrontCustomerAuth::pullIntendedUrl('checkout');
+        $redirectKey = StorefrontCustomerAuth::pullIntendedRedirect('checkout');
 
-            return redirect('/dang-nhap')->with('message', 'Đăng nhập bằng tài khoản facebook <span style="color:red">' . $account_name->customer_email . '</span> thành công');
-        } elseif ($account == NULL) {
-            $customer_login = new SocialCustomers([
-                'provider_user_id' => $provider->getId(),
-                'provider_user_email' => $provider->getEmail(),
-                'provider' => 'facebook'
-            ]);
-
-            $customer = Customer::where('customer_email', $provider->getEmail())->first();
-
-            if (!$customer) {
-                $customer = Customer::create([
-                    'customer_name' => $provider->getName(),
-                    'customer_email' => $provider->getEmail(),
-                    'customer_picture' => '',
-                    'customer_password' => '',
-                    'customer_phone' => ''
-                ]);
-            }
-            $customer_login->customer()->associate($customer);
-            $customer_login->save();
-
-            $account_new = Customer::where('customer_id', $customer_login->user)->first();
-            Session::put('customer_id', $account_new->customer_id);
-            Session::put('customer_name', $account_new->customer_name);
-
-
-            return redirect('/dang-nhap')->with('message', 'Đăng nhập bằng tài khoản facebook <span style="color:red">' . $account_new->customer_email . '</span> thành công');
-        }
+        return redirect($redirectUrl ?: StorefrontCustomerAuth::destinationUrl($redirectKey, 'checkout'))
+            ->with('message', 'Đăng nhập bằng tài khoản Facebook thành công.');
     }
     public function show_dashboard(Request $request)
     {
@@ -154,20 +149,23 @@ class AdminController extends Controller
         $visitors_total = 0;
 
         if (Schema::hasTable((new Visitors())->getTable())) {
+            $visitorRecordedToday = Visitors::query()
+                ->where('ip_address', $user_ip_address)
+                ->where('date_visitor', $now)
+                ->exists();
+
+            if (! $visitorRecordedToday) {
+                $visitor = new Visitors();
+                $visitor->ip_address = $user_ip_address;
+                $visitor->date_visitor = $now;
+                $visitor->save();
+            }
+
             $visitor_last_month_count = Visitors::whereBetween('date_visitor', [$early_last_month, $end_of_last_month])->count();
             $visitor_this_month_count = Visitors::whereBetween('date_visitor', [$early_this_month, $now])->count();
             $visitor_year_count = Visitors::whereBetween('date_visitor', [$oneyears, $now])->count();
             $visitors_total = Visitors::count();
-            $visitor_count = Visitors::where('ip_address', $user_ip_address)->count();
-
-            if ($visitor_count < 1) {
-                $visitor = new Visitors();
-                $visitor->ip_address = $user_ip_address;
-                $visitor->date_visitor = Carbon::now('Asia/Ho_Chi_Minh')->toDateString();
-                $visitor->save();
-                $visitor_count = 1;
-                $visitors_total++;
-            }
+            $visitor_count = 1;
         }
 
         $product = $this->dashboardProductCount();
@@ -190,7 +188,7 @@ class AdminController extends Controller
         if (
             $request->user('web')
             && $request->user('web')->can(AdminPermissions::MANAGE_SYSTEM)
-            && Schema::hasTable('chat_conversations')
+            && app(ChatInboxService::class)->tablesReady()
         ) {
             $chat_inbox_stats = app(ChatInboxService::class)->sidebarStats($request->user('web'));
         }
@@ -247,8 +245,6 @@ class AdminController extends Controller
             return response()->json([]);
         }
 
-        $data = $request->all();
-
         // $today = Carbon::now('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
         // $tomorrow = Carbon::now('Asia/Ho_Chi_Minh')->addDay()->format('d-m-Y H:i:s');
         // $lastWeek = Carbon::now('Asia/Ho_Chi_Minh')->subWeek()->format('d-m-Y H:i:s');
@@ -269,17 +265,18 @@ class AdminController extends Controller
 
 
         $now = Carbon::now('Asia/Ho_Chi_Minh')->toDateString();
+        $dashboardValue = (string) $request->input('dashboard_value', '365ngayqua');
 
-        if ($data['dashboard_value'] == '7ngay') {
+        if ($dashboardValue == '7ngay') {
 
             $get = Statistic::whereBetween('order_date', [$sub7days, $now])->orderBy('order_date', 'ASC')->get();
-        } elseif ($data['dashboard_value'] == 'thangtruoc') {
+        } elseif ($dashboardValue == 'thangtruoc') {
 
             $get = Statistic::whereBetween('order_date', [$dau_thangtruoc, $cuoi_thangtruoc])->orderBy('order_date', 'ASC')->get();
-        } elseif ($data['dashboard_value'] == 'thangnay') {
+        } elseif ($dashboardValue == 'thangnay') {
 
             $get = Statistic::whereBetween('order_date', [$dauthangnay, $now])->orderBy('order_date', 'ASC')->get();
-        } elseif ($data['dashboard_value'] == 'thang9') {
+        } elseif ($dashboardValue == 'thang9') {
 
             $get = Statistic::whereBetween('order_date', [$dauthang9, $cuoithang9])->orderBy('order_date', 'ASC')->get();
         } else {
@@ -307,10 +304,16 @@ class AdminController extends Controller
             return response()->json([]);
         }
 
-        $data = $request->all();
+        $from_date = $this->normalizeAdminDateInput($request->input('from_date'));
+        $to_date = $this->normalizeAdminDateInput($request->input('to_date'));
 
-        $from_date = $data['from_date'];
-        $to_date = $data['to_date'];
+        if (! $from_date || ! $to_date) {
+            return response()->json([]);
+        }
+
+        if ($from_date > $to_date) {
+            [$from_date, $to_date] = [$to_date, $from_date];
+        }
 
         $get = Statistic::whereBetween('order_date', [$from_date, $to_date])->orderBy('order_date', 'ASC')->get();
 
@@ -332,7 +335,7 @@ class AdminController extends Controller
     }
     public function order_date(Request $request)
     {
-        $order_date = $request->query('date');
+        $order_date = $this->normalizeAdminDateInput($request->query('date'));
 
         if (! $order_date) {
             return view('admin.order_date')->with(['order' => collect()]);
@@ -345,6 +348,28 @@ class AdminController extends Controller
 
         $order = Order::where('order_date', $order_date)->orderby('created_at', 'DESC')->get();
         return view('admin.order_date')->with(compact('order'));
+    }
+
+    protected function normalizeAdminDateInput(mixed $value): ?string
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        foreach (['Y-m-d', 'd/m/Y', 'd-m-Y'] as $format) {
+            try {
+                return Carbon::createFromFormat($format, $value, 'Asia/Ho_Chi_Minh')->toDateString();
+            } catch (\Throwable) {
+            }
+        }
+
+        try {
+            return Carbon::parse($value, 'Asia/Ho_Chi_Minh')->toDateString();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     protected function dashboardProductCount(): int
@@ -428,5 +453,100 @@ class AdminController extends Controller
         }
 
         return collect();
+    }
+
+    protected function findOrCreateStorefrontSocialCustomer(
+        string $provider,
+        string $providerUserId,
+        ?string $email,
+        ?string $name,
+        ?string $avatar
+    ): StorefrontCustomer {
+        $provider = strtolower($provider);
+        $socialAccount = SocialCustomers::query()
+            ->whereRaw('LOWER(provider) = ?', [$provider])
+            ->where('provider_user_id', $providerUserId)
+            ->first();
+
+        $email = trim((string) $email);
+        if ($email === '') {
+            $email = $provider . '-' . $providerUserId . '@social.shopw.local';
+        }
+
+        $customer = $socialAccount
+            ? StorefrontCustomer::query()->find($socialAccount->user)
+            : null;
+
+        if (! $customer) {
+            $customer = StorefrontCustomer::query()->firstOrCreate(
+                ['email' => $email],
+                [
+                    'name' => $name ?: 'Khách hàng ' . ucfirst($provider),
+                    'password' => bcrypt(Str::random(32)),
+                    'phone' => null,
+                    'is_active' => true,
+                    'meta' => [
+                        'social_auth' => [
+                            'provider' => $provider,
+                            'provider_user_id' => $providerUserId,
+                            'avatar' => $avatar,
+                        ],
+                    ],
+                ]
+            );
+        }
+
+        $meta = (array) ($customer->meta ?? []);
+        $meta['social_auth'] = array_filter([
+            'provider' => $provider,
+            'provider_user_id' => $providerUserId,
+            'avatar' => $avatar,
+        ], fn ($value) => $value !== null && $value !== '');
+
+        $customer->forceFill([
+            'name' => $customer->name ?: ($name ?: 'Khách hàng ' . ucfirst($provider)),
+            'email' => $customer->email ?: $email,
+            'is_active' => true,
+            'meta' => $meta,
+        ])->save();
+
+        $socialAccount = $socialAccount ?: new SocialCustomers();
+        $socialAccount->provider_user_id = $providerUserId;
+        $socialAccount->provider_user_email = $email;
+        $socialAccount->provider = $provider;
+        $socialAccount->user = $customer->id;
+        $socialAccount->save();
+
+        return $customer;
+    }
+
+    protected function socialUserId(object $providerUser): string
+    {
+        return (string) (
+            $providerUser->getId()
+            ?? $providerUser->id
+            ?? ''
+        );
+    }
+
+    protected function socialUserEmail(object $providerUser): ?string
+    {
+        return $providerUser->getEmail()
+            ?? $providerUser->email
+            ?? null;
+    }
+
+    protected function socialUserName(object $providerUser): ?string
+    {
+        return $providerUser->getName()
+            ?? $providerUser->name
+            ?? null;
+    }
+
+    protected function socialUserAvatar(object $providerUser): ?string
+    {
+        return $providerUser->getAvatar()
+            ?? $providerUser->avatar
+            ?? null;
     }
 }

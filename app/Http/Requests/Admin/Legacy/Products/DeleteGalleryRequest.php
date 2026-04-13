@@ -19,4 +19,11 @@ class DeleteGalleryRequest extends BaseFormRequest
             'gal_id' => $galleryRules,
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'gal_id.exists' => 'Không tìm thấy ảnh trong thư viện cần xóa.',
+        ];
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Application\Catalog\Services;
 
+use App\Application\Shared\Services\CacheService;
 use App\Domain\Catalog\Repositories\CategoryRepositoryInterface;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -12,6 +13,7 @@ class CategoryService
 {
     public function __construct(
         private readonly CategoryRepositoryInterface $categories,
+        private readonly CacheService $cache,
     ) {
     }
 
@@ -70,29 +72,49 @@ class CategoryService
     {
         $payload = $this->preparePayload($data);
 
-        return $this->categories->create($payload);
+        $category = $this->categories->create($payload);
+        $this->cache->invalidateCategoryCache($category->id);
+
+        return $category;
     }
 
     public function update(ProductCategory $category, array $data): ProductCategory
     {
+        $previousSlug = $category->slug;
         $payload = $this->preparePayload($data, $category);
 
-        return $this->categories->update($category, $payload);
+        $updated = $this->categories->update($category, $payload);
+        $this->cache->invalidateCategoryCache($updated->id, [
+            'category_slugs' => [$previousSlug],
+        ]);
+
+        return $updated;
     }
 
     public function delete(ProductCategory $category): void
     {
+        $categoryId = $category->id;
+        $previousSlug = $category->slug;
         $this->categories->delete($category);
+        $this->cache->invalidateCategoryCache($categoryId, [
+            'category_slugs' => [$previousSlug],
+        ]);
     }
 
     public function updateStatus(ProductCategory $category, bool $isActive): ProductCategory
     {
-        return $this->categories->setStatus($category, $isActive);
+        $updated = $this->categories->setStatus($category, $isActive);
+        $this->cache->invalidateCategoryCache($updated->id, [
+            'category_slugs' => [$category->slug],
+        ]);
+
+        return $updated;
     }
 
     public function reorder(array $orderedIds): void
     {
         $this->categories->reorder($orderedIds);
+        $this->cache->invalidateCategoryCache((int) ($orderedIds[0] ?? 0));
     }
 
     public function findActiveBySlug(string $slug): ?ProductCategory

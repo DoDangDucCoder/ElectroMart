@@ -1,75 +1,95 @@
-<!DOCTYPE html>
-<html lang="vi">
+@extends('admin.custom_auth.layout')
 
-<head>
-    <meta charset="utf-8">
-    <title>Đăng ký quản trị</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="{{ asset('backend/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('backend/css/font-awesome.css') }}">
-    <style>
-        body {
-            min-height: 100vh;
-            margin: 0;
-            font-family: "Helvetica Neue", Arial, sans-serif;
-            background: linear-gradient(135deg, #0f1f34, #173454 55%, #224b73);
-            color: #11233b;
-            display: grid;
-            place-items: center;
-            padding: 24px;
-        }
+@section('title', 'Đăng ký quản trị')
+@section('hero_title', 'Tạo tài khoản cho khu vực quản trị')
+@section('hero_copy', 'Khởi tạo tài khoản quản trị đầu tiên hoặc đăng ký thêm tài khoản vận hành mới theo mã cấp quyền của hệ thống.')
+@section('form_title', 'Đăng ký tài khoản')
+@section('form_intro', $adminAuthBootstrapMode
+    ? 'Hệ thống hiện chưa có tài khoản quản trị nào. Tài khoản đầu tiên sẽ được dùng để khởi tạo quyền điều hành.'
+    : 'Điền thông tin tài khoản mới. Nếu hệ thống yêu cầu, hãy nhập mã cấp quyền quản trị được cấp cho bạn.')
 
-        .admin-auth-disabled {
-            width: min(100%, 560px);
-            background: rgba(255, 255, 255, 0.97);
-            border-radius: 24px;
-            padding: 36px 32px;
-            text-align: center;
-            box-shadow: 0 24px 60px rgba(5, 18, 34, 0.32);
-        }
+@section('hero_notes')
+    <li><i class="fa fa-check-circle"></i><span>Tài khoản đầu tiên sẽ được gán vai trò <strong>Super Admin</strong> để khởi tạo hệ thống.</span></li>
+    <li><i class="fa fa-check-circle"></i><span>Các tài khoản đăng ký sau đó mặc định nhận vai trò <strong>{{ $adminAuthRegistrationRole }}</strong>.</span></li>
+    <li><i class="fa fa-check-circle"></i><span>Quản trị viên hiện tại vẫn có thể đổi vai trò hoặc phân quyền chi tiết sau khi bạn đăng ký.</span></li>
+@endsection
 
-        .admin-auth-disabled .icon {
-            width: 72px;
-            height: 72px;
-            margin: 0 auto 18px;
-            border-radius: 50%;
-            display: grid;
-            place-items: center;
-            font-size: 28px;
-            color: #0f5ed7;
-            background: rgba(15, 94, 215, 0.12);
-        }
-
-        .admin-auth-disabled h1 {
-            margin: 0 0 12px;
-            font-size: 30px;
-            line-height: 1.2;
-        }
-
-        .admin-auth-disabled p {
-            margin: 0 0 12px;
-            color: #5f748f;
-            line-height: 1.7;
-        }
-
-        .admin-auth-disabled a {
-            color: #0f5ed7;
-            font-weight: 700;
-            text-decoration: none;
-        }
-    </style>
-</head>
-
-<body>
-    <section class="admin-auth-disabled">
-        <div class="icon">
-            <i class="fa fa-lock"></i>
+@section('form_body')
+    @if (! empty($adminAuthDatabaseUnavailable))
+        <div class="admin-auth-meta">
+            <strong>Chưa thể tạo tài khoản quản trị.</strong>
+            <div>Hệ thống đang không kết nối được cơ sở dữ liệu nên không thể kiểm tra email, vai trò hoặc lưu tài khoản mới.</div>
         </div>
-        <h1>Đăng ký quản trị đã bị vô hiệu hóa</h1>
-        <p>Tài khoản quản trị mới không thể tự đăng ký công khai trên hệ thống.</p>
-        <p>Nếu cần cấp quyền truy cập, hãy liên hệ quản trị viên hệ thống hiện tại.</p>
-        <p><a href="{{ url('/admin') }}">Quay lại màn hình đăng nhập quản trị</a></p>
-    </section>
-</body>
+    @elseif (! $adminAuthRegistrationEnabled)
+        <div class="admin-auth-meta">
+            <strong>Đăng ký quản trị hiện chưa sẵn sàng.</strong>
+            <div>
+                @if ($adminAuthBootstrapMode)
+                    Hệ thống đang tạm tắt đăng ký quản trị đầu tiên. Hãy kiểm tra lại cấu hình trước khi tiếp tục.
+                @else
+                    Hệ thống cần được cấu hình <code>ADMIN_REGISTRATION_CODE</code> để cấp thêm tài khoản quản trị mới.
+                @endif
+            </div>
+        </div>
+    @else
+        <form action="{{ route('admin.register.store') }}" method="post" novalidate class="admin-auth-grid">
+            @csrf
 
-</html>
+            <div class="admin-auth-grid admin-auth-grid--double">
+                <div class="form-group">
+                    <label for="name">Tên quản trị viên</label>
+                    <input type="text" class="form-control" id="name" name="name"
+                        value="{{ old('name') }}" placeholder="Nguyen Van A" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Số điện thoại</label>
+                    <input type="text" class="form-control" id="phone" name="phone"
+                        value="{{ old('phone') }}" placeholder="0909xxxxxx">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email quản trị</label>
+                <input type="email" class="form-control" id="email" name="email"
+                    value="{{ old('email') }}" placeholder="quantri@congty.com" required>
+            </div>
+
+            @if ($adminAuthRequiresRegistrationCode)
+                <div class="form-group">
+                    <label for="registration_code">Mã cấp quyền đăng ký</label>
+                    <input type="password" class="form-control" id="registration_code" name="registration_code"
+                        placeholder="Nhập mã cấp quyền do quản trị viên cung cấp" required>
+                </div>
+            @endif
+
+            <div class="admin-auth-grid admin-auth-grid--double">
+                <div class="form-group">
+                    <label for="password">Mật khẩu</label>
+                    <input type="password" class="form-control" id="password" name="password"
+                        placeholder="Ít nhất 8 ký tự" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password_confirmation">Xác nhận mật khẩu</label>
+                    <input type="password" class="form-control" id="password_confirmation" name="password_confirmation"
+                        placeholder="Nhập lại mật khẩu" required>
+                </div>
+            </div>
+
+            <div class="admin-auth-meta">
+                <strong>Vai trò dự kiến:</strong> {{ $adminAuthRegistrationRole }}<br>
+                @if ($adminAuthBootstrapMode)
+                    Tài khoản này sẽ được dùng để hoàn tất bước khởi tạo quyền quản trị đầu tiên.
+                @else
+                    Sau khi tạo tài khoản, bạn có thể đăng nhập ngay và quản trị viên cấp cao hơn vẫn có thể điều chỉnh quyền sau đó.
+                @endif
+            </div>
+
+            <div class="admin-auth-link-row">
+                <button type="submit" class="btn btn-primary">Tạo tài khoản quản trị</button>
+                <a href="{{ route('admin.login') }}" class="admin-auth-link">Quay lại đăng nhập</a>
+            </div>
+        </form>
+    @endif
+@endsection

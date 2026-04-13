@@ -35,7 +35,13 @@
                     <td contenteditable data-video_id="{{ $videoId }}" data-video_type="video_link" class="video_edit" id="video_link_{{ $videoId }}">{{ $videoLink }}</td>
                     <td contenteditable data-video_id="{{ $videoId }}" data-video_type="video_desc" class="video_edit" id="video_desc_{{ $videoId }}">{{ $videoDesc }}</td>
                     <td>
-                        <iframe width="200" height="200" src="https://www.youtube.com/embed/{{ $youtubeId }}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        @if ($youtubeId !== '')
+                            <iframe width="200" height="200" src="https://www.youtube.com/embed/{{ $youtubeId }}" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        @else
+                            <div class="g-admin-empty-state g-admin-video-preview-empty">
+                                Chưa có link xem trước hợp lệ.
+                            </div>
+                        @endif
                     </td>
                     <td>
                         <button type="button" data-video_id="{{ $videoId }}" class="btn btn-xs btn-danger btn-delete-video">Xóa video</button>

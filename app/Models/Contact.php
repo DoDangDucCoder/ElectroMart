@@ -11,6 +11,7 @@ class Contact extends Model
         'info_contact',
         'info_map',
         'info_logo',
+        'slogan_logo',
         'info_fanpage'
     ];
     protected $primaryKey = 'info_id';

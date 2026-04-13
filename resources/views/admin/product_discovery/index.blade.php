@@ -28,6 +28,13 @@
                 </div>
             </header>
             <div class="g-admin-panel-body">
+                @if (($discovery_tables_ready['search_queries'] ?? true) === false || ($discovery_tables_ready['recommendation_impressions'] ?? true) === false)
+                    <div class="alert alert-warning">
+                        Một phần dữ liệu analytics chưa sẵn sàng trên cơ sở dữ liệu hiện tại.
+                        Báo cáo đang hiển thị ở chế độ an toàn với các khối chưa có bảng dữ liệu sẽ để trống.
+                    </div>
+                @endif
+
                 <form method="GET" action="{{ url('/product-discovery-report') }}" class="g-admin-report-toolbar">
                     <div class="form-group">
                         <label for="date_from">Từ ngày</label>

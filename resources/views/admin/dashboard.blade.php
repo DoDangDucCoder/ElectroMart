@@ -88,7 +88,7 @@
                                 <option value="7ngay">7 ngày qua</option>
                                 <option value="thangtruoc">Tháng trước</option>
                                 <option value="thangnay">Tháng này</option>
-                                <option value="365ngayqua">365 ngày qua</option>
+                                <option value="365ngayqua" selected>365 ngày qua</option>
                             </select>
                         </div>
                     </div>
@@ -98,6 +98,7 @@
                     </div>
                 </form>
 
+                <div id="dashboard_chart_notice" class="alert alert-info" hidden></div>
                 <div id="chart" class="g-admin-chart-stage" style="height: 280px;"></div>
             </div>
         </section>

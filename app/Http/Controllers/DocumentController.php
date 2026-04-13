@@ -80,8 +80,9 @@ class DocumentController extends Controller
     {
         try {
             $disk = $this->documentDisk();
+            $root = $this->managedDocumentRoot();
 
-            return collect($disk->allFiles())
+            return collect($disk->allFiles($root))
                 ->map(function (string $path) use ($disk) {
                     $mimeType = $this->safeMimeType($path);
                     $size = $this->safeSize($path);
@@ -192,5 +193,10 @@ class DocumentController extends Controller
     {
         return $this->collectDocuments()
             ->contains(fn (array $document) => ($document['path'] ?? null) === $path);
+    }
+
+    protected function managedDocumentRoot(): string
+    {
+        return 'documents';
     }
 }

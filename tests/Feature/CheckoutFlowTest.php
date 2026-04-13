@@ -59,7 +59,11 @@ class CheckoutFlowTest extends TestCase
             ->assertSee('shipping_email')
             ->assertSee('calculate_delivery')
             ->assertSee('send_order')
-            ->assertSee('Tóm tắt đơn hàng');
+            ->assertSee('Tóm tắt đơn hàng')
+            ->assertSee('data-checkout-fee-display="hero"', false)
+            ->assertSee('data-checkout-grand-total-display="summary"', false)
+            ->assertSee('checkout_delivery_notice', false)
+            ->assertSee('checkout_base_total', false);
 
         [$city, $province, $ward] = Location::query()->orderBy('id')->get()->values()->all();
 
@@ -117,6 +121,32 @@ class CheckoutFlowTest extends TestCase
         $this->assertNull($this->couponService->current());
     }
 
+    public function test_guest_is_redirected_to_login_before_accessing_checkout_steps(): void
+    {
+        $this->cartService->addItem($this->productId, 1);
+
+        $this->get('/checkout')
+            ->assertRedirect('/dang-nhap?redirect=checkout')
+            ->assertSessionHas('error', 'Vui lòng đăng nhập để tiếp tục thanh toán.');
+
+        $this->get('/payment')
+            ->assertRedirect('/dang-nhap?redirect=payment')
+            ->assertSessionHas('error', 'Vui lòng đăng nhập để tiếp tục thanh toán.');
+    }
+
+    public function test_stale_customer_session_is_redirected_back_to_login_before_checkout(): void
+    {
+        $this->cartService->addItem($this->productId, 1);
+
+        Session::put('customer_id', 999999);
+
+        $this->get('/checkout')
+            ->assertRedirect('/dang-nhap?redirect=checkout')
+            ->assertSessionHas('error', 'Vui lòng đăng nhập để tiếp tục thanh toán.');
+
+        $this->assertNull(session('customer_id'));
+    }
+
     public function test_checkout_endpoints_validate_invalid_payloads(): void
     {
         $this->postJson('/calculate-fee', [
@@ -152,7 +182,7 @@ class CheckoutFlowTest extends TestCase
             'shipping_method' => 'cod',
         ])->assertStatus(401)
             ->assertJson([
-                'message' => 'Please sign in before placing an order.',
+                'message' => 'Vui lòng đăng nhập trước khi đặt hàng.',
             ]);
 
         Session::put('customer_id', 999999);
@@ -165,7 +195,7 @@ class CheckoutFlowTest extends TestCase
             'shipping_method' => 'cod',
         ])->assertStatus(401)
             ->assertJson([
-                'message' => 'Please sign in before placing an order.',
+                'message' => 'Vui lòng đăng nhập trước khi đặt hàng.',
             ]);
     }
 
@@ -204,12 +234,14 @@ class CheckoutFlowTest extends TestCase
             'action' => 'city',
             'ma_id' => $city->id,
         ])->assertOk()
+            ->assertSee('--- Chọn quận / huyện ---')
             ->assertSee('District Test');
 
         $this->post('/select-delivery-home', [
             'action' => 'province',
             'ma_id' => $province->id,
         ])->assertOk()
+            ->assertSee('--- Chọn phường / xã ---')
             ->assertSee('Ward Test');
 
         $this->postJson('/select-delivery-home', [

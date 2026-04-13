@@ -18,7 +18,13 @@
 
         @if (session('message'))
             <div class="alert alert-success">{{ session('message') }}</div>
+        @elseif (session('error'))
+            <div class="alert alert-danger">{{ session('error') }}</div>
         @endif
+
+        @unless ($attributeTableReady ?? true)
+            <div class="alert alert-warning">Bảng thuộc tính nền chưa sẵn sàng trên môi trường này. Danh sách đang được hiển thị ở trạng thái rỗng an toàn.</div>
+        @endunless
 
         <section class="g-admin-panel-card">
             <header class="g-admin-panel-head">

@@ -3,6 +3,7 @@
 namespace App\Application\Catalog\Services;
 
 use App\Domain\Catalog\Repositories\ProductRepositoryInterface;
+use App\Application\Shared\Services\CacheService;
 use App\Application\Shared\Services\ProductSearchService;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -20,7 +21,8 @@ class ProductService
         private readonly ProductSearchService $search,
         private readonly ProductRecommendationService $recommendations,
         private readonly ProductViewTrackingService $productViews,
-        private readonly ProductDiscoveryTrackingService $discoveryTracking
+        private readonly ProductDiscoveryTrackingService $discoveryTracking,
+        private readonly CacheService $cache
     ) {
     }
 
@@ -206,13 +208,18 @@ class ProductService
                 $this->replicateToLegacyGallery($imagePath);
             }
 
-            return $product->fresh(['brand', 'categories', 'media']);
+            $product = $product->fresh(['brand', 'categories', 'media']);
+            $this->cache->invalidateProductCache($product->id);
+
+            return $product;
         });
     }
 
     public function updateProduct(Product $product, array $data, ?UploadedFile $image = null, ?UploadedFile $document = null): Product
     {
-        return DB::transaction(function () use ($product, $data, $image, $document) {
+        $cacheContext = $this->captureCacheContext($product);
+
+        $updated = DB::transaction(function () use ($product, $data, $image, $document) {
             $resolvedPrice = (float) ($data['price'] ?? $product->price);
             $pricingPayload = $this->pricing->derivePricingPayload(
                 $resolvedPrice,
@@ -291,15 +298,24 @@ class ProductService
 
             return $updated->fresh(['brand', 'categories', 'media']);
         });
+
+        $this->cache->invalidateProductCache($updated->id, $cacheContext);
+
+        return $updated;
     }
 
     public function setProductStatus(Product $product, bool $isActive): Product
     {
-        return $this->products->setStatus($product, $isActive);
+        $updated = $this->products->setStatus($product, $isActive);
+        $this->cache->invalidateProductCache($updated->id);
+
+        return $updated;
     }
 
     public function deleteProduct(Product $product): void
     {
+        $cacheContext = $this->captureCacheContext($product);
+
         DB::transaction(function () use ($product) {
             $meta = $product->meta ?? [];
 
@@ -320,6 +336,8 @@ class ProductService
 
             $this->products->delete($product);
         });
+
+        $this->cache->invalidateProductCache($product->id, $cacheContext);
     }
 
     public function removeProductDocument(Product $product): Product
@@ -418,5 +436,16 @@ class ProductService
         if (File::exists($source)) {
             File::copy($source, $destination);
         }
+    }
+
+    protected function captureCacheContext(Product $product): array
+    {
+        $product->loadMissing(['brand', 'categories']);
+
+        return [
+            'product_slugs' => array_filter([$product->slug]),
+            'category_slugs' => $product->categories->pluck('slug')->filter()->values()->all(),
+            'brand_slugs' => array_filter([$product->brand?->slug]),
+        ];
     }
 }

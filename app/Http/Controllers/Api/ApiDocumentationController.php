@@ -55,6 +55,29 @@ class ApiDocumentationController extends Controller
                             'success' => 'boolean',
                             'data' => 'ProductResource',
                             'related_products' => 'array of ProductResource',
+                            'recommended_products' => 'array of ProductResource',
+                        ],
+                    ],
+                    'GET /api/v1/products/category/{categorySlug}' => [
+                        'description' => 'Get paginated products for an active category slug',
+                        'parameters' => [
+                            'page' => 'Page number (default: 1)',
+                            'per_page' => 'Items per page (max: 50, default: 12)',
+                            'brand' => 'Filter by active brand slug',
+                            'min_price' => 'Minimum price filter',
+                            'max_price' => 'Maximum price filter',
+                            'sort' => 'Sort by: price_asc, price_desc, name_asc, name_desc',
+                        ],
+                    ],
+                    'GET /api/v1/products/brand/{brandSlug}' => [
+                        'description' => 'Get paginated products for an active brand slug',
+                        'parameters' => [
+                            'page' => 'Page number (default: 1)',
+                            'per_page' => 'Items per page (max: 50, default: 12)',
+                            'category' => 'Filter by active category slug',
+                            'min_price' => 'Minimum price filter',
+                            'max_price' => 'Maximum price filter',
+                            'sort' => 'Sort by: price_asc, price_desc, name_asc, name_desc',
                         ],
                     ],
                     'GET /api/v1/products/latest' => [
@@ -231,6 +254,23 @@ class ApiDocumentationController extends Controller
                             'cache' => 'cache status',
                             'storage' => 'storage status',
                         ],
+                    ],
+                    'GET /api/v1/health/cache' => [
+                        'description' => 'Cache health and driver statistics',
+                    ],
+                    'GET /api/v1/health/performance' => [
+                        'description' => 'Runtime performance snapshot',
+                    ],
+                ],
+                'settings' => [
+                    'GET /api/v1/settings' => [
+                        'description' => 'Get public settings key/value pairs',
+                    ],
+                    'GET /api/v1/settings/contact' => [
+                        'description' => 'Get public contact settings',
+                    ],
+                    'GET /api/v1/settings/seo' => [
+                        'description' => 'Get public SEO settings',
                     ],
                 ],
             ],

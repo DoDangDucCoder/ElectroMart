@@ -19,7 +19,7 @@ class CategoryController extends Controller
     public function index(Request $request): JsonResponse
     {
         $filters = $request->only(['search', 'is_active', 'parent_id']);
-        $perPage = min($request->get('per_page', 15), 100);
+        $perPage = max(1, min((int) $request->get('per_page', 15), 100));
 
         $categories = $this->categoryService->paginate($filters, $perPage);
 

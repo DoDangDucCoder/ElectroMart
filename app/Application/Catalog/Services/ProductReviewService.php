@@ -143,7 +143,7 @@ class ProductReviewService
             'author_name' => $adminName,
             'author_email' => null,
             'content' => $content,
-            'rating' => null,
+            'rating' => 0,
             'status' => 'approved',
             'is_public' => true,
             'approved_at' => Carbon::now(),
