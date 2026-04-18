@@ -45,7 +45,7 @@ class Product extends BaseModel
         'sale_explanation',
     ];
 
-    public function getProductIdAttribute(): int
+    public function getProductIdAttribute(): ?int
     {
         return $this->id;
     }
@@ -190,6 +190,15 @@ class Product extends BaseModel
     protected function pricing(): ProductPricingService
     {
         return app(ProductPricingService::class);
+    }
+
+    protected function getArrayableAppends(): array
+    {
+        if (! array_key_exists($this->getKeyName(), $this->getAttributes())) {
+            return [];
+        }
+
+        return parent::getArrayableAppends();
     }
 
     protected function pricingPayload(): array

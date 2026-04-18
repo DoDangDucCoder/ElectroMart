@@ -83,7 +83,7 @@ class ProductRecommendationService
             ->get();
 
         $categoryIds = $purchasedProducts
-            ->flatMap(fn (Product $product) => $product->categories->pluck('id'))
+            ->flatMap(fn (Product $product) => $this->categoryIdsForProduct($product))
             ->unique()
             ->map(fn ($id) => (int) $id)
             ->values()
@@ -102,8 +102,10 @@ class ProductRecommendationService
                 $hasCategoryConstraint = false;
 
                 if (! empty($categoryIds)) {
-                    $query->whereHas('categories', function (Builder $relation) use ($categoryIds) {
-                        $relation->whereIn('product_categories.id', $categoryIds);
+                    $query->where(function (Builder $categoryQuery) use ($categoryIds) {
+                        $categoryQuery->whereHas('categories', function (Builder $relation) use ($categoryIds) {
+                            $relation->whereIn('product_categories.id', $categoryIds);
+                        })->orWhereIn('primary_category_id', $categoryIds);
                     });
 
                     $hasCategoryConstraint = true;
@@ -162,7 +164,7 @@ class ProductRecommendationService
             ->get();
 
         $categoryIds = $viewedProducts
-            ->flatMap(fn (Product $product) => $product->categories->pluck('id'))
+            ->flatMap(fn (Product $product) => $this->categoryIdsForProduct($product))
             ->unique()
             ->map(fn ($id) => (int) $id)
             ->values()
@@ -170,8 +172,10 @@ class ProductRecommendationService
 
         $related = $this->candidateQuery(array_merge($excludeIds, $directMatches->pluck('id')->all()))
             ->when(! empty($categoryIds), function (Builder $query) use ($categoryIds) {
-                $query->whereHas('categories', function (Builder $relation) use ($categoryIds) {
-                    $relation->whereIn('product_categories.id', $categoryIds);
+                $query->where(function (Builder $categoryQuery) use ($categoryIds) {
+                    $categoryQuery->whereHas('categories', function (Builder $relation) use ($categoryIds) {
+                        $relation->whereIn('product_categories.id', $categoryIds);
+                    })->orWhereIn('primary_category_id', $categoryIds);
                 });
             })
             ->orderByDesc('views_count')
@@ -233,5 +237,17 @@ class ProductRecommendationService
         }
 
         return 'Bạn chưa có lịch sử mua hàng, nên hệ thống ưu tiên lượt xem gần đây và sản phẩm đang được quan tâm nhiều.';
+    }
+
+    protected function categoryIdsForProduct(Product $product): array
+    {
+        return $product->categories
+            ->pluck('id')
+            ->push($product->primary_category_id)
+            ->filter()
+            ->unique()
+            ->map(fn ($id) => (int) $id)
+            ->values()
+            ->all();
     }
 }

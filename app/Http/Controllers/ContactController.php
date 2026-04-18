@@ -82,6 +82,7 @@ class ContactController extends Controller
         $icons = Icons::find($request->integer('id'));
 
         if ($icons) {
+            $this->publicUploadService->deletePublicFile('uploads/icons/' . $icons->image);
             $icons->delete();
         }
 
@@ -155,14 +156,14 @@ class ContactController extends Controller
     public function update_info(UpdateContactInfoRequest $request, $info_id)
     {
         if (! Schema::hasTable((new Contact())->getTable())) {
-            return redirect()->back()->with('message', 'Bảng thông tin website chưa sẵn sàng.');
+            return Redirect::to('/information')->with('message', 'Bảng thông tin website chưa sẵn sàng.');
         }
 
         $data = $request->validated();
 
         $contact = Contact::find($info_id);
         if (! $contact) {
-            return redirect()->back()->with('message', 'Không tìm thấy thông tin website cần cập nhật');
+            return Redirect::to('/information')->with('message', 'Không tìm thấy thông tin website cần cập nhật');
         }
 
         $contact->info_contact = $data['info_contact'];
@@ -176,28 +177,30 @@ class ContactController extends Controller
         }
 
         $contact->save();
-        return redirect()->back()->with('message', 'Cập nhật thông tin website thành công');
+        return Redirect::to('/information')->with('message', 'Cập nhật thông tin website thành công');
     }
     public function save_info(StoreContactInfoRequest $request)
     {
         if (! Schema::hasTable((new Contact())->getTable())) {
-            return redirect()->back()->with('message', 'Bảng thông tin website chưa sẵn sàng.');
+            return Redirect::to('/information')->with('message', 'Bảng thông tin website chưa sẵn sàng.');
         }
 
         $data = $request->validated();
 
-        $contact = new Contact();
+        $contact = Contact::find(1) ?? new Contact();
+        $contact->info_id = 1;
         $contact->info_contact = $data['info_contact'];
         $contact->slogan_logo = $data['slogan_logo'] ?? null;
         $contact->info_map = $data['info_map'] ?? null;
         $contact->info_fanpage = $data['info_fanpage'] ?? null;
         $get_image = $request->file('info_image');
         if ($get_image) {
+            $this->publicUploadService->deletePublicFile('uploads/contact/' . $contact->info_logo);
             $contact->info_logo = $this->publicUploadService->storeLegacyImage($get_image, 'uploads/contact');
         }
 
         $contact->save();
-        return redirect()->back()->with('message', 'Cập nhật thông tin website thành công');
+        return Redirect::to('/information')->with('message', 'Cập nhật thông tin website thành công');
     }
 
     protected function legacyActiveSliders()

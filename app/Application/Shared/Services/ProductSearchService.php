@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class ProductSearchService
 {
@@ -113,7 +114,7 @@ class ProductSearchService
         $driver = DB::connection()->getDriverName();
 
         $query->where(function (Builder $builder) use ($keyword, $driver) {
-            if ($driver === 'mysql' && mb_strlen($keyword) >= 3) {
+            if ($this->canUseMysqlFullText($keyword, $driver)) {
                 $builder->whereFullText(['name', 'description'], $keyword)
                     ->orWhere('sku', 'like', '%' . $keyword . '%')
                     ->orWhere('slug', 'like', '%' . $keyword . '%')
@@ -128,6 +129,23 @@ class ProductSearchService
                 ->orWhere('description', 'like', '%' . $keyword . '%')
                 ->orWhere('meta->tags', 'like', '%' . $keyword . '%');
         });
+    }
+
+    protected function canUseMysqlFullText(string $keyword, ?string $driver = null): bool
+    {
+        if (($driver ?? DB::connection()->getDriverName()) !== 'mysql' || mb_strlen($keyword) < 3) {
+            return false;
+        }
+
+        if (! Schema::hasTable('products')) {
+            return false;
+        }
+
+        try {
+            return Schema::hasIndex('products', ['name', 'description'], 'fulltext');
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     protected function applySorting(Builder $query, array $filters): void

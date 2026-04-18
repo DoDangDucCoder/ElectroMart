@@ -25,7 +25,7 @@ class CouponResource extends JsonResource
             'starts_at' => $this->starts_at,
             'expires_at' => $this->expires_at,
             'is_valid' => $this->isValidCoupon(),
-            'remaining_uses' => $this->usage_limit ? $this->usage_limit - $this->used_count : null,
+            'remaining_uses' => $this->usage_limit ? max(0, $this->usage_limit - $this->used_count) : null,
         ];
     }
 
@@ -52,6 +52,10 @@ class CouponResource extends JsonResource
         }
 
         if ($this->expires_at && $this->expires_at->lt($now)) {
+            return false;
+        }
+
+        if ($this->usage_limit !== null && $this->used_count >= $this->usage_limit) {
             return false;
         }
 

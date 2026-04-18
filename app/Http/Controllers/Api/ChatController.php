@@ -24,8 +24,20 @@ class ChatController extends Controller
     {
         $customerId = $this->resolveCustomerId($request);
         $sessionToken = $this->resolveSessionToken($request);
-        $conversation = $this->conversations->bootstrap($customerId, null, $sessionToken, 'api');
         $afterId = (int) $request->query('after_id', 0);
+
+        if (! $this->conversations->tablesReady()) {
+            return response()->json([
+                'success' => true,
+                'data' => $this->conversations->statelessConversationPayload(
+                    'api',
+                    $sessionToken,
+                    $afterId > 0 ? [] : [$this->conversations->statelessWelcomeMessagePayload()]
+                ),
+            ]);
+        }
+
+        $conversation = $this->conversations->bootstrap($customerId, null, $sessionToken, 'api');
         $messages = $afterId > 0
             ? $this->conversations->messagesAfter($conversation, $afterId, 50)
             : $this->conversations->recentMessages($conversation, 20);
@@ -46,8 +58,44 @@ class ChatController extends Controller
     {
         $customerId = $this->resolveCustomerId($request);
         $sessionToken = $this->resolveSessionToken($request);
-        $conversation = $this->conversations->bootstrap($customerId, null, $sessionToken, 'api');
         $validated = $request->validated();
+
+        if (! $this->conversations->tablesReady()) {
+            $welcomeMessage = $this->conversations->statelessWelcomeMessagePayload();
+            $userMessage = $this->conversations->statelessMessagePayload(
+                'user',
+                $validated['message'],
+                null,
+                'user_message'
+            );
+            $reply = $this->chatbot->reply($validated['message'], $customerId, $request->ip(), []);
+            $botMessage = $this->conversations->statelessMessagePayload(
+                'bot',
+                (string) ($reply['message'] ?? config('chatbot.fallback_message')),
+                (string) ($reply['intent'] ?? 'fallback'),
+                (string) ($reply['response_type'] ?? 'text'),
+                [
+                    'products' => (array) ($reply['products'] ?? []),
+                    'actions' => (array) ($reply['actions'] ?? []),
+                    'source' => $reply['source'] ?? 'rule_based',
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'conversation' => $this->conversations->statelessConversationPayload(
+                        'api',
+                        $sessionToken,
+                        [$welcomeMessage, $userMessage, $botMessage]
+                    ),
+                    'user_message' => $userMessage,
+                    'bot_message' => $botMessage,
+                ],
+            ]);
+        }
+
+        $conversation = $this->conversations->bootstrap($customerId, null, $sessionToken, 'api');
 
         $history = $this->conversations->recentMessages($conversation, 8)
             ->map(fn ($message) => [

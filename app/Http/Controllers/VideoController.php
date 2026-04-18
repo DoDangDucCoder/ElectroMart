@@ -65,6 +65,11 @@ class VideoController extends Controller
         $video->video_link = $this->extractYoutubeId($data['video_link'] ?? '');
         $video->video_slug = $data['video_slug'] ?? Str::slug($data['video_title'] ?? Str::random(8));
         $video->video_image = $imagePath ? basename($imagePath) : null;
+
+        if ($this->legacyVideoStatusColumnExists()) {
+            $video->setAttribute('video_status', 1);
+        }
+
         $video->save();
 
         return response()->noContent();
@@ -269,7 +274,7 @@ class VideoController extends Controller
         }
 
         if ($this->usesLegacyVideoTable()) {
-            return LegacyVideo::query()
+            return $this->legacyVideoQuery(onlyActive: true)
                 ->orderBy('video_id', 'DESC')
                 ->paginate($perPage);
         }
@@ -290,7 +295,7 @@ class VideoController extends Controller
         }
 
         if ($this->usesLegacyVideoTable()) {
-            return LegacyVideo::query()
+            return $this->legacyVideoQuery()
                 ->orderBy('video_id', 'DESC')
                 ->get();
         }
@@ -301,11 +306,16 @@ class VideoController extends Controller
     protected function findStorefrontVideoById(int $id): LegacyVideo|ModernVideo|null
     {
         if ($this->usesModernVideoTable()) {
-            return ModernVideo::find($id);
+            return ModernVideo::query()
+                ->where('is_active', true)
+                ->whereKey($id)
+                ->first();
         }
 
         if ($this->usesLegacyVideoTable()) {
-            return LegacyVideo::find($id);
+            return $this->legacyVideoQuery(onlyActive: true)
+                ->whereKey($id)
+                ->first();
         }
 
         return null;
@@ -319,6 +329,24 @@ class VideoController extends Controller
     protected function usesLegacyVideoTable(): bool
     {
         return Schema::hasTable((new LegacyVideo())->getTable());
+    }
+
+    protected function legacyVideoStatusColumnExists(): bool
+    {
+        $table = (new LegacyVideo())->getTable();
+
+        return Schema::hasTable($table) && Schema::hasColumn($table, 'video_status');
+    }
+
+    protected function legacyVideoQuery(bool $onlyActive = false)
+    {
+        $query = LegacyVideo::query();
+
+        if ($onlyActive && $this->legacyVideoStatusColumnExists()) {
+            $query->where('video_status', 1);
+        }
+
+        return $query;
     }
 
     protected function legacyActiveSliders()

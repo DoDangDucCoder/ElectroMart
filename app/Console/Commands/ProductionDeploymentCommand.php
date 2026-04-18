@@ -5,6 +5,9 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Application\Shared\Services\MonitoringLoggingService;
 use App\Application\Shared\Services\BackupRecoveryService;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 
 class ProductionDeploymentCommand extends Command
 {
@@ -37,6 +40,10 @@ class ProductionDeploymentCommand extends Command
         $this->newLine();
 
         try {
+            if ($this->option('status')) {
+                return $this->displayDeploymentStatus();
+            }
+
             // Check if we're in production environment
             if (app()->environment() !== 'production') {
                 $this->warn('⚠️ Warning: Not in production environment');
@@ -94,6 +101,28 @@ class ProductionDeploymentCommand extends Command
             
             return Command::FAILURE;
         }
+    }
+
+    private function displayDeploymentStatus(): int
+    {
+        $healthStatus = $this->monitoringService->getHealthStatus();
+        $latestBackup = $this->backupService->listBackups()[0]['backup_id'] ?? 'No backups found';
+
+        $this->info('📋 Deployment Status');
+        $this->table(
+            ['Metric', 'Value'],
+            [
+                ['Environment', app()->environment()],
+                ['Application URL', config('app.url') ?: 'Not configured'],
+                ['Database Driver', (string) config('database.default')],
+                ['Cache Driver', (string) config('cache.default')],
+                ['Queue Driver', (string) config('queue.default')],
+                ['Overall Health', $healthStatus['overall_status'] ?? 'unknown'],
+                ['Latest Backup', $latestBackup],
+            ]
+        );
+
+        return Command::SUCCESS;
     }
 
     private function runPreDeploymentChecks(): void

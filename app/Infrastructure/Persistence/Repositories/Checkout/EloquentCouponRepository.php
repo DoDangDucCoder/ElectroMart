@@ -49,6 +49,9 @@ class EloquentCouponRepository implements CouponRepositoryInterface
                 $builder->whereNull('starts_at')->orWhere('starts_at', '<=', $now);
             })->where(function ($builder) use ($now) {
                 $builder->whereNull('expires_at')->orWhere('expires_at', '>=', $now);
+            })->where(function ($builder) {
+                $builder->whereNull('usage_limit')
+                    ->orWhereColumn('used_count', '<', 'usage_limit');
             });
         }
 

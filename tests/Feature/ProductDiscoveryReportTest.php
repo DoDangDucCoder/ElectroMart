@@ -11,7 +11,9 @@ use App\Infrastructure\Persistence\Eloquent\Catalog\ProductSearchQuery;
 use App\Models\User;
 use App\Support\AdminAccess;
 use App\Support\AdminPermissions;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -65,6 +67,66 @@ class ProductDiscoveryReportTest extends TestCase
             ->assertJsonPath('recommended_products.0.product_id', $product->id)
             ->assertJsonPath('recommended_products.0.product_name', $product->product_name)
             ->assertJsonPath('recommended_products.0.category_name', $category->name);
+    }
+
+    public function test_product_discovery_api_handles_missing_optional_analytics_columns(): void
+    {
+        $admin = $this->createAdminUser();
+        [$product, $category] = $this->createDiscoveryFixtures();
+
+        ProductSearchQuery::create([
+            'category_id' => $category->id,
+            'keyword' => 'discovery fallback',
+            'product_code' => 'DISC-FALLBACK',
+            'price_min' => 100000,
+            'price_max' => 1000000,
+            'sort' => 'latest',
+            'results_count' => 3,
+            'source' => 'web',
+            'ip_address' => '198.51.100.25',
+            'searched_at' => now()->subHours(5),
+        ]);
+
+        ProductRecommendationImpression::create([
+            'product_id' => $product->id,
+            'context' => 'homepage',
+            'source_label' => 'featured',
+            'ip_address' => '198.51.100.25',
+            'impressed_at' => now()->subHours(4),
+        ]);
+
+        \DB::statement('DROP INDEX IF EXISTS idx_product_search_queries_searched_at');
+        \DB::statement('DROP INDEX IF EXISTS idx_product_search_queries_keyword_searched_at');
+        \DB::statement('DROP INDEX IF EXISTS idx_product_search_queries_customer_searched_at');
+        \DB::statement('DROP INDEX IF EXISTS idx_product_search_queries_source_searched_at');
+        Schema::table('product_search_queries', function (Blueprint $table) {
+            $table->dropColumn(['results_count', 'searched_at']);
+        });
+
+        \DB::statement('DROP INDEX IF EXISTS idx_product_reco_impressions_product_impressed_at');
+        \DB::statement('DROP INDEX IF EXISTS idx_product_reco_impressions_customer_impressed_at');
+        \DB::statement('DROP INDEX IF EXISTS idx_product_reco_impressions_context_impressed_at');
+        Schema::table('product_recommendation_impressions', function (Blueprint $table) {
+            $table->dropColumn('impressed_at');
+        });
+
+        Sanctum::actingAs($admin);
+
+        $this->getJson('/api/v1/admin/statistics/product-discovery?' . http_build_query([
+            'date_from' => now()->subDays(2)->toDateString(),
+            'date_to' => now()->toDateString(),
+        ]))
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('summary.total_searches', 1)
+            ->assertJsonPath('summary.unique_keywords', 1)
+            ->assertJsonPath('summary.recommendation_impressions', 1)
+            ->assertJsonPath('summary.recommended_products', 1)
+            ->assertJsonPath('top_keywords.0.keyword', 'discovery fallback')
+            ->assertJsonPath('top_keywords.0.avg_results_count', 0)
+            ->assertJsonPath('recommended_products.0.product_id', $product->id)
+            ->assertJsonPath('recommended_products.0.product_name', $product->product_name)
+            ->assertJsonPath('recommended_products.0.last_impressed_at', null);
     }
 
     /**

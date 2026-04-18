@@ -245,6 +245,10 @@ class AuthenticationSecurityService
 
     public function generateSecurePassword(int $length = 16): string
     {
+        if ($length < 4) {
+            throw new \InvalidArgumentException('Secure password length must be at least 4 characters.');
+        }
+
         $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $lowercase = 'abcdefghijklmnopqrstuvwxyz';
         $numbers = '0123456789';
@@ -305,7 +309,8 @@ class AuthenticationSecurityService
 
     private function isDisposableEmail(string $email): bool
     {
-        $domain = substr(strrchr($email, "@"), 1);
+        $domainPart = strrchr($email, '@');
+        $domain = $domainPart === false ? '' : strtolower(substr($domainPart, 1));
         $disposableDomains = [
             '10minutemail.com', 'tempmail.org', 'guerrillamail.com',
             'mailinator.com', 'temp-mail.org', 'throwaway.email',
@@ -318,7 +323,7 @@ class AuthenticationSecurityService
     {
         $suspiciousPatterns = [
             '/\d{4,}/', // Multiple consecutive numbers
-            '/[^a-zA-Z0-9@._-]/', // Special characters
+            '/[^a-zA-Z0-9@._+\-]/', // Unexpected special characters
             '/\.{2,}/', // Multiple consecutive dots
         ];
 

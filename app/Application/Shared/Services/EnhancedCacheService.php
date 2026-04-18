@@ -2,6 +2,8 @@
 
 namespace App\Application\Shared\Services;
 
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
+use Illuminate\Cache\TaggableStore;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -17,6 +19,9 @@ class EnhancedCacheService
     private const DRIVER_REDIS = 'redis';
     private const DRIVER_FILE = 'file';
     private const DRIVER_DATABASE = 'database';
+    private const REGISTRY_PRODUCTS = 'enhanced_cache_registry.products';
+    private const REGISTRY_CATEGORIES = 'enhanced_cache_registry.categories';
+    private const REGISTRY_ORDERS = 'enhanced_cache_registry.orders';
 
     public function remember(string $key, callable $callback, int $ttl = self::DEFAULT_TTL): mixed
     {
@@ -38,9 +43,13 @@ class EnhancedCacheService
         return Cache::flush();
     }
 
-    public function tags(array $tags): \Illuminate\Cache\TaggedCache
+    public function tags(array $tags): CacheRepository
     {
-        return Cache::tags($tags);
+        if ($this->supportsTags()) {
+            return Cache::tags($tags);
+        }
+
+        return Cache::store();
     }
 
     // Multi-level caching
@@ -79,8 +88,8 @@ class EnhancedCacheService
     public function getProductsByCategory(string $categorySlug, array $filters = [], int $perPage = 12): mixed
     {
         $key = "products_category_{$categorySlug}_" . md5(serialize($filters)) . "_{$perPage}";
-        
-        return $this->getMultiLevel($key, function () use ($categorySlug, $filters, $perPage) {
+
+        return $this->rememberIndexed(self::REGISTRY_PRODUCTS, $key, function () use ($categorySlug, $filters, $perPage) {
             // Mock implementation - replace with actual repository method
             return DB::table('products')
                 ->join('product_categories', 'products.primary_category_id', '=', 'product_categories.id')
@@ -94,8 +103,8 @@ class EnhancedCacheService
     public function getLatestProducts(int $limit = 6): mixed
     {
         $key = "products_latest_{$limit}";
-        
-        return $this->getMultiLevel($key, function () use ($limit) {
+
+        return $this->rememberIndexed(self::REGISTRY_PRODUCTS, $key, function () use ($limit) {
             // Mock implementation - replace with actual repository method
             return DB::table('products')
                 ->where('is_active', true)
@@ -108,8 +117,8 @@ class EnhancedCacheService
     public function getFeaturedProducts(int $limit = 6): mixed
     {
         $key = "products_featured_{$limit}";
-        
-        return $this->getMultiLevel($key, function () use ($limit) {
+
+        return $this->rememberIndexed(self::REGISTRY_PRODUCTS, $key, function () use ($limit) {
             // Mock implementation - replace with actual repository method
             return DB::table('products')
                 ->where('is_active', true)
@@ -123,8 +132,8 @@ class EnhancedCacheService
     public function getProductBySlug(string $slug): mixed
     {
         $key = "product_slug_{$slug}";
-        
-        return $this->getMultiLevel($key, function () use ($slug) {
+
+        return $this->rememberIndexed(self::REGISTRY_PRODUCTS, $key, function () use ($slug) {
             // Mock implementation - replace with actual repository method
             return DB::table('products')
                 ->where('slug', $slug)
@@ -137,8 +146,8 @@ class EnhancedCacheService
     public function getCategoriesTree(): mixed
     {
         $key = "categories_tree";
-        
-        return $this->getMultiLevel($key, function () {
+
+        return $this->rememberIndexed(self::REGISTRY_CATEGORIES, $key, function () {
             // Mock implementation - replace with actual repository method
             return DB::table('product_categories')
                 ->where('is_active', true)
@@ -150,8 +159,8 @@ class EnhancedCacheService
     public function getActiveCategories(): mixed
     {
         $key = "categories_active";
-        
-        return $this->getMultiLevel($key, function () {
+
+        return $this->rememberIndexed(self::REGISTRY_CATEGORIES, $key, function () {
             // Mock implementation - replace with actual repository method
             return DB::table('product_categories')
                 ->where('is_active', true)
@@ -178,8 +187,8 @@ class EnhancedCacheService
     public function getCustomerOrders(int $customerId, int $perPage = 10): mixed
     {
         $key = "customer_orders_{$customerId}_{$perPage}";
-        
-        return $this->getMultiLevel($key, function () use ($customerId, $perPage) {
+
+        return $this->rememberIndexed(self::REGISTRY_ORDERS, $key, function () use ($customerId, $perPage) {
             // Mock implementation - replace with actual repository method
             return DB::table('orders')
                 ->where('customer_id', $customerId)
@@ -288,9 +297,8 @@ class EnhancedCacheService
         if ($productId) {
             $tags[] = "product_{$productId}";
         }
-        
-        Cache::tags($tags)->flush();
-        Log::info('Product cache invalidated', ['product_id' => $productId]);
+
+        $this->flushTaggedCache($tags, 'Product cache invalidated', ['product_id' => $productId]);
     }
 
     public function invalidateCategoryCache(int $categoryId = null): void
@@ -299,9 +307,8 @@ class EnhancedCacheService
         if ($categoryId) {
             $tags[] = "category_{$categoryId}";
         }
-        
-        Cache::tags($tags)->flush();
-        Log::info('Category cache invalidated', ['category_id' => $categoryId]);
+
+        $this->flushTaggedCache($tags, 'Category cache invalidated', ['category_id' => $categoryId]);
     }
 
     public function invalidateOrderCache(int $customerId = null): void
@@ -310,9 +317,8 @@ class EnhancedCacheService
         if ($customerId) {
             $tags[] = "customer_{$customerId}";
         }
-        
-        Cache::tags($tags)->flush();
-        Log::info('Order cache invalidated', ['customer_id' => $customerId]);
+
+        $this->flushTaggedCache($tags, 'Order cache invalidated', ['customer_id' => $customerId]);
     }
 
     // Memory cache methods
@@ -456,5 +462,87 @@ class EnhancedCacheService
         }
 
         Log::info('Expired cache cleaned up');
+    }
+
+    private function supportsTags(): bool
+    {
+        return Cache::getStore() instanceof TaggableStore;
+    }
+
+    private function flushTaggedCache(array $tags, string $message, array $context = []): void
+    {
+        if ($this->supportsTags()) {
+            Cache::tags($tags)->flush();
+            Log::info($message, $context + ['tags' => $tags]);
+
+            return;
+        }
+
+        foreach ($this->fallbackRegistriesForTags($tags) as $registryKey) {
+            $this->forgetRegisteredKeys($registryKey);
+        }
+
+        Log::info($message, $context + [
+            'tags' => $tags,
+            'fallback' => 'scoped_registry_invalidation',
+        ]);
+    }
+
+    private function rememberIndexed(string $registryKey, string $key, callable $callback, int $ttl): mixed
+    {
+        $value = $this->getMultiLevel($key, $callback, $ttl);
+        $this->trackCacheKey($registryKey, $key);
+
+        return $value;
+    }
+
+    private function trackCacheKey(string $registryKey, string $key): void
+    {
+        $keys = Cache::get($registryKey, []);
+
+        if (! is_array($keys)) {
+            $keys = [];
+        }
+
+        if (! in_array($key, $keys, true)) {
+            $keys[] = $key;
+            Cache::forever($registryKey, array_values($keys));
+        }
+    }
+
+    private function forgetRegisteredKeys(string $registryKey): void
+    {
+        $keys = Cache::get($registryKey, []);
+
+        if (! is_array($keys)) {
+            $keys = [];
+        }
+
+        foreach (array_unique($keys) as $key) {
+            Cache::forget($key);
+        }
+
+        Cache::forget($registryKey);
+    }
+
+    private function fallbackRegistriesForTags(array $tags): array
+    {
+        $registries = [];
+
+        foreach ($tags as $tag) {
+            if ($tag === 'products' || str_starts_with($tag, 'product_')) {
+                $registries[] = self::REGISTRY_PRODUCTS;
+            }
+
+            if ($tag === 'categories' || str_starts_with($tag, 'category_')) {
+                $registries[] = self::REGISTRY_CATEGORIES;
+            }
+
+            if ($tag === 'orders' || str_starts_with($tag, 'customer_')) {
+                $registries[] = self::REGISTRY_ORDERS;
+            }
+        }
+
+        return array_values(array_unique($registries));
     }
 }

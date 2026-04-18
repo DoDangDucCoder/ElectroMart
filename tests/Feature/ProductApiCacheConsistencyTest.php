@@ -88,6 +88,30 @@ class ProductApiCacheConsistencyTest extends TestCase
             ->assertJsonMissing(['slug' => $nonFeaturedLaptop->slug]);
     }
 
+    public function test_product_service_can_filter_by_category_ids_without_ambiguous_column_errors(): void
+    {
+        $featuredPhone = $this->createProduct('iPhone 17 Filtered', $this->phones, $this->apple, [
+            'is_featured' => true,
+        ]);
+
+        $laptopCategory = ProductCategory::create([
+            'name' => 'Laptop Filter',
+            'slug' => 'laptop-filter',
+            'description' => 'Danh mục laptop filter',
+            'is_active' => true,
+            'display_order' => 1,
+        ]);
+
+        $this->createProduct('Galaxy Book Filter', $laptopCategory, $this->apple);
+
+        $products = $this->productService->getProducts([
+            'category_ids' => [$this->phones->id],
+        ], 12);
+
+        $this->assertSame(1, $products->total());
+        $this->assertSame($featuredPhone->slug, $products->items()[0]->slug);
+    }
+
     public function test_disabling_product_invalidates_public_product_caches(): void
     {
         $product = $this->createProduct('iPhone 17 Air', $this->phones, $this->apple, [
@@ -215,6 +239,51 @@ class ProductApiCacheConsistencyTest extends TestCase
 
         $this->getJson('/api/v1/products/brand/apple')
             ->assertNotFound();
+    }
+
+    public function test_public_product_category_routes_and_filters_support_primary_category_without_pivot_rows(): void
+    {
+        $camera = ProductCategory::create([
+            'name' => 'Camera',
+            'slug' => 'camera',
+            'description' => 'Danh muc camera',
+            'is_active' => true,
+            'display_order' => 2,
+        ]);
+
+        $brand = Brand::create([
+            'name' => 'LensCo',
+            'slug' => 'lensco',
+            'description' => 'LensCo brand',
+            'is_active' => true,
+            'display_order' => 2,
+        ]);
+
+        $product = $this->productService->createProduct([
+            'name' => 'Mirrorless Body',
+            'slug' => 'mirrorless-body',
+            'brand_id' => $brand->id,
+            'primary_category_id' => $camera->id,
+            'price' => 2200000,
+            'cost_price' => 1800000,
+            'stock_quantity' => 8,
+            'description' => 'Mirrorless body',
+            'content' => 'Mirrorless body content',
+            'category_ids' => [$camera->id],
+            'is_active' => true,
+        ]);
+
+        $product->categories()->detach();
+
+        $this->getJson('/api/v1/products/category/camera')
+            ->assertOk()
+            ->assertJsonPath('pagination.total', 1)
+            ->assertJsonFragment(['slug' => 'mirrorless-body']);
+
+        $this->getJson('/api/v1/products?category=camera')
+            ->assertOk()
+            ->assertJsonPath('pagination.total', 1)
+            ->assertJsonFragment(['slug' => 'mirrorless-body']);
     }
 
     protected function createProduct(string $name, ProductCategory $category, Brand $brand, array $overrides = [])

@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 class MonitoringLoggingService
 {
@@ -74,6 +76,7 @@ class MonitoringLoggingService
             $memoryUsage = memory_get_usage(true);
             $memoryPeak = memory_get_peak_usage(true);
             $memoryLimit = ini_get('memory_limit');
+            $loadAverage = function_exists('sys_getloadavg') ? \sys_getloadavg() : [];
             
             return [
                 'memory_usage_bytes' => $memoryUsage,
@@ -82,11 +85,11 @@ class MonitoringLoggingService
                 'memory_usage_percent' => $this->calculateMemoryUsagePercent($memoryUsage, $memoryLimit),
                 'cpu_usage_percent' => $this->getCpuUsage(),
                 'disk_usage_percent' => $this->getDiskUsage(),
-                'load_average' => sys_getloadavg(),
+                'load_average' => is_array($loadAverage) ? $loadAverage : [],
                 'uptime_seconds' => $this->getUptime(),
                 'timestamp' => now()->toISOString(),
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to collect system metrics', ['error' => $e->getMessage()]);
             return [];
         }
@@ -105,7 +108,7 @@ class MonitoringLoggingService
                 'database_connections' => $this->getDatabaseConnections(),
                 'timestamp' => now()->toISOString(),
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to collect application metrics', ['error' => $e->getMessage()]);
             return [];
         }
@@ -114,8 +117,17 @@ class MonitoringLoggingService
     private function collectDatabaseMetrics(): array
     {
         try {
+            $driver = DB::getDriverName();
+
+            if ($driver !== 'mysql') {
+                return [
+                    'driver' => $driver,
+                    'timestamp' => now()->toISOString(),
+                ];
+            }
+
             $connection = DB::connection();
-            $pdo = $connection->getPdo();
+            $connection->getPdo();
             
             $status = $connection->select('SHOW STATUS');
             $statusArray = [];
@@ -124,6 +136,7 @@ class MonitoringLoggingService
             }
 
             return [
+                'driver' => $driver,
                 'connections_active' => $statusArray['Threads_connected'] ?? 0,
                 'connections_running' => $statusArray['Threads_running'] ?? 0,
                 'queries_per_second' => $statusArray['Queries'] ?? 0,
@@ -132,7 +145,7 @@ class MonitoringLoggingService
                 'innodb_buffer_pool_hit_rate' => $this->calculateInnoDBHitRate($statusArray),
                 'timestamp' => now()->toISOString(),
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to collect database metrics', ['error' => $e->getMessage()]);
             return [];
         }
@@ -163,7 +176,7 @@ class MonitoringLoggingService
                 'driver' => $cacheDriver,
                 'timestamp' => now()->toISOString(),
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to collect cache metrics', ['error' => $e->getMessage()]);
             return [];
         }
@@ -190,7 +203,7 @@ class MonitoringLoggingService
                 'driver' => $queueDriver,
                 'timestamp' => now()->toISOString(),
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to collect queue metrics', ['error' => $e->getMessage()]);
             return [];
         }
@@ -207,7 +220,7 @@ class MonitoringLoggingService
                 'api_endpoint_performance' => $this->getApiEndpointPerformance(),
                 'timestamp' => now()->toISOString(),
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to collect performance metrics', ['error' => $e->getMessage()]);
             return [];
         }
@@ -222,13 +235,15 @@ class MonitoringLoggingService
             Cache::put($metricsKey, $this->metrics, now()->addDays($this->config['monitoring']['metrics_retention_days']));
             
             // Store in database for long-term analysis
-            DB::table('metrics')->insert([
-                'timestamp' => $timestamp,
-                'metrics' => json_encode($this->metrics),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        } catch (\Exception $e) {
+            if (Schema::hasTable('metrics')) {
+                DB::table('metrics')->insert([
+                    'timestamp' => $timestamp,
+                    'metrics' => json_encode($this->metrics),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        } catch (\Throwable $e) {
             Log::error('Failed to store metrics', ['error' => $e->getMessage()]);
         }
     }
@@ -251,9 +266,19 @@ class MonitoringLoggingService
     private function checkMetricThreshold(string $category, string $metric, float $value, array $thresholds): void
     {
         $thresholdKey = $this->getThresholdKey($metric);
-        
-        if (isset($thresholds[$thresholdKey]) && $value > $thresholds[$thresholdKey]) {
-            $this->sendAlert($category, $metric, $value, $thresholds[$thresholdKey]);
+
+        if ($thresholdKey === null || ! isset($thresholds[$thresholdKey])) {
+            return;
+        }
+
+        $threshold = (float) $thresholds[$thresholdKey];
+
+        if ($threshold <= 0) {
+            return;
+        }
+
+        if ($value > $threshold) {
+            $this->sendAlert($category, $metric, $value, $threshold);
         }
     }
 
@@ -283,26 +308,45 @@ class MonitoringLoggingService
         ];
 
         Log::critical('Alert: Metric threshold exceeded', $alert);
-        
-        // Store alert in database
-        DB::table('alerts')->insert([
-            'type' => $alert['type'],
-            'category' => $alert['category'],
-            'metric' => $alert['metric'],
-            'value' => $alert['value'],
-            'threshold' => $alert['threshold'],
-            'severity' => $alert['severity'],
-            'resolved' => false,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+
+        $this->storeAlert($alert);
 
         // Send notification (implement based on your notification system)
         $this->sendNotification($alert);
     }
 
+    private function storeAlert(array $alert): void
+    {
+        try {
+            if (! Schema::hasTable('alerts')) {
+                return;
+            }
+
+            DB::table('alerts')->insert([
+                'type' => $alert['type'],
+                'category' => $alert['category'],
+                'metric' => $alert['metric'],
+                'value' => $alert['value'],
+                'threshold' => $alert['threshold'],
+                'severity' => $alert['severity'],
+                'resolved' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to store monitoring alert', [
+                'metric' => $alert['metric'] ?? null,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
     private function getAlertSeverity(float $value, float $threshold): string
     {
+        if ($threshold <= 0) {
+            return 'low';
+        }
+
         $ratio = $value / $threshold;
         
         if ($ratio >= 2.0) return 'critical';
@@ -325,7 +369,7 @@ class MonitoringLoggingService
             if (config('monitoring.email_alerts')) {
                 $this->sendEmailNotification($alert);
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to send notification', ['error' => $e->getMessage()]);
         }
     }
@@ -423,7 +467,7 @@ class MonitoringLoggingService
                 default:
                     return ['status' => 'unknown', 'message' => 'Unknown health check'];
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return [
                 'status' => 'error',
                 'message' => $e->getMessage(),
@@ -456,6 +500,14 @@ class MonitoringLoggingService
     private function checkRedisHealth(): array
     {
         try {
+            if (! $this->usesRedis()) {
+                return [
+                    'status' => 'healthy',
+                    'message' => 'Redis is not in active use',
+                    'timestamp' => now()->toISOString(),
+                ];
+            }
+
             $startTime = microtime(true);
             Redis::ping();
             $responseTime = (microtime(true) - $startTime) * 1000;
@@ -465,7 +517,7 @@ class MonitoringLoggingService
                 'response_time_ms' => round($responseTime, 2),
                 'timestamp' => now()->toISOString(),
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return [
                 'status' => 'unhealthy',
                 'error' => $e->getMessage(),
@@ -499,7 +551,7 @@ class MonitoringLoggingService
                     'timestamp' => now()->toISOString(),
                 ];
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return [
                 'status' => 'unhealthy',
                 'error' => $e->getMessage(),
@@ -515,9 +567,9 @@ class MonitoringLoggingService
             $testContent = 'health check content';
             
             $startTime = microtime(true);
-            \Storage::put($testFile, $testContent);
-            $retrievedContent = \Storage::get($testFile);
-            \Storage::delete($testFile);
+            Storage::put($testFile, $testContent);
+            $retrievedContent = Storage::get($testFile);
+            Storage::delete($testFile);
             $responseTime = (microtime(true) - $startTime) * 1000;
 
             if ($retrievedContent === $testContent) {
@@ -533,7 +585,7 @@ class MonitoringLoggingService
                     'timestamp' => now()->toISOString(),
                 ];
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return [
                 'status' => 'unhealthy',
                 'error' => $e->getMessage(),
@@ -563,7 +615,7 @@ class MonitoringLoggingService
                 'message' => 'Queue driver not configured for health check',
                 'timestamp' => now()->toISOString(),
             ];
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return [
                 'status' => 'unhealthy',
                 'error' => $e->getMessage(),
@@ -574,16 +626,16 @@ class MonitoringLoggingService
 
     private function getOverallHealthStatus(array $checks): string
     {
-        $unhealthyCount = 0;
+        $problemCount = 0;
         
         foreach ($checks as $check) {
-            if ($check['status'] === 'unhealthy') {
-                $unhealthyCount++;
+            if (($check['status'] ?? 'unknown') !== 'healthy') {
+                $problemCount++;
             }
         }
 
-        if ($unhealthyCount === 0) return 'healthy';
-        if ($unhealthyCount === count($checks)) return 'unhealthy';
+        if ($problemCount === 0) return 'healthy';
+        if ($problemCount === count($checks)) return 'unhealthy';
         return 'degraded';
     }
 
@@ -616,21 +668,46 @@ class MonitoringLoggingService
     {
         // This is a simplified implementation
         // In production, you might want to use more sophisticated methods
-        $load = sys_getloadavg();
-        return $load[0] * 100; // Convert to percentage
+        if (! function_exists('sys_getloadavg')) {
+            return 0;
+        }
+
+        $load = \sys_getloadavg();
+        if (! is_array($load) || ! isset($load[0])) {
+            return 0;
+        }
+
+        return max(round($load[0] * 100, 2), 0);
     }
 
     private function getDiskUsage(): float
     {
-        $bytes = disk_free_space('/');
-        $total = disk_total_space('/');
+        $path = base_path();
+        $bytes = @disk_free_space($path);
+        $total = @disk_total_space($path);
+
+        if ($bytes === false || $total === false) {
+            return 0;
+        }
+
         return $total > 0 ? round((($total - $bytes) / $total) * 100, 2) : 0;
     }
 
     private function getUptime(): int
     {
-        $uptime = shell_exec('cat /proc/uptime');
-        return (int) explode(' ', $uptime)[0];
+        $uptimeFile = '/proc/uptime';
+
+        if (! is_file($uptimeFile) || ! is_readable($uptimeFile)) {
+            return 0;
+        }
+
+        $uptime = @file_get_contents($uptimeFile);
+
+        if (! is_string($uptime) || trim($uptime) === '') {
+            return 0;
+        }
+
+        return (int) explode(' ', trim($uptime))[0];
     }
 
     private function getRequestsPerMinute(): int
@@ -717,9 +794,21 @@ class MonitoringLoggingService
         return [];
     }
 
+    private function usesRedis(): bool
+    {
+        return in_array(config('cache.default'), ['redis'], true)
+            || in_array(config('queue.default'), ['redis'], true)
+            || in_array(config('session.driver'), ['redis'], true)
+            || in_array(config('broadcasting.default'), ['redis'], true);
+    }
+
     public function getMetricsHistory(int $hours = 24): array
     {
         try {
+            if (! Schema::hasTable('metrics')) {
+                return [];
+            }
+
             $since = now()->subHours($hours);
             
             $metrics = DB::table('metrics')
@@ -734,7 +823,7 @@ class MonitoringLoggingService
                 });
 
             return $metrics->toArray();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to get metrics history', ['error' => $e->getMessage()]);
             return [];
         }
@@ -743,6 +832,10 @@ class MonitoringLoggingService
     public function getAlerts(int $days = 7): array
     {
         try {
+            if (! Schema::hasTable('alerts')) {
+                return [];
+            }
+
             $since = now()->subDays($days);
             
             $alerts = DB::table('alerts')
@@ -751,7 +844,7 @@ class MonitoringLoggingService
                 ->get();
 
             return $alerts->toArray();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to get alerts', ['error' => $e->getMessage()]);
             return [];
         }
@@ -760,6 +853,10 @@ class MonitoringLoggingService
     public function resolveAlert(int $alertId): bool
     {
         try {
+            if (! Schema::hasTable('alerts')) {
+                return false;
+            }
+
             DB::table('alerts')
                 ->where('id', $alertId)
                 ->update([
@@ -769,7 +866,7 @@ class MonitoringLoggingService
                 ]);
 
             return true;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to resolve alert', ['alert_id' => $alertId, 'error' => $e->getMessage()]);
             return false;
         }

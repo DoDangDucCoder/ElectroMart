@@ -54,6 +54,7 @@ use App\Infrastructure\Persistence\Repositories\Cms\EloquentBlogCategoryReposito
 use App\Infrastructure\Persistence\Repositories\Cms\EloquentBlogPostRepository;
 use App\Support\DatabaseRuntime;
 use App\Support\AdminPermissions;
+use Illuminate\Http\Client\Response as HttpClientResponse;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
@@ -65,6 +66,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         DatabaseRuntime::activateLocalFallbacksIfNeeded();
+        $this->configureConsoleRuntimeEnvironment();
 
         $this->app->bind(CategoryRepositoryInterface::class, EloquentCategoryRepository::class);
         $this->app->bind(BrandRepositoryInterface::class, EloquentBrandRepository::class);
@@ -108,6 +110,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $this->registerHttpClientCompatibilityMacros();
+
         view()->composer('*', function ($view) {
             $sharedData = $this->sharedViewDefaults();
 
@@ -235,5 +239,50 @@ class AppServiceProvider extends ServiceProvider
             'contact_footer' => collect(),
             'post_footer' => collect(),
         ];
+    }
+
+    private function registerHttpClientCompatibilityMacros(): void
+    {
+        if (! HttpClientResponse::hasMacro('fromPsrResponse')) {
+            HttpClientResponse::macro('fromPsrResponse', function ($response) {
+                return new static($response);
+            });
+        }
+    }
+
+    private function configureConsoleRuntimeEnvironment(): void
+    {
+        if (! $this->app->runningInConsole() || ! $this->runningTinkerConsoleCommand()) {
+            return;
+        }
+
+        $frameworkStorage = storage_path('framework');
+
+        if (! is_dir($frameworkStorage)) {
+            @mkdir($frameworkStorage, 0777, true);
+        }
+
+        foreach ([
+            'APPDATA' => $frameworkStorage,
+            'LOCALAPPDATA' => $frameworkStorage,
+            'XDG_CONFIG_HOME' => $frameworkStorage,
+            'XDG_DATA_HOME' => $frameworkStorage,
+        ] as $key => $value) {
+            $this->overrideEnvironmentValue($key, $value);
+        }
+    }
+
+    private function runningTinkerConsoleCommand(): bool
+    {
+        $argv = $_SERVER['argv'] ?? [];
+
+        return in_array('tinker', $argv, true);
+    }
+
+    private function overrideEnvironmentValue(string $key, string $value): void
+    {
+        putenv("{$key}={$value}");
+        $_ENV[$key] = $value;
+        $_SERVER[$key] = $value;
     }
 }

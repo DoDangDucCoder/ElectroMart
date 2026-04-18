@@ -361,12 +361,13 @@ class IntegrationTestingCommand extends Command
         $categories = [];
 
         foreach ($testResults as $category => $result) {
+            $categories[] = $category;
+
             if (isset($result['report']['summary'])) {
                 $summary = $result['report']['summary'];
                 $totalTests += $summary['total_tests'];
                 $passedTests += $summary['passed_tests'];
                 $failedTests += $summary['failed_tests'];
-                $categories[] = $category;
             }
         }
 
@@ -451,7 +452,9 @@ class IntegrationTestingCommand extends Command
                 $summary['failed_tests'] += $categorySummary['failed_tests'];
             }
 
-            if (isset($result['report']['vulnerabilities_found'])) {
+            if (isset($result['report']['summary']['vulnerabilities_found'])) {
+                $summary['vulnerabilities_found'] += $result['report']['summary']['vulnerabilities_found'];
+            } elseif (isset($result['report']['vulnerabilities_found'])) {
                 $summary['vulnerabilities_found'] += $result['report']['vulnerabilities_found'];
             }
 
@@ -512,18 +515,8 @@ class IntegrationTestingCommand extends Command
 
         foreach ($testResults as $category => $result) {
             if (isset($result['results'])) {
-                foreach ($result['results'] as $testCategory => $tests) {
-                    if (is_array($tests)) {
-                        foreach ($tests as $test => $testResult) {
-                            if (is_array($testResult)) {
-                                $status = $testResult['success'] ?? false ? 'PASS' : 'FAIL';
-                                $message = $testResult['message'] ?? '';
-                                $details = json_encode($testResult);
-                                
-                                $csvData[] = [$category, $test, $status, $message, $details];
-                            }
-                        }
-                    }
+                foreach ($this->flattenCsvRows($category, $result['results']) as $row) {
+                    $csvData[] = $row;
                 }
             }
         }
@@ -533,5 +526,31 @@ class IntegrationTestingCommand extends Command
             fputcsv($file, $row);
         }
         fclose($file);
+    }
+
+    private function flattenCsvRows(string $category, array $results, string $prefix = ''): array
+    {
+        $rows = [];
+
+        foreach ($results as $key => $value) {
+            $label = $prefix !== '' ? $prefix . ' > ' . $key : (string) $key;
+
+            if (! is_array($value)) {
+                continue;
+            }
+
+            if (array_key_exists('success', $value) || array_key_exists('message', $value) || array_key_exists('error', $value)) {
+                $status = ($value['success'] ?? false) ? 'PASS' : 'FAIL';
+                $message = (string) ($value['message'] ?? $value['error'] ?? '');
+                $details = json_encode($value);
+
+                $rows[] = [$category, $label, $status, $message, $details];
+                continue;
+            }
+
+            $rows = array_merge($rows, $this->flattenCsvRows($category, $value, $label));
+        }
+
+        return $rows;
     }
 }

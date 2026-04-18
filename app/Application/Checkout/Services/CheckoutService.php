@@ -47,6 +47,10 @@ class CheckoutService
         return DB::transaction(function () use ($customerId, $addressId, $paymentMethod, $notes, $couponCode, $cart, $items) {
             $address = Address::where('customer_id', $customerId)->find($addressId);
 
+            if (! $address) {
+                throw new RuntimeException('Shipping address is invalid.');
+            }
+
             $shippingFee = $this->shippingService->calculateFee(
                 $address?->location_city_id,
                 $address?->location_province_id,
@@ -92,7 +96,7 @@ class CheckoutService
                 'payment_method' => $paymentMethod,
             ];
 
-            $order = $this->createOrderRecord($payload, $customerId, $address?->id, $totals, $couponData);
+            $order = $this->createOrderRecord($payload, $customerId, $address->id, $totals, $couponData);
 
             $this->createOrderItemsFromCart($order, $items);
             $this->createOrderShipping($order, $payload, $shippingFee);
@@ -126,6 +130,10 @@ class CheckoutService
             return null;
         }
 
+        if (in_array($order->status, ['cancelled', 'completed', 'refunded'], true)) {
+            throw new RuntimeException('Order cannot be cancelled in its current status.');
+        }
+
         $order->status = 'cancelled';
         $order->cancelled_at = now();
         $order->save();
@@ -143,7 +151,10 @@ class CheckoutService
 
         return DB::transaction(function () use ($payload, $customerId, $items) {
             $shippingFee = (float) ($payload['shipping_fee'] ?? $this->shippingService->getFee());
-            $couponData = $this->couponService->current();
+            $couponData = $this->couponService->validatedCurrent(
+                $this->cartService->subtotal(),
+                $customerId
+            );
             $totals = $this->cartService->totals($couponData, $shippingFee);
 
             $address = $this->storeCustomerAddress($payload, $customerId);

@@ -35,6 +35,19 @@ class StorefrontLinkTest extends TestCase
 
         $this->assertCount(1, $links);
         $this->assertSame('/video-shop', $links[0]['url']);
+        $this->assertSame('/video-shop', $links[0]['href']);
         $this->assertSame('Video', $links[0]['label']);
+    }
+
+    public function test_it_accepts_url_alias_when_normalizing_href_links(): void
+    {
+        $links = StorefrontLink::normalize([
+            ['url' => '/goi-y-san-pham', 'label' => 'Goi y'],
+        ]);
+
+        $this->assertCount(1, $links);
+        $this->assertSame('/goi-y-san-pham', $links[0]['href']);
+        $this->assertSame('/goi-y-san-pham', $links[0]['url']);
+        $this->assertSame('Goi y', $links[0]['label']);
     }
 }

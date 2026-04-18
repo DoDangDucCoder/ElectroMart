@@ -102,9 +102,9 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>{{ $customer->customer_name ?? 'Chưa có dữ liệu' }}</td>
-                        <td>{{ $customer->customer_phone ?? 'Chưa có dữ liệu' }}</td>
-                        <td>{{ $customer->customer_email ?? 'Chưa có dữ liệu' }}</td>
+                        <td>{{ data_get($customer, 'customer_name', 'Chưa có dữ liệu') }}</td>
+                        <td>{{ data_get($customer, 'customer_phone', 'Chưa có dữ liệu') }}</td>
+                        <td>{{ data_get($customer, 'customer_email', 'Chưa có dữ liệu') }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -124,11 +124,11 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>{{ $shipping->shipping_name ?? 'Chưa có dữ liệu' }}</td>
-                        <td>{{ $shipping->shipping_address ?? 'Chưa có dữ liệu' }}</td>
-                        <td>{{ $shipping->shipping_phone ?? 'Chưa có dữ liệu' }}</td>
-                        <td>{{ $shipping->shipping_email ?? 'Chưa có dữ liệu' }}</td>
-                        <td>{{ $shipping->shipping_notes ?? 'Không có ghi chú' }}</td>
+                        <td>{{ data_get($shipping, 'shipping_name', 'Chưa có dữ liệu') }}</td>
+                        <td>{{ data_get($shipping, 'shipping_address', 'Chưa có dữ liệu') }}</td>
+                        <td>{{ data_get($shipping, 'shipping_phone', 'Chưa có dữ liệu') }}</td>
+                        <td>{{ data_get($shipping, 'shipping_email', 'Chưa có dữ liệu') }}</td>
+                        <td>{{ data_get($shipping, 'shipping_notes') ?: 'Không có ghi chú' }}</td>
                     </tr>
                 </tbody>
             </table>

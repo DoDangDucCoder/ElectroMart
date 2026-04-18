@@ -9,6 +9,7 @@ use App\Application\Cms\Services\BlogCategoryService;
 use App\Models\Slider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class BrandProduct extends Controller
@@ -148,10 +149,7 @@ class BrandProduct extends Controller
     public function show_brand_home(Request $request, string $brandSlug): View
     {
         $categoryPost = $this->blogCategoryService->listAll(['is_active' => true]);
-        $slider = Slider::orderBy('slider_id', 'DESC')
-            ->where('slider_status', '1')
-            ->take(4)
-            ->get();
+        $slider = $this->legacyActiveSliders();
 
         $productCategories = $this->categoryService->listAll(['is_active' => true]);
         $brandList = $this->brandService->listActive();
@@ -179,5 +177,17 @@ class BrandProduct extends Controller
             'slider' => $slider,
             'category_post' => $categoryPost,
         ]);
+    }
+
+    protected function legacyActiveSliders()
+    {
+        if (! Schema::hasTable('tbl_slider')) {
+            return collect();
+        }
+
+        return Slider::orderBy('slider_id', 'DESC')
+            ->where('slider_status', '1')
+            ->take(4)
+            ->get();
     }
 }

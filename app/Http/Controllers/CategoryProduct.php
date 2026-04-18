@@ -115,16 +115,24 @@ class CategoryProduct extends Controller
             $filters['sort'] = $sortMap[$sortBy];
         }
 
-        if ($request->filled('start_price') && $request->filled('end_price')) {
-            $min = (float) $request->input('start_price');
-            $max = (float) $request->input('end_price');
+        $hasMin = $request->filled('start_price');
+        $hasMax = $request->filled('end_price');
 
-            if ($min > $max) {
+        if ($hasMin || $hasMax) {
+            $min = $hasMin ? (float) $request->input('start_price') : null;
+            $max = $hasMax ? (float) $request->input('end_price') : null;
+
+            if ($min !== null && $max !== null && $min > $max) {
                 [$min, $max] = [$max, $min];
             }
 
-            $filters['price_min'] = $min;
-            $filters['price_max'] = $max;
+            if ($min !== null) {
+                $filters['price_min'] = $min;
+            }
+
+            if ($max !== null) {
+                $filters['price_max'] = $max;
+            }
         }
 
         return $filters;

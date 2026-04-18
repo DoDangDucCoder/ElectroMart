@@ -135,7 +135,9 @@ class HomeController extends Controller
             }
 
             $priceRow = (clone $productQuery)
-                ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
+                ->selectRaw(
+                    'MIN(' . $this->effectivePriceExpression() . ') as min_price, MAX(' . $this->effectivePriceExpression() . ') as max_price'
+                )
                 ->first();
 
             $priceBuckets = $this->buildPriceBuckets(
@@ -714,6 +716,11 @@ class HomeController extends Controller
         }
 
         return asset($fallback);
+    }
+
+    private function effectivePriceExpression(): string
+    {
+        return 'CAST(CASE WHEN sale_price IS NOT NULL AND sale_price > 0 THEN sale_price ELSE price END AS REAL)';
     }
 
     private function legacyIcons()

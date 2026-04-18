@@ -305,11 +305,23 @@ class CheckoutController extends Controller
 
     protected function cartContext(): array
     {
-        $coupon = $this->couponService->current();
-        $shippingFee = $this->shippingService->getFee();
+        $items = $this->cartService->items();
+
+        if ($items->isEmpty()) {
+            $this->couponService->clear();
+            $this->shippingService->clearFee();
+        }
+
+        $coupon = $items->isEmpty()
+            ? null
+            : $this->couponService->validatedCurrent(
+                $this->cartService->subtotal(),
+                (int) Session::get('customer_id') ?: null
+            );
+        $shippingFee = $items->isEmpty() ? 0.0 : $this->shippingService->getFee();
 
         return [
-            'cartItems' => $this->cartService->items(),
+            'cartItems' => $items,
             'cartTotals' => $this->cartService->totals($coupon, $shippingFee),
             'coupon' => $coupon,
             'shipping_fee' => $shippingFee,

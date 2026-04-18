@@ -2002,6 +2002,20 @@ class AdminPanelTest extends TestCase
             ->assertSee('Tải xuống');
     }
 
+    public function test_legacy_admin_gg_document_route_maps_to_document_manager(): void
+    {
+        $admin = $this->createAdminUser();
+
+        Storage::fake('public');
+        Storage::disk('public')->put('documents/manual.pdf', 'fake-pdf-content');
+
+        $this->actingAs($admin, 'web')
+            ->get('/gg-document')
+            ->assertOk()
+            ->assertSee('Kho tài liệu')
+            ->assertSee('manual.pdf');
+    }
+
     public function test_admin_document_routes_handle_download_delete_and_failure_paths(): void
     {
         $admin = $this->createAdminUser();
@@ -2085,6 +2099,49 @@ class AdminPanelTest extends TestCase
         ]);
 
         $this->assertSame('Mua sắm công nghệ gọn hơn', Contact::query()->value('slogan_logo'));
+    }
+
+    public function test_admin_save_info_upserts_canonical_information_row(): void
+    {
+        $admin = $this->createAdminUser();
+
+        if (! Schema::hasTable('tbl_infomation')) {
+            Schema::create('tbl_infomation', function (Blueprint $table) {
+                $table->increments('info_id');
+                $table->text('info_contact');
+                $table->text('info_map')->nullable();
+                $table->string('info_logo')->nullable();
+                $table->string('slogan_logo')->nullable();
+                $table->text('info_fanpage')->nullable();
+            });
+        }
+
+        Contact::query()->insert([
+            'info_id' => 2,
+            'info_contact' => 'Legacy row',
+            'info_map' => null,
+            'info_logo' => null,
+            'slogan_logo' => 'Old slogan',
+            'info_fanpage' => null,
+        ]);
+
+        $this->actingAs($admin, 'web')
+            ->from('/information')
+            ->post('/save-info', [
+                'info_contact' => 'Canonical website info',
+                'slogan_logo' => 'Canonical slogan',
+                'info_map' => '<iframe src="https://example.com/map-2"></iframe>',
+                'info_fanpage' => '<iframe src="https://example.com/fanpage-2"></iframe>',
+            ])
+            ->assertRedirect('/information')
+            ->assertSessionHas('message', 'Cập nhật thông tin website thành công');
+
+        $this->assertDatabaseHas('tbl_infomation', [
+            'info_id' => 1,
+            'info_contact' => 'Canonical website info',
+            'slogan_logo' => 'Canonical slogan',
+        ]);
+        $this->assertDatabaseCount('tbl_infomation', 2);
     }
 
     public function test_admin_legacy_actions_validate_input_before_persisting_changes(): void
@@ -2830,6 +2887,32 @@ class AdminPanelTest extends TestCase
             ->assertSee('---Không có dữ liệu xã phường---');
     }
 
+    public function test_admin_delete_icons_also_removes_uploaded_icon_file(): void
+    {
+        $admin = $this->createAdminUser();
+        $this->ensureLegacyIconsTableExists();
+
+        $iconDirectory = public_path('uploads/icons');
+        File::ensureDirectoryExists($iconDirectory);
+        File::put($iconDirectory . '/legacy-delete-icon.png', 'icon');
+
+        $icon = new Icons();
+        $icon->name = 'Delete Me';
+        $icon->image = 'legacy-delete-icon.png';
+        $icon->link = 'https://example.com';
+        $icon->category = 'icons';
+        $icon->save();
+
+        $this->actingAs($admin, 'web')
+            ->delete('/delete-icons', ['id' => $icon->id_icons])
+            ->assertNoContent();
+
+        $this->assertDatabaseMissing('tbl_icons', [
+            'id_icons' => $icon->id_icons,
+        ]);
+        $this->assertFileDoesNotExist($iconDirectory . '/legacy-delete-icon.png');
+    }
+
     public function test_admin_video_actions_return_clear_errors_for_missing_storage_and_missing_records(): void
     {
         $admin = $this->createAdminUser();
@@ -2907,6 +2990,41 @@ class AdminPanelTest extends TestCase
             ->assertJsonPath('errors.video_link.0', 'Vui lòng nhập link video.');
     }
 
+    public function test_admin_can_insert_video_into_legacy_tbl_video_schema(): void
+    {
+        $admin = $this->createAdminUser();
+
+        Schema::dropIfExists('videos');
+        Schema::dropIfExists('tbl_videos');
+        Schema::dropIfExists('tbl_video');
+
+        Schema::create('tbl_video', function (Blueprint $table) {
+            $table->increments('video_id');
+            $table->string('video_title');
+            $table->string('video_slug');
+            $table->string('video_link');
+            $table->string('video_image')->nullable();
+            $table->text('video_desc')->nullable();
+            $table->integer('video_status')->default(1);
+        });
+
+        $this->actingAs($admin, 'web')
+            ->post('/insert-video', [
+                'video_title' => 'Legacy admin insert',
+                'video_slug' => 'legacy-admin-insert',
+                'video_desc' => 'Mo ta video legacy',
+                'video_link' => 'https://youtu.be/dQw4w9WgXcQ',
+            ])
+            ->assertNoContent();
+
+        $this->assertDatabaseHas('tbl_video', [
+            'video_title' => 'Legacy admin insert',
+            'video_slug' => 'legacy-admin-insert',
+            'video_link' => 'dQw4w9WgXcQ',
+            'video_status' => 1,
+        ]);
+    }
+
     public function test_admin_video_list_renders_safe_preview_fallback_for_invalid_video_links(): void
     {
         $admin = $this->createAdminUser();
@@ -2974,6 +3092,23 @@ class AdminPanelTest extends TestCase
             'fee_xaid' => 100,
             'fee_feeship' => 45000,
         ]);
+    }
+
+    public function test_admin_select_feeship_survives_missing_location_tables(): void
+    {
+        $admin = $this->createAdminUser();
+        $this->createLegacyDeliveryFixture();
+
+        Schema::dropIfExists('tbl_xaphuongthitran');
+        Schema::dropIfExists('tbl_quanhuyen');
+        Schema::dropIfExists('tbl_tinhthanhpho');
+
+        $this->actingAs($admin, 'web')
+            ->post('/select-feeship')
+            ->assertOk()
+            ->assertSee('g-admin-data-table')
+            ->assertSee('Chưa cấu hình')
+            ->assertSee('30.000');
     }
 
     protected function createAdminUser(array $attributes = []): User

@@ -161,7 +161,6 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
         Route::post('/save-product', [ProductController::class, 'save_product']);
         Route::post('/update-product/{product_id}', [ProductController::class, 'update_product']);
         Route::post('/delete-document', [ProductController::class, 'delete_document']);
-        Route::get('/gg-document', [ProductController::class, 'gg_document']);
     });
 
     Route::middleware('admin.permission:' . AdminPermissions::MANAGE_PRODUCTS)->group(function () {
@@ -233,6 +232,7 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
             ->where('path', '.*');
         Route::delete('delete_document/{path}', [DocumentController::class, 'delete_document'])
             ->where('path', '.*');
+        Route::get('gg-document', [DocumentController::class, 'read_data']);
         Route::get('read_data', [DocumentController::class, 'read_data']);
     });
 

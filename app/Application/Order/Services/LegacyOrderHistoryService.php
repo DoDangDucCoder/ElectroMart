@@ -7,6 +7,7 @@ use App\Models\Shipping;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class LegacyOrderHistoryService
 {
@@ -17,6 +18,10 @@ class LegacyOrderHistoryService
 
     public function paginateCustomerOrders(int $customerId, int $perPage = 10): LengthAwarePaginator
     {
+        if (! Schema::hasTable((new Order())->getTable())) {
+            return $this->emptyPaginator($perPage);
+        }
+
         $orders = Order::where('customer_id', $customerId)
             ->orderByDesc('order_id')
             ->paginate($perPage);
@@ -115,11 +120,28 @@ class LegacyOrderHistoryService
             ->unique()
             ->values();
 
-        if ($shippingIds->isEmpty()) {
+        if (
+            $shippingIds->isEmpty() ||
+            ! Schema::hasTable((new Shipping())->getTable())
+        ) {
             return collect();
         }
 
         return Shipping::whereIn('shipping_id', $shippingIds)->get()->keyBy(fn ($shipping) => (int) $shipping->shipping_id);
+    }
+
+    protected function emptyPaginator(int $perPage): LengthAwarePaginator
+    {
+        return new LengthAwarePaginator(
+            collect(),
+            0,
+            $perPage,
+            LengthAwarePaginator::resolveCurrentPage(),
+            [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'pageName' => 'page',
+            ]
+        );
     }
 
     protected function statusKey(int $status): string

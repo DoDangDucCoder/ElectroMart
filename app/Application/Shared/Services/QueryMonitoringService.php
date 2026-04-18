@@ -12,6 +12,7 @@ class QueryMonitoringService
     private array $slowQueries = [];
     private float $slowQueryThreshold = 1.0; // seconds
     private bool $isMonitoring = false;
+    private bool $listenerRegistered = false;
 
     public function startMonitoring(): void
     {
@@ -20,12 +21,17 @@ class QueryMonitoringService
         $this->slowQueries = [];
         
         // Enable query logging
+        DB::flushQueryLog();
         DB::enableQueryLog();
         
         // Listen to query executed events
-        DB::listen(function (QueryExecuted $query) {
-            $this->recordQuery($query);
-        });
+        if (! $this->listenerRegistered) {
+            DB::listen(function (QueryExecuted $query) {
+                $this->recordQuery($query);
+            });
+
+            $this->listenerRegistered = true;
+        }
         
         Log::info('Query monitoring started');
     }
@@ -87,6 +93,7 @@ class QueryMonitoringService
                 'slow_queries' => 0,
                 'average_execution_time' => 0,
                 'total_execution_time' => 0,
+                'slow_query_percentage' => 0,
             ];
         }
 
@@ -140,6 +147,10 @@ class QueryMonitoringService
             $queryData['average_time'] = $queryData['total_time'] / $queryData['count'];
         }
 
+        $queryCounts = array_filter($queryCounts, function ($queryData) {
+            return ($queryData['count'] ?? 0) > 1;
+        });
+
         // Sort by count descending
         uasort($queryCounts, function ($a, $b) {
             return $b['count'] <=> $a['count'];
@@ -164,17 +175,18 @@ class QueryMonitoringService
 
         foreach ($this->queries as $query) {
             $sql = strtolower($query['sql']);
+            $normalizedSql = $this->normalizeSqlPrefix($sql);
             
-            if (strpos($sql, 'select') === 0) {
+            if ($this->isSelectQuery($normalizedSql)) {
                 $patterns['select_queries']++;
             }
-            if (strpos($sql, 'insert') === 0) {
+            if (str_starts_with($normalizedSql, 'insert')) {
                 $patterns['insert_queries']++;
             }
-            if (strpos($sql, 'update') === 0) {
+            if (str_starts_with($normalizedSql, 'update')) {
                 $patterns['update_queries']++;
             }
-            if (strpos($sql, 'delete') === 0) {
+            if (str_starts_with($normalizedSql, 'delete')) {
                 $patterns['delete_queries']++;
             }
             if (strpos($sql, ' join ') !== false) {
@@ -195,6 +207,20 @@ class QueryMonitoringService
         }
 
         return $patterns;
+    }
+
+    private function normalizeSqlPrefix(string $sql): string
+    {
+        return ltrim($sql);
+    }
+
+    private function isSelectQuery(string $sql): bool
+    {
+        if (str_starts_with($sql, 'select')) {
+            return true;
+        }
+
+        return preg_match('/^with\b[\s\S]*?\bselect\b/i', $sql) === 1;
     }
 
     public function getTableUsageStatistics(): array
@@ -238,25 +264,41 @@ class QueryMonitoringService
     private function extractTableNames(string $sql): array
     {
         $tables = [];
+        $cteAliases = $this->extractCteAliases($sql);
         
         // Simple regex to extract table names
         $patterns = [
-            '/from\s+`?(\w+)`?/i',
-            '/join\s+`?(\w+)`?/i',
-            '/update\s+`?(\w+)`?/i',
-            '/insert\s+into\s+`?(\w+)`?/i',
-            '/delete\s+from\s+`?(\w+)`?/i',
+            '/from\s+(?:"|`|\[)?(?:(?:\w+)(?:"|`|\])?\.)?(?:"|`|\[)?(\w+)(?:"|`|\])?/i',
+            '/join\s+(?:"|`|\[)?(?:(?:\w+)(?:"|`|\])?\.)?(?:"|`|\[)?(\w+)(?:"|`|\])?/i',
+            '/update\s+(?:"|`|\[)?(?:(?:\w+)(?:"|`|\])?\.)?(?:"|`|\[)?(\w+)(?:"|`|\])?/i',
+            '/insert\s+into\s+(?:"|`|\[)?(?:(?:\w+)(?:"|`|\])?\.)?(?:"|`|\[)?(\w+)(?:"|`|\])?/i',
+            '/delete\s+from\s+(?:"|`|\[)?(?:(?:\w+)(?:"|`|\])?\.)?(?:"|`|\[)?(\w+)(?:"|`|\])?/i',
         ];
 
         foreach ($patterns as $pattern) {
             if (preg_match_all($pattern, $sql, $matches)) {
                 foreach ($matches[1] as $table) {
+                    if (in_array($table, $cteAliases, true)) {
+                        continue;
+                    }
+
                     $tables[] = $table;
                 }
             }
         }
 
         return array_unique($tables);
+    }
+
+    private function extractCteAliases(string $sql): array
+    {
+        if (! str_starts_with(ltrim($sql), 'with')) {
+            return [];
+        }
+
+        preg_match_all('/(?:with|,)\s+(?:"|`|\[)?(\w+)(?:"|`|\])?\s+as\s*\(/i', $sql, $matches);
+
+        return array_values(array_unique($matches[1] ?? []));
     }
 
     public function generateOptimizationRecommendations(): array

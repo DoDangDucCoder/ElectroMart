@@ -59,13 +59,18 @@ class OptimizeDatabaseCommand extends Command
             return;
         }
 
-        $this->table(['Table', 'Operation', 'Msg_type', 'Msg_text'], 
+        if ($this->renderSummaryIfPresent($results)) {
+            return;
+        }
+
+        $this->table(
+            ['Table', 'Operation', 'Status', 'Message'],
             collect($results)->map(function ($result, $table) {
                 return [
                     $table,
-                    $result->Op ?? 'N/A',
-                    $result->Msg_type ?? 'N/A',
-                    $result->Msg_text ?? 'N/A'
+                    data_get($result, 'operation', data_get($result, 'Op', 'N/A')),
+                    data_get($result, 'status', data_get($result, 'Msg_type', 'N/A')),
+                    data_get($result, 'message', data_get($result, 'Msg_text', is_string($result) ? $result : 'N/A')),
                 ];
             })->toArray()
         );
@@ -82,13 +87,18 @@ class OptimizeDatabaseCommand extends Command
             return;
         }
 
-        $this->table(['Table', 'Operation', 'Msg_type', 'Msg_text'], 
+        if ($this->renderSummaryIfPresent($results)) {
+            return;
+        }
+
+        $this->table(
+            ['Table', 'Operation', 'Status', 'Message'],
             collect($results)->map(function ($result, $table) {
                 return [
                     $table,
-                    $result->Op ?? 'N/A',
-                    $result->Msg_type ?? 'N/A',
-                    $result->Msg_text ?? 'N/A'
+                    data_get($result, 'operation', data_get($result, 'Op', 'N/A')),
+                    data_get($result, 'status', data_get($result, 'Msg_type', 'N/A')),
+                    data_get($result, 'message', data_get($result, 'Msg_text', is_string($result) ? $result : 'N/A')),
                 ];
             })->toArray()
         );
@@ -110,10 +120,10 @@ class OptimizeDatabaseCommand extends Command
             $this->table(['Key_name', 'Column_name', 'Index_type', 'Cardinality'], 
                 collect($indexes)->map(function ($index) {
                     return [
-                        $index->Key_name ?? 'N/A',
-                        $index->Column_name ?? 'N/A',
-                        $index->Index_type ?? 'N/A',
-                        $index->Cardinality ?? 'N/A'
+                        $index->Key_name ?? $index->name ?? $index->indexname ?? 'N/A',
+                        $index->Column_name ?? data_get($index, 'origin', 'N/A'),
+                        $index->Index_type ?? data_get($index, 'unique', 'N/A'),
+                        $index->Cardinality ?? data_get($index, 'partial', 'N/A'),
                     ];
                 })->toArray()
             );
@@ -165,7 +175,7 @@ class OptimizeDatabaseCommand extends Command
         $this->table(['Query', 'Exec Count', 'Avg Time (s)', 'Max Time (s)', 'Rows Examined'], 
             collect($queries)->map(function ($query) {
                 return [
-                    substr($query->query ?? 'N/A', 0, 50) . '...',
+                    substr($query->query ?? $query->sql_text ?? 'N/A', 0, 50) . '...',
                     number_format($query->exec_count ?? 0),
                     number_format($query->avg_time_seconds ?? 0, 4),
                     number_format($query->max_time_seconds ?? 0, 4),
@@ -232,5 +242,53 @@ class OptimizeDatabaseCommand extends Command
         }
         
         return round($bytes, 2) . ' ' . $units[$unitIndex];
+    }
+
+    private function renderSummaryIfPresent(array $results): bool
+    {
+        $summary = $results['__summary'] ?? null;
+
+        if (! is_array($summary)) {
+            return false;
+        }
+
+        $this->renderSummary($summary);
+
+        return true;
+    }
+
+    private function renderSummary(array $summary): void
+    {
+        $line = $this->formatSummaryLine($summary);
+
+        if (($summary['status'] ?? null) === 'ok') {
+            $this->info($line);
+            return;
+        }
+
+        if (($summary['status'] ?? null) === 'error') {
+            $this->error($line);
+            return;
+        }
+
+        $this->warn($line);
+    }
+
+    private function formatSummaryLine(array $summary): string
+    {
+        $operation = (string) ($summary['operation'] ?? 'operation');
+        $status = (string) ($summary['status'] ?? 'unknown');
+        $driver = (string) ($summary['driver'] ?? 'unknown');
+        $tableCount = (int) ($summary['table_count'] ?? 0);
+        $message = trim((string) ($summary['message'] ?? ''));
+        $tableLabel = $tableCount === 1 ? 'table' : 'tables';
+
+        $line = "Database {$operation} {$status} for {$driver} driver across {$tableCount} {$tableLabel}";
+
+        if ($message !== '') {
+            $line .= ": {$message}";
+        }
+
+        return $line;
     }
 }

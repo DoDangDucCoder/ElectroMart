@@ -1,0 +1,8 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+
+:root {
+    --bs-body-bg: #f8fafc;
+    --bs-body-font-family: 'Nunito', sans-serif;
+    --bs-body-font-size: 0.9rem;
+    --bs-body-line-height: 1.6;
+}

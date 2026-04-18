@@ -52,6 +52,10 @@ class AdminPermissionHardeningTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($editor, 'web')
+            ->get('/gg-document')
+            ->assertForbidden();
+
+        $this->actingAs($editor, 'web')
             ->get('/download_document/documents/manual.pdf/manual.pdf')
             ->assertForbidden();
 

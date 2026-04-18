@@ -83,6 +83,83 @@ class LegacyContentPagesTest extends TestCase
             ]);
     }
 
+    public function test_watch_video_returns_not_found_for_inactive_modern_video(): void
+    {
+        $inactiveVideo = Video::create([
+            'title' => 'Video inactive storefront',
+            'slug' => 'video-inactive-storefront',
+            'description' => 'Không nên hiện ra ngoài storefront',
+            'video_url' => 'https://youtu.be/dQw4w9WgXcQ',
+            'thumbnail_path' => 'uploads/product/no-image.svg',
+            'is_active' => false,
+            'display_order' => 99,
+        ]);
+
+        $this->post('/watch-video', [
+            'video_id' => $inactiveVideo->id,
+        ])->assertNotFound()
+            ->assertJsonFragment([
+                'video_title' => 'Video không tồn tại',
+            ]);
+    }
+
+    public function test_legacy_video_storefront_supports_tbl_video_and_hides_inactive_rows(): void
+    {
+        Schema::dropIfExists('videos');
+        Schema::dropIfExists('tbl_videos');
+        Schema::dropIfExists('tbl_video');
+
+        Schema::create('tbl_video', function (Blueprint $table) {
+            $table->increments('video_id');
+            $table->string('video_title');
+            $table->string('video_slug');
+            $table->string('video_link');
+            $table->string('video_image')->nullable();
+            $table->text('video_desc')->nullable();
+            $table->integer('video_status')->default(1);
+        });
+
+        DB::table('tbl_video')->insert([
+            [
+                'video_id' => 1,
+                'video_title' => 'Legacy video active',
+                'video_slug' => 'legacy-video-active',
+                'video_link' => 'dQw4w9WgXcQ',
+                'video_image' => null,
+                'video_desc' => 'Video legacy đang hoạt động',
+                'video_status' => 1,
+            ],
+            [
+                'video_id' => 2,
+                'video_title' => 'Legacy video inactive',
+                'video_slug' => 'legacy-video-inactive',
+                'video_link' => 'inactiveVideoId',
+                'video_image' => null,
+                'video_desc' => 'Video legacy đã ẩn',
+                'video_status' => 0,
+            ],
+        ]);
+
+        $this->get('/video-shop')
+            ->assertOk()
+            ->assertSee('Legacy video active')
+            ->assertDontSee('Legacy video inactive');
+
+        $this->post('/watch-video', [
+            'video_id' => 1,
+        ])->assertOk()
+            ->assertJsonFragment([
+                'video_title' => 'Legacy video active',
+            ]);
+
+        $this->post('/watch-video', [
+            'video_id' => 2,
+        ])->assertNotFound()
+            ->assertJsonFragment([
+                'video_title' => 'Video không tồn tại',
+            ]);
+    }
+
     protected function createLegacyContactTable(): void
     {
         if (! Schema::hasTable('tbl_infomation')) {

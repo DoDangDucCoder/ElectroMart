@@ -28,8 +28,8 @@ class EagerLoadingService
             // Order relationships
             'orders' => [
                 'default' => ['customer', 'items'],
-                'detailed' => ['customer', 'items.product', 'shipping', 'payment'],
-                'admin' => ['customer', 'items.product', 'shipping', 'payment', 'customer.addresses'],
+                'detailed' => ['customer', 'items.product', 'shipping', 'payments'],
+                'admin' => ['customer', 'items.product', 'shipping', 'payments', 'customer.addresses'],
             ],
             
             // Customer relationships
@@ -50,7 +50,7 @@ class EagerLoadingService
             'brands' => [
                 'default' => [],
                 'detailed' => ['products'],
-                'admin' => ['products.category'],
+                'admin' => ['products.primaryCategory'],
             ],
         ];
     }
@@ -123,7 +123,7 @@ class EagerLoadingService
                 'customer_name' => 'customer',
                 'items' => 'items',
                 'shipping_address' => 'shipping',
-                'payment_method' => 'payment',
+                'payment_method' => 'payments',
             ],
             'customers' => [
                 'addresses' => 'addresses',
@@ -142,11 +142,10 @@ class EagerLoadingService
 
     private function getModelName(Model $model): string
     {
-        $className = get_class($model);
-        $parts = explode('\\', $className);
-        $modelName = end($parts);
-        
-        return strtolower($modelName);
+        return match ($model->getTable()) {
+            'product_categories' => 'categories',
+            default => $model->getTable(),
+        };
     }
 
     public function optimizeNPlusOneQueries(Builder $query): Builder
@@ -179,7 +178,7 @@ class EagerLoadingService
                 'items:id,order_id,product_id,quantity,price',
                 'items.product:id,name,slug,price',
                 'shipping:id,order_id,address',
-                'payment:id,order_id,method,status',
+                'payments:id,order_id,method,status',
             ],
             'customers' => [
                 'addresses:id,customer_id,label,address_line1',
@@ -360,7 +359,7 @@ class EagerLoadingService
                 'items:id,order_id,product_id,product_name,quantity,price',
                 'items.product:id,name,slug,sku',
                 'shipping:id,order_id,address,phone,notes',
-                'payment:id,order_id,method,status,amount',
+                'payments:id,order_id,method,status,amount',
                 'customer.addresses:id,customer_id,label,address_line1',
             ],
             'customers' => [
@@ -368,6 +367,16 @@ class EagerLoadingService
                 'orders:id,customer_id,total,status,created_at',
                 'orders.items:id,order_id,product_name,quantity',
                 'loyaltyTier:id,name,benefits,min_points',
+            ],
+            'categories' => [
+                'parent:id,name,slug',
+                'children:id,parent_id,name,slug',
+                'products:id,brand_id,primary_category_id,name,slug,price',
+                'products.brand:id,name,slug',
+            ],
+            'brands' => [
+                'products:id,brand_id,primary_category_id,name,slug,price',
+                'products.primaryCategory:id,name,slug',
             ],
         ];
 

@@ -20,6 +20,7 @@ use Illuminate\Mail\Markdown;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\Response;
 
 class MailController extends Controller
@@ -57,7 +58,7 @@ class MailController extends Controller
             false
         );
 
-        return $this->mailRedirectResponse($result);
+        return $this->mailRedirectResponse($result, '/list-coupon');
     }
 
     public function send_coupon_vip(SendCouponCampaignRequest $request, $coupon_time, $coupon_condition, $coupon_number, $coupon_code)
@@ -67,7 +68,7 @@ class MailController extends Controller
             true
         );
 
-        return $this->mailRedirectResponse($result);
+        return $this->mailRedirectResponse($result, '/list-coupon');
     }
     public function recover_pass(RecoverPasswordRequest $request)
     {
@@ -75,7 +76,7 @@ class MailController extends Controller
             (string) $request->validated('email_account')
         );
 
-        return $this->mailRedirectResponse($result);
+        return $this->mailRedirectResponse($result, '/quen-mat-khau');
     }
     public function reset_new_pass(ResetPasswordRequest $request)
     {
@@ -156,13 +157,28 @@ class MailController extends Controller
         ];
     }
 
-    protected function mailRedirectResponse(array $result)
+    protected function mailRedirectResponse(array $result, string $fallbackPath)
     {
+        $target = $this->safeBackTarget($fallbackPath);
+
         if ($result['ok']) {
-            return redirect()->back()->with('message', $result['message']);
+            return redirect()->to($target)->with('message', $result['message']);
         }
 
-        return redirect()->back()->with('error', $result['message']);
+        return redirect()->to($target)->with('error', $result['message']);
+    }
+
+    protected function safeBackTarget(string $fallbackPath): string
+    {
+        $previous = URL::previous();
+        $current = url()->current();
+        $root = url('/');
+
+        if (! is_string($previous) || $previous === '' || $previous === $current || $previous === $root) {
+            return url($fallbackPath);
+        }
+
+        return $previous;
     }
 
     protected function mailPreviewDefinitions(): array

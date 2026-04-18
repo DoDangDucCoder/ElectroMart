@@ -26,18 +26,44 @@ final class StorefrontLink
                     return null;
                 }
 
-                $url = trim((string) ($link[$urlKey] ?? ''));
+                $url = self::resolveUrl($link, $urlKey);
 
                 if ($url === '') {
                     return null;
                 }
 
-                return array_merge($defaults, $link, [
+                $normalized = array_merge($defaults, $link, [
                     $urlKey => $url,
                 ]);
+
+                if (in_array($urlKey, ['href', 'url'], true)) {
+                    $alternateKey = $urlKey === 'href' ? 'url' : 'href';
+                    $normalized[$alternateKey] = self::resolveUrl($normalized, $alternateKey) ?: $url;
+                }
+
+                return $normalized;
             })
             ->filter()
             ->values();
+    }
+
+    protected static function resolveUrl(array $link, string $urlKey): string
+    {
+        $value = trim((string) ($link[$urlKey] ?? ''));
+
+        if ($value !== '') {
+            return $value;
+        }
+
+        if ($urlKey === 'href') {
+            return trim((string) ($link['url'] ?? ''));
+        }
+
+        if ($urlKey === 'url') {
+            return trim((string) ($link['href'] ?? ''));
+        }
+
+        return '';
     }
 
     protected static function toArray(mixed $link): mixed

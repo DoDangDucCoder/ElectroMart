@@ -12,6 +12,14 @@ class StorefrontCustomerAuth
     public const SESSION_NAME_KEY = 'storefront_customer_name';
     public const SESSION_EMAIL_KEY = 'storefront_customer_email';
     public const SESSION_PICTURE_KEY = 'storefront_customer_picture';
+    protected const BLOCKED_PREFIXES = [
+        '/admin',
+        '/api',
+        '/sanctum',
+        '/broadcasting',
+        '/_debugbar',
+        '/telescope',
+    ];
 
     protected const DESTINATIONS = [
         'login' => '/dang-nhap',
@@ -154,6 +162,12 @@ class StorefrontCustomerAuth
 
         if (in_array($normalizedPath, $blockedPaths, true)) {
             return $fallback;
+        }
+
+        foreach (static::BLOCKED_PREFIXES as $blockedPrefix) {
+            if ($normalizedPath === $blockedPrefix || str_starts_with($normalizedPath, $blockedPrefix . '/')) {
+                return $fallback;
+            }
         }
 
         return url($pathWithQuery);

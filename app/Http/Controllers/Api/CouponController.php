@@ -44,7 +44,7 @@ class CouponController extends Controller
     {
         $coupon = $this->couponService->findActiveByCode($code);
 
-        if (!$coupon) {
+        if (! $coupon || ($coupon->usage_limit !== null && $coupon->used_count >= $coupon->usage_limit)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Coupon not found',

@@ -49,15 +49,15 @@
                     <div class="g-admin-detail-list">
                         <div>
                             <span>Khách hàng</span>
-                            <strong>{{ $customer->customer_name ?? 'Chưa có dữ liệu' }}</strong>
+                            <strong>{{ data_get($customer, 'customer_name', 'Chưa có dữ liệu') }}</strong>
                         </div>
                         <div>
                             <span>Số điện thoại</span>
-                            <strong>{{ $customer->customer_phone ?? 'Chưa có dữ liệu' }}</strong>
+                            <strong>{{ data_get($customer, 'customer_phone', 'Chưa có dữ liệu') }}</strong>
                         </div>
                         <div>
                             <span>Email</span>
-                            <strong>{{ $customer->customer_email ?? 'Chưa có dữ liệu' }}</strong>
+                            <strong>{{ data_get($customer, 'customer_email', 'Chưa có dữ liệu') }}</strong>
                         </div>
                     </div>
                 </div>
@@ -74,30 +74,30 @@
                     <div class="g-admin-detail-list">
                         <div>
                             <span>Người nhận</span>
-                            <strong>{{ $shipping->shipping_name ?? 'Chưa có dữ liệu' }}</strong>
+                            <strong>{{ data_get($shipping, 'shipping_name', 'Chưa có dữ liệu') }}</strong>
                         </div>
                         <div>
                             <span>Địa chỉ</span>
-                            <strong>{{ $shipping->shipping_address ?? 'Chưa có dữ liệu' }}</strong>
+                            <strong>{{ data_get($shipping, 'shipping_address', 'Chưa có dữ liệu') }}</strong>
                         </div>
                         <div>
                             <span>Điện thoại</span>
-                            <strong>{{ $shipping->shipping_phone ?? 'Chưa có dữ liệu' }}</strong>
+                            <strong>{{ data_get($shipping, 'shipping_phone', 'Chưa có dữ liệu') }}</strong>
                         </div>
                         <div>
                             <span>Email</span>
-                            <strong>{{ $shipping->shipping_email ?? 'Chưa có dữ liệu' }}</strong>
+                            <strong>{{ data_get($shipping, 'shipping_email', 'Chưa có dữ liệu') }}</strong>
                         </div>
                         <div>
                             <span>Ghi chú</span>
-                            <strong>{{ $shipping->shipping_notes ?: 'Không có ghi chú' }}</strong>
+                            <strong>{{ data_get($shipping, 'shipping_notes') ?: 'Không có ghi chú' }}</strong>
                         </div>
                         <div>
                             <span>Thanh toán</span>
                             <strong>
-                                @if (($shipping->shipping_method ?? null) == 0)
+                                @if (data_get($shipping, 'shipping_method') == 0)
                                     Chuyển khoản
-                                @elseif(($shipping->shipping_method ?? null) == 1)
+                                @elseif(data_get($shipping, 'shipping_method') == 1)
                                     Tiền mặt
                                 @else
                                     Paypal

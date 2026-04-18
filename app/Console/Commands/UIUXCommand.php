@@ -65,7 +65,15 @@ class UIUXCommand extends Command
         
         foreach ($results as $type => $result) {
             if (is_array($result) && !isset($result['error'])) {
-                $this->info("✓ {$type}: " . count($result) . " files processed");
+                $summary = $this->summarizeOptimizationResult($result);
+                $this->info(sprintf(
+                    '✓ %s: %d files, %d success, %d skipped, %d failed',
+                    $type,
+                    $summary['files'],
+                    $summary['success'],
+                    $summary['skipped'],
+                    $summary['failed']
+                ));
             } elseif (isset($result['error'])) {
                 $this->error("❌ {$type}: {$result['error']}");
             } else {
@@ -85,24 +93,65 @@ class UIUXCommand extends Command
         ]);
     }
 
+    private function summarizeOptimizationResult(array $result): array
+    {
+        $summary = [
+            'files' => 0,
+            'success' => 0,
+            'skipped' => 0,
+            'failed' => 0,
+        ];
+
+        foreach ($result as $entry) {
+            if (! is_array($entry)) {
+                continue;
+            }
+
+            $summary['files']++;
+
+            foreach ($entry as $status) {
+                if (! is_string($status)) {
+                    continue;
+                }
+
+                $normalized = strtolower($status);
+
+                if ($normalized === 'success') {
+                    $summary['success']++;
+                } elseif ($normalized === 'skipped') {
+                    $summary['skipped']++;
+                } elseif ($normalized === 'failed' || $normalized === 'error') {
+                    $summary['failed']++;
+                }
+            }
+        }
+
+        return $summary;
+    }
+
     private function generateResponsive(ResponsiveDesignService $responsiveService): void
     {
         $this->info('Generating responsive design...');
+
+        $outputDirectory = storage_path('app/uiux-generated/responsive');
         
-        $results = $responsiveService->generateResponsiveCSS();
+        $results = $responsiveService->generateResponsiveCSS($outputDirectory);
         
         $this->info('Responsive CSS Generation Results:');
         $this->line('');
         
         foreach ($results as $type => $result) {
             if ($result === 'Generated') {
-                $this->line("✓ {$type}");
+                $this->line("✓ {$type}: Generated in storage");
             } elseif (isset($result['error'])) {
                 $this->error("❌ {$type}: {$result['error']}");
             } else {
                 $this->line("• {$type}: {$result}");
             }
         }
+
+        $this->line('');
+        $this->info('Output directory: ' . $outputDirectory);
         
         // Show statistics
         $stats = $responsiveService->getResponsiveStatistics();
@@ -129,7 +178,7 @@ class UIUXCommand extends Command
         );
         
         // Validate responsive design
-        $validation = $responsiveService->validateResponsiveDesign();
+        $validation = $responsiveService->validateResponsiveDesign($outputDirectory);
         if (!$validation['is_valid']) {
             $this->line('');
             $this->warn('Responsive Design Issues:');
@@ -149,14 +198,19 @@ class UIUXCommand extends Command
         $this->line('');
         
         foreach ($results as $category => $result) {
-            $this->info("✓ {$category}: Enhanced");
-            if (is_array($result)) {
-                foreach ($result as $feature => $status) {
-                    if (is_array($status) && isset($status['enabled'])) {
-                        $icon = $status['enabled'] ? '✓' : '❌';
-                        $this->line("  {$icon} {$feature}");
-                    }
-                }
+            if (isset($result['error'])) {
+                $this->error("❌ {$category}: {$result['error']}");
+                continue;
+            }
+
+            $this->line("• {$category}: Config payload generated");
+
+            if (! is_array($result)) {
+                continue;
+            }
+
+            foreach ($result as $feature => $status) {
+                $this->line("  - {$feature}: " . $this->describeConfigPayloadStatus($status));
             }
         }
         
@@ -194,7 +248,12 @@ class UIUXCommand extends Command
         $this->line('');
         
         foreach ($results as $component => $result) {
-            $this->line("✓ {$component}: Generated");
+            if (isset($result['error'])) {
+                $this->error("❌ {$component}: {$result['error']}");
+                continue;
+            }
+
+            $this->line("• {$component}: Component payload generated");
             if (isset($result['css'])) {
                 $this->line("  • CSS: " . strlen($result['css']) . " characters");
             }
@@ -242,14 +301,18 @@ class UIUXCommand extends Command
         $demoHTML = $this->generateDemoHTML();
         
         // Save demo file
-        $demoPath = public_path('/ui-demo.html');
+        $demoPath = storage_path('app/uiux-demo/ui-demo.html');
+        $demoDirectory = dirname($demoPath);
+        if (! is_dir($demoDirectory)) {
+            mkdir($demoDirectory, 0755, true);
+        }
         file_put_contents($demoPath, $demoHTML);
         
         $this->info("Demo page created at: {$demoPath}");
-        $this->line("Access it at: " . url('/ui-demo.html'));
+        $this->line("Preview file: {$demoPath}");
         
         // Generate component examples
-        $this->generateComponentExamples();
+        $this->generateComponentExamples($demoDirectory . '/component-examples');
         
         $this->info('UI demo page created successfully!');
     }
@@ -439,10 +502,8 @@ class UIUXCommand extends Command
 </html>';
     }
 
-    private function generateComponentExamples(): void
+    private function generateComponentExamples(string $examplesPath): void
     {
-        $examplesPath = public_path('/component-examples');
-        
         if (!is_dir($examplesPath)) {
             mkdir($examplesPath, 0755, true);
         }
@@ -457,7 +518,7 @@ class UIUXCommand extends Command
         foreach ($examples as $filename => $content) {
             file_put_contents($examplesPath . '/' . $filename, $content);
         }
-        
+
         $this->info('Component examples generated in: ' . $examplesPath);
     }
 
@@ -670,5 +731,22 @@ class UIUXCommand extends Command
         $this->line('  php artisan uiux:manage --optimize-assets');
         $this->line('  php artisan uiux:manage --generate-responsive');
         $this->line('  php artisan uiux:manage --full-setup');
+    }
+
+    private function describeConfigPayloadStatus(mixed $status): string
+    {
+        if (! is_array($status)) {
+            return (string) $status;
+        }
+
+        if (array_key_exists('enabled', $status)) {
+            return $status['enabled'] ? 'payload generated' : 'unsupported';
+        }
+
+        if (isset($status['error'])) {
+            return 'error: ' . $status['error'];
+        }
+
+        return 'payload generated';
     }
 }

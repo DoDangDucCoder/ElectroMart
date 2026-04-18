@@ -4,6 +4,7 @@ namespace App\Application\Shared\Services;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use App\Application\Shared\Services\EnhancedCacheService;
 
 class CacheWarmingService
@@ -183,14 +184,34 @@ class CacheWarmingService
     private function warmUpPopularProducts(): void
     {
         try {
+            if (! $this->tableExists('products')) {
+                return;
+            }
+
             // Get most viewed products
-            $popularProducts = DB::table('products')
-                ->where('is_active', true)
-                ->orderBy('views_count', 'desc')
+            $popularProductsQuery = DB::table('products')
+                ->when(
+                    $this->columnExists('products', 'is_active'),
+                    fn ($query) => $query->where('is_active', true)
+                );
+
+            if ($this->columnExists('products', 'views_count')) {
+                $popularProductsQuery->orderByDesc('views_count');
+            } elseif ($this->columnExists('products', 'created_at')) {
+                $popularProductsQuery->orderByDesc('created_at');
+            } else {
+                $popularProductsQuery->orderByDesc('id');
+            }
+
+            $popularProducts = $popularProductsQuery
                 ->limit(20)
                 ->get();
 
             foreach ($popularProducts as $product) {
+                if (! isset($product->slug)) {
+                    continue;
+                }
+
                 $this->cacheService->getProductBySlug($product->slug);
             }
         } catch (\Exception $e) {
@@ -201,18 +222,39 @@ class CacheWarmingService
     private function warmUpTrendingCategories(): void
     {
         try {
+            if (
+                ! $this->tableExists('product_categories') ||
+                ! $this->tableExists('products') ||
+                ! $this->columnExists('product_categories', 'slug') ||
+                ! $this->columnExists('products', 'primary_category_id')
+            ) {
+                return;
+            }
+
             // Get categories with most products
-            $trendingCategories = DB::table('product_categories')
+            $trendingCategoriesQuery = DB::table('product_categories')
                 ->join('products', 'product_categories.id', '=', 'products.primary_category_id')
-                ->where('product_categories.is_active', true)
-                ->where('products.is_active', true)
-                ->select('product_categories.*')
-                ->groupBy('product_categories.id')
+                ->select('product_categories.id', 'product_categories.slug')
+                ->groupBy('product_categories.id', 'product_categories.slug');
+
+            if ($this->columnExists('product_categories', 'is_active')) {
+                $trendingCategoriesQuery->where('product_categories.is_active', true);
+            }
+
+            if ($this->columnExists('products', 'is_active')) {
+                $trendingCategoriesQuery->where('products.is_active', true);
+            }
+
+            $trendingCategories = $trendingCategoriesQuery
                 ->orderByRaw('COUNT(products.id) DESC')
                 ->limit(10)
                 ->get();
 
             foreach ($trendingCategories as $category) {
+                if (! isset($category->slug)) {
+                    continue;
+                }
+
                 $this->cacheService->getProductsByCategory($category->slug, [], 12);
             }
         } catch (\Exception $e) {
@@ -223,14 +265,38 @@ class CacheWarmingService
     private function warmUpRecentBlogPosts(): void
     {
         try {
+            if (! $this->tableExists('blog_posts') || ! $this->columnExists('blog_posts', 'slug')) {
+                return;
+            }
+
             // Get recent blog posts
-            $recentPosts = DB::table('blog_posts')
-                ->where('is_active', true)
-                ->orderBy('created_at', 'desc')
+            $recentPostsQuery = DB::table('blog_posts');
+
+            if ($this->columnExists('blog_posts', 'status')) {
+                $recentPostsQuery->where('status', 'published');
+            } elseif ($this->columnExists('blog_posts', 'is_active')) {
+                $recentPostsQuery->where('is_active', true);
+            }
+
+            if ($this->columnExists('blog_posts', 'published_at')) {
+                $recentPostsQuery->orderByDesc('published_at');
+            } elseif ($this->columnExists('blog_posts', 'created_at')) {
+                $recentPostsQuery->orderByDesc('created_at');
+            } elseif ($this->columnExists('blog_posts', 'updated_at')) {
+                $recentPostsQuery->orderByDesc('updated_at');
+            } else {
+                $recentPostsQuery->orderByDesc('id');
+            }
+
+            $recentPosts = $recentPostsQuery
                 ->limit(10)
                 ->get();
 
             foreach ($recentPosts as $post) {
+                if (! isset($post->slug)) {
+                    continue;
+                }
+
                 // Cache individual blog post
                 $this->cacheService->remember("blog_post_{$post->slug}", function () use ($post) {
                     return $post;
@@ -415,5 +481,34 @@ class CacheWarmingService
             'total_strategies' => count($this->warmingStrategies),
             'cache_service_stats' => $this->cacheService->getCacheStatistics(),
         ];
+    }
+
+    private function tableExists(string $table): bool
+    {
+        try {
+            return Schema::hasTable($table);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to inspect cache warming table', [
+                'table' => $table,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    private function columnExists(string $table, string $column): bool
+    {
+        try {
+            return Schema::hasColumn($table, $column);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to inspect cache warming column', [
+                'table' => $table,
+                'column' => $column,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 }

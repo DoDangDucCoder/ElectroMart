@@ -14,12 +14,7 @@ class LegacyOrderPresentationService
 {
     public function loadOrderPackage(string $orderCode): ?array
     {
-        if (
-            ! Schema::hasTable((new Order())->getTable()) ||
-            ! Schema::hasTable((new OrderDetails())->getTable()) ||
-            ! Schema::hasTable((new Customer())->getTable()) ||
-            ! Schema::hasTable((new Shipping())->getTable())
-        ) {
+        if (! Schema::hasTable((new Order())->getTable())) {
             return null;
         }
 
@@ -28,14 +23,20 @@ class LegacyOrderPresentationService
             return null;
         }
 
-        $details = OrderDetails::with('product')
-            ->where('order_code', $orderCode)
-            ->get();
+        $details = Schema::hasTable((new OrderDetails())->getTable())
+            ? OrderDetails::with('product')
+                ->where('order_code', $orderCode)
+                ->get()
+            : collect();
 
         return [
             'order' => $order,
-            'customer' => Customer::where('customer_id', $order->customer_id)->first(),
-            'shipping' => Shipping::where('shipping_id', $order->shipping_id)->first(),
+            'customer' => Schema::hasTable((new Customer())->getTable())
+                ? Customer::where('customer_id', $order->customer_id)->first()
+                : null,
+            'shipping' => Schema::hasTable((new Shipping())->getTable())
+                ? Shipping::where('shipping_id', $order->shipping_id)->first()
+                : null,
             'details' => $details,
             'totals' => $this->calculateTotals($orderCode, $details),
         ];
@@ -43,9 +44,13 @@ class LegacyOrderPresentationService
 
     public function calculateTotals(string $orderCode, $details = null): array
     {
-        $details = $details instanceof Collection
-            ? $details
-            : OrderDetails::where('order_code', $orderCode)->get();
+        if ($details instanceof Collection) {
+            $details = $details;
+        } elseif (Schema::hasTable((new OrderDetails())->getTable())) {
+            $details = OrderDetails::where('order_code', $orderCode)->get();
+        } else {
+            $details = collect();
+        }
 
         $subtotal = (float) $details->sum(fn ($item) => $item->product_price * $item->product_sales_quantity);
         $firstDetail = $details->first();

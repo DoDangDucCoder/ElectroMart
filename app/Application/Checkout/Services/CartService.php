@@ -8,6 +8,7 @@ use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Models\ProductAttribute;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -145,13 +146,25 @@ class CartService
 
     public function updateQuantity(string $sessionId, int $quantity): void
     {
-        $cart = $this->items()->map(function (array $item) use ($sessionId, $quantity) {
-            if ($item['session_id'] === $sessionId) {
-                $item['product_qty'] = max(1, $quantity);
-            }
+        $cart = $this->items();
+        $index = $cart->search(fn (array $item) => $item['session_id'] === $sessionId);
 
-            return $item;
-        });
+        if ($index === false) {
+            throw new RuntimeException('Không tìm thấy sản phẩm cần cập nhật.');
+        }
+
+        $item = $cart[$index];
+        $nextQuantity = max(1, $quantity);
+        $availableStock = (int) ($item['product_quantity'] ?? 0);
+        $itemLabel = $item['attribute_label']
+            ?? $item['product_attribute']
+            ?? $item['product_name']
+            ?? null;
+
+        $this->ensureAvailableQuantity($availableStock, $nextQuantity, $itemLabel);
+
+        $item['product_qty'] = $nextQuantity;
+        $cart->put($index, $item);
 
         $this->persist($cart);
     }
@@ -242,6 +255,10 @@ class CartService
     {
         if (! $attributeId) {
             return [];
+        }
+
+        if (! Schema::hasTable((new ProductAttribute())->getTable())) {
+            throw new RuntimeException('Tùy chọn sản phẩm hiện không khả dụng.');
         }
 
         /** @var ProductAttribute|null $attribute */

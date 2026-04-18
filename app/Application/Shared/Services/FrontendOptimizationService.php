@@ -4,7 +4,6 @@ namespace App\Application\Shared\Services;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 
 class FrontendOptimizationService
 {
@@ -58,6 +57,8 @@ class FrontendOptimizationService
     {
         Log::info('Starting frontend asset optimization...');
 
+        $this->cleanupGeneratedArtifacts();
+
         $results = [
             'css' => $this->optimizeCSS(),
             'js' => $this->optimizeJS(),
@@ -70,6 +71,20 @@ class FrontendOptimizationService
         return $results;
     }
 
+    public function cleanupGeneratedArtifacts(): array
+    {
+        return [
+            'css' => $this->cleanupDirectoryArtifacts(
+                $this->publicPath . '/frontend/css',
+                fn (string $path): bool => $this->shouldDeleteGeneratedCssArtifact($path)
+            ),
+            'js' => $this->cleanupDirectoryArtifacts(
+                $this->publicPath . '/frontend/js',
+                fn (string $path): bool => $this->shouldDeleteGeneratedJsArtifact($path)
+            ),
+        ];
+    }
+
     private function optimizeCSS(): array
     {
         $results = [];
@@ -79,7 +94,10 @@ class FrontendOptimizationService
             return ['error' => 'CSS directory not found'];
         }
 
-        $cssFiles = File::glob($cssPath . '/*.css');
+        $cssFiles = collect(File::glob($cssPath . '/*.css'))
+            ->reject(fn (string $file) => ! $this->isProcessableAsset($file, 'css'))
+            ->values()
+            ->all();
         
         foreach ($cssFiles as $file) {
             $filename = basename($file);
@@ -130,7 +148,10 @@ class FrontendOptimizationService
             return ['error' => 'JS directory not found'];
         }
 
-        $jsFiles = File::glob($jsPath . '/*.js');
+        $jsFiles = collect(File::glob($jsPath . '/*.js'))
+            ->reject(fn (string $file) => ! $this->isProcessableAsset($file, 'js'))
+            ->values()
+            ->all();
         
         foreach ($jsFiles as $file) {
             $filename = basename($file);
@@ -173,7 +194,10 @@ class FrontendOptimizationService
             return ['error' => 'Images directory not found'];
         }
 
-        $imageFiles = File::glob($imagePath . '/**/*.{jpg,jpeg,png,gif}', GLOB_BRACE);
+        $imageFiles = collect($this->findFilesByExtensions($imagePath, ['jpg', 'jpeg', 'png', 'gif']))
+            ->reject(fn (string $file) => ! $this->isProcessableAsset($file, 'images'))
+            ->values()
+            ->all();
         
         foreach ($imageFiles as $file) {
             $filename = basename($file);
@@ -182,21 +206,33 @@ class FrontendOptimizationService
             try {
                 // Optimize image
                 if ($this->optimizationConfig['images']['optimize']) {
-                    $optimized = $this->optimizeImage($file);
-                    $results[$filename]['optimized'] = $optimized ? 'Success' : 'Failed';
+                    if ($this->canOptimizeImages()) {
+                        $optimized = $this->optimizeImage($file);
+                        $results[$filename]['optimized'] = $optimized ? 'Success' : 'Failed';
+                    } else {
+                        $results[$filename]['optimized'] = 'Skipped';
+                    }
                 }
 
                 // Convert to WebP
                 if ($this->optimizationConfig['images']['webp'] && in_array($extension, ['jpg', 'jpeg', 'png'])) {
-                    $webpPath = str_replace('.' . $extension, '.webp', $file);
-                    $webpCreated = $this->convertToWebP($file, $webpPath);
-                    $results[$filename]['webp'] = $webpCreated ? 'Success' : 'Failed';
+                    if ($this->canConvertImagesToWebp()) {
+                        $webpPath = str_replace('.' . $extension, '.webp', $file);
+                        $webpCreated = $this->convertToWebP($file, $webpPath);
+                        $results[$filename]['webp'] = $webpCreated ? 'Success' : 'Failed';
+                    } else {
+                        $results[$filename]['webp'] = 'Skipped';
+                    }
                 }
 
                 // Generate responsive images
                 if ($this->optimizationConfig['images']['responsive']) {
-                    $responsive = $this->generateResponsiveImages($file);
-                    $results[$filename]['responsive'] = $responsive ? 'Success' : 'Failed';
+                    if ($this->canGenerateResponsiveImages()) {
+                        $responsive = $this->generateResponsiveImages($file);
+                        $results[$filename]['responsive'] = $responsive ? 'Success' : 'Failed';
+                    } else {
+                        $results[$filename]['responsive'] = 'Skipped';
+                    }
                 }
 
             } catch (\Exception $e) {
@@ -220,7 +256,10 @@ class FrontendOptimizationService
             return ['error' => 'Fonts directory not found'];
         }
 
-        $fontFiles = File::glob($fontPath . '/*.{woff,woff2,ttf,otf}', GLOB_BRACE);
+        $fontFiles = collect($this->findFilesByExtensions($fontPath, ['woff', 'ttf', 'otf']))
+            ->reject(fn (string $file) => ! $this->isProcessableAsset($file, 'fonts'))
+            ->values()
+            ->all();
         
         foreach ($fontFiles as $file) {
             $filename = basename($file);
@@ -228,15 +267,23 @@ class FrontendOptimizationService
             try {
                 // Generate font preload
                 if ($this->optimizationConfig['fonts']['preload']) {
-                    $preload = $this->generateFontPreload($file);
-                    $results[$filename]['preload'] = $preload ? 'Success' : 'Failed';
+                    if ($this->canGenerateFontPreload()) {
+                        $preload = $this->generateFontPreload($file);
+                        $results[$filename]['preload'] = $preload ? 'Success' : 'Failed';
+                    } else {
+                        $results[$filename]['preload'] = 'Skipped';
+                    }
                 }
 
                 // Convert to WOFF2
                 if ($this->optimizationConfig['fonts']['woff2']) {
-                    $woff2Path = str_replace(['.woff', '.ttf', '.otf'], '.woff2', $file);
-                    $woff2Created = $this->convertToWOFF2($file, $woff2Path);
-                    $results[$filename]['woff2'] = $woff2Created ? 'Success' : 'Failed';
+                    if ($this->canConvertFontsToWoff2()) {
+                        $woff2Path = str_replace(['.woff', '.ttf', '.otf'], '.woff2', $file);
+                        $woff2Created = $this->convertToWOFF2($file, $woff2Path);
+                        $results[$filename]['woff2'] = $woff2Created ? 'Success' : 'Failed';
+                    } else {
+                        $results[$filename]['woff2'] = 'Skipped';
+                    }
                 }
 
             } catch (\Exception $e) {
@@ -307,6 +354,34 @@ class FrontendOptimizationService
         }
         
         return implode("\n", $purgedLines);
+    }
+
+    private function isSelectorUsed(string $selector, array $usedSelectors): bool
+    {
+        $parts = preg_split('/[\s>+~,:]+/', trim($selector)) ?: [];
+
+        foreach ($parts as $part) {
+            $part = trim($part);
+
+            if ($part === '' || str_starts_with($part, '@')) {
+                continue;
+            }
+
+            if (str_starts_with($part, '.')) {
+                $className = ltrim($part, '.#');
+                if (in_array($className, $usedSelectors, true)) {
+                    return true;
+                }
+
+                continue;
+            }
+
+            if (preg_match('/^[a-z][a-z0-9-]*$/i', $part) === 1) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function generateCriticalCSS(string $css): string
@@ -388,6 +463,31 @@ class FrontendOptimizationService
         return true;
     }
 
+    private function canOptimizeImages(): bool
+    {
+        return false;
+    }
+
+    private function canConvertImagesToWebp(): bool
+    {
+        return false;
+    }
+
+    private function canGenerateResponsiveImages(): bool
+    {
+        return false;
+    }
+
+    private function canGenerateFontPreload(): bool
+    {
+        return false;
+    }
+
+    private function canConvertFontsToWoff2(): bool
+    {
+        return false;
+    }
+
     private function generateFontPreload(string $fontPath): bool
     {
         // Generate preload link for font
@@ -409,7 +509,7 @@ class FrontendOptimizationService
     private function getUsedCSSSelectors(): array
     {
         // Scan blade templates for used CSS classes
-        $templates = File::glob($this->resourcesPath . '/views/**/*.blade.php');
+        $templates = $this->findFilesByExtensions($this->resourcesPath . '/views', ['blade.php']);
         $selectors = [];
         
         foreach ($templates as $template) {
@@ -429,7 +529,7 @@ class FrontendOptimizationService
     private function getUsedJSFunctions(): array
     {
         // Scan blade templates for used JavaScript functions
-        $templates = File::glob($this->resourcesPath . '/views/**/*.blade.php');
+        $templates = $this->findFilesByExtensions($this->resourcesPath . '/views', ['blade.php']);
         $functions = [];
         
         foreach ($templates as $template) {
@@ -448,7 +548,10 @@ class FrontendOptimizationService
         $manifest = [];
         
         // CSS files
-        $cssFiles = File::glob($this->publicPath . '/frontend/css/*.css');
+        $cssFiles = collect(File::glob($this->publicPath . '/frontend/css/*.css'))
+            ->filter(fn (string $file) => $this->isProcessableAsset($file, 'css'))
+            ->values()
+            ->all();
         foreach ($cssFiles as $file) {
             $manifest['css'][] = [
                 'file' => basename($file),
@@ -458,7 +561,10 @@ class FrontendOptimizationService
         }
         
         // JS files
-        $jsFiles = File::glob($this->publicPath . '/frontend/js/*.js');
+        $jsFiles = collect(File::glob($this->publicPath . '/frontend/js/*.js'))
+            ->filter(fn (string $file) => $this->isProcessableAsset($file, 'js'))
+            ->values()
+            ->all();
         foreach ($jsFiles as $file) {
             $manifest['js'][] = [
                 'file' => basename($file),
@@ -468,11 +574,14 @@ class FrontendOptimizationService
         }
         
         // Images
-        $imageFiles = File::glob($this->publicPath . '/uploads/**/*.{jpg,jpeg,png,gif}', GLOB_BRACE);
+        $imageFiles = collect($this->findFilesByExtensions($this->publicPath . '/uploads', ['jpg', 'jpeg', 'png', 'gif']))
+            ->filter(fn (string $file) => $this->isProcessableAsset($file, 'images'))
+            ->values()
+            ->all();
         foreach ($imageFiles as $file) {
             $manifest['images'][] = [
                 'file' => basename($file),
-                'path' => str_replace($this->publicPath, '', $file),
+                'path' => str_replace('\\', '/', str_replace($this->publicPath, '', $file)),
                 'size' => File::size($file),
                 'modified' => File::lastModified($file),
             ];
@@ -572,5 +681,109 @@ class FrontendOptimizationService
                 'font_preload' => $this->optimizationConfig['fonts']['preload'],
             ],
         ];
+    }
+
+    private function findFilesByExtensions(string $directory, array $extensions): array
+    {
+        if (! File::isDirectory($directory)) {
+            return [];
+        }
+
+        $normalizedExtensions = array_map(
+            static fn (string $extension) => ltrim(strtolower($extension), '.'),
+            $extensions
+        );
+
+        return collect(File::allFiles($directory))
+            ->map(static fn ($file) => $file->getPathname())
+            ->filter(function (string $path) use ($normalizedExtensions) {
+                $filename = strtolower(basename($path));
+
+                foreach ($normalizedExtensions as $extension) {
+                    if (str_ends_with($filename, '.' . $extension)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            })
+            ->values()
+            ->all();
+    }
+
+    private function isGeneratedOptimizationArtifact(string $path): bool
+    {
+        $filename = strtolower(pathinfo($path, PATHINFO_FILENAME));
+
+        foreach (['.min', '.purged', '.critical', '.shaken'] as $suffix) {
+            if (str_ends_with($filename, $suffix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function cleanupDirectoryArtifacts(string $directory, callable $shouldDelete): array
+    {
+        if (! File::isDirectory($directory)) {
+            return [];
+        }
+
+        $deleted = [];
+
+        foreach (File::files($directory) as $file) {
+            $path = $file->getPathname();
+
+            if (! $shouldDelete($path)) {
+                continue;
+            }
+
+            File::delete($path);
+            $deleted[] = basename($path);
+        }
+
+        return $deleted;
+    }
+
+    private function shouldDeleteGeneratedCssArtifact(string $path): bool
+    {
+        $filename = strtolower(pathinfo($path, PATHINFO_FILENAME));
+
+        if (str_contains($filename, '.critical') || str_contains($filename, '.purged')) {
+            return true;
+        }
+
+        return substr_count($filename, '.min') > 1;
+    }
+
+    private function shouldDeleteGeneratedJsArtifact(string $path): bool
+    {
+        $filename = strtolower(pathinfo($path, PATHINFO_FILENAME));
+
+        if (str_contains($filename, '.shaken')) {
+            return true;
+        }
+
+        return substr_count($filename, '.min') > 1;
+    }
+
+    private function isProcessableAsset(string $path, string $type): bool
+    {
+        if ($this->isGeneratedOptimizationArtifact($path)) {
+            return false;
+        }
+
+        $basename = strtolower(basename($path));
+
+        if ($type === 'fonts' && str_ends_with($basename, '.woff2')) {
+            return false;
+        }
+
+        if ($type === 'images' && preg_match('/_\d+\.(jpg|jpeg|png|gif)$/', $basename) === 1) {
+            return false;
+        }
+
+        return true;
     }
 }

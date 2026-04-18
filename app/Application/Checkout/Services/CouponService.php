@@ -19,7 +19,51 @@ class CouponService
 
     public function current(): ?array
     {
-        return Session::get(self::SESSION_KEY);
+        return $this->validatedCurrent();
+    }
+
+    public function validatedCurrent(?float $subtotal = null, ?int $customerId = null): ?array
+    {
+        $data = Session::get(self::SESSION_KEY);
+
+        if (! is_array($data) || empty($data)) {
+            return null;
+        }
+
+        $code = $data['code'] ?? null;
+
+        if (! is_string($code) || trim($code) === '') {
+            $this->clear();
+
+            return null;
+        }
+
+        if ($subtotal === null) {
+            return $data;
+        }
+
+        $validation = $this->validateCoupon($code, $subtotal, $customerId);
+
+        if (! ($validation['valid'] ?? false)) {
+            $this->clear();
+
+            return null;
+        }
+
+        $coupon = $validation['coupon'];
+        $payload = [
+            'id' => $coupon->id,
+            'code' => $coupon->code,
+            'type' => $coupon->type,
+            'value' => (float) $coupon->value,
+            'discount_amount' => (float) $validation['discount_amount'],
+            'max_discount' => (float) ($coupon->max_discount ?? 0),
+        ];
+
+        Session::put(self::SESSION_KEY, $payload);
+        Session::save();
+
+        return $payload;
     }
 
     public function paginateCoupons(array $filters = [], int $perPage = 15): LengthAwarePaginator
@@ -110,7 +154,7 @@ class CouponService
 
     public function resolveCouponFromSession(): ?Coupon
     {
-        $data = $this->current();
+        $data = Session::get(self::SESSION_KEY);
 
         if (! $data) {
             return null;

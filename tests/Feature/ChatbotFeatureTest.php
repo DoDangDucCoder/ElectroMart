@@ -10,6 +10,7 @@ use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use App\Infrastructure\Persistence\Eloquent\Order\Order;
 use App\Infrastructure\Persistence\Eloquent\Order\OrderItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -170,6 +171,43 @@ class ChatbotFeatureTest extends TestCase
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.bot_message.response_type', 'faq')
             ->assertJsonPath('data.conversation.channel', 'api');
+
+        $this->assertNotEmpty($response->json('data.conversation.session_token'));
+    }
+
+    public function test_storefront_chatbot_conversation_falls_back_to_stateless_mode_when_tables_are_missing(): void
+    {
+        Schema::dropIfExists('chat_messages');
+        Schema::dropIfExists('chat_conversations');
+
+        $response = $this->getJson('/chatbot/conversation');
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.id', null)
+            ->assertJsonPath('data.channel', 'storefront')
+            ->assertJsonPath('data.messages.0.sender', 'bot')
+            ->assertJsonPath('data.messages.0.response_type', 'welcome');
+
+        $this->assertNotEmpty($response->json('data.session_token'));
+    }
+
+    public function test_api_chatbot_message_endpoint_falls_back_to_stateless_mode_when_tables_are_missing(): void
+    {
+        Schema::dropIfExists('chat_messages');
+        Schema::dropIfExists('chat_conversations');
+
+        $response = $this->postJson('/api/v1/chatbot/messages', [
+            'message' => 'Shop có hỗ trợ giao hàng không?',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.conversation.id', null)
+            ->assertJsonPath('data.conversation.channel', 'api')
+            ->assertJsonPath('data.conversation.messages.0.response_type', 'welcome')
+            ->assertJsonPath('data.user_message.sender', 'user')
+            ->assertJsonPath('data.bot_message.response_type', 'faq');
 
         $this->assertNotEmpty($response->json('data.conversation.session_token'));
     }

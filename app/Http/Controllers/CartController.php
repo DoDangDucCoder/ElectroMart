@@ -155,7 +155,11 @@ class CartController extends Controller
     {
         $validated = $request->validated();
 
-        $this->cartService->updateQuantity($validated['session_id'], (int) $validated['quantity']);
+        try {
+            $this->cartService->updateQuantity($validated['session_id'], (int) $validated['quantity']);
+        } catch (RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         return response()->json(['message' => 'Đã cập nhật số lượng.']);
     }
@@ -198,18 +202,34 @@ class CartController extends Controller
     {
         $validated = $request->validated();
 
-        $this->cartService->updateQuantity($validated['rowId_cart'], (int) $validated['cart_quantity']);
+        try {
+            $this->cartService->updateQuantity($validated['rowId_cart'], (int) $validated['cart_quantity']);
+        } catch (RuntimeException $e) {
+            return Redirect::back()->with('error', $e->getMessage());
+        }
 
         return Redirect::to('/gio-hang')->with('message', 'Đã cập nhật giỏ hàng.');
     }
 
     protected function cartContext(): array
     {
-        $coupon = $this->couponService->current();
-        $shippingFee = $this->shippingService->getFee();
+        $items = $this->cartService->items();
+
+        if ($items->isEmpty()) {
+            $this->couponService->clear();
+            $this->shippingService->clearFee();
+        }
+
+        $coupon = $items->isEmpty()
+            ? null
+            : $this->couponService->validatedCurrent(
+                $this->cartService->subtotal(),
+                (int) Session::get('customer_id') ?: null
+            );
+        $shippingFee = $items->isEmpty() ? 0.0 : $this->shippingService->getFee();
 
         return [
-            'cartItems' => $this->cartService->items(),
+            'cartItems' => $items,
             'cartTotals' => $this->cartService->totals($coupon, $shippingFee),
             'coupon' => $coupon,
             'shipping_fee' => $shippingFee,

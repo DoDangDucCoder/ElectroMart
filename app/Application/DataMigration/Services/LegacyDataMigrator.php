@@ -413,13 +413,14 @@ class LegacyDataMigrator
         $address = $this->getOrCreateAddress($shippingRecord, $customer);
 
         $details = DB::table('tbl_order_details')->where('order_code', $legacy->order_code)->get();
+        $firstDetail = $details->first();
         $subtotal = $details->sum(function ($detail) {
             return (float) ($detail->product_price ?? 0) * (int) ($detail->product_sales_quantity ?? 0);
         });
-        $shippingFee = (float) ($details->first()->product_feeship ?? 0);
+        $shippingFee = (float) ($firstDetail->product_feeship ?? 0);
         $total = (float) ($legacy->order_total ?? ($subtotal + $shippingFee));
 
-        $couponCode = $this->normalizeCouponCode($details->first()->product_coupon ?? null);
+        $couponCode = $this->normalizeCouponCode($firstDetail->product_coupon ?? null);
         $discount = max(0.0, ($subtotal + $shippingFee) - $total);
 
         $order->fill([

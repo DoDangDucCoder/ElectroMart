@@ -17,6 +17,7 @@ class OptimizePerformanceCommand extends Command
     protected $signature = 'performance:optimize 
                             {--cache-warm : Warm up cache}
                             {--query-monitor : Start query monitoring}
+                            {--query-monitor-seconds=3 : Seconds to keep query monitoring active}
                             {--query-analyze : Analyze query performance}
                             {--cache-stats : Show cache statistics}
                             {--db-optimize : Optimize database}
@@ -87,8 +88,11 @@ class OptimizePerformanceCommand extends Command
         
         $this->info('Query monitoring started. Use Ctrl+C to stop.');
         
-        // Keep monitoring for 30 seconds
-        sleep(30);
+        $duration = max((int) $this->option('query-monitor-seconds'), 0);
+
+        if ($duration > 0) {
+            sleep($duration);
+        }
         
         $monitoringService->stopMonitoring();
         
@@ -224,7 +228,11 @@ class OptimizePerformanceCommand extends Command
     {
         $this->info('Optimizing database...');
         
-        $results = $dbService->optimizeDatabase();
+        $results = [
+            'optimize_tables' => $dbService->optimizeTables(),
+            'analyze_tables' => $dbService->analyzeTables(),
+            'missing_indexes' => $dbService->addMissingIndexes(),
+        ];
         
         $this->info('Database optimization completed!');
         
@@ -276,8 +284,11 @@ class OptimizePerformanceCommand extends Command
         
         // Show test results
         foreach ($results as $test => $result) {
-            if (isset($result['status']) && $result['status'] === 'success') {
+            if (($result['status'] ?? null) === 'success') {
                 $this->line("✓ {$test}: {$result['total_time']}s");
+            } elseif (($result['status'] ?? null) === 'skipped') {
+                $reason = $result['reason'] ?? 'Skipped';
+                $this->line("- {$test}: Skipped ({$reason})");
             } else {
                 $this->line("❌ {$test}: Failed");
             }
@@ -388,6 +399,7 @@ class OptimizePerformanceCommand extends Command
         $this->line('Available options:');
         $this->line('  --cache-warm     Warm up application cache');
         $this->line('  --query-monitor  Start query monitoring');
+        $this->line('  --query-monitor-seconds=3 Seconds to keep monitoring active');
         $this->line('  --query-analyze  Analyze query performance');
         $this->line('  --cache-stats    Show cache statistics');
         $this->line('  --db-optimize    Optimize database');

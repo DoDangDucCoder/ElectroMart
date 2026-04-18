@@ -929,7 +929,18 @@ class BrowserAutomationTestingService
     private function testNavigationLink(array $link): array
     {
         try {
-            $url = $this->baseUrl . $link['url'];
+            $url = $this->normalizeNavigationUrl($link['url'] ?? null);
+
+            if ($url === null) {
+                return [
+                    'url' => $link['url'] ?? '',
+                    'text' => $link['text'] ?? '',
+                    'success' => true,
+                    'skipped' => true,
+                    'message' => 'Link skipped',
+                ];
+            }
+
             $response = Http::timeout(10)->get($url);
             
             return [
@@ -947,6 +958,40 @@ class BrowserAutomationTestingService
                 'error' => $e->getMessage(),
             ];
         }
+    }
+
+    private function normalizeNavigationUrl(?string $url): ?string
+    {
+        $url = trim((string) $url);
+
+        if ($url === '' || str_starts_with($url, '#')) {
+            return null;
+        }
+
+        if (
+            str_starts_with($url, 'javascript:')
+            || str_starts_with($url, 'mailto:')
+            || str_starts_with($url, 'tel:')
+        ) {
+            return null;
+        }
+
+        if (preg_match('/^https?:\/\//i', $url) === 1) {
+            $targetHost = parse_url($url, PHP_URL_HOST);
+            $baseHost = parse_url($this->baseUrl, PHP_URL_HOST);
+
+            return $targetHost === $baseHost ? $url : null;
+        }
+
+        if (str_starts_with($url, '//')) {
+            return null;
+        }
+
+        if (str_starts_with($url, '/')) {
+            return rtrim($this->baseUrl, '/') . $url;
+        }
+
+        return rtrim($this->baseUrl, '/') . '/' . ltrim($url, '/');
     }
 
     private function extractBreadcrumbs(string $html): array
@@ -1264,24 +1309,7 @@ class BrowserAutomationTestingService
 
     public function generateTestReport(): array
     {
-        $totalTests = 0;
-        $passedTests = 0;
-        $failedTests = 0;
-
-        foreach ($this->testResults as $category => $tests) {
-            if (is_array($tests)) {
-                foreach ($tests as $test) {
-                    if (is_array($test) && isset($test['success'])) {
-                        $totalTests++;
-                        if ($test['success']) {
-                            $passedTests++;
-                        } else {
-                            $failedTests++;
-                        }
-                    }
-                }
-            }
-        }
+        ['total' => $totalTests, 'passed' => $passedTests, 'failed' => $failedTests] = $this->countTestOutcomes($this->testResults);
 
         return [
             'summary' => [
@@ -1293,6 +1321,34 @@ class BrowserAutomationTestingService
             'categories' => array_keys($this->testResults),
             'recommendations' => $this->generateRecommendations(),
         ];
+    }
+
+    private function countTestOutcomes(array $tests): array
+    {
+        $counts = ['total' => 0, 'passed' => 0, 'failed' => 0];
+
+        foreach ($tests as $test) {
+            if (! is_array($test)) {
+                continue;
+            }
+
+            if (array_key_exists('success', $test)) {
+                $counts['total']++;
+
+                if ($test['success']) {
+                    $counts['passed']++;
+                } else {
+                    $counts['failed']++;
+                }
+            }
+
+            $nested = $this->countTestOutcomes($test);
+            $counts['total'] += $nested['total'];
+            $counts['passed'] += $nested['passed'];
+            $counts['failed'] += $nested['failed'];
+        }
+
+        return $counts;
     }
 
     private function generateRecommendations(): array

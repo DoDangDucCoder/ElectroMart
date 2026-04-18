@@ -19,8 +19,16 @@ class ProductViewTrackingService
 
         $recentView = ProductView::query()
             ->where('product_id', $product->id)
-            ->when($customerId, function ($query) use ($customerId) {
-                $query->where('customer_id', $customerId);
+            ->when($customerId || $ipAddress, function ($query) use ($customerId, $ipAddress) {
+                $query->where(function ($match) use ($customerId, $ipAddress) {
+                    if ($customerId) {
+                        $match->orWhere('customer_id', $customerId);
+                    }
+
+                    if ($ipAddress) {
+                        $match->orWhere('ip_address', $ipAddress);
+                    }
+                });
             }, function ($query) use ($ipAddress) {
                 $query->where('ip_address', $ipAddress);
             })

@@ -33,7 +33,7 @@ class DeliveryController extends Controller
 
 		$fee_ship = Feeship::find($data['feeship_id']);
 		if (! $fee_ship) {
-			return response()->noContent();
+			return response()->json(['message' => 'Không tìm thấy cấu hình phí vận chuyển cần cập nhật.'], 404);
 		}
 
 		$fee_value = $this->numericInputNormalizer->digitsOnly($data['fee_value']);
@@ -48,7 +48,31 @@ class DeliveryController extends Controller
 			return response('<div class="g-admin-empty-state">Chưa có cấu hình phí vận chuyển nào trên môi trường này.</div>');
 		}
 
-		$feeship = Feeship::orderby('fee_id', 'DESC')->get();
+		$feeship = Feeship::orderby('fee_id', 'DESC')->get()->map(function (Feeship $fee) {
+			$fee->city_name = $this->resolveLocationName(
+				Schema::hasTable((new City())->getTable()),
+				City::class,
+				'matp',
+				$fee->fee_matp,
+				'name_city'
+			);
+			$fee->province_name = $this->resolveLocationName(
+				Schema::hasTable((new Province())->getTable()),
+				Province::class,
+				'maqh',
+				$fee->fee_maqh,
+				'name_quanhuyen'
+			);
+			$fee->ward_name = $this->resolveLocationName(
+				Schema::hasTable((new Wards())->getTable()),
+				Wards::class,
+				'xaid',
+				$fee->fee_xaid,
+				'name_xaphuong'
+			);
+
+			return $fee;
+		});
 
 		return response()->view('admin.delivery.partials.feeship_table', compact('feeship'));
 	}
@@ -115,5 +139,21 @@ class DeliveryController extends Controller
 			'valueField' => 'xaid',
 			'labelField' => 'name_xaphuong',
 		]);
+	}
+
+	private function resolveLocationName(
+		bool $tableExists,
+		string $modelClass,
+		string $keyColumn,
+		int|string|null $keyValue,
+		string $labelColumn
+	): ?string {
+		if (! $tableExists || $keyValue === null) {
+			return null;
+		}
+
+		return $modelClass::query()
+			->where($keyColumn, $keyValue)
+			->value($labelColumn);
 	}
 }

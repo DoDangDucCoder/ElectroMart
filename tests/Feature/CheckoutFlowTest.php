@@ -152,7 +152,7 @@ class CheckoutFlowTest extends TestCase
         $this->postJson('/calculate-fee', [
             'city_id' => 'abc',
         ])->assertUnprocessable()
-            ->assertJsonValidationErrors(['city_id']);
+            ->assertJsonValidationErrors(['city_id', 'province_id', 'ward_id']);
 
         $this->postJson('/confirm-order', [
             'shipping_email' => '',
@@ -168,6 +168,13 @@ class CheckoutFlowTest extends TestCase
                 'shipping_phone',
                 'shipping_method',
             ]);
+    }
+
+    public function test_calculate_fee_requires_full_shipping_location_selection(): void
+    {
+        $this->postJson('/calculate-fee', [])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['city_id', 'province_id', 'ward_id']);
     }
 
     public function test_checkout_requires_valid_customer_session_to_confirm_order(): void
@@ -317,6 +324,57 @@ class CheckoutFlowTest extends TestCase
         $this->assertSame(100000.0, (float) $orderItem->discount_amount);
         $this->assertSame(500000.0, (float) $orderItem->revenue);
         $this->assertSame(140000.0, (float) $orderItem->profit);
+    }
+
+    public function test_confirm_order_ignores_stale_coupon_session_that_no_longer_meets_minimum_total(): void
+    {
+        $customer = Customer::create([
+            'name' => 'Stale Coupon Customer',
+            'email' => 'stale-coupon@example.com',
+            'password' => bcrypt('secret123'),
+            'phone' => '0977777777',
+            'is_active' => true,
+        ]);
+
+        Session::put('customer_id', $customer->id);
+
+        $this->cartService->clear();
+        $this->cartService->addItem($this->productId, 1);
+
+        $coupon = Coupon::create([
+            'code' => 'MIN200',
+            'name' => 'Minimum 200k',
+            'type' => 'fixed',
+            'value' => 50000,
+            'min_order_total' => 300000,
+            'usage_limit' => null,
+            'usage_per_customer' => null,
+            'used_count' => 0,
+            'is_active' => true,
+        ]);
+
+        Session::put('coupon', [
+            'id' => $coupon->id,
+            'code' => $coupon->code,
+            'type' => $coupon->type,
+            'value' => (float) $coupon->value,
+            'discount_amount' => 50000,
+            'max_discount' => 0,
+        ]);
+
+        $this->postJson('/confirm-order', [
+            'shipping_email' => 'stale-coupon@example.com',
+            'shipping_name' => 'Stale Coupon Customer',
+            'shipping_address' => '123 Session Street',
+            'shipping_phone' => '0977777777',
+            'shipping_method' => 'cod',
+        ])->assertOk();
+
+        $order = \App\Infrastructure\Persistence\Eloquent\Order\Order::query()->latest('id')->firstOrFail();
+
+        $this->assertSame(0.0, (float) $order->coupon_discount);
+        $this->assertNull($order->coupon_code);
+        $this->assertNull(session('coupon'));
     }
 
     protected function createProduct(): int

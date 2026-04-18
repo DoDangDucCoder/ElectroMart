@@ -190,6 +190,47 @@ class ProductProfitReportTest extends TestCase
             ->assertJsonPath('summary.profit', 140000);
     }
 
+    public function test_product_profit_report_handles_missing_order_date_columns(): void
+    {
+        $admin = $this->createAdminUser('Manager');
+        [$product] = $this->createCompletedOrderFixtures();
+
+        $order = Order::query()->latest('id')->firstOrFail();
+        $order->forceFill([
+            'created_at' => now()->subDays(4),
+            'updated_at' => now()->subDays(4),
+        ])->save();
+
+        \DB::statement('DROP INDEX IF EXISTS orders_placed_at_created_at_index');
+        \DB::statement('DROP INDEX IF EXISTS idx_orders_placed');
+        \DB::statement('DROP INDEX IF EXISTS idx_orders_completed');
+
+        Schema::table('orders', function (Blueprint $table) {
+            $table->dropColumn(['completed_at', 'placed_at']);
+        });
+
+        $this->actingAs($admin, 'web')
+            ->get('/product-profit?' . http_build_query([
+                'date_from' => now()->subDays(5)->toDateString(),
+                'date_to' => now()->subDays(3)->toDateString(),
+            ]))
+            ->assertOk()
+            ->assertSee('Lợi nhuận sản phẩm')
+            ->assertSee($product->product_name);
+
+        Sanctum::actingAs($admin);
+
+        $this->getJson('/api/v1/admin/statistics/products-profit?' . http_build_query([
+            'date_from' => now()->subDays(5)->toDateString(),
+            'date_to' => now()->subDays(3)->toDateString(),
+        ]))
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.0.product_name', $product->product_name)
+            ->assertJsonPath('summary.revenue', 500000)
+            ->assertJsonPath('summary.profit', 140000);
+    }
+
     /**
      * @return array{0: Product, 1: ProductCategory, 2: Brand}
      */

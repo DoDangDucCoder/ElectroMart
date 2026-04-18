@@ -74,6 +74,24 @@ class LegacyMailFlowTest extends TestCase
         $this->assertNotEmpty($customer->customer_token);
     }
 
+    public function test_mail_routes_fall_back_to_canonical_pages_without_referer(): void
+    {
+        $this->ensureLegacyCustomerTableExists();
+        $this->ensureLegacyCouponTableExists();
+
+        $admin = $this->createAdminUser();
+
+        $this->actingAs($admin, 'web')
+            ->post('/send-coupon/10/1/15/MISSING')
+            ->assertRedirect('/list-coupon')
+            ->assertSessionHas('error', 'Không tìm thấy mã khuyến mãi cần gửi.');
+
+        $this->post('/recover-pass', [
+            'email_account' => 'missing@example.com',
+        ])->assertRedirect('/quen-mat-khau')
+            ->assertSessionHas('error', 'Email chưa được đăng ký để khôi phục mật khẩu');
+    }
+
     public function test_reset_new_pass_validates_and_updates_legacy_customer_password(): void
     {
         $this->ensureLegacyCustomerTableExists();

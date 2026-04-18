@@ -81,6 +81,56 @@ class CategoryPageTest extends TestCase
             ->assertSee('Giá: 15.000.000 VND - 30.000.000 VND');
     }
 
+    public function test_category_page_applies_single_sided_min_price_filter(): void
+    {
+        $low = $this->createProduct('Gaming Laptop Budget', 12000000);
+        $mid = $this->createProduct('Gaming Laptop Mid Range', 18000000);
+        $high = $this->createProduct('Gaming Laptop Premium', 26000000);
+
+        $this->get('/danh-muc/' . $this->category->slug_category_product . '?' . http_build_query([
+            'start_price' => 15000000,
+        ]))
+            ->assertOk()
+            ->assertDontSee($low->product_name)
+            ->assertSee($mid->product_name)
+            ->assertSee($high->product_name);
+    }
+
+    public function test_category_page_filters_using_discounted_final_price(): void
+    {
+        $discounted = $this->createProduct('Gaming Laptop Flash Deal', 22000000, [
+            'sale_type' => 'fixed',
+            'sale_value' => 7000000,
+        ]);
+        $regular = $this->createProduct('Gaming Laptop Regular Price', 16000000);
+
+        $this->get('/danh-muc/' . $this->category->slug_category_product . '?' . http_build_query([
+            'start_price' => 14000000,
+            'end_price' => 15000000,
+        ]))
+            ->assertOk()
+            ->assertSee($discounted->product_name)
+            ->assertDontSee($regular->product_name);
+    }
+
+    public function test_category_page_sorts_by_discounted_final_price(): void
+    {
+        $lowestFinalPrice = $this->createProduct('Gaming Laptop Deep Discount', 30000000, [
+            'sale_type' => 'fixed',
+            'sale_value' => 15000000,
+        ]);
+        $midFinalPrice = $this->createProduct('Gaming Laptop Mid Price', 17000000);
+        $highestFinalPrice = $this->createProduct('Gaming Laptop High Price', 21000000);
+
+        $this->get('/danh-muc/' . $this->category->slug_category_product . '?sort_by=tang_dan')
+            ->assertOk()
+            ->assertSeeInOrder([
+                $lowestFinalPrice->product_name,
+                $midFinalPrice->product_name,
+                $highestFinalPrice->product_name,
+            ]);
+    }
+
     public function test_category_page_renders_sale_badge_and_breakdown_on_product_cards(): void
     {
         $product = $this->createProduct('Gaming Laptop Sale', 20000000, [

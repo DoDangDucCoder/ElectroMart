@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Schema;
 
 class SecurityMonitoringService
 {
@@ -53,8 +54,17 @@ class SecurityMonitoringService
     private function logToFile(array $eventData): void
     {
         $logLevel = $this->getLogLevel($eventData['level']);
-        
-        Log::channel('security')->{$logLevel}('Security Event', $eventData);
+
+        try {
+            if (is_array(config('logging.channels.security'))) {
+                Log::channel('security')->log($logLevel, 'Security Event', $eventData);
+                return;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Security log channel unavailable', ['error' => $e->getMessage()]);
+        }
+
+        Log::log($logLevel, 'Security Event', $eventData);
     }
 
     private function getLogLevel(string $threatLevel): string
@@ -85,6 +95,10 @@ class SecurityMonitoringService
     private function storeInDatabase(array $eventData): void
     {
         try {
+            if (! $this->schemaHasTable('security_events')) {
+                return;
+            }
+
             DB::table('security_events')->insert([
                 'event_type' => $eventData['event'],
                 'threat_level' => $eventData['level'],
@@ -95,7 +109,7 @@ class SecurityMonitoringService
                 'created_at' => $eventData['timestamp'],
                 'updated_at' => $eventData['timestamp'],
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to store security event in database', [
                 'error' => $e->getMessage(),
                 'event' => $eventData,
@@ -132,14 +146,27 @@ class SecurityMonitoringService
 
     private function getEventCount(string $eventType, $since): int
     {
+        if (! $this->schemaHasTable('security_events')) {
+            return 0;
+        }
+
         $cacheKey = "event_count_{$eventType}_" . $since->format('Y-m-d-H');
-        
-        return Cache::remember($cacheKey, 3600, function () use ($eventType, $since) {
-            return DB::table('security_events')
-                ->where('event_type', $eventType)
-                ->where('created_at', '>=', $since)
-                ->count();
-        });
+
+        try {
+            return Cache::remember($cacheKey, 3600, function () use ($eventType, $since) {
+                return DB::table('security_events')
+                    ->where('event_type', $eventType)
+                    ->where('created_at', '>=', $since)
+                    ->count();
+            });
+        } catch (\Throwable $e) {
+            Log::warning('Failed to count security events', [
+                'event_type' => $eventType,
+                'error' => $e->getMessage(),
+            ]);
+
+            return 0;
+        }
     }
 
     private function detectSuspiciousPattern(array $eventData): bool
@@ -160,11 +187,19 @@ class SecurityMonitoringService
             return false;
         }
 
-        $recentFailures = DB::table('security_events')
-            ->where('event_type', 'failed_login')
-            ->where('ip_address', $eventData['ip_address'])
-            ->where('created_at', '>=', now()->subMinutes(5))
-            ->count();
+        if (! $this->schemaHasTable('security_events')) {
+            return false;
+        }
+
+        try {
+            $recentFailures = DB::table('security_events')
+                ->where('event_type', 'failed_login')
+                ->where('ip_address', $eventData['ip_address'])
+                ->where('created_at', '>=', now()->subMinutes(5))
+                ->count();
+        } catch (\Throwable $e) {
+            return false;
+        }
 
         return $recentFailures >= 10;
     }
@@ -179,11 +214,19 @@ class SecurityMonitoringService
             return true;
         }
 
+        if (! $this->schemaHasTable('security_events')) {
+            return false;
+        }
+
         // Check if IP has been flagged before
-        $previousFlags = DB::table('security_events')
-            ->where('ip_address', $ip)
-            ->where('threat_level', 'high')
-            ->count();
+        try {
+            $previousFlags = DB::table('security_events')
+                ->where('ip_address', $ip)
+                ->where('threat_level', 'high')
+                ->count();
+        } catch (\Throwable $e) {
+            return false;
+        }
 
         return $previousFlags > 0;
     }
@@ -258,6 +301,10 @@ class SecurityMonitoringService
     private function storeAlert(array $alert): void
     {
         try {
+            if (! $this->schemaHasTable('security_alerts')) {
+                return;
+            }
+
             DB::table('security_alerts')->insert([
                 'alert_type' => $alert['type'],
                 'severity' => $alert['severity'],
@@ -265,7 +312,7 @@ class SecurityMonitoringService
                 'created_at' => $alert['timestamp'],
                 'updated_at' => $alert['timestamp'],
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to store security alert', [
                 'error' => $e->getMessage(),
                 'alert' => $alert,
@@ -335,6 +382,10 @@ class SecurityMonitoringService
 
     private function getRecentEvents(int $hours): array
     {
+        if (! $this->schemaHasTable('security_events')) {
+            return [];
+        }
+
         return DB::table('security_events')
             ->where('created_at', '>=', now()->subHours($hours))
             ->orderBy('created_at', 'desc')
@@ -352,10 +403,20 @@ class SecurityMonitoringService
             ->toArray();
     }
 
-    private function getThreatLevelStats($since): array
+    private function getThreatLevelStats($since, $until = null): array
     {
+        if (! $this->schemaHasTable('security_events')) {
+            return [
+                'low' => 0,
+                'medium' => 0,
+                'high' => 0,
+                'critical' => 0,
+            ];
+        }
+
         $stats = DB::table('security_events')
             ->where('created_at', '>=', $since)
+            ->when($until !== null, fn ($query) => $query->where('created_at', '<=', $until))
             ->select('threat_level', DB::raw('count(*) as count'))
             ->groupBy('threat_level')
             ->get()
@@ -370,10 +431,15 @@ class SecurityMonitoringService
         ];
     }
 
-    private function getTopEvents($since): array
+    private function getTopEvents($since, $until = null): array
     {
+        if (! $this->schemaHasTable('security_events')) {
+            return [];
+        }
+
         return DB::table('security_events')
             ->where('created_at', '>=', $since)
+            ->when($until !== null, fn ($query) => $query->where('created_at', '<=', $until))
             ->select('event_type', DB::raw('count(*) as count'))
             ->groupBy('event_type')
             ->orderBy('count', 'desc')
@@ -384,6 +450,10 @@ class SecurityMonitoringService
 
     private function getSuspiciousIPs($since): array
     {
+        if (! $this->schemaHasTable('security_events')) {
+            return [];
+        }
+
         return DB::table('security_events')
             ->where('created_at', '>=', $since)
             ->whereIn('threat_level', ['high', 'critical'])
@@ -397,6 +467,10 @@ class SecurityMonitoringService
 
     private function getFailedLoginStats($since): array
     {
+        if (! $this->schemaHasTable('security_events')) {
+            return [];
+        }
+
         $stats = DB::table('security_events')
             ->where('created_at', '>=', $since)
             ->where('event_type', 'failed_login')
@@ -412,6 +486,10 @@ class SecurityMonitoringService
 
     private function getRecentAlerts(int $hours): array
     {
+        if (! $this->schemaHasTable('security_alerts')) {
+            return [];
+        }
+
         return DB::table('security_alerts')
             ->where('created_at', '>=', now()->subHours($hours))
             ->orderBy('created_at', 'desc')
@@ -425,19 +503,30 @@ class SecurityMonitoringService
         // This is a simplified implementation
         // In production, use a proper IP geolocation service
         try {
-            $response = file_get_contents("http://ip-api.com/json/{$ip}");
+            if (! filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                return null;
+            }
+
+            $context = stream_context_create([
+                'http' => [
+                    'timeout' => 1,
+                ],
+            ]);
+
+            $response = @file_get_contents("http://ip-api.com/json/{$ip}", false, $context);
             $data = json_decode($response, true);
             
             if ($data && $data['status'] === 'success') {
                 return [
                     'country' => $data['country'],
+                    'country_code' => $data['countryCode'] ?? null,
                     'region' => $data['regionName'],
                     'city' => $data['city'],
                     'lat' => $data['lat'],
                     'lon' => $data['lon'],
                 ];
             }
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::warning('Failed to get IP location', [
                 'ip' => $ip,
                 'error' => $e->getMessage(),
@@ -450,20 +539,30 @@ class SecurityMonitoringService
     private function isUnusualLocation(array $location): bool
     {
         // Define expected locations (countries where your business operates)
-        $expectedCountries = ['US', 'CA', 'GB', 'DE', 'FR'];
+        $expectedCountryCodes = ['US', 'CA', 'GB', 'DE', 'FR'];
+        $expectedCountryNames = ['United States', 'Canada', 'United Kingdom', 'Germany', 'France'];
+
+        $countryCode = strtoupper((string) ($location['country_code'] ?? ''));
+        $countryName = (string) ($location['country'] ?? '');
         
-        return !in_array($location['country'], $expectedCountries);
+        return ! in_array($countryCode, $expectedCountryCodes, true)
+            && ! in_array($countryName, $expectedCountryNames, true);
     }
 
     public function blockIP(string $ip, string $reason = 'Security violation'): bool
     {
         try {
-            DB::table('blocked_ips')->insert([
+            if (! $this->schemaHasTable('blocked_ips')) {
+                return false;
+            }
+
+            DB::table('blocked_ips')->updateOrInsert([
                 'ip_address' => $ip,
+            ], [
                 'reason' => $reason,
                 'blocked_at' => now(),
-                'created_at' => now(),
                 'updated_at' => now(),
+                'created_at' => now(),
             ]);
 
             Log::info('IP address blocked', [
@@ -473,7 +572,7 @@ class SecurityMonitoringService
             ]);
 
             return true;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Failed to block IP address', [
                 'ip' => $ip,
                 'error' => $e->getMessage(),
@@ -485,20 +584,48 @@ class SecurityMonitoringService
 
     public function isIPBlocked(string $ip): bool
     {
+        if (! $this->schemaHasTable('blocked_ips')) {
+            return false;
+        }
+
         return DB::table('blocked_ips')
             ->where('ip_address', $ip)
             ->exists();
     }
 
+    public function unblockIP(string $ip): bool
+    {
+        try {
+            if (! $this->schemaHasTable('blocked_ips')) {
+                return false;
+            }
+
+            return DB::table('blocked_ips')
+                ->where('ip_address', $ip)
+                ->delete() > 0;
+        } catch (\Throwable $e) {
+            Log::error('Failed to unblock IP address', [
+                'ip' => $ip,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
     public function generateSecurityReport($startDate, $endDate): array
     {
-        $events = DB::table('security_events')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->get();
+        $events = $this->schemaHasTable('security_events')
+            ? DB::table('security_events')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->get()
+            : collect();
 
-        $alerts = DB::table('security_alerts')
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->get();
+        $alerts = $this->schemaHasTable('security_alerts')
+            ? DB::table('security_alerts')
+                ->whereBetween('created_at', [$startDate, $endDate])
+                ->get()
+            : collect();
 
         return [
             'period' => [
@@ -508,13 +635,22 @@ class SecurityMonitoringService
             'summary' => [
                 'total_events' => $events->count(),
                 'total_alerts' => $alerts->count(),
-                'threat_levels' => $this->getThreatLevelStats($startDate),
-                'top_events' => $this->getTopEvents($startDate),
+                'threat_levels' => $this->getThreatLevelStats($startDate, $endDate),
+                'top_events' => $this->getTopEvents($startDate, $endDate),
             ],
             'events' => $events->toArray(),
             'alerts' => $alerts->toArray(),
             'recommendations' => $this->generateSecurityRecommendations($events, $alerts),
         ];
+    }
+
+    private function schemaHasTable(string $table): bool
+    {
+        try {
+            return Schema::hasTable($table);
+        } catch (\Throwable $e) {
+            return false;
+        }
     }
 
     private function generateSecurityRecommendations($events, $alerts): array

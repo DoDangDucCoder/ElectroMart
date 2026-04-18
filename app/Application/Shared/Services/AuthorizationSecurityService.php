@@ -9,6 +9,7 @@ use Spatie\Permission\Models\Permission;
 
 class AuthorizationSecurityService
 {
+    private const ROLE_PERMISSION_CACHE_REGISTRY_PREFIX = 'authorization.role_permission_checks.';
     private array $roleHierarchy = [];
     private array $permissionGroups = [];
     private int $cacheTtl = 3600; // 1 hour
@@ -87,6 +88,7 @@ class AuthorizationSecurityService
     public function checkPermission(string $userRole, string $permission): bool
     {
         $cacheKey = "permission_check_{$userRole}_{$permission}";
+        $this->trackRolePermissionCacheKey($userRole, $cacheKey);
         
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($userRole, $permission) {
             // Check direct permission
@@ -102,7 +104,9 @@ class AuthorizationSecurityService
     private function hasDirectPermission(string $role, string $permission): bool
     {
         try {
-            $roleModel = Role::where('name', $role)->first();
+            $roleModel = Role::where('name', $role)
+                ->where('guard_name', $this->guardName())
+                ->first();
             if (!$roleModel) {
                 return false;
             }
@@ -175,7 +179,9 @@ class AuthorizationSecurityService
         
         return Cache::remember($cacheKey, $this->cacheTtl, function () use ($role) {
             try {
-                $roleModel = Role::where('name', $role)->first();
+                $roleModel = Role::where('name', $role)
+                    ->where('guard_name', $this->guardName())
+                    ->first();
                 if (!$roleModel) {
                     return [];
                 }
@@ -273,14 +279,21 @@ class AuthorizationSecurityService
     public function grantPermissionToRole(string $role, string $permission): bool
     {
         try {
-            $roleModel = Role::where('name', $role)->first();
+            $roleModel = Role::where('name', $role)
+                ->where('guard_name', $this->guardName())
+                ->first();
             if (!$roleModel) {
                 return false;
             }
 
-            $permissionModel = Permission::where('name', $permission)->first();
+            $permissionModel = Permission::where('name', $permission)
+                ->where('guard_name', $this->guardName())
+                ->first();
             if (!$permissionModel) {
-                $permissionModel = Permission::create(['name' => $permission]);
+                $permissionModel = Permission::create([
+                    'name' => $permission,
+                    'guard_name' => $this->guardName(),
+                ]);
             }
 
             $roleModel->givePermissionTo($permissionModel);
@@ -308,12 +321,21 @@ class AuthorizationSecurityService
     public function revokePermissionFromRole(string $role, string $permission): bool
     {
         try {
-            $roleModel = Role::where('name', $role)->first();
+            $roleModel = Role::where('name', $role)
+                ->where('guard_name', $this->guardName())
+                ->first();
             if (!$roleModel) {
                 return false;
             }
 
-            $roleModel->revokePermissionTo($permission);
+            $permissionModel = Permission::where('name', $permission)
+                ->where('guard_name', $this->guardName())
+                ->first();
+            if (! $permissionModel) {
+                return false;
+            }
+
+            $roleModel->revokePermissionTo($permissionModel);
             
             Log::info('Permission revoked from role', [
                 'role' => $role,
@@ -338,13 +360,21 @@ class AuthorizationSecurityService
     public function createRole(string $name, array $permissions = []): bool
     {
         try {
-            $role = Role::create(['name' => $name]);
+            $role = Role::create([
+                'name' => $name,
+                'guard_name' => $this->guardName(),
+            ]);
             
             if (!empty($permissions)) {
                 foreach ($permissions as $permission) {
-                    $permissionModel = Permission::where('name', $permission)->first();
+                    $permissionModel = Permission::where('name', $permission)
+                        ->where('guard_name', $this->guardName())
+                        ->first();
                     if (!$permissionModel) {
-                        $permissionModel = Permission::create(['name' => $permission]);
+                        $permissionModel = Permission::create([
+                            'name' => $permission,
+                            'guard_name' => $this->guardName(),
+                        ]);
                     }
                     $role->givePermissionTo($permissionModel);
                 }
@@ -369,7 +399,9 @@ class AuthorizationSecurityService
     public function deleteRole(string $name): bool
     {
         try {
-            $role = Role::where('name', $name)->first();
+            $role = Role::where('name', $name)
+                ->where('guard_name', $this->guardName())
+                ->first();
             if (!$role) {
                 return false;
             }
@@ -459,29 +491,31 @@ class AuthorizationSecurityService
 
     private function clearRolePermissionCache(string $role): void
     {
-        $cacheKeys = [
-            "role_permissions_{$role}",
-            "permission_check_{$role}_*",
-        ];
+        Cache::forget("role_permissions_{$role}");
 
-        foreach ($cacheKeys as $key) {
-            if (str_contains($key, '*')) {
-                // Clear all keys matching pattern
-                $pattern = str_replace('*', '', $key);
-                // This is a simplified approach - in production, use Redis SCAN
-                Cache::flush();
-            } else {
-                Cache::forget($key);
-            }
+        $registryKey = $this->rolePermissionRegistryKey($role);
+        $cacheKeys = Cache::get($registryKey, []);
+
+        if (! is_array($cacheKeys)) {
+            $cacheKeys = [];
         }
+
+        foreach (array_unique($cacheKeys) as $cacheKey) {
+            Cache::forget($cacheKey);
+        }
+
+        Cache::forget($registryKey);
     }
 
     public function getSecurityStatistics(): array
     {
         try {
-            $totalRoles = Role::count();
-            $totalPermissions = Permission::count();
-            $rolePermissions = Role::with('permissions')->get();
+            $guard = $this->guardName();
+            $totalRoles = Role::where('guard_name', $guard)->count();
+            $totalPermissions = Permission::where('guard_name', $guard)->count();
+            $rolePermissions = Role::with('permissions')
+                ->where('guard_name', $guard)
+                ->get();
 
             $statistics = [
                 'total_roles' => $totalRoles,
@@ -519,5 +553,30 @@ class AuthorizationSecurityService
             'is_valid' => empty($issues),
             'issues' => $issues,
         ];
+    }
+
+    private function guardName(): string
+    {
+        return (string) (config('permission.defaults.guard') ?? config('auth.defaults.guard', 'web'));
+    }
+
+    private function trackRolePermissionCacheKey(string $role, string $cacheKey): void
+    {
+        $registryKey = $this->rolePermissionRegistryKey($role);
+        $keys = Cache::get($registryKey, []);
+
+        if (! is_array($keys)) {
+            $keys = [];
+        }
+
+        if (! in_array($cacheKey, $keys, true)) {
+            $keys[] = $cacheKey;
+            Cache::forever($registryKey, array_values($keys));
+        }
+    }
+
+    private function rolePermissionRegistryKey(string $role): string
+    {
+        return self::ROLE_PERMISSION_CACHE_REGISTRY_PREFIX . $role;
     }
 }

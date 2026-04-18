@@ -316,12 +316,13 @@ class EndToEndTestingCommand extends Command
         $categories = [];
 
         foreach ($testResults as $category => $result) {
+            $categories[] = $category;
+
             if (isset($result['report']['summary'])) {
                 $summary = $result['report']['summary'];
                 $totalTests += $summary['total_tests'];
                 $passedTests += $summary['passed_tests'];
                 $failedTests += $summary['failed_tests'];
-                $categories[] = $category;
             }
         }
 
@@ -394,14 +395,15 @@ class EndToEndTestingCommand extends Command
         ];
 
         foreach ($testResults as $category => $result) {
-            if ($result['success']) {
+            if (($result['success'] ?? false) === true) {
                 $summary['successful_categories']++;
             } else {
                 $summary['failed_categories']++;
             }
 
+            $categorySummary = $result['report']['summary'] ?? null;
+
             if (isset($result['report']['summary'])) {
-                $categorySummary = $result['report']['summary'];
                 $summary['total_tests'] += $categorySummary['total_tests'];
                 $summary['passed_tests'] += $categorySummary['passed_tests'];
                 $summary['failed_tests'] += $categorySummary['failed_tests'];
@@ -469,18 +471,8 @@ class EndToEndTestingCommand extends Command
 
         foreach ($testResults as $category => $result) {
             if (isset($result['results'])) {
-                foreach ($result['results'] as $testCategory => $tests) {
-                    if (is_array($tests)) {
-                        foreach ($tests as $test => $testResult) {
-                            if (is_array($testResult)) {
-                                $status = $testResult['success'] ?? false ? 'PASS' : 'FAIL';
-                                $message = $testResult['message'] ?? '';
-                                $details = json_encode($testResult);
-                                
-                                $csvData[] = [$category, $test, $status, $message, $details];
-                            }
-                        }
-                    }
+                foreach ($this->flattenCsvRows($category, $result['results']) as $row) {
+                    $csvData[] = $row;
                 }
             }
         }
@@ -490,5 +482,31 @@ class EndToEndTestingCommand extends Command
             fputcsv($file, $row);
         }
         fclose($file);
+    }
+
+    private function flattenCsvRows(string $category, array $results, string $prefix = ''): array
+    {
+        $rows = [];
+
+        foreach ($results as $key => $value) {
+            $label = $prefix !== '' ? $prefix . ' > ' . $key : (string) $key;
+
+            if (! is_array($value)) {
+                continue;
+            }
+
+            if (array_key_exists('success', $value) || array_key_exists('message', $value) || array_key_exists('error', $value)) {
+                $status = ($value['success'] ?? false) ? 'PASS' : 'FAIL';
+                $message = (string) ($value['message'] ?? $value['error'] ?? '');
+                $details = json_encode($value);
+
+                $rows[] = [$category, $label, $status, $message, $details];
+                continue;
+            }
+
+            $rows = array_merge($rows, $this->flattenCsvRows($category, $value, $label));
+        }
+
+        return $rows;
     }
 }

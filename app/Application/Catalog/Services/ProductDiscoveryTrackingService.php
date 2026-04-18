@@ -6,12 +6,13 @@ use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductRecommendationImpression;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductSearchQuery;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class ProductDiscoveryTrackingService
 {
     public function trackSearch(array $filters, int $resultsCount, ?int $customerId = null, ?string $ipAddress = null, string $source = 'web'): void
     {
-        if ($this->isEmptySearch($filters)) {
+        if ($this->isEmptySearch($filters) || ! $this->searchTableReady()) {
             return;
         }
 
@@ -37,7 +38,7 @@ class ProductDiscoveryTrackingService
         string $context = 'storefront',
         array $sources = []
     ): void {
-        if ($products->isEmpty()) {
+        if ($products->isEmpty() || ! $this->impressionTableReady()) {
             return;
         }
 
@@ -80,5 +81,15 @@ class ProductDiscoveryTrackingService
         }
 
         return true;
+    }
+
+    protected function searchTableReady(): bool
+    {
+        return Schema::hasTable((new ProductSearchQuery())->getTable());
+    }
+
+    protected function impressionTableReady(): bool
+    {
+        return Schema::hasTable((new ProductRecommendationImpression())->getTable());
     }
 }

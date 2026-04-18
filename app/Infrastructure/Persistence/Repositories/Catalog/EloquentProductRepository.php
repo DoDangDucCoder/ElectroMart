@@ -43,9 +43,14 @@ class EloquentProductRepository implements ProductRepositoryInterface
     public function paginateByCategorySlug(string $slug, array $filters = [], int $perPage = 12): LengthAwarePaginator
     {
         $query = $this->applyFilters(Product::with(['brand', 'categories']), $filters)
-            ->whereHas('categories', fn (Builder $builder) => $builder
-                ->where('slug', $slug)
-                ->where('is_active', true));
+            ->where(function (Builder $builder) use ($slug) {
+                $builder->whereHas('primaryCategory', fn (Builder $relation) => $relation
+                    ->where('slug', $slug)
+                    ->where('is_active', true))
+                    ->orWhereHas('categories', fn (Builder $relation) => $relation
+                        ->where('slug', $slug)
+                        ->where('is_active', true));
+            });
 
         return $this->applySorting($query, $filters)->paginate($perPage);
     }
@@ -111,7 +116,10 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
         return Product::with(['brand', 'categories'])
             ->where('is_active', true)
-            ->whereHas('categories', fn (Builder $builder) => $builder->whereIn('product_categories.id', $ids))
+            ->where(function (Builder $builder) use ($ids) {
+                $builder->whereIn('primary_category_id', $ids)
+                    ->orWhereHas('categories', fn (Builder $relation) => $relation->whereIn('product_categories.id', $ids));
+            })
             ->orderByDesc('id')
             ->limit($limit)
             ->get();
@@ -120,10 +128,23 @@ class EloquentProductRepository implements ProductRepositoryInterface
     public function priceRangeByCategorySlug(string $slug): array
     {
         $query = Product::where('is_active', true)
-            ->whereHas('categories', fn (Builder $builder) => $builder->where('slug', $slug));
+            ->where(function (Builder $builder) use ($slug) {
+                $builder->whereHas('primaryCategory', fn (Builder $relation) => $relation
+                    ->where('slug', $slug)
+                    ->where('is_active', true))
+                    ->orWhereHas('categories', fn (Builder $relation) => $relation
+                        ->where('slug', $slug)
+                        ->where('is_active', true));
+            });
 
-        $min = (float) (clone $query)->min('price');
-        $max = (float) (clone $query)->max('price');
+        $priceWindow = (clone $query)
+            ->selectRaw(
+                'MIN(' . $this->effectivePriceExpression() . ') as min_price, MAX(' . $this->effectivePriceExpression() . ') as max_price'
+            )
+            ->first();
+
+        $min = (float) ($priceWindow?->min_price ?? 0);
+        $max = (float) ($priceWindow?->max_price ?? 0);
 
         return [
             'min' => $min,
@@ -194,24 +215,32 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
         $priceMin = $filters['price_min'] ?? $filters['min_price'] ?? null;
         if ($priceMin !== null && $priceMin !== '') {
-            $query->where('price', '>=', (float) $priceMin);
+            $query->whereRaw($this->effectivePriceExpression() . ' >= ?', [(float) $priceMin]);
         }
 
         $priceMax = $filters['price_max'] ?? $filters['max_price'] ?? null;
         if ($priceMax !== null && $priceMax !== '') {
-            $query->where('price', '<=', (float) $priceMax);
+            $query->whereRaw($this->effectivePriceExpression() . ' <= ?', [(float) $priceMax]);
         }
 
         if (! empty($filters['category_ids'])) {
             $categoryIds = (array) $filters['category_ids'];
-            $query->whereHas('categories', fn (Builder $builder) => $builder->whereIn('id', $categoryIds));
+            $query->where(function (Builder $builder) use ($categoryIds) {
+                $builder->whereIn('primary_category_id', $categoryIds)
+                    ->orWhereHas('categories', fn (Builder $relation) => $relation->whereIn('product_categories.id', $categoryIds));
+            });
         }
 
         if (! empty($filters['category'])) {
             $categorySlug = trim((string) $filters['category']);
-            $query->whereHas('categories', fn (Builder $builder) => $builder
-                ->where('slug', $categorySlug)
-                ->where('is_active', true));
+            $query->where(function (Builder $builder) use ($categorySlug) {
+                $builder->whereHas('primaryCategory', fn (Builder $relation) => $relation
+                    ->where('slug', $categorySlug)
+                    ->where('is_active', true))
+                    ->orWhereHas('categories', fn (Builder $relation) => $relation
+                        ->where('slug', $categorySlug)
+                        ->where('is_active', true));
+            });
         }
 
         if (! empty($filters['brand_ids'])) {
@@ -239,12 +268,17 @@ class EloquentProductRepository implements ProductRepositoryInterface
     protected function applySorting(Builder $query, array $filters): Builder
     {
         return match ($filters['sort'] ?? null) {
-            'price_asc' => $query->orderBy('price'),
-            'price_desc' => $query->orderByDesc('price'),
+            'price_asc' => $query->orderByRaw($this->effectivePriceExpression() . ' asc'),
+            'price_desc' => $query->orderByRaw($this->effectivePriceExpression() . ' desc'),
             'name_asc' => $query->orderBy('name'),
             'name_desc' => $query->orderByDesc('name'),
             default => $query->orderByDesc('id'),
         };
+    }
+
+    protected function effectivePriceExpression(): string
+    {
+        return 'CAST(CASE WHEN sale_price IS NOT NULL AND sale_price > 0 THEN sale_price ELSE price END AS REAL)';
     }
 
     protected function normalizeBooleanFilter(mixed $value): ?bool

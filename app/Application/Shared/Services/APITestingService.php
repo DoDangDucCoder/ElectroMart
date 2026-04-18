@@ -23,24 +23,24 @@ class APITestingService
         $this->testConfig = [
             'endpoints' => [
                 'public' => [
-                    'GET /api/products' => [
+                    'GET /api/v1/products' => [
                         'description' => 'Get products list',
                         'expected_status' => 200,
                         'required_fields' => ['id', 'name', 'price'],
                     ],
-                    'GET /api/categories' => [
+                    'GET /api/v1/categories' => [
                         'description' => 'Get categories list',
                         'expected_status' => 200,
                         'required_fields' => ['id', 'name', 'slug'],
                     ],
-                    'GET /api/brands' => [
+                    'GET /api/v1/brands' => [
                         'description' => 'Get brands list',
                         'expected_status' => 200,
                         'required_fields' => ['id', 'name'],
                     ],
                 ],
                 'protected' => [
-                    'POST /api/auth/login' => [
+                    'POST /api/v1/auth/login' => [
                         'description' => 'User login',
                         'expected_status' => 200,
                         'required_fields' => ['token', 'user'],
@@ -49,13 +49,13 @@ class APITestingService
                             'password' => 'password',
                         ],
                     ],
-                    'GET /api/user/profile' => [
+                    'GET /api/v1/user' => [
                         'description' => 'Get user profile',
                         'expected_status' => 200,
                         'required_fields' => ['id', 'name', 'email'],
                         'requires_auth' => true,
                     ],
-                    'POST /api/orders' => [
+                    'POST /api/v1/orders' => [
                         'description' => 'Create order',
                         'expected_status' => 201,
                         'required_fields' => ['id', 'status', 'total'],
@@ -73,14 +73,14 @@ class APITestingService
                     ],
                 ],
                 'admin' => [
-                    'GET /api/admin/users' => [
-                        'description' => 'Get users list (admin)',
+                    'GET /api/v1/admin/auth/me' => [
+                        'description' => 'Get current admin profile',
                         'expected_status' => 200,
-                        'required_fields' => ['data'],
+                        'required_fields' => ['id', 'name', 'email'],
                         'requires_auth' => true,
                         'requires_role' => 'admin',
                     ],
-                    'POST /api/admin/products' => [
+                    'POST /api/v1/admin/products' => [
                         'description' => 'Create product (admin)',
                         'expected_status' => 201,
                         'required_fields' => ['id', 'name', 'price'],
@@ -174,8 +174,8 @@ class APITestingService
 
     private function testEndpoint(string $endpoint, array $config): array
     {
-        $url = $this->baseUrl . $endpoint;
-        $method = $this->getMethodFromEndpoint($endpoint);
+        ['method' => $method, 'path' => $path] = $this->parseEndpoint($endpoint);
+        $url = $this->resolveUrl($path);
         
         $headers = ['Accept' => 'application/json'];
         
@@ -252,9 +252,9 @@ class APITestingService
     private function testUnauthorizedAccess(): array
     {
         $protectedEndpoints = [
-            'GET /api/user/profile',
-            'POST /api/orders',
-            'GET /api/admin/users',
+            'GET /api/v1/user',
+            'POST /api/v1/orders',
+            'GET /api/v1/admin/auth/me',
         ];
 
         $results = [];
@@ -282,7 +282,7 @@ class APITestingService
 
     private function testInvalidToken(): array
     {
-        $url = $this->baseUrl . '/api/user/profile';
+        $url = $this->resolveUrl('/api/v1/user');
         
         try {
             $response = Http::withHeaders([
@@ -314,7 +314,7 @@ class APITestingService
 
         $results = [];
         foreach ($maliciousInputs as $input) {
-            $url = $this->baseUrl . '/api/products?search=' . urlencode($input);
+            $url = $this->resolveUrl('/api/v1/products/search?q=' . urlencode($input));
             
             try {
                 $response = Http::timeout(10)->get($url);
@@ -347,7 +347,7 @@ class APITestingService
 
         $results = [];
         foreach ($xssPayloads as $payload) {
-            $url = $this->baseUrl . '/api/products?name=' . urlencode($payload);
+            $url = $this->resolveUrl('/api/v1/products/search?q=' . urlencode($payload));
             
             try {
                 $response = Http::timeout(10)->get($url);
@@ -373,7 +373,7 @@ class APITestingService
 
     private function testRateLimiting(): array
     {
-        $url = $this->baseUrl . '/api/products';
+        $url = $this->resolveUrl('/api/v1/products');
         $requests = [];
         $successCount = 0;
 
@@ -417,9 +417,9 @@ class APITestingService
 
         // Test response times for different endpoints
         $endpoints = [
-            'GET /api/products',
-            'GET /api/categories',
-            'GET /api/brands',
+            'GET /api/v1/products',
+            'GET /api/v1/categories',
+            'GET /api/v1/brands',
         ];
 
         foreach ($endpoints as $endpoint) {
@@ -431,7 +431,8 @@ class APITestingService
 
     private function testEndpointPerformance(string $endpoint): array
     {
-        $url = $this->baseUrl . $endpoint;
+        ['path' => $path] = $this->parseEndpoint($endpoint);
+        $url = $this->resolveUrl($path);
         $times = [];
         $successCount = 0;
 
@@ -483,7 +484,7 @@ class APITestingService
 
     private function testRequiredFieldValidation(): array
     {
-        $url = $this->baseUrl . '/api/auth/login';
+        $url = $this->resolveUrl('/api/v1/auth/login');
         
         $testCases = [
             [
@@ -527,7 +528,7 @@ class APITestingService
 
     private function testDataTypeValidation(): array
     {
-        $url = $this->baseUrl . '/api/products';
+        $url = $this->resolveUrl('/api/v1/admin/products');
         
         $testCases = [
             [
@@ -566,7 +567,7 @@ class APITestingService
 
     private function testFormatValidation(): array
     {
-        $url = $this->baseUrl . '/api/auth/login';
+        $url = $this->resolveUrl('/api/v1/auth/login');
         
         $testCases = [
             [
@@ -615,7 +616,7 @@ class APITestingService
 
     private function getAuthToken(): ?string
     {
-        $url = $this->baseUrl . '/api/auth/login';
+        $url = $this->resolveUrl('/api/v1/auth/login');
         
         try {
             $response = Http::timeout(10)->post($url, [
@@ -624,8 +625,7 @@ class APITestingService
             ]);
 
             if ($response->successful()) {
-                $data = $response->json();
-                return $data['token'] ?? null;
+                return $this->extractToken((array) $response->json());
             }
         } catch (\Exception $e) {
             Log::error('Failed to get auth token', ['error' => $e->getMessage()]);
@@ -636,7 +636,7 @@ class APITestingService
 
     private function getAdminToken(): ?string
     {
-        $url = $this->baseUrl . '/api/auth/login';
+        $url = $this->resolveUrl('/api/v1/admin/auth/login');
         
         try {
             $response = Http::timeout(10)->post($url, [
@@ -645,8 +645,7 @@ class APITestingService
             ]);
 
             if ($response->successful()) {
-                $data = $response->json();
-                return $data['token'] ?? null;
+                return $this->extractToken((array) $response->json());
             }
         } catch (\Exception $e) {
             Log::error('Failed to get admin token', ['error' => $e->getMessage()]);
@@ -662,8 +661,8 @@ class APITestingService
         foreach ($requiredFields as $field) {
             $validation[$field] = [
                 'required' => true,
-                'present' => isset($data[$field]) || (isset($data['data']) && isset($data['data'][0][$field])),
-                'valid' => isset($data[$field]) || (isset($data['data']) && isset($data['data'][0][$field])),
+                'present' => $this->containsField($data, $field),
+                'valid' => $this->containsField($data, $field),
             ];
         }
 
@@ -761,5 +760,66 @@ class APITestingService
                                 count($this->testConfig['endpoints']['protected']) + 
                                 count($this->testConfig['endpoints']['admin']),
         ];
+    }
+
+    private function parseEndpoint(string $endpoint): array
+    {
+        [$verb, $path] = array_pad(explode(' ', $endpoint, 2), 2, '/');
+
+        return [
+            'method' => $this->getMethodFromEndpoint($endpoint),
+            'path' => $this->normalizeApiPath($path),
+        ];
+    }
+
+    private function normalizeApiPath(string $path): string
+    {
+        $path = '/' . ltrim(trim($path), '/');
+
+        $aliases = [
+            '/api/products' => '/api/v1/products',
+            '/api/categories' => '/api/v1/categories',
+            '/api/brands' => '/api/v1/brands',
+            '/api/auth/login' => '/api/v1/auth/login',
+            '/api/user/profile' => '/api/v1/user',
+            '/api/orders' => '/api/v1/orders',
+            '/api/admin/users' => '/api/v1/admin/auth/me',
+            '/api/admin/products' => '/api/v1/admin/products',
+        ];
+
+        return $aliases[$path] ?? $path;
+    }
+
+    private function resolveUrl(string $path): string
+    {
+        return rtrim($this->baseUrl, '/') . $this->normalizeApiPath($path);
+    }
+
+    private function extractToken(array $data): ?string
+    {
+        if (isset($data['token']) && is_string($data['token'])) {
+            return $data['token'];
+        }
+
+        if (isset($data['data']['token']) && is_string($data['data']['token'])) {
+            return $data['data']['token'];
+        }
+
+        return null;
+    }
+
+    private function containsField(array $data, string $field): bool
+    {
+        if (array_key_exists($field, $data)) {
+            return true;
+        }
+
+        foreach ($data as $value) {
+            if (is_array($value) && $this->containsField($value, $field)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

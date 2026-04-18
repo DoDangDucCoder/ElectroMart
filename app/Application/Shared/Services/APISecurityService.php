@@ -9,6 +9,8 @@ use Illuminate\Support\Str;
 
 class APISecurityService
 {
+    private const RUNTIME_CACHE_KEY = 'api_security_runtime_keys';
+
     private array $apiKeys = [];
     private int $rateLimitPerMinute = 60;
     private int $rateLimitPerHour = 1000;
@@ -22,11 +24,23 @@ class APISecurityService
 
     private function initializeAPISecurity(): void
     {
-        $this->allowedOrigins = [
-            'https://yourdomain.com',
-            'https://api.yourdomain.com',
-            'http://localhost:3000', // Development
-        ];
+        $configuredOrigins = (array) (
+            config('security.api.allowed_origins')
+            ?? config('services.api_security.allowed_origins')
+            ?? []
+        );
+
+        if (empty($configuredOrigins)) {
+            $configuredOrigins = array_filter([
+                config('app.url'),
+                app()->environment(['local', 'testing']) ? 'http://localhost:3000' : null,
+            ]);
+        }
+
+        $this->allowedOrigins = array_values(array_unique(array_filter(array_map(
+            fn ($origin) => is_string($origin) ? trim($origin) : null,
+            $configuredOrigins
+        ))));
 
         $this->blockedIPs = [
             // Add known malicious IPs
@@ -99,29 +113,7 @@ class APISecurityService
 
     private function getStoredAPIKeys(): array
     {
-        // Mock API keys - in production, load from database
-        return [
-            'sk_test_1234567890abcdef' => [
-                'id' => 1,
-                'name' => 'Test API Key',
-                'user_id' => 1,
-                'is_active' => true,
-                'permissions' => ['read', 'write'],
-                'expires_at' => null,
-                'last_used_at' => null,
-                'created_at' => now()->subDays(30),
-            ],
-            'sk_live_abcdef1234567890' => [
-                'id' => 2,
-                'name' => 'Production API Key',
-                'user_id' => 1,
-                'is_active' => true,
-                'permissions' => ['read'],
-                'expires_at' => now()->addDays(365),
-                'last_used_at' => now()->subMinutes(5),
-                'created_at' => now()->subDays(10),
-            ],
-        ];
+        return array_merge($this->configuredApiKeys(), $this->runtimeApiKeys());
     }
 
     public function checkRateLimit(string $apiKey): bool
@@ -238,6 +230,10 @@ class APISecurityService
 
         // Store API key (in production, save to database)
         $this->apiKeys[$key] = $keyData;
+        $runtimeKeys = $this->runtimeApiKeys();
+        $runtimeKeys[$key] = $keyData;
+        Cache::forever(self::RUNTIME_CACHE_KEY, $runtimeKeys);
+        Cache::forget($this->apiKeyCacheKey($key));
 
         Log::info('API key generated', [
             'name' => $name,
@@ -251,8 +247,13 @@ class APISecurityService
 
     public function revokeAPIKey(string $apiKey): bool
     {
-        if (isset($this->apiKeys[$apiKey])) {
-            $this->apiKeys[$apiKey]['is_active'] = false;
+        $runtimeKeys = $this->runtimeApiKeys();
+
+        if (isset($runtimeKeys[$apiKey])) {
+            $runtimeKeys[$apiKey]['is_active'] = false;
+            $this->apiKeys[$apiKey] = $runtimeKeys[$apiKey];
+            Cache::forever(self::RUNTIME_CACHE_KEY, $runtimeKeys);
+            Cache::forget($this->apiKeyCacheKey($apiKey));
             
             Log::info('API key revoked', [
                 'api_key' => substr($apiKey, 0, 8) . '...',
@@ -296,8 +297,13 @@ class APISecurityService
 
     private function updateLastUsed(string $apiKey): void
     {
-        if (isset($this->apiKeys[$apiKey])) {
-            $this->apiKeys[$apiKey]['last_used_at'] = now();
+        $runtimeKeys = $this->runtimeApiKeys();
+
+        if (isset($runtimeKeys[$apiKey])) {
+            $runtimeKeys[$apiKey]['last_used_at'] = now();
+            $this->apiKeys[$apiKey] = $runtimeKeys[$apiKey];
+            Cache::forever(self::RUNTIME_CACHE_KEY, $runtimeKeys);
+            Cache::forget($this->apiKeyCacheKey($apiKey));
         }
     }
 
@@ -422,6 +428,10 @@ class APISecurityService
 
     public function validateNonce(string $nonce, int $ttl = 300): bool // 5 minutes default
     {
+        if (trim($nonce) === '') {
+            return false;
+        }
+
         $cacheKey = "api_nonce_{$nonce}";
         
         if (Cache::has($cacheKey)) {
@@ -434,9 +444,11 @@ class APISecurityService
 
     public function getAPISecurityStatistics(): array
     {
+        $keys = $this->getStoredAPIKeys();
+
         return [
-            'active_api_keys' => count(array_filter($this->apiKeys, fn($key) => $key['is_active'])),
-            'total_api_keys' => count($this->apiKeys),
+            'active_api_keys' => count(array_filter($keys, fn($key) => ($key['is_active'] ?? false) === true)),
+            'total_api_keys' => count($keys),
             'rate_limits' => [
                 'per_minute' => $this->rateLimitPerMinute,
                 'per_hour' => $this->rateLimitPerHour,
@@ -471,7 +483,43 @@ class APISecurityService
 
     private function getRemainingRateLimit(): int
     {
-        // This would be calculated based on current API key usage
-        return $this->rateLimitPerMinute;
+        $apiKey = request()->header('X-API-Key');
+
+        if (! is_string($apiKey) || trim($apiKey) === '') {
+            $authorization = (string) request()->header('Authorization', '');
+
+            if (str_starts_with($authorization, 'Bearer ')) {
+                $apiKey = trim(substr($authorization, 7));
+            }
+        }
+
+        if (! is_string($apiKey) || trim($apiKey) === '') {
+            return $this->rateLimitPerMinute;
+        }
+
+        return max(0, RateLimiter::remaining("api_rate_limit_minute_{$apiKey}", $this->rateLimitPerMinute));
+    }
+
+    private function configuredApiKeys(): array
+    {
+        $configured = config('security.api.keys') ?? config('services.api_security.keys') ?? [];
+
+        if (! is_array($configured)) {
+            return [];
+        }
+
+        return $configured;
+    }
+
+    private function runtimeApiKeys(): array
+    {
+        $keys = Cache::get(self::RUNTIME_CACHE_KEY, []);
+
+        return is_array($keys) ? $keys : [];
+    }
+
+    private function apiKeyCacheKey(string $apiKey): string
+    {
+        return 'api_key_data_' . md5($apiKey);
     }
 }

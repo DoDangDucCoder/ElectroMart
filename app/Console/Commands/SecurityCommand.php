@@ -263,10 +263,12 @@ class SecurityCommand extends Command
     private function unblockIPAddress(SecurityMonitoringService $monitoringService): void
     {
         $ip = $this->ask('Enter IP address to unblock');
-        
-        // This would require implementing an unblock method
-        $this->info("Unblocking IP address {$ip}...");
-        $this->warn('Unblock functionality not implemented yet.');
+
+        if ($monitoringService->unblockIP($ip)) {
+            $this->info("IP address {$ip} has been unblocked.");
+        } else {
+            $this->error("Failed to unblock IP address {$ip}.");
+        }
     }
 
     private function generateAPIKey(APISecurityService $apiService): void

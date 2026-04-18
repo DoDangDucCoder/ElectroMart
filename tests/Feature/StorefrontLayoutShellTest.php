@@ -9,6 +9,7 @@ use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -87,6 +88,8 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertSee('shopw-desktop-category-promo-stats', false)
             ->assertSee('Thương hiệu nổi bật')
             ->assertSee('Theo tầm giá')
+            ->assertSee('start_price=', false)
+            ->assertDontSee('price_min=', false)
             ->assertSee('placeholder="Tìm sản phẩm, thương hiệu, cấu hình..."', false)
             ->assertSee('data-search-trends=', false)
             ->assertSee('data-desktop-panel="#shopw-desktop-category-panel"', false)
@@ -231,9 +234,34 @@ class StorefrontLayoutShellTest extends TestCase
         );
     }
 
-    protected function createProduct(string $name): Product
+    public function test_storefront_header_price_links_use_discounted_final_price(): void
     {
-        return $this->productService->createProduct([
+        $this->createProduct('Shell Discounted Price Product', [
+            'price' => 22000000,
+            'sale_type' => 'fixed',
+            'sale_value' => 7000000,
+        ]);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('start_price=15000000', false)
+            ->assertDontSee('start_price=22000000', false);
+    }
+
+    public function test_brand_route_renders_when_legacy_slider_table_is_missing(): void
+    {
+        $product = $this->createProduct('Shell Brand Product');
+        Schema::dropIfExists('tbl_slider');
+
+        $this->get('/thuong-hieu/' . $this->brand->slug)
+            ->assertOk()
+            ->assertSee($product->name)
+            ->assertSee($this->brand->name);
+    }
+
+    protected function createProduct(string $name, array $overrides = []): Product
+    {
+        return $this->productService->createProduct(array_merge([
             'name' => $name,
             'slug' => Str::slug($name) . '-' . Str::random(5),
             'brand_id' => $this->brand->id,
@@ -246,7 +274,7 @@ class StorefrontLayoutShellTest extends TestCase
             'category_ids' => [$this->category->id],
             'tags' => 'layout,shell',
             'is_active' => true,
-        ]);
+        ], $overrides));
     }
 }
 

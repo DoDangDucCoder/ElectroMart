@@ -2,6 +2,7 @@
 
 namespace App\Application\Shared\Services;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -127,6 +128,7 @@ class CrossBrowserCompatibilityTestingService
     private function testPageInBrowser(string $path, string $description, array $config): array
     {
         try {
+            $path = $this->normalizePublicPath($path);
             $url = $this->baseUrl . $path;
             $startTime = microtime(true);
             
@@ -1222,24 +1224,7 @@ class CrossBrowserCompatibilityTestingService
 
     public function generateTestReport(): array
     {
-        $totalTests = 0;
-        $passedTests = 0;
-        $failedTests = 0;
-
-        foreach ($this->testResults as $category => $tests) {
-            if (is_array($tests)) {
-                foreach ($tests as $test) {
-                    if (is_array($test) && isset($test['success'])) {
-                        $totalTests++;
-                        if ($test['success']) {
-                            $passedTests++;
-                        } else {
-                            $failedTests++;
-                        }
-                    }
-                }
-            }
-        }
+        ['total' => $totalTests, 'passed' => $passedTests, 'failed' => $failedTests] = $this->countTestOutcomes($this->testResults);
 
         return [
             'summary' => [
@@ -1251,6 +1236,34 @@ class CrossBrowserCompatibilityTestingService
             'categories' => array_keys($this->testResults),
             'recommendations' => $this->generateRecommendations(),
         ];
+    }
+
+    private function countTestOutcomes(array $tests): array
+    {
+        $counts = ['total' => 0, 'passed' => 0, 'failed' => 0];
+
+        foreach ($tests as $test) {
+            if (! is_array($test)) {
+                continue;
+            }
+
+            if (array_key_exists('success', $test)) {
+                $counts['total']++;
+
+                if ($test['success']) {
+                    $counts['passed']++;
+                } else {
+                    $counts['failed']++;
+                }
+            }
+
+            $nested = $this->countTestOutcomes($test);
+            $counts['total'] += $nested['total'];
+            $counts['passed'] += $nested['passed'];
+            $counts['failed'] += $nested['failed'];
+        }
+
+        return $counts;
     }
 
     private function generateRecommendations(): array
@@ -1288,5 +1301,25 @@ class CrossBrowserCompatibilityTestingService
             'total_browsers' => count(array_filter($this->testConfig['browsers'], fn($browser) => $browser['enabled'])),
             'total_test_pages' => count($this->testConfig['test_pages']),
         ];
+    }
+
+    private function normalizePublicPath(string $path): string
+    {
+        return match ($path) {
+            '/products' => '/tim-kiem',
+            '/categories' => $this->resolveCategoryPath(),
+            '/contact' => '/lien-he',
+            '/login', '/register' => '/dang-nhap',
+            default => $path,
+        };
+    }
+
+    private function resolveCategoryPath(): string
+    {
+        $slug = DB::table('product_categories')
+            ->where('is_active', true)
+            ->value('slug');
+
+        return $slug ? '/danh-muc/' . $slug : '/';
     }
 }

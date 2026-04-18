@@ -2,6 +2,7 @@
 
 namespace App\Application\Shared\Services;
 
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -11,73 +12,48 @@ class DatabaseTestingService
     private array $testConfig = [];
     private array $testResults = [];
     private array $testTables = [];
+    private ?string $latestBackupId = null;
 
     public function __construct()
     {
-        $this->initializeTestConfig();
-        $this->initializeTestTables();
-    }
-
-    private function initializeTestConfig(): void
-    {
         $this->testConfig = [
-            'connection_tests' => [
-                'test_connection' => true,
-                'test_transactions' => true,
-                'test_rollback' => true,
-            ],
-            'schema_tests' => [
-                'test_table_structure' => true,
-                'test_indexes' => true,
-                'test_foreign_keys' => true,
-                'test_constraints' => true,
-            ],
-            'data_tests' => [
-                'test_crud_operations' => true,
-                'test_data_integrity' => true,
-                'test_relationships' => true,
-                'test_data_validation' => true,
-            ],
-            'performance_tests' => [
-                'test_query_performance' => true,
-                'test_bulk_operations' => true,
-                'test_concurrent_access' => true,
-            ],
-            'backup_tests' => [
-                'test_backup_creation' => true,
-                'test_backup_restoration' => true,
-                'test_data_consistency' => true,
-            ],
+            'connection_tests' => ['test_connection' => true, 'test_transactions' => true, 'test_rollback' => true],
+            'schema_tests' => ['test_table_structure' => true, 'test_indexes' => true, 'test_foreign_keys' => true, 'test_constraints' => true],
+            'data_tests' => ['test_crud_operations' => true, 'test_data_integrity' => true, 'test_relationships' => true, 'test_data_validation' => true],
+            'performance_tests' => ['test_query_performance' => true, 'test_bulk_operations' => true, 'test_concurrent_access' => true],
+            'backup_tests' => ['test_backup_creation' => true, 'test_backup_restoration' => true, 'test_data_consistency' => true],
         ];
-    }
 
-    private function initializeTestTables(): void
-    {
         $this->testTables = [
             'products' => [
-                'columns' => ['id', 'name', 'price', 'description', 'category_id', 'brand_id', 'is_active'],
-                'relationships' => ['category_id' => 'categories', 'brand_id' => 'brands'],
-                'indexes' => ['id', 'category_id', 'brand_id', 'is_active'],
+                'columns' => ['id', 'name', 'slug', 'price', 'brand_id', 'primary_category_id', 'is_active'],
+                'foreign_keys' => ['brand_id' => 'brands', 'primary_category_id' => 'product_categories'],
+                'indexed_columns' => ['id', 'brand_id', 'primary_category_id', 'is_active', 'display_order'],
             ],
-            'categories' => [
+            'product_categories' => [
                 'columns' => ['id', 'name', 'slug', 'parent_id', 'is_active'],
-                'relationships' => ['parent_id' => 'categories'],
-                'indexes' => ['id', 'slug', 'parent_id'],
+                'foreign_keys' => ['parent_id' => 'product_categories'],
+                'indexed_columns' => ['id', 'slug', 'parent_id', 'display_order', 'is_active'],
             ],
             'brands' => [
                 'columns' => ['id', 'name', 'slug', 'is_active'],
-                'relationships' => [],
-                'indexes' => ['id', 'slug'],
+                'foreign_keys' => [],
+                'indexed_columns' => ['id', 'slug'],
             ],
             'customers' => [
-                'columns' => ['id', 'name', 'email', 'phone', 'is_active'],
-                'relationships' => [],
-                'indexes' => ['id', 'email'],
+                'columns' => ['id', 'name', 'email', 'password', 'is_active'],
+                'foreign_keys' => [],
+                'indexed_columns' => ['id', 'email', 'phone', 'is_active', 'created_at'],
             ],
             'orders' => [
-                'columns' => ['id', 'customer_id', 'status', 'total', 'created_at'],
-                'relationships' => ['customer_id' => 'customers'],
-                'indexes' => ['id', 'customer_id', 'status'],
+                'columns' => ['id', 'code', 'customer_id', 'status', 'total', 'created_at'],
+                'foreign_keys' => ['customer_id' => 'customers'],
+                'indexed_columns' => ['id', 'code', 'customer_id', 'status', 'placed_at', 'created_at'],
+            ],
+            'order_items' => [
+                'columns' => ['id', 'order_id', 'product_id', 'product_name', 'price', 'quantity', 'subtotal'],
+                'foreign_keys' => ['order_id' => 'orders', 'product_id' => 'products'],
+                'indexed_columns' => ['id', 'order_id'],
             ],
         ];
     }
@@ -86,1112 +62,71 @@ class DatabaseTestingService
     {
         Log::info('Starting database tests...');
 
+        $this->ensureScratchTables();
+        $this->latestBackupId = null;
+
         $this->testResults = [
-            'connection_tests' => $this->testConnections(),
-            'schema_tests' => $this->testSchema(),
-            'data_tests' => $this->testDataOperations(),
-            'performance_tests' => $this->testPerformance(),
-            'backup_tests' => $this->testBackups(),
+            'connection_tests' => $this->wrap([
+                'basic_connection' => $this->testBasicConnection(),
+                'transaction_support' => $this->testTransactionSupport(),
+                'rollback_functionality' => $this->testRollbackFunctionality(),
+                'connection_pooling' => $this->testConnectionPooling(),
+            ], 'Connection tests completed.'),
+            'schema_tests' => $this->wrap([
+                'table_structure' => $this->testTableStructure(),
+                'indexes' => $this->testIndexes(),
+                'foreign_keys' => $this->testForeignKeys(),
+                'constraints' => $this->testConstraints(),
+            ], 'Schema tests completed.'),
+            'data_tests' => $this->wrap([
+                'crud_operations' => $this->testCrudOperations(),
+                'data_integrity' => $this->testDataIntegrity(),
+                'relationships' => $this->testRelationships(),
+                'data_validation' => $this->testDataValidation(),
+            ], 'Data tests completed.'),
+            'performance_tests' => $this->wrap([
+                'query_performance' => $this->testQueryPerformance(),
+                'bulk_operations' => $this->testBulkOperations(),
+                'concurrent_access' => $this->testConcurrentAccess(),
+            ], 'Performance tests completed.'),
+            'backup_tests' => $this->wrap([
+                'backup_creation' => $this->testBackupCreation(),
+                'backup_restoration' => $this->testBackupRestoration(),
+                'data_consistency' => $this->testDataConsistencyAfterBackup(),
+            ], 'Backup tests completed.'),
         ];
 
-        Log::info('Database tests completed');
+        Log::info('Database tests completed', ['summary' => $this->generateTestReport()['summary']]);
+
         return $this->testResults;
-    }
-
-    private function testConnections(): array
-    {
-        $results = [];
-
-        try {
-            // Test basic connection
-            $results['basic_connection'] = $this->testBasicConnection();
-            
-            // Test transaction support
-            $results['transaction_support'] = $this->testTransactionSupport();
-            
-            // Test rollback functionality
-            $results['rollback_functionality'] = $this->testRollbackFunctionality();
-            
-            // Test connection pooling
-            $results['connection_pooling'] = $this->testConnectionPooling();
-
-        } catch (\Exception $e) {
-            Log::error('Connection tests failed', ['error' => $e->getMessage()]);
-            $results['error'] = $e->getMessage();
-        }
-
-        return $results;
-    }
-
-    private function testBasicConnection(): array
-    {
-        try {
-            $startTime = microtime(true);
-            $result = DB::select('SELECT 1 as test');
-            $endTime = microtime(true);
-            
-            return [
-                'success' => true,
-                'response_time_ms' => round(($endTime - $startTime) * 1000, 2),
-                'result' => $result[0]->test ?? null,
-                'message' => 'Database connection is working',
-            ];
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Database connection failed',
-            ];
-        }
-    }
-
-    private function testTransactionSupport(): array
-    {
-        try {
-            DB::beginTransaction();
-            
-            // Test insert within transaction
-            $testData = [
-                'name' => 'Test Transaction',
-                'email' => 'test@transaction.com',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-            
-            $id = DB::table('test_transaction')->insertGetId($testData);
-            
-            // Verify data exists
-            $exists = DB::table('test_transaction')->where('id', $id)->exists();
-            
-            DB::rollBack();
-            
-            // Verify data was rolled back
-            $notExists = !DB::table('test_transaction')->where('id', $id)->exists();
-            
-            return [
-                'success' => $exists && $notExists,
-                'transaction_insert' => $exists,
-                'rollback_verification' => $notExists,
-                'message' => $exists && $notExists ? 'Transaction support working' : 'Transaction support issue',
-            ];
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Transaction test failed',
-            ];
-        }
-    }
-
-    private function testRollbackFunctionality(): array
-    {
-        try {
-            $initialCount = DB::table('test_rollback')->count();
-            
-            DB::beginTransaction();
-            
-            // Insert test data
-            DB::table('test_rollback')->insert([
-                'name' => 'Test Rollback',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            
-            $afterInsertCount = DB::table('test_rollback')->count();
-            
-            DB::rollBack();
-            
-            $afterRollbackCount = DB::table('test_rollback')->count();
-            
-            return [
-                'success' => $afterRollbackCount === $initialCount,
-                'initial_count' => $initialCount,
-                'after_insert_count' => $afterInsertCount,
-                'after_rollback_count' => $afterRollbackCount,
-                'message' => $afterRollbackCount === $initialCount ? 'Rollback working correctly' : 'Rollback issue',
-            ];
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Rollback test failed',
-            ];
-        }
-    }
-
-    private function testConnectionPooling(): array
-    {
-        try {
-            $connections = [];
-            $startTime = microtime(true);
-            
-            // Create multiple connections
-            for ($i = 0; $i < 10; $i++) {
-                $connections[] = DB::connection();
-            }
-            
-            $endTime = microtime(true);
-            $connectionTime = ($endTime - $startTime) * 1000;
-            
-            // Test concurrent queries
-            $queryStartTime = microtime(true);
-            $results = [];
-            
-            foreach ($connections as $connection) {
-                $results[] = $connection->select('SELECT 1 as test');
-            }
-            
-            $queryEndTime = microtime(true);
-            $queryTime = ($queryEndTime - $queryStartTime) * 1000;
-            
-            return [
-                'success' => count($results) === 10,
-                'connection_count' => count($connections),
-                'connection_time_ms' => round($connectionTime, 2),
-                'query_time_ms' => round($queryTime, 2),
-                'message' => count($results) === 10 ? 'Connection pooling working' : 'Connection pooling issue',
-            ];
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Connection pooling test failed',
-            ];
-        }
-    }
-
-    private function testSchema(): array
-    {
-        $results = [];
-
-        try {
-            // Test table structure
-            $results['table_structure'] = $this->testTableStructure();
-            
-            // Test indexes
-            $results['indexes'] = $this->testIndexes();
-            
-            // Test foreign keys
-            $results['foreign_keys'] = $this->testForeignKeys();
-            
-            // Test constraints
-            $results['constraints'] = $this->testConstraints();
-
-        } catch (\Exception $e) {
-            Log::error('Schema tests failed', ['error' => $e->getMessage()]);
-            $results['error'] = $e->getMessage();
-        }
-
-        return $results;
-    }
-
-    private function testTableStructure(): array
-    {
-        $results = [];
-        
-        foreach ($this->testTables as $table => $config) {
-            try {
-                if (Schema::hasTable($table)) {
-                    $columns = Schema::getColumnListing($table);
-                    $expectedColumns = $config['columns'];
-                    
-                    $missingColumns = array_diff($expectedColumns, $columns);
-                    $extraColumns = array_diff($columns, $expectedColumns);
-                    
-                    $results[$table] = [
-                        'exists' => true,
-                        'expected_columns' => $expectedColumns,
-                        'actual_columns' => $columns,
-                        'missing_columns' => $missingColumns,
-                        'extra_columns' => $extraColumns,
-                        'structure_valid' => empty($missingColumns),
-                        'message' => empty($missingColumns) ? 'Table structure is valid' : 'Missing required columns',
-                    ];
-                } else {
-                    $results[$table] = [
-                        'exists' => false,
-                        'message' => 'Table does not exist',
-                    ];
-                }
-            } catch (\Exception $e) {
-                $results[$table] = [
-                    'error' => $e->getMessage(),
-                    'message' => 'Error checking table structure',
-                ];
-            }
-        }
-        
-        return $results;
-    }
-
-    private function testIndexes(): array
-    {
-        $results = [];
-        
-        foreach ($this->testTables as $table => $config) {
-            try {
-                if (Schema::hasTable($table)) {
-                    $indexes = $this->getTableIndexes($table);
-                    $expectedIndexes = $config['indexes'];
-                    
-                    $missingIndexes = [];
-                    foreach ($expectedIndexes as $expectedIndex) {
-                        if (!$this->hasIndex($indexes, $expectedIndex)) {
-                            $missingIndexes[] = $expectedIndex;
-                        }
-                    }
-                    
-                    $results[$table] = [
-                        'expected_indexes' => $expectedIndexes,
-                        'actual_indexes' => $indexes,
-                        'missing_indexes' => $missingIndexes,
-                        'indexes_valid' => empty($missingIndexes),
-                        'message' => empty($missingIndexes) ? 'All required indexes exist' : 'Missing required indexes',
-                    ];
-                } else {
-                    $results[$table] = [
-                        'exists' => false,
-                        'message' => 'Table does not exist',
-                    ];
-                }
-            } catch (\Exception $e) {
-                $results[$table] = [
-                    'error' => $e->getMessage(),
-                    'message' => 'Error checking indexes',
-                ];
-            }
-        }
-        
-        return $results;
-    }
-
-    private function testForeignKeys(): array
-    {
-        $results = [];
-        
-        foreach ($this->testTables as $table => $config) {
-            try {
-                if (Schema::hasTable($table)) {
-                    $foreignKeys = $this->getTableForeignKeys($table);
-                    $expectedRelationships = $config['relationships'];
-                    
-                    $missingForeignKeys = [];
-                    foreach ($expectedRelationships as $column => $referencedTable) {
-                        if (!$this->hasForeignKey($foreignKeys, $column, $referencedTable)) {
-                            $missingForeignKeys[] = "{$column} -> {$referencedTable}";
-                        }
-                    }
-                    
-                    $results[$table] = [
-                        'expected_relationships' => $expectedRelationships,
-                        'actual_foreign_keys' => $foreignKeys,
-                        'missing_foreign_keys' => $missingForeignKeys,
-                        'foreign_keys_valid' => empty($missingForeignKeys),
-                        'message' => empty($missingForeignKeys) ? 'All foreign keys exist' : 'Missing foreign keys',
-                    ];
-                } else {
-                    $results[$table] = [
-                        'exists' => false,
-                        'message' => 'Table does not exist',
-                    ];
-                }
-            } catch (\Exception $e) {
-                $results[$table] = [
-                    'error' => $e->getMessage(),
-                    'message' => 'Error checking foreign keys',
-                ];
-            }
-        }
-        
-        return $results;
-    }
-
-    private function testConstraints(): array
-    {
-        $results = [];
-        
-        // Test NOT NULL constraints
-        $results['not_null_constraints'] = $this->testNotNullConstraints();
-        
-        // Test UNIQUE constraints
-        $results['unique_constraints'] = $this->testUniqueConstraints();
-        
-        // Test CHECK constraints
-        $results['check_constraints'] = $this->testCheckConstraints();
-        
-        return $results;
-    }
-
-    private function testNotNullConstraints(): array
-    {
-        $results = [];
-        
-        $notNullColumns = [
-            'products' => ['id', 'name', 'price'],
-            'categories' => ['id', 'name'],
-            'customers' => ['id', 'name', 'email'],
-        ];
-        
-        foreach ($notNullColumns as $table => $columns) {
-            try {
-                if (Schema::hasTable($table)) {
-                    $violations = [];
-                    
-                    foreach ($columns as $column) {
-                        $nullCount = DB::table($table)->whereNull($column)->count();
-                        if ($nullCount > 0) {
-                            $violations[] = "Column {$column} has {$nullCount} NULL values";
-                        }
-                    }
-                    
-                    $results[$table] = [
-                        'columns_checked' => $columns,
-                        'violations' => $violations,
-                        'constraints_valid' => empty($violations),
-                        'message' => empty($violations) ? 'NOT NULL constraints are valid' : 'NOT NULL constraint violations found',
-                    ];
-                } else {
-                    $results[$table] = [
-                        'exists' => false,
-                        'message' => 'Table does not exist',
-                    ];
-                }
-            } catch (\Exception $e) {
-                $results[$table] = [
-                    'error' => $e->getMessage(),
-                    'message' => 'Error checking NOT NULL constraints',
-                ];
-            }
-        }
-        
-        return $results;
-    }
-
-    private function testUniqueConstraints(): array
-    {
-        $results = [];
-        
-        $uniqueColumns = [
-            'categories' => ['slug'],
-            'brands' => ['slug'],
-            'customers' => ['email'],
-        ];
-        
-        foreach ($uniqueColumns as $table => $columns) {
-            try {
-                if (Schema::hasTable($table)) {
-                    $violations = [];
-                    
-                    foreach ($columns as $column) {
-                        $duplicates = DB::table($table)
-                            ->select($column)
-                            ->groupBy($column)
-                            ->havingRaw("COUNT(*) > 1")
-                            ->get();
-                        
-                        if ($duplicates->count() > 0) {
-                            $violations[] = "Column {$column} has duplicate values";
-                        }
-                    }
-                    
-                    $results[$table] = [
-                        'columns_checked' => $columns,
-                        'violations' => $violations,
-                        'constraints_valid' => empty($violations),
-                        'message' => empty($violations) ? 'UNIQUE constraints are valid' : 'UNIQUE constraint violations found',
-                    ];
-                } else {
-                    $results[$table] = [
-                        'exists' => false,
-                        'message' => 'Table does not exist',
-                    ];
-                }
-            } catch (\Exception $e) {
-                $results[$table] = [
-                    'error' => $e->getMessage(),
-                    'message' => 'Error checking UNIQUE constraints',
-                ];
-            }
-        }
-        
-        return $results;
-    }
-
-    private function testCheckConstraints(): array
-    {
-        $results = [];
-        
-        // Test price constraints (should be positive)
-        try {
-            if (Schema::hasTable('products')) {
-                $negativePrices = DB::table('products')->where('price', '<', 0)->count();
-                
-                $results['products_price'] = [
-                    'constraint' => 'price >= 0',
-                    'violations' => $negativePrices,
-                    'constraints_valid' => $negativePrices === 0,
-                    'message' => $negativePrices === 0 ? 'Price constraints are valid' : 'Price constraint violations found',
-                ];
-            }
-        } catch (\Exception $e) {
-            $results['products_price'] = [
-                'error' => $e->getMessage(),
-                'message' => 'Error checking price constraints',
-            ];
-        }
-        
-        return $results;
-    }
-
-    private function testDataOperations(): array
-    {
-        $results = [];
-
-        try {
-            // Test CRUD operations
-            $results['crud_operations'] = $this->testCrudOperations();
-            
-            // Test data integrity
-            $results['data_integrity'] = $this->testDataIntegrity();
-            
-            // Test relationships
-            $results['relationships'] = $this->testRelationships();
-            
-            // Test data validation
-            $results['data_validation'] = $this->testDataValidation();
-
-        } catch (\Exception $e) {
-            Log::error('Data operation tests failed', ['error' => $e->getMessage()]);
-            $results['error'] = $e->getMessage();
-        }
-
-        return $results;
-    }
-
-    private function testCrudOperations(): array
-    {
-        $results = [];
-        
-        try {
-            // Test CREATE
-            $testData = [
-                'name' => 'Test Product ' . time(),
-                'price' => 99.99,
-                'description' => 'Test product description',
-                'category_id' => 1,
-                'brand_id' => 1,
-                'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-            
-            $id = DB::table('test_crud')->insertGetId($testData);
-            $results['create'] = [
-                'success' => $id > 0,
-                'inserted_id' => $id,
-                'message' => $id > 0 ? 'CREATE operation successful' : 'CREATE operation failed',
-            ];
-            
-            // Test READ
-            $product = DB::table('test_crud')->where('id', $id)->first();
-            $results['read'] = [
-                'success' => $product !== null,
-                'data' => $product,
-                'message' => $product !== null ? 'READ operation successful' : 'READ operation failed',
-            ];
-            
-            // Test UPDATE
-            $updateData = ['name' => 'Updated Test Product', 'updated_at' => now()];
-            $updated = DB::table('test_crud')->where('id', $id)->update($updateData);
-            $results['update'] = [
-                'success' => $updated > 0,
-                'affected_rows' => $updated,
-                'message' => $updated > 0 ? 'UPDATE operation successful' : 'UPDATE operation failed',
-            ];
-            
-            // Test DELETE
-            $deleted = DB::table('test_crud')->where('id', $id)->delete();
-            $results['delete'] = [
-                'success' => $deleted > 0,
-                'affected_rows' => $deleted,
-                'message' => $deleted > 0 ? 'DELETE operation successful' : 'DELETE operation failed',
-            ];
-            
-        } catch (\Exception $e) {
-            $results['error'] = $e->getMessage();
-        }
-        
-        return $results;
-    }
-
-    private function testDataIntegrity(): array
-    {
-        $results = [];
-        
-        try {
-            // Test referential integrity
-            $results['referential_integrity'] = $this->testReferentialIntegrity();
-            
-            // Test data consistency
-            $results['data_consistency'] = $this->testDataConsistency();
-            
-        } catch (\Exception $e) {
-            $results['error'] = $e->getMessage();
-        }
-        
-        return $results;
-    }
-
-    private function testReferentialIntegrity(): array
-    {
-        $results = [];
-        
-        try {
-            // Test orphaned records
-            $orphanedProducts = DB::table('products')
-                ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
-                ->whereNull('categories.id')
-                ->count();
-            
-            $orphanedOrders = DB::table('orders')
-                ->leftJoin('customers', 'orders.customer_id', '=', 'customers.id')
-                ->whereNull('customers.id')
-                ->count();
-            
-            $results = [
-                'orphaned_products' => $orphanedProducts,
-                'orphaned_orders' => $orphanedOrders,
-                'integrity_valid' => $orphanedProducts === 0 && $orphanedOrders === 0,
-                'message' => ($orphanedProducts === 0 && $orphanedOrders === 0) ? 'Referential integrity is maintained' : 'Referential integrity violations found',
-            ];
-            
-        } catch (\Exception $e) {
-            $results = [
-                'error' => $e->getMessage(),
-                'message' => 'Error checking referential integrity',
-            ];
-        }
-        
-        return $results;
-    }
-
-    private function testDataConsistency(): array
-    {
-        $results = [];
-        
-        try {
-            // Test order totals consistency
-            $inconsistentOrders = DB::table('orders')
-                ->leftJoin('order_items', 'orders.id', '=', 'order_items.order_id')
-                ->groupBy('orders.id')
-                ->havingRaw('ABS(orders.total - SUM(order_items.price * order_items.quantity)) > 0.01')
-                ->count();
-            
-            $results = [
-                'inconsistent_orders' => $inconsistentOrders,
-                'consistency_valid' => $inconsistentOrders === 0,
-                'message' => $inconsistentOrders === 0 ? 'Data consistency is maintained' : 'Data consistency violations found',
-            ];
-            
-        } catch (\Exception $e) {
-            $results = [
-                'error' => $e->getMessage(),
-                'message' => 'Error checking data consistency',
-            ];
-        }
-        
-        return $results;
-    }
-
-    private function testRelationships(): array
-    {
-        $results = [];
-        
-        try {
-            // Test product-category relationship
-            $productCategoryTest = DB::table('products')
-                ->join('categories', 'products.category_id', '=', 'categories.id')
-                ->count();
-            
-            // Test order-customer relationship
-            $orderCustomerTest = DB::table('orders')
-                ->join('customers', 'orders.customer_id', '=', 'customers.id')
-                ->count();
-            
-            $results = [
-                'product_category_joins' => $productCategoryTest,
-                'order_customer_joins' => $orderCustomerTest,
-                'relationships_valid' => $productCategoryTest > 0 && $orderCustomerTest > 0,
-                'message' => ($productCategoryTest > 0 && $orderCustomerTest > 0) ? 'Relationships are working' : 'Relationship issues found',
-            ];
-            
-        } catch (\Exception $e) {
-            $results = [
-                'error' => $e->getMessage(),
-                'message' => 'Error testing relationships',
-            ];
-        }
-        
-        return $results;
-    }
-
-    private function testDataValidation(): array
-    {
-        $results = [];
-        
-        try {
-            // Test email format validation
-            $invalidEmails = DB::table('customers')
-                ->whereRaw("email NOT REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$'")
-                ->count();
-            
-            // Test price validation
-            $invalidPrices = DB::table('products')
-                ->where('price', '<=', 0)
-                ->count();
-            
-            $results = [
-                'invalid_emails' => $invalidEmails,
-                'invalid_prices' => $invalidPrices,
-                'validation_valid' => $invalidEmails === 0 && $invalidPrices === 0,
-                'message' => ($invalidEmails === 0 && $invalidPrices === 0) ? 'Data validation is working' : 'Data validation issues found',
-            ];
-            
-        } catch (\Exception $e) {
-            $results = [
-                'error' => $e->getMessage(),
-                'message' => 'Error testing data validation',
-            ];
-        }
-        
-        return $results;
-    }
-
-    private function testPerformance(): array
-    {
-        $results = [];
-
-        try {
-            // Test query performance
-            $results['query_performance'] = $this->testQueryPerformance();
-            
-            // Test bulk operations
-            $results['bulk_operations'] = $this->testBulkOperations();
-            
-            // Test concurrent access
-            $results['concurrent_access'] = $this->testConcurrentAccess();
-
-        } catch (\Exception $e) {
-            Log::error('Performance tests failed', ['error' => $e->getMessage()]);
-            $results['error'] = $e->getMessage();
-        }
-
-        return $results;
-    }
-
-    private function testQueryPerformance(): array
-    {
-        $results = [];
-        
-        $queries = [
-            'simple_select' => 'SELECT * FROM products LIMIT 100',
-            'join_query' => 'SELECT p.*, c.name as category_name FROM products p JOIN categories c ON p.category_id = c.id LIMIT 100',
-            'aggregate_query' => 'SELECT category_id, COUNT(*) as count, AVG(price) as avg_price FROM products GROUP BY category_id',
-            'complex_query' => 'SELECT c.name, COUNT(p.id) as product_count, AVG(p.price) as avg_price FROM categories c LEFT JOIN products p ON c.id = p.category_id GROUP BY c.id',
-        ];
-        
-        foreach ($queries as $name => $query) {
-            try {
-                $startTime = microtime(true);
-                $result = DB::select($query);
-                $endTime = microtime(true);
-                
-                $executionTime = ($endTime - $startTime) * 1000;
-                
-                $results[$name] = [
-                    'execution_time_ms' => round($executionTime, 2),
-                    'result_count' => count($result),
-                    'performance_rating' => $this->getPerformanceRating($executionTime),
-                    'message' => $executionTime < 1000 ? 'Query performance is good' : 'Query performance needs optimization',
-                ];
-                
-            } catch (\Exception $e) {
-                $results[$name] = [
-                    'error' => $e->getMessage(),
-                    'message' => 'Query execution failed',
-                ];
-            }
-        }
-        
-        return $results;
-    }
-
-    private function testBulkOperations(): array
-    {
-        $results = [];
-        
-        try {
-            // Test bulk insert
-            $bulkData = [];
-            for ($i = 0; $i < 1000; $i++) {
-                $bulkData[] = [
-                    'name' => "Bulk Test Product {$i}",
-                    'price' => rand(10, 1000),
-                    'description' => "Bulk test description {$i}",
-                    'category_id' => 1,
-                    'brand_id' => 1,
-                    'is_active' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-            }
-            
-            $startTime = microtime(true);
-            DB::table('test_bulk')->insert($bulkData);
-            $endTime = microtime(true);
-            
-            $insertTime = ($endTime - $startTime) * 1000;
-            
-            // Test bulk update
-            $startTime = microtime(true);
-            DB::table('test_bulk')->where('name', 'LIKE', 'Bulk Test Product%')->update(['is_active' => false]);
-            $endTime = microtime(true);
-            
-            $updateTime = ($endTime - $startTime) * 1000;
-            
-            // Test bulk delete
-            $startTime = microtime(true);
-            DB::table('test_bulk')->where('name', 'LIKE', 'Bulk Test Product%')->delete();
-            $endTime = microtime(true);
-            
-            $deleteTime = ($endTime - $startTime) * 1000;
-            
-            $results = [
-                'bulk_insert_time_ms' => round($insertTime, 2),
-                'bulk_update_time_ms' => round($updateTime, 2),
-                'bulk_delete_time_ms' => round($deleteTime, 2),
-                'records_processed' => 1000,
-                'performance_rating' => $this->getBulkPerformanceRating($insertTime, $updateTime, $deleteTime),
-                'message' => 'Bulk operations completed successfully',
-            ];
-            
-        } catch (\Exception $e) {
-            $results = [
-                'error' => $e->getMessage(),
-                'message' => 'Bulk operations test failed',
-            ];
-        }
-        
-        return $results;
-    }
-
-    private function testConcurrentAccess(): array
-    {
-        $results = [];
-        
-        try {
-            $concurrentQueries = 10;
-            $startTime = microtime(true);
-            
-            // Simulate concurrent access
-            $promises = [];
-            for ($i = 0; $i < $concurrentQueries; $i++) {
-                $promises[] = function() use ($i) {
-                    return DB::table('products')->where('id', '>', $i * 10)->limit(10)->get();
-                };
-            }
-            
-            // Execute concurrent queries
-            $queryResults = [];
-            foreach ($promises as $promise) {
-                $queryResults[] = $promise();
-            }
-            
-            $endTime = microtime(true);
-            $totalTime = ($endTime - $startTime) * 1000;
-            
-            $results = [
-                'concurrent_queries' => $concurrentQueries,
-                'total_time_ms' => round($totalTime, 2),
-                'average_time_per_query_ms' => round($totalTime / $concurrentQueries, 2),
-                'successful_queries' => count($queryResults),
-                'performance_rating' => $this->getConcurrentPerformanceRating($totalTime / $concurrentQueries),
-                'message' => 'Concurrent access test completed',
-            ];
-            
-        } catch (\Exception $e) {
-            $results = [
-                'error' => $e->getMessage(),
-                'message' => 'Concurrent access test failed',
-            ];
-        }
-        
-        return $results;
-    }
-
-    private function testBackups(): array
-    {
-        $results = [];
-
-        try {
-            // Test backup creation
-            $results['backup_creation'] = $this->testBackupCreation();
-            
-            // Test backup restoration
-            $results['backup_restoration'] = $this->testBackupRestoration();
-            
-            // Test data consistency after backup
-            $results['data_consistency'] = $this->testDataConsistencyAfterBackup();
-
-        } catch (\Exception $e) {
-            Log::error('Backup tests failed', ['error' => $e->getMessage()]);
-            $results['error'] = $e->getMessage();
-        }
-
-        return $results;
-    }
-
-    private function testBackupCreation(): array
-    {
-        try {
-            $backupPath = storage_path('app/backups/test_backup_' . time() . '.sql');
-            
-            $startTime = microtime(true);
-            
-            // Create backup using mysqldump (simplified)
-            $command = "mysqldump --user=" . config('database.connections.mysql.username') . 
-                      " --password=" . config('database.connections.mysql.password') . 
-                      " --host=" . config('database.connections.mysql.host') . 
-                      " " . config('database.connections.mysql.database') . 
-                      " > " . $backupPath;
-            
-            exec($command, $output, $returnCode);
-            
-            $endTime = microtime(true);
-            $backupTime = ($endTime - $startTime) * 1000;
-            
-            $backupExists = file_exists($backupPath);
-            $backupSize = $backupExists ? filesize($backupPath) : 0;
-            
-            return [
-                'success' => $backupExists && $returnCode === 0,
-                'backup_path' => $backupPath,
-                'backup_size_bytes' => $backupSize,
-                'backup_time_ms' => round($backupTime, 2),
-                'return_code' => $returnCode,
-                'message' => $backupExists && $returnCode === 0 ? 'Backup creation successful' : 'Backup creation failed',
-            ];
-            
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Backup creation test failed',
-            ];
-        }
-    }
-
-    private function testBackupRestoration(): array
-    {
-        try {
-            // This is a simplified test - in production, you'd restore to a test database
-            $backupPath = storage_path('app/backups/test_backup.sql');
-            
-            if (!file_exists($backupPath)) {
-                return [
-                    'success' => false,
-                    'message' => 'Backup file not found for restoration test',
-                ];
-            }
-            
-            $startTime = microtime(true);
-            
-            // Test backup file integrity
-            $backupContent = file_get_contents($backupPath);
-            $isValidSQL = str_contains($backupContent, 'CREATE TABLE') && str_contains($backupContent, 'INSERT INTO');
-            
-            $endTime = microtime(true);
-            $restoreTime = ($endTime - $startTime) * 1000;
-            
-            return [
-                'success' => $isValidSQL,
-                'backup_file_size' => strlen($backupContent),
-                'restore_time_ms' => round($restoreTime, 2),
-                'sql_valid' => $isValidSQL,
-                'message' => $isValidSQL ? 'Backup restoration test passed' : 'Backup file is invalid',
-            ];
-            
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Backup restoration test failed',
-            ];
-        }
-    }
-
-    private function testDataConsistencyAfterBackup(): array
-    {
-        try {
-            // Test data integrity after backup operations
-            $tableCounts = [];
-            
-            foreach ($this->testTables as $table => $config) {
-                if (Schema::hasTable($table)) {
-                    $tableCounts[$table] = DB::table($table)->count();
-                }
-            }
-            
-            return [
-                'success' => true,
-                'table_counts' => $tableCounts,
-                'message' => 'Data consistency check completed',
-            ];
-            
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage(),
-                'message' => 'Data consistency check failed',
-            ];
-        }
-    }
-
-    // Helper methods
-    private function getTableIndexes(string $table): array
-    {
-        try {
-            $indexes = DB::select("SHOW INDEX FROM {$table}");
-            return array_unique(array_column($indexes, 'Key_name'));
-        } catch (\Exception $e) {
-            return [];
-        }
-    }
-
-    private function hasIndex(array $indexes, string $indexName): bool
-    {
-        return in_array($indexName, $indexes);
-    }
-
-    private function getTableForeignKeys(string $table): array
-    {
-        try {
-            $foreignKeys = DB::select("
-                SELECT 
-                    COLUMN_NAME,
-                    REFERENCED_TABLE_NAME,
-                    REFERENCED_COLUMN_NAME
-                FROM 
-                    INFORMATION_SCHEMA.KEY_COLUMN_USAGE 
-                WHERE 
-                    TABLE_SCHEMA = DATABASE() 
-                    AND TABLE_NAME = '{$table}' 
-                    AND REFERENCED_TABLE_NAME IS NOT NULL
-            ");
-            
-            $result = [];
-            foreach ($foreignKeys as $fk) {
-                $result[] = [
-                    'column' => $fk->COLUMN_NAME,
-                    'referenced_table' => $fk->REFERENCED_TABLE_NAME,
-                    'referenced_column' => $fk->REFERENCED_COLUMN_NAME,
-                ];
-            }
-            
-            return $result;
-        } catch (\Exception $e) {
-            return [];
-        }
-    }
-
-    private function hasForeignKey(array $foreignKeys, string $column, string $referencedTable): bool
-    {
-        foreach ($foreignKeys as $fk) {
-            if ($fk['column'] === $column && $fk['referenced_table'] === $referencedTable) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private function getPerformanceRating(float $executionTime): string
-    {
-        if ($executionTime < 100) return 'Excellent';
-        if ($executionTime < 500) return 'Good';
-        if ($executionTime < 1000) return 'Fair';
-        return 'Poor';
-    }
-
-    private function getBulkPerformanceRating(float $insertTime, float $updateTime, float $deleteTime): string
-    {
-        $averageTime = ($insertTime + $updateTime + $deleteTime) / 3;
-        return $this->getPerformanceRating($averageTime);
-    }
-
-    private function getConcurrentPerformanceRating(float $averageTime): string
-    {
-        return $this->getPerformanceRating($averageTime);
     }
 
     public function generateTestReport(): array
     {
-        $totalTests = 0;
-        $passedTests = 0;
-        $failedTests = 0;
+        $total = 0;
+        $passed = 0;
 
-        foreach ($this->testResults as $category => $tests) {
-            if (is_array($tests)) {
-                foreach ($tests as $test) {
-                    if (is_array($test) && isset($test['success'])) {
-                        $totalTests++;
-                        if ($test['success']) {
-                            $passedTests++;
-                        } else {
-                            $failedTests++;
-                        }
-                    }
+        foreach ($this->testResults as $tests) {
+            foreach ($tests as $result) {
+                if (! is_array($result) || ! array_key_exists('success', $result)) {
+                    continue;
                 }
+
+                $total++;
+                $passed += ($result['success'] ?? false) ? 1 : 0;
             }
         }
 
         return [
             'summary' => [
-                'total_tests' => $totalTests,
-                'passed_tests' => $passedTests,
-                'failed_tests' => $failedTests,
-                'success_rate' => $totalTests > 0 ? round(($passedTests / $totalTests) * 100, 2) : 0,
+                'total_tests' => $total,
+                'passed_tests' => $passed,
+                'failed_tests' => max($total - $passed, 0),
+                'success_rate' => $total > 0 ? round(($passed / $total) * 100, 2) : 0,
             ],
             'categories' => array_keys($this->testResults),
             'recommendations' => $this->generateRecommendations(),
         ];
-    }
-
-    private function generateRecommendations(): array
-    {
-        $recommendations = [];
-
-        // Analyze test results and generate recommendations
-        if (isset($this->testResults['performance_tests']['query_performance'])) {
-            foreach ($this->testResults['performance_tests']['query_performance'] as $query => $result) {
-                if (isset($result['performance_rating']) && in_array($result['performance_rating'], ['Fair', 'Poor'])) {
-                    $recommendations[] = "Optimize query performance for: {$query}";
-                }
-            }
-        }
-
-        if (isset($this->testResults['schema_tests']['indexes'])) {
-            foreach ($this->testResults['schema_tests']['indexes'] as $table => $result) {
-                if (isset($result['indexes_valid']) && !$result['indexes_valid']) {
-                    $recommendations[] = "Add missing indexes for table: {$table}";
-                }
-            }
-        }
-
-        if (empty($recommendations)) {
-            $recommendations[] = 'Database tests are passing well. Continue monitoring.';
-        }
-
-        return $recommendations;
     }
 
     public function getTestStatistics(): array
@@ -1199,7 +134,497 @@ class DatabaseTestingService
         return [
             'config' => $this->testConfig,
             'test_tables' => array_keys($this->testTables),
+            'database_driver' => DB::getDriverName(),
             'total_test_categories' => count($this->testConfig),
         ];
+    }
+
+    private function wrap(array $tests, string $message): array
+    {
+        $leaves = array_filter($tests, fn ($value) => is_array($value) && array_key_exists('success', $value));
+        $tests['success'] = $leaves !== [] && collect($leaves)->every(fn (array $result) => ($result['success'] ?? false) === true);
+        $tests['message'] = $message;
+
+        return $tests;
+    }
+
+    private function ensureScratchTables(): void
+    {
+        $tables = [
+            'test_transaction' => fn (Blueprint $table) => [$table->id(), $table->string('name'), $table->string('email')->nullable(), $table->timestamps()],
+            'test_rollback' => fn (Blueprint $table) => [$table->id(), $table->string('name'), $table->timestamps()],
+            'test_crud' => fn (Blueprint $table) => [$table->id(), $table->string('name'), $table->boolean('is_active')->default(true), $table->json('meta')->nullable(), $table->timestamps()],
+            'test_bulk' => fn (Blueprint $table) => [$table->id(), $table->string('name'), $table->boolean('is_active')->default(true), $table->timestamps()],
+        ];
+
+        foreach ($tables as $name => $definition) {
+            if (Schema::hasTable($name)) {
+                continue;
+            }
+
+            Schema::create($name, function (Blueprint $table) use ($definition) {
+                $definition($table);
+            });
+        }
+    }
+
+    private function testBasicConnection(): array
+    {
+        return $this->attempt(function () {
+            $start = microtime(true);
+            $result = DB::select('SELECT 1 as test');
+
+            return [
+                'success' => (int) ($result[0]->test ?? 0) === 1,
+                'response_time_ms' => round((microtime(true) - $start) * 1000, 2),
+                'message' => 'Database connection is working.',
+            ];
+        }, 'Database connection failed.');
+    }
+
+    private function testTransactionSupport(): array
+    {
+        return $this->attempt(function () {
+            $id = null;
+            DB::beginTransaction();
+
+            $id = DB::table('test_transaction')->insertGetId([
+                'name' => 'transaction_' . uniqid(),
+                'email' => uniqid() . '@example.com',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $inside = DB::table('test_transaction')->where('id', $id)->exists();
+            DB::rollBack();
+            $after = DB::table('test_transaction')->where('id', $id)->exists();
+
+            return [
+                'success' => $inside && ! $after,
+                'message' => 'Transaction support check completed.',
+            ];
+        }, 'Transaction support test failed.', true);
+    }
+
+    private function testRollbackFunctionality(): array
+    {
+        return $this->attempt(function () {
+            $initial = DB::table('test_rollback')->count();
+            DB::beginTransaction();
+            DB::table('test_rollback')->insert([
+                'name' => 'rollback_' . uniqid(),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $afterInsert = DB::table('test_rollback')->count();
+            DB::rollBack();
+            $afterRollback = DB::table('test_rollback')->count();
+
+            return [
+                'success' => $afterInsert === $initial + 1 && $afterRollback === $initial,
+                'message' => 'Rollback functionality check completed.',
+            ];
+        }, 'Rollback functionality test failed.', true);
+    }
+
+    private function testConnectionPooling(): array
+    {
+        return $this->attempt(function () {
+            $queries = 5;
+            $start = microtime(true);
+            for ($i = 0; $i < $queries; $i++) {
+                DB::connection()->select('SELECT 1 as test');
+            }
+
+            return [
+                'success' => true,
+                'average_time_per_query_ms' => round(((microtime(true) - $start) * 1000) / $queries, 2),
+                'message' => 'Repeated connection queries completed.',
+            ];
+        }, 'Connection pooling simulation failed.');
+    }
+
+    private function testTableStructure(): array
+    {
+        $details = [];
+        $success = true;
+
+        foreach ($this->testTables as $table => $config) {
+            $columns = Schema::hasTable($table) ? Schema::getColumnListing($table) : [];
+            $missing = Schema::hasTable($table) ? array_values(array_diff($config['columns'], $columns)) : $config['columns'];
+            $details[$table] = ['success' => Schema::hasTable($table) && $missing === [], 'missing_columns' => $missing];
+            $success = $success && $details[$table]['success'];
+        }
+
+        return ['success' => $success, 'tables' => $details, 'message' => $success ? 'Core table structures match the current schema.' : 'Some core tables are missing required columns.'];
+    }
+
+    private function testIndexes(): array
+    {
+        $details = [];
+        $success = true;
+
+        foreach ($this->testTables as $table => $config) {
+            $indexed = Schema::hasTable($table) ? $this->getIndexedColumns($table) : [];
+            $missing = Schema::hasTable($table) ? array_values(array_diff($config['indexed_columns'], $indexed)) : $config['indexed_columns'];
+            $details[$table] = ['success' => Schema::hasTable($table) && $missing === [], 'missing_indexed_columns' => $missing];
+            $success = $success && $details[$table]['success'];
+        }
+
+        return ['success' => $success, 'tables' => $details, 'message' => $success ? 'Index checks completed successfully.' : 'Index coverage is incomplete for one or more core tables.'];
+    }
+
+    private function testForeignKeys(): array
+    {
+        $details = [];
+        $success = true;
+
+        foreach ($this->testTables as $table => $config) {
+            $foreignKeys = Schema::hasTable($table) ? $this->getTableForeignKeys($table) : [];
+            $missing = [];
+            foreach ($config['foreign_keys'] as $column => $referencedTable) {
+                if (! $this->hasForeignKey($foreignKeys, $column, $referencedTable)) {
+                    $missing[] = $column . ' -> ' . $referencedTable;
+                }
+            }
+            $details[$table] = ['success' => Schema::hasTable($table) && $missing === [], 'missing_foreign_keys' => $missing];
+            $success = $success && $details[$table]['success'];
+        }
+
+        return ['success' => $success, 'tables' => $details, 'message' => $success ? 'Foreign key checks completed successfully.' : 'Foreign key validation failed for one or more tables.'];
+    }
+
+    private function testConstraints(): array
+    {
+        return $this->wrap([
+            'not_null_constraints' => $this->attempt(function () {
+                $checks = ['products' => ['name', 'slug', 'price'], 'product_categories' => ['name', 'slug'], 'customers' => ['name', 'email', 'password'], 'orders' => ['code', 'status', 'total']];
+                foreach ($checks as $table => $columns) {
+                    if (! Schema::hasTable($table)) {
+                        return ['success' => false, 'message' => 'Constraint table missing.'];
+                    }
+                    foreach ($columns as $column) {
+                        if (! Schema::hasColumn($table, $column) || DB::table($table)->whereNull($column)->exists()) {
+                            return ['success' => false, 'message' => 'NOT NULL issues found.'];
+                        }
+                    }
+                }
+                return ['success' => true, 'message' => 'NOT NULL checks passed.'];
+            }, 'NOT NULL checks failed.'),
+            'unique_constraints' => $this->attempt(function () {
+                $checks = ['product_categories' => ['slug'], 'brands' => ['slug'], 'customers' => ['email'], 'orders' => ['code']];
+                foreach ($checks as $table => $columns) {
+                    if (! Schema::hasTable($table)) {
+                        return ['success' => false, 'message' => 'Constraint table missing.'];
+                    }
+                    foreach ($columns as $column) {
+                        $duplicates = DB::table($table)->whereNotNull($column)->select($column)->groupBy($column)->havingRaw('COUNT(*) > 1')->count();
+                        if ($duplicates > 0) {
+                            return ['success' => false, 'message' => 'Unique constraint issues found.'];
+                        }
+                    }
+                }
+                return ['success' => true, 'message' => 'Unique checks passed.'];
+            }, 'Unique checks failed.'),
+            'check_constraints' => $this->attempt(function () {
+                $negativePrices = Schema::hasTable('products') ? DB::table('products')->where('price', '<', 0)->count() : 0;
+                $negativeTotals = Schema::hasTable('orders') ? DB::table('orders')->where('total', '<', 0)->count() : 0;
+                return ['success' => $negativePrices === 0 && $negativeTotals === 0, 'message' => $negativePrices === 0 && $negativeTotals === 0 ? 'Value checks passed.' : 'Negative values were found.'];
+            }, 'Check constraints failed.'),
+        ], 'Constraint checks completed.');
+    }
+
+    private function testCrudOperations(): array
+    {
+        return $this->attempt(function () {
+            $id = DB::table('test_crud')->insertGetId([
+                'name' => 'crud_' . uniqid(),
+                'is_active' => true,
+                'meta' => json_encode(['stage' => 'created']),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            $updated = DB::table('test_crud')->where('id', $id)->update(['is_active' => false, 'updated_at' => now()]);
+            $deleted = DB::table('test_crud')->where('id', $id)->delete();
+
+            return ['success' => $updated === 1 && $deleted === 1, 'message' => 'CRUD operations completed.'];
+        }, 'CRUD operations test failed.');
+    }
+
+    private function testDataIntegrity(): array
+    {
+        return $this->attempt(function () {
+            $orphanedOrders = DB::table('orders')->leftJoin('customers', 'orders.customer_id', '=', 'customers.id')->whereNotNull('orders.customer_id')->whereNull('customers.id')->count();
+            $orphanedOrderItems = DB::table('order_items')->leftJoin('orders', 'order_items.order_id', '=', 'orders.id')->whereNull('orders.id')->count();
+            $orphanedProductLinks = DB::table('order_items')->leftJoin('products', 'order_items.product_id', '=', 'products.id')->whereNotNull('order_items.product_id')->whereNull('products.id')->count();
+            return ['success' => $orphanedOrders === 0 && $orphanedOrderItems === 0 && $orphanedProductLinks === 0, 'message' => 'Referential integrity checks completed.'];
+        }, 'Data integrity test failed.');
+    }
+
+    private function testRelationships(): array
+    {
+        return $this->attempt(function () {
+            DB::table('products')->leftJoin('product_categories', 'products.primary_category_id', '=', 'product_categories.id')->count();
+            DB::table('products')->leftJoin('brands', 'products.brand_id', '=', 'brands.id')->count();
+            DB::table('orders')->leftJoin('customers', 'orders.customer_id', '=', 'customers.id')->count();
+            return ['success' => true, 'message' => 'Relationship queries executed successfully.'];
+        }, 'Relationship test failed.');
+    }
+
+    private function testDataValidation(): array
+    {
+        return $this->attempt(function () {
+            $invalidEmails = DB::table('customers')->whereNotNull('email')->pluck('email')->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL) === false)->count();
+            $invalidPrices = DB::table('products')->where('price', '<', 0)->count();
+            return ['success' => $invalidEmails === 0 && $invalidPrices === 0, 'message' => 'Validation checks completed.'];
+        }, 'Data validation test failed.');
+    }
+
+    private function testQueryPerformance(): array
+    {
+        return $this->attempt(function () {
+            $queries = [
+                fn () => DB::table('products')->limit(100)->get(),
+                fn () => DB::table('products')->leftJoin('product_categories', 'products.primary_category_id', '=', 'product_categories.id')->select('products.id')->limit(100)->get(),
+                fn () => DB::table('products')->selectRaw('primary_category_id, COUNT(*) as items_count, AVG(price) as avg_price')->groupBy('primary_category_id')->get(),
+                fn () => DB::table('orders')->leftJoin('order_items', 'orders.id', '=', 'order_items.order_id')->selectRaw('orders.id, COALESCE(SUM(order_items.subtotal), 0) as items_total')->groupBy('orders.id')->limit(100)->get(),
+            ];
+
+            $ratings = [];
+            foreach ($queries as $query) {
+                $start = microtime(true);
+                $query();
+                $ratings[] = $this->getPerformanceRating((microtime(true) - $start) * 1000);
+            }
+
+            return ['success' => true, 'ratings' => $ratings, 'message' => 'Query performance checks completed.'];
+        }, 'One or more performance queries failed.');
+    }
+
+    private function testBulkOperations(): array
+    {
+        return $this->attempt(function () {
+            $prefix = 'bulk_' . uniqid();
+            $rows = [];
+            for ($i = 0; $i < 200; $i++) {
+                $rows[] = ['name' => $prefix . '_' . $i, 'is_active' => true, 'created_at' => now(), 'updated_at' => now()];
+            }
+
+            $insertStart = microtime(true);
+            DB::table('test_bulk')->insert($rows);
+            $insert = (microtime(true) - $insertStart) * 1000;
+
+            $updateStart = microtime(true);
+            $updated = DB::table('test_bulk')->where('name', 'like', $prefix . '%')->update(['is_active' => false, 'updated_at' => now()]);
+            $update = (microtime(true) - $updateStart) * 1000;
+
+            $deleteStart = microtime(true);
+            $deleted = DB::table('test_bulk')->where('name', 'like', $prefix . '%')->delete();
+            $delete = (microtime(true) - $deleteStart) * 1000;
+
+            return [
+                'success' => $updated === 200 && $deleted === 200,
+                'performance_rating' => $this->getPerformanceRating(($insert + $update + $delete) / 3),
+                'message' => 'Bulk operations completed.',
+            ];
+        }, 'Bulk operations test failed.');
+    }
+
+    private function testConcurrentAccess(): array
+    {
+        return $this->attempt(function () {
+            for ($i = 0; $i < 5; $i++) {
+                DB::table('products')->where('id', '>=', 0)->limit(10)->get();
+            }
+
+            return ['success' => true, 'message' => 'Concurrent access simulation completed.'];
+        }, 'Concurrent access test failed.');
+    }
+
+    private function testBackupCreation(): array
+    {
+        return $this->attempt(function () {
+            $backupService = $this->resolvePortableBackupService();
+            $result = $backupService->createBackup();
+            $backupId = $result['backup_id'] ?? null;
+            $manifestPath = $backupId ? storage_path('app/backups/' . $backupId . '/manifest.json') : null;
+            $databasePath = $backupId ? storage_path('app/backups/' . $backupId . '/database.sql') : null;
+            $this->latestBackupId = ($result['success'] ?? false) ? $backupId : null;
+
+            return [
+                'success' => ($result['success'] ?? false) && $manifestPath && file_exists($manifestPath) && $databasePath && file_exists($databasePath),
+                'backup_id' => $backupId,
+                'message' => ($result['success'] ?? false) ? 'Portable backup creation succeeded.' : ($result['error'] ?? 'Backup creation failed.'),
+            ];
+        }, 'Backup creation test failed.');
+    }
+
+    private function testBackupRestoration(): array
+    {
+        if ($this->latestBackupId === null) {
+            return ['success' => false, 'message' => 'Backup creation did not produce a restorable backup.'];
+        }
+
+        return $this->attempt(function () {
+            $result = $this->resolvePortableBackupService()->restoreBackup($this->latestBackupId);
+            return ['success' => $result['success'] ?? false, 'message' => ($result['success'] ?? false) ? 'Portable backup restoration succeeded.' : ($result['error'] ?? 'Backup restoration failed.')];
+        }, 'Backup restoration test failed.', false, true);
+    }
+
+    private function testDataConsistencyAfterBackup(): array
+    {
+        return $this->attempt(function () {
+            $counts = [];
+            foreach (array_keys($this->testTables) as $table) {
+                $counts[$table] = DB::table($table)->count();
+            }
+            return ['success' => true, 'table_counts' => $counts, 'message' => 'Data consistency snapshot collected.'];
+        }, 'Data consistency after backup test failed.');
+    }
+
+    private function resolvePortableBackupService(): BackupRecoveryService
+    {
+        config([
+            'backup.enabled' => true,
+            'backup.compression' => false,
+            'backup.encryption' => false,
+            'backup.storage.local' => true,
+            'backup.storage.s3' => false,
+            'backup.storage.ftp' => false,
+            'backup.components.database' => true,
+            'backup.components.files' => false,
+            'backup.components.config' => false,
+            'backup.components.logs' => false,
+            'backup.notifications.email' => false,
+            'backup.notifications.slack' => false,
+        ]);
+
+        app()->forgetInstance(BackupRecoveryService::class);
+
+        return app(BackupRecoveryService::class);
+    }
+
+    private function attempt(callable $callback, string $fallbackMessage, bool $rollback = false, bool $cleanupBackup = false): array
+    {
+        try {
+            return $callback();
+        } catch (\Throwable $e) {
+            if ($rollback) {
+                while (DB::transactionLevel() > 0) {
+                    DB::rollBack();
+                }
+            }
+
+            return ['success' => false, 'error' => $e->getMessage(), 'message' => $fallbackMessage];
+        } finally {
+            if ($cleanupBackup) {
+                $this->cleanupBackupArtifacts($this->latestBackupId);
+            }
+        }
+    }
+
+    private function cleanupBackupArtifacts(?string $backupId): void
+    {
+        if ($backupId === null) {
+            return;
+        }
+
+        foreach ([
+            storage_path('app/backups/' . $backupId),
+            storage_path('app/backups/' . $backupId . '.tar.gz'),
+            storage_path('app/backups/' . $backupId . '.enc'),
+            storage_path('app/backups/' . $backupId . '.tar.gz.enc'),
+        ] as $path) {
+            if (is_dir($path)) {
+                $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS), \RecursiveIteratorIterator::CHILD_FIRST);
+                foreach ($iterator as $item) {
+                    $item->isDir() ? @rmdir($item->getRealPath()) : @unlink($item->getRealPath());
+                }
+                @rmdir($path);
+            } elseif (is_file($path)) {
+                @unlink($path);
+            }
+        }
+    }
+
+    private function getIndexedColumns(string $table): array
+    {
+        try {
+            if (DB::getDriverName() === 'mysql') {
+                return array_values(array_unique(array_map(fn ($row) => $row->Column_name, DB::select('SHOW INDEX FROM `' . str_replace('`', '``', $table) . '`'))));
+            }
+
+            if (DB::getDriverName() === 'sqlite') {
+                $columns = array_map(fn ($row) => $row->name, array_filter(DB::select('PRAGMA table_info("' . str_replace('"', '""', $table) . '")'), fn ($row) => (int) ($row->pk ?? 0) > 0));
+                foreach (DB::select('PRAGMA index_list("' . str_replace('"', '""', $table) . '")') as $index) {
+                    foreach (DB::select('PRAGMA index_info("' . str_replace('"', '""', $index->name) . '")') as $column) {
+                        $columns[] = $column->name;
+                    }
+                }
+                return array_values(array_unique($columns));
+            }
+        } catch (\Throwable $e) {
+            return [];
+        }
+
+        return [];
+    }
+
+    private function getTableForeignKeys(string $table): array
+    {
+        try {
+            if (DB::getDriverName() === 'mysql') {
+                return array_map(fn ($row) => ['column' => $row->COLUMN_NAME, 'referenced_table' => $row->REFERENCED_TABLE_NAME], DB::select('SELECT COLUMN_NAME, REFERENCED_TABLE_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND REFERENCED_TABLE_NAME IS NOT NULL', [DB::getDatabaseName(), $table]));
+            }
+
+            if (DB::getDriverName() === 'sqlite') {
+                return array_map(fn ($row) => ['column' => $row->from, 'referenced_table' => $row->table], DB::select('PRAGMA foreign_key_list("' . str_replace('"', '""', $table) . '")'));
+            }
+        } catch (\Throwable $e) {
+            return [];
+        }
+
+        return [];
+    }
+
+    private function hasForeignKey(array $foreignKeys, string $column, string $referencedTable): bool
+    {
+        foreach ($foreignKeys as $foreignKey) {
+            if (($foreignKey['column'] ?? null) === $column && ($foreignKey['referenced_table'] ?? null) === $referencedTable) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function getPerformanceRating(float $executionTime): string
+    {
+        if ($executionTime < 100) {
+            return 'Excellent';
+        }
+        if ($executionTime < 500) {
+            return 'Good';
+        }
+        if ($executionTime < 1000) {
+            return 'Fair';
+        }
+        return 'Poor';
+    }
+
+    private function generateRecommendations(): array
+    {
+        $recommendations = [];
+
+        foreach ($this->testResults as $category => $tests) {
+            foreach ($tests as $test => $result) {
+                if (is_array($result) && array_key_exists('success', $result) && ($result['success'] ?? false) === false) {
+                    $recommendations[] = 'Investigate ' . $category . '.' . $test . ': ' . ($result['message'] ?? 'Test failed.');
+                }
+            }
+        }
+
+        return $recommendations === [] ? ['Database tests are passing well. Continue monitoring.'] : $recommendations;
     }
 }

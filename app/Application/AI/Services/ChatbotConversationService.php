@@ -7,9 +7,15 @@ use App\Infrastructure\Persistence\Eloquent\Support\ChatConversation;
 use App\Infrastructure\Persistence\Eloquent\Support\ChatMessage;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class ChatbotConversationService
 {
+    public function tablesReady(): bool
+    {
+        return Schema::hasTable('chat_conversations') && Schema::hasTable('chat_messages');
+    }
+
     public function bootstrap(
         ?int $customerId,
         ?int $userId,
@@ -187,6 +193,55 @@ class ChatbotConversationService
             'actions' => (array) ($meta['actions'] ?? []),
             'source' => $meta['source'] ?? null,
             'created_at' => optional($message->created_at)->toIso8601String(),
+        ];
+    }
+
+    public function statelessConversationPayload(
+        string $channel,
+        ?string $sessionToken,
+        array $messages = [],
+        ?Carbon $lastMessageAt = null
+    ): array {
+        return [
+            'id' => null,
+            'channel' => $channel,
+            'session_token' => $sessionToken,
+            'last_message_at' => ($lastMessageAt ?? ($messages === [] ? null : Carbon::now()))?->toIso8601String(),
+            'messages' => array_values($messages),
+        ];
+    }
+
+    public function statelessWelcomeMessagePayload(): array
+    {
+        return $this->statelessMessagePayload(
+            sender: 'bot',
+            message: (string) config('chatbot.welcome_message'),
+            intent: 'welcome',
+            responseType: 'welcome',
+            meta: [
+                'actions' => $this->normalizeActions(config('chatbot.welcome_actions', [])),
+            ]
+        );
+    }
+
+    public function statelessMessagePayload(
+        string $sender,
+        string $message,
+        ?string $intent = null,
+        string $responseType = 'text',
+        array $meta = [],
+        ?Carbon $createdAt = null
+    ): array {
+        return [
+            'id' => null,
+            'sender' => $sender,
+            'message' => trim($message),
+            'intent' => $intent,
+            'response_type' => $responseType,
+            'products' => (array) ($meta['products'] ?? []),
+            'actions' => (array) ($meta['actions'] ?? []),
+            'source' => $meta['source'] ?? null,
+            'created_at' => ($createdAt ?? Carbon::now())->toIso8601String(),
         ];
     }
 

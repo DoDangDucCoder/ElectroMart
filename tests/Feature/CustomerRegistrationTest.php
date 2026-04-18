@@ -213,6 +213,45 @@ class CustomerRegistrationTest extends TestCase
         ])->assertRedirect('/gio-hang');
     }
 
+    public function test_customer_auth_flow_rejects_system_redirect_targets_even_on_same_host(): void
+    {
+        Customer::create([
+            'name' => 'Safe Redirect Customer',
+            'email' => 'safe-redirect@example.com',
+            'password' => bcrypt('secret123'),
+            'phone' => '0915555555',
+            'is_active' => true,
+        ]);
+
+        $this->post('/login-customer', [
+            'email_account' => 'safe-redirect@example.com',
+            'password_account' => 'secret123',
+            'redirect_target' => 'history',
+            'redirect_to' => url('/admin'),
+        ])->assertRedirect('/history');
+    }
+
+    public function test_customer_login_ignores_admin_referer_and_falls_back_to_storefront_destination(): void
+    {
+        Customer::create([
+            'name' => 'Admin Referer Customer',
+            'email' => 'admin-referer@example.com',
+            'password' => bcrypt('secret123'),
+            'phone' => '0916666666',
+            'is_active' => true,
+        ]);
+
+        $this->from('/admin')
+            ->get('/dang-nhap?redirect=checkout')
+            ->assertOk();
+
+        $this->post('/login-customer', [
+            'email_account' => 'admin-referer@example.com',
+            'password_account' => 'secret123',
+            'redirect_target' => 'history',
+        ])->assertRedirect('/checkout');
+    }
+
     public function test_logged_in_customer_login_page_renders_account_identity_and_logout(): void
     {
         $customer = Customer::create([

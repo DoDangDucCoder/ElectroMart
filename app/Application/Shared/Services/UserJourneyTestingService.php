@@ -2,6 +2,7 @@
 
 namespace App\Application\Shared\Services;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -174,22 +175,33 @@ class UserJourneyTestingService
     private function testJourneyStep(string $stepName, array $stepConfig): array
     {
         try {
-            $url = $this->baseUrl . $stepConfig['url'];
+            $path = $this->normalizeJourneyPath($stepConfig['url']);
+            $url = $this->baseUrl . $path;
             $startTime = microtime(true);
             
-            $response = Http::timeout(30)->get($url);
+            $response = $this->journeyRequest($url, 30);
             
             $endTime = microtime(true);
             $loadTime = ($endTime - $startTime) * 1000;
+            $expectedRedirect = $this->expectedAuthRedirectForPath($path);
+            $authRedirect = $this->matchesExpectedRedirect($response, $expectedRedirect);
 
             $result = [
                 'step_name' => $stepName,
                 'url' => $url,
+                'resolved_path' => $path,
                 'status_code' => $response->status(),
                 'load_time_ms' => round($loadTime, 2),
-                'success' => $response->successful(),
+                'success' => $response->successful() || $authRedirect,
                 'content_length' => strlen($response->body()),
             ];
+
+            if ($authRedirect) {
+                $result['auth_redirect'] = $expectedRedirect;
+                $result['message'] = 'Protected step redirected to authentication as expected';
+
+                return $result;
+            }
 
             if ($response->successful()) {
                 $html = $response->body();
@@ -695,9 +707,9 @@ class UserJourneyTestingService
         try {
             $journeySteps = [
                 'homepage' => '/',
-                'products' => '/products',
+                'products' => '/tim-kiem',
                 'product_detail' => '/products/1',
-                'cart' => '/cart',
+                'cart' => '/gio-hang',
                 'checkout' => '/checkout',
             ];
 
@@ -706,21 +718,22 @@ class UserJourneyTestingService
             $successfulSteps = 0;
 
             foreach ($journeySteps as $step => $url) {
+                $path = $this->normalizeJourneyPath($url);
                 $startTime = microtime(true);
-                $response = Http::timeout(10)->get($this->baseUrl . $url);
+                $response = $this->journeyRequest($this->baseUrl . $path, 10);
                 $endTime = microtime(true);
                 
                 $stepTime = ($endTime - $startTime) * 1000;
                 $totalTime += $stepTime;
                 
-                if ($response->successful()) {
+                if ($response->successful() || $this->matchesExpectedRedirect($response, $this->expectedAuthRedirectForPath($path))) {
                     $successfulSteps++;
                 }
                 
                 $results[$step] = [
-                    'url' => $url,
+                    'url' => $path,
                     'status' => $response->status(),
-                    'success' => $response->successful(),
+                    'success' => $response->successful() || $this->matchesExpectedRedirect($response, $this->expectedAuthRedirectForPath($path)),
                     'load_time_ms' => round($stepTime, 2),
                 ];
             }
@@ -749,9 +762,9 @@ class UserJourneyTestingService
     {
         try {
             $journeySteps = [
-                'login' => '/login',
+                'login' => '/dang-nhap',
                 'dashboard' => '/dashboard',
-                'orders' => '/orders',
+                'orders' => '/history',
                 'profile' => '/profile',
             ];
 
@@ -760,21 +773,22 @@ class UserJourneyTestingService
             $successfulSteps = 0;
 
             foreach ($journeySteps as $step => $url) {
+                $path = $this->normalizeJourneyPath($url);
                 $startTime = microtime(true);
-                $response = Http::timeout(10)->get($this->baseUrl . $url);
+                $response = $this->journeyRequest($this->baseUrl . $path, 10);
                 $endTime = microtime(true);
                 
                 $stepTime = ($endTime - $startTime) * 1000;
                 $totalTime += $stepTime;
                 
-                if ($response->successful()) {
+                if ($response->successful() || $this->matchesExpectedRedirect($response, $this->expectedAuthRedirectForPath($path))) {
                     $successfulSteps++;
                 }
                 
                 $results[$step] = [
-                    'url' => $url,
+                    'url' => $path,
                     'status' => $response->status(),
-                    'success' => $response->successful(),
+                    'success' => $response->successful() || $this->matchesExpectedRedirect($response, $this->expectedAuthRedirectForPath($path)),
                     'load_time_ms' => round($stepTime, 2),
                 ];
             }
@@ -803,10 +817,10 @@ class UserJourneyTestingService
     {
         try {
             $journeySteps = [
-                'admin_login' => '/admin/login',
-                'admin_dashboard' => '/admin/dashboard',
-                'admin_products' => '/admin/products',
-                'admin_orders' => '/admin/orders',
+                'admin_login' => '/admin',
+                'admin_dashboard' => '/dashboard',
+                'admin_products' => '/all-product',
+                'admin_orders' => '/manage-order',
             ];
 
             $results = [];
@@ -814,21 +828,22 @@ class UserJourneyTestingService
             $successfulSteps = 0;
 
             foreach ($journeySteps as $step => $url) {
+                $path = $this->normalizeJourneyPath($url);
                 $startTime = microtime(true);
-                $response = Http::timeout(10)->get($this->baseUrl . $url);
+                $response = $this->journeyRequest($this->baseUrl . $path, 10);
                 $endTime = microtime(true);
                 
                 $stepTime = ($endTime - $startTime) * 1000;
                 $totalTime += $stepTime;
                 
-                if ($response->successful()) {
+                if ($response->successful() || $this->matchesExpectedRedirect($response, $this->expectedAuthRedirectForPath($path))) {
                     $successfulSteps++;
                 }
                 
                 $results[$step] = [
-                    'url' => $url,
+                    'url' => $path,
                     'status' => $response->status(),
-                    'success' => $response->successful(),
+                    'success' => $response->successful() || $this->matchesExpectedRedirect($response, $this->expectedAuthRedirectForPath($path)),
                     'load_time_ms' => round($stepTime, 2),
                 ];
             }
@@ -878,8 +893,8 @@ class UserJourneyTestingService
             $loginUrl = $this->baseUrl . '/login';
             $dashboardUrl = $this->baseUrl . '/dashboard';
             
-            $response1 = Http::timeout(10)->get($loginUrl);
-            $response2 = Http::timeout(10)->get($dashboardUrl);
+            $response1 = $this->journeyRequest($loginUrl, 10);
+            $response2 = $this->journeyRequest($dashboardUrl, 10);
             
             return [
                 'success' => true,
@@ -902,7 +917,7 @@ class UserJourneyTestingService
         try {
             // Test basic compatibility (simplified)
             $url = $this->baseUrl . '/';
-            $response = Http::timeout(10)->get($url);
+            $response = $this->journeyRequest($url, 10);
             
             if ($response->successful()) {
                 $html = $response->body();
@@ -934,7 +949,7 @@ class UserJourneyTestingService
     {
         try {
             $url = $this->baseUrl . '/';
-            $response = Http::timeout(10)->get($url);
+            $response = $this->journeyRequest($url, 10);
             
             if ($response->successful()) {
                 $html = $response->body();
@@ -969,7 +984,7 @@ class UserJourneyTestingService
         try {
             // Test 404 error handling
             $notFoundUrl = $this->baseUrl . '/non-existent-page';
-            $response = Http::timeout(10)->get($notFoundUrl);
+            $response = $this->journeyRequest($notFoundUrl, 10);
             
             return [
                 'success' => true,
@@ -1002,24 +1017,7 @@ class UserJourneyTestingService
 
     public function generateTestReport(): array
     {
-        $totalTests = 0;
-        $passedTests = 0;
-        $failedTests = 0;
-
-        foreach ($this->testResults as $category => $tests) {
-            if (is_array($tests)) {
-                foreach ($tests as $test) {
-                    if (is_array($test) && isset($test['success'])) {
-                        $totalTests++;
-                        if ($test['success']) {
-                            $passedTests++;
-                        } else {
-                            $failedTests++;
-                        }
-                    }
-                }
-            }
-        }
+        ['total' => $totalTests, 'passed' => $passedTests, 'failed' => $failedTests] = $this->countTestOutcomes($this->testResults);
 
         return [
             'summary' => [
@@ -1031,6 +1029,34 @@ class UserJourneyTestingService
             'categories' => array_keys($this->testResults),
             'recommendations' => $this->generateRecommendations(),
         ];
+    }
+
+    private function countTestOutcomes(array $tests): array
+    {
+        $counts = ['total' => 0, 'passed' => 0, 'failed' => 0];
+
+        foreach ($tests as $test) {
+            if (! is_array($test)) {
+                continue;
+            }
+
+            if (array_key_exists('success', $test)) {
+                $counts['total']++;
+
+                if ($test['success']) {
+                    $counts['passed']++;
+                } else {
+                    $counts['failed']++;
+                }
+            }
+
+            $nested = $this->countTestOutcomes($test);
+            $counts['total'] += $nested['total'];
+            $counts['passed'] += $nested['passed'];
+            $counts['failed'] += $nested['failed'];
+        }
+
+        return $counts;
     }
 
     private function generateRecommendations(): array
@@ -1073,5 +1099,77 @@ class UserJourneyTestingService
             'base_url' => $this->baseUrl,
             'total_user_journeys' => count($this->testConfig['user_journeys']),
         ];
+    }
+
+    private function journeyRequest(string $url, int $timeout)
+    {
+        return Http::withoutRedirecting()->timeout($timeout)->get($url);
+    }
+
+    private function normalizeJourneyPath(string $path): string
+    {
+        return match ($path) {
+            '/products' => '/tim-kiem',
+            '/categories' => $this->resolveCategoryPath(),
+            '/contact' => '/lien-he',
+            '/login', '/register' => '/dang-nhap',
+            '/cart' => '/gio-hang',
+            '/orders' => '/history',
+            '/profile' => '/dang-nhap',
+            '/admin/login' => '/admin',
+            '/admin/dashboard' => '/dashboard',
+            '/admin/products' => '/all-product',
+            '/admin/orders' => '/manage-order',
+            '/products/1' => $this->resolveProductPath(),
+            default => $path,
+        };
+    }
+
+    private function expectedAuthRedirectForPath(string $path): ?string
+    {
+        if (in_array($path, ['/checkout', '/history', '/dashboard', '/all-product', '/manage-order'], true)) {
+            return in_array($path, ['/dashboard', '/all-product', '/manage-order'], true) ? '/admin' : '/dang-nhap';
+        }
+
+        return null;
+    }
+
+    private function matchesExpectedRedirect($response, ?string $expectedRedirect): bool
+    {
+        if ($expectedRedirect === null || ! method_exists($response, 'status')) {
+            return false;
+        }
+
+        $status = (int) $response->status();
+
+        if ($status < 300 || $status >= 400) {
+            return false;
+        }
+
+        $location = (string) $response->header('Location');
+
+        if ($location === '') {
+            return true;
+        }
+
+        return str_contains($location, $expectedRedirect);
+    }
+
+    private function resolveCategoryPath(): string
+    {
+        $slug = DB::table('product_categories')
+            ->where('is_active', true)
+            ->value('slug');
+
+        return $slug ? '/danh-muc/' . $slug : '/';
+    }
+
+    private function resolveProductPath(): string
+    {
+        $slug = DB::table('products')
+            ->where('is_active', true)
+            ->value('slug');
+
+        return $slug ? '/chi-tiet/' . $slug : '/';
     }
 }

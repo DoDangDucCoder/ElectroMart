@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class Video extends Model
 {
@@ -16,4 +17,19 @@ class Video extends Model
     ];
     protected $primaryKey = 'video_id';
     protected $table = 'tbl_videos';
+
+    public function getTable()
+    {
+        $table = $this->table;
+
+        if (Schema::hasTable($table)) {
+            return $table;
+        }
+
+        if (Schema::hasTable('tbl_video')) {
+            return 'tbl_video';
+        }
+
+        return $table;
+    }
 }

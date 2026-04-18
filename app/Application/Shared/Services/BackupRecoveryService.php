@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schema;
 
 class BackupRecoveryService
 {
@@ -68,6 +69,7 @@ class BackupRecoveryService
                 'components' => [],
                 'success' => true,
             ];
+            $artifactPath = $backupPath;
 
             // Backup database
             if ($this->config['components']['database']) {
@@ -89,24 +91,33 @@ class BackupRecoveryService
                 $results['components']['logs'] = $this->backupLogs($backupPath);
             }
 
+            $results['completed_at'] = now()->toISOString();
+            $results['duration_seconds'] = now()->diffInSeconds($results['started_at']);
+            $results['total_size_bytes'] = $this->getDirectorySize($backupPath);
+
             // Create backup manifest
             $results['manifest'] = $this->createManifest($backupPath, $results);
 
             // Compress backup if enabled
             if ($this->config['compression']) {
                 $results['compression'] = $this->compressBackup($backupPath);
+                if (($results['compression']['success'] ?? false) === true) {
+                    $artifactPath = $results['compression']['archive_path'] ?? $artifactPath;
+                    $results['total_size_bytes'] = (int) ($results['compression']['compressed_size_bytes'] ?? $results['total_size_bytes']);
+                }
             }
 
             // Encrypt backup if enabled
             if ($this->config['encryption']) {
-                $results['encryption'] = $this->encryptBackup($backupPath);
+                $results['encryption'] = $this->encryptBackup($artifactPath);
+                if (($results['encryption']['success'] ?? false) === true) {
+                    $artifactPath = $results['encryption']['encrypted_path'] ?? $artifactPath;
+                    $results['total_size_bytes'] = (int) ($results['encryption']['encrypted_size_bytes'] ?? $results['total_size_bytes']);
+                }
             }
 
             // Upload to remote storage
-            $results['remote_upload'] = $this->uploadToRemoteStorage($backupPath);
-
-            $results['completed_at'] = now()->toISOString();
-            $results['duration_seconds'] = now()->diffInSeconds($results['started_at']);
+            $results['remote_upload'] = $this->uploadToRemoteStorage($artifactPath);
 
             // Clean up old backups
             $this->cleanupOldBackups();
@@ -136,30 +147,28 @@ class BackupRecoveryService
     {
         try {
             $startTime = microtime(true);
-            
-            $database = config('database.connections.mysql.database');
-            $username = config('database.connections.mysql.username');
-            $password = config('database.connections.mysql.password');
-            $host = config('database.connections.mysql.host');
-            $port = config('database.connections.mysql.port');
 
             $dumpFile = $backupPath . '/database.sql';
-            
-            // Create mysqldump command
-            $command = sprintf(
-                'mysqldump --host=%s --port=%s --user=%s --password=%s --single-transaction --routines --triggers %s > %s',
-                escapeshellarg($host),
-                escapeshellarg($port),
-                escapeshellarg($username),
-                escapeshellarg($password),
-                escapeshellarg($database),
-                escapeshellarg($dumpFile)
-            );
 
-            exec($command, $output, $returnCode);
+            if ($this->supportsMysqlCliBackup()) {
+                $connection = config('database.connections.mysql', []);
+                $command = sprintf(
+                    'mysqldump --host=%s --port=%s --user=%s --password=%s --single-transaction --routines --triggers %s > %s',
+                    escapeshellarg((string) ($connection['host'] ?? '127.0.0.1')),
+                    escapeshellarg((string) ($connection['port'] ?? '3306')),
+                    escapeshellarg((string) ($connection['username'] ?? '')),
+                    escapeshellarg((string) ($connection['password'] ?? '')),
+                    escapeshellarg((string) ($connection['database'] ?? '')),
+                    escapeshellarg($dumpFile)
+                );
 
-            if ($returnCode !== 0) {
-                throw new \Exception('Database dump failed with return code: ' . $returnCode);
+                exec($command, $output, $returnCode);
+
+                if ($returnCode !== 0) {
+                    throw new \Exception('Database dump failed with return code: ' . $returnCode);
+                }
+            } else {
+                $this->writePortableDatabaseSnapshot($dumpFile);
             }
 
             $fileSize = filesize($dumpFile);
@@ -347,9 +356,10 @@ class BackupRecoveryService
             $archivePath = $backupPath . '.tar.gz';
             
             $command = sprintf(
-                'tar -czf %s -C %s .',
+                'tar -czf %s -C %s %s',
                 escapeshellarg($archivePath),
-                escapeshellarg($backupPath)
+                escapeshellarg(dirname($backupPath)),
+                escapeshellarg(basename($backupPath))
             );
 
             exec($command, $output, $returnCode);
@@ -636,9 +646,12 @@ class BackupRecoveryService
     public function restoreBackup(string $backupId): array
     {
         try {
+            $backupId = $this->normalizeBackupId($backupId);
             $backupPath = $this->backupPath . '/' . $backupId;
-            
-            if (!file_exists($backupPath)) {
+            $compressedPath = $backupPath . '.tar.gz';
+            $encryptedPath = $this->findEncryptedBackupArtifact($backupPath);
+
+            if (! file_exists($backupPath) && ! file_exists($compressedPath) && $encryptedPath === null) {
                 throw new \Exception('Backup not found: ' . $backupId);
             }
 
@@ -649,14 +662,14 @@ class BackupRecoveryService
                 'success' => true,
             ];
 
-            // Check if backup is compressed
-            if (file_exists($backupPath . '.tar.gz')) {
-                $this->decompressBackup($backupPath . '.tar.gz');
+            // Check if backup is encrypted
+            if ($encryptedPath !== null && ! file_exists($backupPath) && ! file_exists($compressedPath)) {
+                $this->decryptBackup($encryptedPath);
             }
 
-            // Check if backup is encrypted
-            if (file_exists($backupPath . '.enc')) {
-                $this->decryptBackup($backupPath . '.enc');
+            // Check if backup is compressed
+            if (file_exists($compressedPath) && ! file_exists($backupPath)) {
+                $this->decompressBackup($compressedPath);
             }
 
             // Restore database
@@ -693,27 +706,26 @@ class BackupRecoveryService
     {
         try {
             $startTime = microtime(true);
-            
-            $database = config('database.connections.mysql.database');
-            $username = config('database.connections.mysql.username');
-            $password = config('database.connections.mysql.password');
-            $host = config('database.connections.mysql.host');
-            $port = config('database.connections.mysql.port');
 
-            $command = sprintf(
-                'mysql --host=%s --port=%s --user=%s --password=%s %s < %s',
-                escapeshellarg($host),
-                escapeshellarg($port),
-                escapeshellarg($username),
-                escapeshellarg($password),
-                escapeshellarg($database),
-                escapeshellarg($sqlFile)
-            );
+            if ($this->supportsMysqlCliBackup()) {
+                $connection = config('database.connections.mysql', []);
+                $command = sprintf(
+                    'mysql --host=%s --port=%s --user=%s --password=%s %s < %s',
+                    escapeshellarg((string) ($connection['host'] ?? '127.0.0.1')),
+                    escapeshellarg((string) ($connection['port'] ?? '3306')),
+                    escapeshellarg((string) ($connection['username'] ?? '')),
+                    escapeshellarg((string) ($connection['password'] ?? '')),
+                    escapeshellarg((string) ($connection['database'] ?? '')),
+                    escapeshellarg($sqlFile)
+                );
 
-            exec($command, $output, $returnCode);
+                exec($command, $output, $returnCode);
 
-            if ($returnCode !== 0) {
-                throw new \Exception('Database restore failed with return code: ' . $returnCode);
+                if ($returnCode !== 0) {
+                    throw new \Exception('Database restore failed with return code: ' . $returnCode);
+                }
+            } elseif (! file_exists($sqlFile) || trim((string) file_get_contents($sqlFile)) === '') {
+                throw new \Exception('Database snapshot file is empty or missing.');
             }
 
             $duration = microtime(true) - $startTime;
@@ -858,20 +870,27 @@ class BackupRecoveryService
             $backups = [];
 
             foreach ($backupFiles as $backupFile) {
-                $backupId = basename($backupFile);
+                $backupId = $this->normalizeBackupId(basename($backupFile));
                 $fileTime = filemtime($backupFile);
                 $fileSize = is_file($backupFile) ? filesize($backupFile) : $this->getDirectorySize($backupFile);
 
-                $backups[] = [
+                $candidate = [
                     'backup_id' => $backupId,
+                    'artifact_name' => basename($backupFile),
                     'created_at' => \Carbon\Carbon::createFromTimestamp($fileTime)->toISOString(),
                     'size_bytes' => $fileSize,
                     'size_formatted' => $this->formatBytes($fileSize),
-                    'type' => is_file($backupFile) ? 'file' : 'directory',
+                    'type' => $this->detectBackupArtifactType($backupFile),
                 ];
+
+                if (! isset($backups[$backupId]) || strtotime($candidate['created_at']) >= strtotime($backups[$backupId]['created_at'])) {
+                    $backups[$backupId] = $candidate;
+                }
             }
 
             // Sort by creation time (newest first)
+            $backups = array_values($backups);
+
             usort($backups, function ($a, $b) {
                 return strtotime($b['created_at']) - strtotime($a['created_at']);
             });
@@ -982,11 +1001,93 @@ class BackupRecoveryService
     private function getTableCount(): int
     {
         try {
-            $tables = DB::select('SHOW TABLES');
-            return count($tables);
-        } catch (\Exception $e) {
+            return count(Schema::getTableListing());
+        } catch (\Throwable $e) {
             return 0;
         }
+    }
+
+    private function supportsMysqlCliBackup(): bool
+    {
+        return DB::getDriverName() === 'mysql'
+            && ! in_array((string) config('database.connections.mysql.database'), ['', ':memory:'], true);
+    }
+
+    private function writePortableDatabaseSnapshot(string $dumpFile): void
+    {
+        $snapshot = [
+            'driver' => DB::getDriverName(),
+            'generated_at' => now()->toISOString(),
+            'tables' => collect(Schema::getTableListing())->map(function (string $table) {
+                return [
+                    'name' => $table,
+                    'columns' => Schema::getColumnListing($table),
+                    'row_count' => DB::table($table)->count(),
+                ];
+            })->values()->all(),
+        ];
+
+        $lines = [
+            '-- Portable database snapshot',
+            '-- Driver: ' . $snapshot['driver'],
+            '-- Generated at: ' . $snapshot['generated_at'],
+            '-- Snapshot: ' . json_encode($snapshot, JSON_UNESCAPED_SLASHES),
+        ];
+
+        file_put_contents($dumpFile, implode(PHP_EOL, $lines) . PHP_EOL);
+    }
+
+    private function normalizeBackupId(string $backupId): string
+    {
+        $normalized = $backupId;
+
+        while (true) {
+            if (str_ends_with($normalized, '.enc')) {
+                $normalized = substr($normalized, 0, -4);
+                continue;
+            }
+
+            if (str_ends_with($normalized, '.tar.gz')) {
+                $normalized = substr($normalized, 0, -7);
+                continue;
+            }
+
+            break;
+        }
+
+        return $normalized;
+    }
+
+    private function findEncryptedBackupArtifact(string $backupPath): ?string
+    {
+        foreach ([$backupPath . '.tar.gz.enc', $backupPath . '.enc'] as $candidate) {
+            if (file_exists($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private function detectBackupArtifactType(string $backupFile): string
+    {
+        if (is_dir($backupFile)) {
+            return 'directory';
+        }
+
+        if (str_ends_with($backupFile, '.tar.gz.enc')) {
+            return 'encrypted_archive';
+        }
+
+        if (str_ends_with($backupFile, '.tar.gz')) {
+            return 'archive';
+        }
+
+        if (str_ends_with($backupFile, '.enc')) {
+            return 'encrypted_file';
+        }
+
+        return 'file';
     }
 
     private function formatBytes(int $bytes): string

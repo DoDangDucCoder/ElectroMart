@@ -76,6 +76,10 @@ class OrderController extends Controller
 			]);
 		}
 
+		if (! Schema::hasTable((new Order())->getTable())) {
+			return response()->json(['message' => 'Dữ liệu đơn hàng legacy hiện chưa sẵn sàng trên môi trường này.'], 404);
+		}
+
 		$order = Order::where('order_code', $data['order_code'])
 			->where('customer_id', $sessionCustomerId)
 			->first();
@@ -231,6 +235,10 @@ class OrderController extends Controller
 					'orderView' => $this->buildModernOrderDetailView($order),
 				]
 			));
+		}
+
+		if (! Schema::hasTable((new Order())->getTable())) {
+			return redirect('/history')->with('error', 'Dữ liệu đơn hàng legacy hiện chưa sẵn sàng trên môi trường này.');
 		}
 
 		$order = Order::where('customer_id', Session::get('customer_id'))

@@ -9,6 +9,8 @@ use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use App\Infrastructure\Persistence\Eloquent\Marketing\Coupon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -57,6 +59,22 @@ class CartFlowTest extends TestCase
         ])->assertStatus(422)
             ->assertJson([
                 'error' => 'Test Product chỉ còn 10 sản phẩm trong kho.',
+            ]);
+
+        $this->assertTrue($this->cartService->items()->isEmpty());
+    }
+
+    public function test_user_receives_clear_error_when_attribute_table_is_missing(): void
+    {
+        Schema::dropIfExists('tbl_product_attribute');
+
+        $this->postJson('/add-cart-ajax', [
+            'id_product' => $this->productId,
+            'id_attribute' => 1,
+            'cart_product_qty' => 1,
+        ])->assertStatus(422)
+            ->assertJson([
+                'error' => 'Tùy chọn sản phẩm hiện không khả dụng.',
             ]);
 
         $this->assertTrue($this->cartService->items()->isEmpty());
@@ -117,6 +135,38 @@ class CartFlowTest extends TestCase
         $this->assertSame(3, $this->cartService->items()->first()['product_qty']);
     }
 
+    public function test_quick_cart_update_rejects_quantity_above_available_stock(): void
+    {
+        $this->cartService->addItem($this->productId, 1);
+        $item = $this->cartService->items()->first();
+
+        $this->postJson('/update-quick-cart', [
+            'session_id' => $item['session_id'],
+            'quantity' => 11,
+        ])->assertStatus(422)
+            ->assertJson([
+                'message' => 'Test Product chỉ còn 10 sản phẩm trong kho.',
+            ]);
+
+        $this->assertSame(1, $this->cartService->items()->first()['product_qty']);
+    }
+
+    public function test_update_cart_quantity_redirects_back_with_error_when_quantity_exceeds_stock(): void
+    {
+        $this->cartService->addItem($this->productId, 1);
+        $item = $this->cartService->items()->first();
+
+        $this->from('/gio-hang')
+            ->post('/update-cart-quantity', [
+                'rowId_cart' => $item['session_id'],
+                'cart_quantity' => 11,
+            ])
+            ->assertRedirect('/gio-hang')
+            ->assertSessionHas('error', 'Test Product chỉ còn 10 sản phẩm trong kho.');
+
+        $this->assertSame(1, $this->cartService->items()->first()['product_qty']);
+    }
+
     public function test_user_can_apply_coupon_to_cart(): void
     {
         $this->cartService->addItem($this->productId, 1);
@@ -142,6 +192,21 @@ class CartFlowTest extends TestCase
         $couponData = session('coupon');
         $this->assertNotEmpty($couponData);
         $this->assertSame($coupon->code, $couponData['code']);
+    }
+
+    public function test_cart_page_clears_stale_coupon_and_shipping_sessions_when_cart_is_empty(): void
+    {
+        Session::put('coupon', [
+            'id' => 999,
+            'code' => 'STALE',
+            'discount_amount' => 10000,
+        ]);
+        Session::put('fee', 25000);
+
+        $this->get('/gio-hang')->assertOk();
+
+        $this->assertNull(session('coupon'));
+        $this->assertNull(session('fee'));
     }
 
     public function test_user_can_clear_cart(): void

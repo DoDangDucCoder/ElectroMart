@@ -28,6 +28,8 @@ class CouponController extends Controller
             Session::forget('coupon');
             return redirect()->back()->with('message', 'Xóa mã khuyến mãi thành công');
         }
+
+        return redirect()->back()->with('error', 'Không có mã khuyến mãi nào để xóa.');
     }
     public function insert_coupon()
     {

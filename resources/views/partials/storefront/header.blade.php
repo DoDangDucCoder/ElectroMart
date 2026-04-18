@@ -264,6 +264,7 @@
 
                     return $formatted . ' triệu';
                 };
+                $desktopCategoryEffectivePriceExpression = 'CASE WHEN sale_price IS NOT NULL AND sale_price > 0 THEN sale_price ELSE price END';
                 $desktopCategoryPriceLinks = function (float $minPrice, float $maxPrice, string $slug) use ($formatDesktopCategoryPrice) {
                     if ($minPrice <= 0 || $maxPrice <= 0 || blank($slug)) {
                         return collect();
@@ -277,7 +278,7 @@
                         return collect([[
                             'label' => 'Giá tốt từ ' . $formatDesktopCategoryPrice($minPrice),
                             'url' => url('/danh-muc/' . $slug) . '?' . http_build_query([
-                                'price_min' => max(0, (int) floor($minPrice)),
+                                'start_price' => max(0, (int) floor($minPrice)),
                             ]),
                             'icon' => 'fa-money',
                             'note' => 'Lọc nhanh theo tầm giá đang bán',
@@ -305,8 +306,8 @@
                                 ? 'Từ ' . $formatDesktopCategoryPrice($rangeStart)
                                 : $formatDesktopCategoryPrice($rangeStart) . ' - ' . $formatDesktopCategoryPrice(max($rangeStart, $rangeEnd - 1)),
                             'url' => url('/danh-muc/' . $slug) . '?' . http_build_query(array_filter([
-                                'price_min' => max(0, (int) floor($rangeStart)),
-                                'price_max' => $isLastRange ? null : max((int) floor($rangeStart), (int) floor($rangeEnd - 1)),
+                                'start_price' => max(0, (int) floor($rangeStart)),
+                                'end_price' => $isLastRange ? null : max((int) floor($rangeStart), (int) floor($rangeEnd - 1)),
                             ])),
                             'icon' => $isLastRange ? 'fa-diamond' : 'fa-money',
                             'note' => 'Lọc nhanh theo khoảng giá phổ biến',
@@ -330,7 +331,7 @@
                 $currentCategorySlug = request()->is('danh-muc/*') ? request()->segment(2) : null;
                 $desktopCategoryGroups = $rootCategoryItems
                     ->take(9)
-                    ->map(function ($item) use ($categoryItems, $rootCategoryItems, $storefrontLabel, $desktopCategoryIconMap, $desktopCategoryUtilityLinks, $desktopCategoryCatalogReady, $desktopCategoryDescendantIds, $desktopCategoryPriceLinks, $desktopCategoryThemeForSlug, $currentCategorySlug, $featuredCategoryLabel, $featuredBlogLabel) {
+                    ->map(function ($item) use ($categoryItems, $rootCategoryItems, $storefrontLabel, $desktopCategoryIconMap, $desktopCategoryUtilityLinks, $desktopCategoryCatalogReady, $desktopCategoryDescendantIds, $desktopCategoryPriceLinks, $desktopCategoryEffectivePriceExpression, $desktopCategoryThemeForSlug, $currentCategorySlug, $featuredCategoryLabel, $featuredBlogLabel) {
                         $children = $categoryItems
                             ->filter(
                                 fn($child) => (int) ($child->category_parent ?? 0) === (int) ($item->category_id ?? 0) &&
@@ -435,7 +436,9 @@
                             }
 
                             $priceStats = (clone $productsQuery)
-                                ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
+                                ->selectRaw(
+                                    'MIN(' . $desktopCategoryEffectivePriceExpression . ') as min_price, MAX(' . $desktopCategoryEffectivePriceExpression . ') as max_price'
+                                )
                                 ->first();
 
                             $priceLinks = $desktopCategoryPriceLinks(
@@ -744,7 +747,7 @@
                                         <span class="shopw-desktop-category-nav-foot-title">Đi nhanh</span>
                                         <div class="shopw-desktop-category-nav-foot-links">
                                             @foreach ($desktopCategoryNavQuicklinks as $quicklink)
-                                                <a href="{{ $quicklink['url'] }}" class="shopw-desktop-category-nav-foot-link">
+                                                <a href="{{ $quicklink['url'] ?? $quicklink['href'] }}" class="shopw-desktop-category-nav-foot-link">
                                                     <span class="shopw-desktop-category-nav-foot-icon">
                                                         <i class="fa {{ $quicklink['icon'] }}"></i>
                                                     </span>
@@ -769,7 +772,7 @@
                                                 <strong>{{ $group['label'] }}</strong>
                                                 <p>Chọn nhanh danh mục con và các lối vào phù hợp với nhu cầu mua sắm hiện tại.</p>
                                             </div>
-                                            <a href="{{ $group['url'] }}" class="shopw-desktop-category-pane-cta">
+                                            <a href="{{ $group['url'] ?? $group['href'] }}" class="shopw-desktop-category-pane-cta">
                                                 <span>Xem tất cả</span>
                                                 <i class="fa fa-arrow-right"></i>
                                             </a>
@@ -799,7 +802,7 @@
                                                         <span class="shopw-desktop-category-section-title">{{ $section['title'] }}</span>
                                                         <div class="shopw-desktop-category-section-list">
                                                             @foreach ($section['links'] as $link)
-                                                                <a href="{{ $link['url'] }}" class="shopw-desktop-category-section-link">
+                                                                <a href="{{ $link['url'] ?? $link['href'] }}" class="shopw-desktop-category-section-link">
                                                                     <span class="shopw-desktop-category-section-link-icon">
                                                                         <i class="fa {{ $link['icon'] ?? 'fa-angle-right' }}"></i>
                                                                     </span>
@@ -821,7 +824,7 @@
                                                     <span class="shopw-desktop-category-pane-title">{{ $group['rail_title'] ?? 'Lối vào nhanh' }}</span>
                                                     <div class="shopw-desktop-category-links">
                                                         @foreach ($group['support_links'] as $link)
-                                                            <a href="{{ $link['url'] }}" class="shopw-desktop-category-link">
+                                                            <a href="{{ $link['url'] ?? $link['href'] }}" class="shopw-desktop-category-link">
                                                                 <span class="shopw-desktop-category-link-icon">
                                                                     <i class="fa {{ $link['icon'] }}"></i>
                                                                 </span>
@@ -839,7 +842,7 @@
                                                         <span class="shopw-desktop-category-pane-title">Sản phẩm nổi bật</span>
                                                         <div class="shopw-desktop-category-products">
                                                             @foreach ($group['featured_products'] as $featuredProduct)
-                                                                <a href="{{ $featuredProduct['url'] }}" class="shopw-desktop-category-product-card">
+                                                                <a href="{{ $featuredProduct['url'] ?? $featuredProduct['href'] }}" class="shopw-desktop-category-product-card">
                                                                     <span class="shopw-desktop-category-product-thumb">
                                                                         <img src="{{ $featuredProduct['image'] }}" alt="{{ $group['label'] }} nổi bật">
                                                                     </span>
@@ -858,7 +861,7 @@
                                                     </div>
                                                 @endif
 
-                                                <a href="{{ $group['url'] }}" class="shopw-desktop-category-promo shopw-desktop-category-promo--{{ $group['theme'] ?? 'core' }}">
+                                                <a href="{{ $group['url'] ?? $group['href'] }}" class="shopw-desktop-category-promo shopw-desktop-category-promo--{{ $group['theme'] ?? 'core' }}">
                                                     <span class="shopw-desktop-category-promo-visual" aria-hidden="true">
                                                         <span class="shopw-desktop-category-promo-orb"></span>
                                                         <span class="shopw-desktop-category-promo-icon">
@@ -915,7 +918,7 @@
                         @endif
                         <div class="shopw-search-hints shopw-search-hints--compact">
                             @foreach ($headerSearchHintLinks as $hint)
-                                <a href="{{ $hint['href'] }}">
+                                <a href="{{ $hint['href'] ?? $hint['url'] }}">
                                     <i class="fa {{ $hint['icon'] }}"></i>
                                     <span>{{ $hint['label'] }}</span>
                                 </a>
@@ -1162,7 +1165,7 @@
                             <ul class="shopw-mobile-quicklinks">
                                 @foreach ($mobileQuicklinks as $quicklink)
                                     <li>
-                                        <a class="{{ $quicklink['class'] }}" href="{{ $quicklink['href'] }}">
+                                        <a class="{{ $quicklink['class'] }}" href="{{ $quicklink['href'] ?? $quicklink['url'] }}">
                                             <span class="shopw-mobile-quicklink-main">
                                                 <span class="shopw-mobile-quicklink-icon">
                                                     <i class="fa {{ $quicklink['icon'] }}"></i>

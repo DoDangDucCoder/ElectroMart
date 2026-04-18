@@ -222,6 +222,97 @@ class OrderHistoryPageTest extends TestCase
         $this->assertSame(3, (int) $totals['items_count']);
     }
 
+    public function test_legacy_history_renders_empty_state_when_legacy_order_table_is_missing(): void
+    {
+        Schema::dropIfExists('tbl_order');
+
+        $this->withSession([
+            'customer_id' => 9999,
+            'customer_name' => 'Legacy History Customer',
+        ])->get('/history')
+            ->assertOk()
+            ->assertSee('g-history')
+            ->assertSee('Chưa có đơn hàng nào');
+    }
+
+    public function test_legacy_history_renders_when_shipping_table_is_missing(): void
+    {
+        $order = $this->createLegacyDetailedOrder();
+        Schema::dropIfExists('tbl_shipping');
+
+        $this->withSession([
+            'customer_id' => $order->customer_id,
+            'customer_name' => 'Legacy History Customer',
+        ])->get('/history')
+            ->assertOk()
+            ->assertSee($order->order_code)
+            ->assertSee('3.105.000 VND')
+            ->assertSee('Chưa xác định');
+    }
+
+    public function test_legacy_order_detail_keeps_items_and_totals_when_shipping_table_is_missing(): void
+    {
+        $order = $this->createLegacyDetailedOrder();
+        Schema::dropIfExists('tbl_shipping');
+
+        $this->withSession([
+            'customer_id' => $order->customer_id,
+            'customer_name' => 'Legacy History Customer',
+        ])->get('/view-history-order/' . $order->order_code)
+            ->assertOk()
+            ->assertSee('Legacy History Product')
+            ->assertSee('Legacy History Product Two')
+            ->assertSee('3.105.000 VND')
+            ->assertSee('Chưa xác định');
+    }
+
+    public function test_legacy_history_handles_missing_order_details_table_without_crashing(): void
+    {
+        $order = $this->createLegacyDetailedOrder();
+        Schema::dropIfExists('tbl_order_details');
+
+        $totals = app(LegacyOrderPresentationService::class)->calculateTotals($order->order_code);
+
+        $this->assertSame(0.0, (float) $totals['total']);
+        $this->assertSame(0, (int) $totals['items_count']);
+
+        $this->withSession([
+            'customer_id' => $order->customer_id,
+            'customer_name' => 'Legacy History Customer',
+        ])->get('/history')
+            ->assertOk()
+            ->assertSee($order->order_code)
+            ->assertSee('0 VND');
+    }
+
+    public function test_legacy_order_detail_redirects_when_legacy_order_table_is_missing(): void
+    {
+        Schema::dropIfExists('tbl_order');
+
+        $this->withSession([
+            'customer_id' => 9999,
+            'customer_name' => 'Legacy History Customer',
+        ])->get('/view-history-order/LEG404')
+            ->assertRedirect('/history')
+            ->assertSessionHas('error', 'Dữ liệu đơn hàng legacy hiện chưa sẵn sàng trên môi trường này.');
+    }
+
+    public function test_legacy_order_cancel_returns_clear_error_when_legacy_order_table_is_missing(): void
+    {
+        Schema::dropIfExists('tbl_order');
+
+        $this->withSession([
+            'customer_id' => 9999,
+            'customer_name' => 'Legacy History Customer',
+        ])->post('/huy-don-hang', [
+            'order_code' => 'LEG404',
+            'lydo' => 'Legacy schema missing',
+        ])->assertStatus(404)
+            ->assertJson([
+                'message' => 'Dữ liệu đơn hàng legacy hiện chưa sẵn sàng trên môi trường này.',
+            ]);
+    }
+
     protected function createModernOrder(array $overrides = []): array
     {
         $customer = Customer::create([

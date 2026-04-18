@@ -40,6 +40,15 @@ class CouponApiTest extends TestCase
             'expires_at' => now()->addDays(10),
         ]);
 
+        $this->createCoupon([
+            'code' => 'EXHAUSTED-10',
+            'is_active' => true,
+            'starts_at' => now()->subDay(),
+            'expires_at' => now()->addDay(),
+            'usage_limit' => 1,
+            'used_count' => 1,
+        ]);
+
         $this->getJson('/api/v1/coupons')
             ->assertOk()
             ->assertJsonPath('success', true)
@@ -70,6 +79,22 @@ class CouponApiTest extends TestCase
             'expires_at' => now()->subDay(),
         ]);
 
+        $this->createCoupon([
+            'code' => 'SHOW-FUTURE',
+            'is_active' => true,
+            'starts_at' => now()->addDay(),
+            'expires_at' => now()->addDays(2),
+        ]);
+
+        $this->createCoupon([
+            'code' => 'SHOW-EXHAUSTED',
+            'is_active' => true,
+            'starts_at' => now()->subDay(),
+            'expires_at' => now()->addDay(),
+            'usage_limit' => 1,
+            'used_count' => 1,
+        ]);
+
         $this->getJson('/api/v1/coupons/' . $valid->code)
             ->assertOk()
             ->assertJsonPath('data.code', $valid->code);
@@ -81,6 +106,14 @@ class CouponApiTest extends TestCase
         $this->getJson('/api/v1/coupons/SHOW-EXPIRED')
             ->assertNotFound()
             ->assertJsonPath('success', false);
+
+        $this->getJson('/api/v1/coupons/SHOW-FUTURE')
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
+
+        $this->getJson('/api/v1/coupons/SHOW-EXHAUSTED')
+            ->assertNotFound()
+            ->assertJsonPath('success', false);
     }
 
     public function test_coupon_validate_returns_bad_request_for_invalid_or_inactive_code(): void
@@ -90,11 +123,40 @@ class CouponApiTest extends TestCase
             'is_active' => false,
         ]);
 
+        $this->createCoupon([
+            'code' => 'FUTURE',
+            'is_active' => true,
+            'starts_at' => now()->addDay(),
+            'expires_at' => now()->addDays(3),
+        ]);
+
+        $this->createCoupon([
+            'code' => 'SPENT',
+            'is_active' => true,
+            'starts_at' => now()->subDay(),
+            'expires_at' => now()->addDay(),
+            'usage_limit' => 1,
+            'used_count' => 1,
+        ]);
+
         $this->postJson('/api/v1/coupons/validate', [
             'code' => 'LOCKED',
             'total_amount' => 1000000,
         ])->assertStatus(400)
             ->assertJsonPath('success', false);
+
+        $this->postJson('/api/v1/coupons/validate', [
+            'code' => 'FUTURE',
+            'total_amount' => 1000000,
+        ])->assertStatus(400)
+            ->assertJsonPath('success', false);
+
+        $this->postJson('/api/v1/coupons/validate', [
+            'code' => 'SPENT',
+            'total_amount' => 1000000,
+        ])->assertStatus(400)
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', 'Mã giảm giá đã đạt giới hạn sử dụng.');
 
         $this->postJson('/api/v1/coupons/validate', [
             'code' => 'MISSING',

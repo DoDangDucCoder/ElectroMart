@@ -74,33 +74,34 @@ class ResponsiveDesignService
         ];
     }
 
-    public function generateResponsiveCSS(): array
+    public function generateResponsiveCSS(?string $outputDirectory = null): array
     {
         Log::info('Generating responsive CSS...');
 
         $results = [];
+        $targetDirectory = $outputDirectory ?: $this->publicPath . '/frontend/css';
         
         try {
             // Generate base responsive CSS
             $baseCSS = $this->generateBaseResponsiveCSS();
-            $this->saveCSSFile('responsive-base.css', $baseCSS);
+            $this->saveCSSFile('responsive-base.css', $baseCSS, $targetDirectory);
             $results['base_css'] = 'Generated';
 
             // Generate breakpoint-specific CSS
             foreach ($this->breakpoints as $breakpoint => $config) {
                 $breakpointCSS = $this->generateBreakpointCSS($breakpoint, $config);
-                $this->saveCSSFile("responsive-{$breakpoint}.css", $breakpointCSS);
+                $this->saveCSSFile("responsive-{$breakpoint}.css", $breakpointCSS, $targetDirectory);
                 $results["breakpoint_{$breakpoint}"] = 'Generated';
             }
 
             // Generate responsive utilities
             $utilitiesCSS = $this->generateResponsiveUtilities();
-            $this->saveCSSFile('responsive-utilities.css', $utilitiesCSS);
+            $this->saveCSSFile('responsive-utilities.css', $utilitiesCSS, $targetDirectory);
             $results['utilities'] = 'Generated';
 
             // Generate responsive grid system
             $gridCSS = $this->generateResponsiveGrid();
-            $this->saveCSSFile('responsive-grid.css', $gridCSS);
+            $this->saveCSSFile('responsive-grid.css', $gridCSS, $targetDirectory);
             $results['grid'] = 'Generated';
 
         } catch (\Exception $e) {
@@ -473,9 +474,9 @@ p { font-size: clamp(0.875rem, 1.5vw, 1rem); }
         return (int) ($baseSize * ($multipliers[$breakpoint] ?? 1));
     }
 
-    private function saveCSSFile(string $filename, string $content): void
+    private function saveCSSFile(string $filename, string $content, ?string $targetDirectory = null): void
     {
-        $cssPath = $this->publicPath . '/frontend/css';
+        $cssPath = $targetDirectory ?: $this->publicPath . '/frontend/css';
         
         if (!is_dir($cssPath)) {
             File::makeDirectory($cssPath, 0755, true);
@@ -500,30 +501,46 @@ p { font-size: clamp(0.875rem, 1.5vw, 1rem); }
         try {
             foreach ($this->responsiveConfig['images']['sizes'] as $breakpoint => $size) {
                 $responsivePath = $directory . '/' . $baseName . "_{$breakpoint}_{$size}w.{$extension}";
-                
-                // In production, this would resize the image
-                // For now, just create a placeholder
-                File::copy($imagePath, $responsivePath);
-                
+
+                if (! $this->supportsResponsiveImageGeneration()) {
+                    $results[$breakpoint] = [
+                        'size' => $size,
+                        'path' => $responsivePath,
+                        'created' => false,
+                        'status' => 'skipped',
+                    ];
+                    continue;
+                }
+
                 $results[$breakpoint] = [
                     'size' => $size,
                     'path' => $responsivePath,
                     'created' => true,
+                    'status' => 'created',
                 ];
             }
 
             // Generate WebP versions
             foreach ($this->responsiveConfig['images']['sizes'] as $breakpoint => $size) {
                 $webpPath = $directory . '/' . $baseName . "_{$breakpoint}_{$size}w.webp";
-                
-                // In production, this would convert to WebP
-                File::copy($imagePath, $webpPath);
-                
+
+                if (! $this->supportsResponsiveImageGeneration()) {
+                    $results["{$breakpoint}_webp"] = [
+                        'size' => $size,
+                        'path' => $webpPath,
+                        'format' => 'webp',
+                        'created' => false,
+                        'status' => 'skipped',
+                    ];
+                    continue;
+                }
+
                 $results["{$breakpoint}_webp"] = [
                     'size' => $size,
                     'path' => $webpPath,
                     'format' => 'webp',
                     'created' => true,
+                    'status' => 'created',
                 ];
             }
 
@@ -536,6 +553,11 @@ p { font-size: clamp(0.875rem, 1.5vw, 1rem); }
         }
 
         return $results;
+    }
+
+    private function supportsResponsiveImageGeneration(): bool
+    {
+        return false;
     }
 
     public function generateResponsiveHTML(string $template, array $data = []): string
@@ -636,12 +658,12 @@ p { font-size: clamp(0.875rem, 1.5vw, 1rem); }
         ];
     }
 
-    public function validateResponsiveDesign(): array
+    public function validateResponsiveDesign(?string $cssPath = null): array
     {
         $issues = [];
 
         // Check if responsive CSS files exist
-        $cssPath = $this->publicPath . '/frontend/css';
+        $cssPath = $cssPath ?: $this->publicPath . '/frontend/css';
         $requiredFiles = [
             'responsive-base.css',
             'responsive-utilities.css',

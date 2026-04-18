@@ -2,6 +2,7 @@
 
 namespace App\Application\Shared\Services;
 
+use Illuminate\Cache\TaggableStore;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -40,9 +41,13 @@ class CacheService
         return Cache::flush();
     }
 
-    public function tags(array $tags): \Illuminate\Cache\TaggedCache
+    public function tags(array $tags): \Illuminate\Contracts\Cache\Repository
     {
-        return Cache::tags($tags);
+        if ($this->supportsTags()) {
+            return Cache::tags($tags);
+        }
+
+        return Cache::store();
     }
 
     // Product-related cache methods
@@ -219,6 +224,9 @@ class CacheService
         if ($product) {
             $productSlugs->push($product->slug);
             $categorySlugs = $categorySlugs->merge($product->categories->pluck('slug'));
+            if ($product->primaryCategory?->slug) {
+                $categorySlugs->push($product->primaryCategory->slug);
+            }
             if ($product->brand?->slug) {
                 $brandSlugs->push($product->brand->slug);
             }
@@ -407,5 +415,10 @@ class CacheService
         ksort($normalized);
 
         return md5(serialize($normalized));
+    }
+
+    protected function supportsTags(): bool
+    {
+        return Cache::getStore() instanceof TaggableStore;
     }
 }

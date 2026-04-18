@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Application\Checkout\Services\CheckoutService;
 use App\Http\Resources\OrderResource;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use RuntimeException;
 
 class OrderController extends Controller
 {
@@ -28,20 +30,35 @@ class OrderController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'shipping_address_id' => 'required|exists:customer_addresses,id',
             'payment_method' => 'required|string|in:cash,cod,card,paypal',
             'notes' => 'nullable|string|max:500',
             'coupon_code' => 'nullable|string|exists:coupons,code',
         ]);
 
-        $order = $this->checkoutService->createOrder(
-            Auth::id(),
-            $request->shipping_address_id,
-            $request->payment_method,
-            $request->notes,
-            $request->coupon_code
-        );
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $order = $this->checkoutService->createOrder(
+                Auth::id(),
+                $request->shipping_address_id,
+                $request->payment_method,
+                $request->notes,
+                $request->coupon_code
+            );
+        } catch (RuntimeException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
 
         return response()->json([
             'success' => true,
@@ -69,7 +86,14 @@ class OrderController extends Controller
 
     public function cancel(int $id): JsonResponse
     {
-        $order = $this->checkoutService->cancelOrder($id, Auth::id());
+        try {
+            $order = $this->checkoutService->cancelOrder($id, Auth::id());
+        } catch (RuntimeException $exception) {
+            return response()->json([
+                'success' => false,
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
 
         if (!$order) {
             return response()->json([

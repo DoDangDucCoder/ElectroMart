@@ -10,6 +10,7 @@ class PerformanceTestingService
 {
     private array $testResults = [];
     private array $performanceMetrics = [];
+    private ?string $databaseAvailabilityError = null;
 
     public function runComprehensiveTests(): array
     {
@@ -41,6 +42,10 @@ class PerformanceTestingService
 
     private function testDatabasePerformance(): array
     {
+        if (! $this->databaseConnectionAvailable()) {
+            return $this->skipDatabaseBoundTest('database performance');
+        }
+
         $results = [];
         $startTime = microtime(true);
 
@@ -157,6 +162,10 @@ class PerformanceTestingService
 
     private function testQueryPerformance(): array
     {
+        if (! $this->databaseConnectionAvailable()) {
+            return $this->skipDatabaseBoundTest('query performance');
+        }
+
         $results = [];
         $startTime = microtime(true);
 
@@ -211,6 +220,10 @@ class PerformanceTestingService
 
     private function testMemoryUsage(): array
     {
+        if (! $this->databaseConnectionAvailable()) {
+            return $this->skipDatabaseBoundTest('memory usage');
+        }
+
         $results = [];
         $startTime = microtime(true);
 
@@ -252,6 +265,10 @@ class PerformanceTestingService
 
     private function testResponseTimes(): array
     {
+        if (! $this->databaseConnectionAvailable()) {
+            return $this->skipDatabaseBoundTest('response time');
+        }
+
         $results = [];
         $startTime = microtime(true);
 
@@ -333,11 +350,13 @@ class PerformanceTestingService
 
     private function generatePerformanceReport(): void
     {
+        $overallScore = $this->calculateOverallScore();
+
         $this->performanceMetrics = [
-            'overall_score' => $this->calculateOverallScore(),
+            'overall_score' => $overallScore,
             'recommendations' => $this->generateRecommendations(),
             'bottlenecks' => $this->identifyBottlenecks(),
-            'improvements' => $this->suggestImprovements(),
+            'improvements' => $this->suggestImprovements($overallScore),
         ];
     }
 
@@ -388,7 +407,10 @@ class PerformanceTestingService
         }
 
         // Query recommendations
-        if (isset($this->testResults['query_performance']['n_plus_one_query'])) {
+        if (
+            isset($this->testResults['query_performance']['n_plus_one_query']) &&
+            isset($this->testResults['query_performance']['optimized_query'])
+        ) {
             if ($this->testResults['query_performance']['n_plus_one_query'] > 
                 $this->testResults['query_performance']['optimized_query']) {
                 $recommendations[] = 'Implement eager loading to prevent N+1 queries';
@@ -411,11 +433,11 @@ class PerformanceTestingService
         return $bottlenecks;
     }
 
-    private function suggestImprovements(): array
+    private function suggestImprovements(?int $overallScore = null): array
     {
         $improvements = [];
 
-        $overallScore = $this->performanceMetrics['overall_score'];
+        $overallScore ??= (int) ($this->performanceMetrics['overall_score'] ?? 0);
 
         if ($overallScore < 60) {
             $improvements[] = 'Critical: Immediate performance optimization required';
@@ -459,5 +481,37 @@ class PerformanceTestingService
         }
         
         return round($bytes, 2) . ' ' . $units[$unitIndex];
+    }
+
+    private function databaseConnectionAvailable(): bool
+    {
+        if ($this->databaseAvailabilityError !== null) {
+            return false;
+        }
+
+        try {
+            DB::connection()->getPdo();
+
+            return true;
+        } catch (\Throwable $e) {
+            $this->databaseAvailabilityError = $e->getMessage();
+
+            return false;
+        }
+    }
+
+    private function skipDatabaseBoundTest(string $testName): array
+    {
+        $error = $this->databaseAvailabilityError ?? 'Database connection is unavailable.';
+
+        Log::warning("Skipping {$testName} test because the database is unavailable", [
+            'error' => $error,
+        ]);
+
+        return [
+            'status' => 'skipped',
+            'reason' => 'Database unavailable',
+            'error' => $error,
+        ];
     }
 }
