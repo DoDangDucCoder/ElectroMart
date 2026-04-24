@@ -1,18 +1,4 @@
 <div class="shopw-chatbot" data-chatbot-widget>
-    <button type="button" class="shopw-chatbot-toggle" data-chatbot-toggle aria-controls="shopw-chatbot-panel"
-        aria-expanded="false">
-            <span class="shopw-chatbot-toggle-main">
-                <span class="shopw-chatbot-toggle-icon"><i class="fa fa-comments-o"></i></span>
-                <span class="shopw-chatbot-toggle-copy">
-                    <strong>{{ config('storefront.labels.chat_assistant', 'Trợ lý bán hàng') }}</strong>
-                    <span>Hỏi sản phẩm, giá sale, bảo hành</span>
-                </span>
-            </span>
-        <span class="shopw-chatbot-toggle-tail" aria-hidden="true">
-            <i class="fa fa-angle-up"></i>
-        </span>
-    </button>
-
     <section id="shopw-chatbot-panel" class="shopw-chatbot-panel" data-chatbot-panel hidden>
         <header class="shopw-chatbot-header">
             <div>

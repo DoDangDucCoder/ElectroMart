@@ -17,6 +17,7 @@ class Product extends BaseModel
         'meta' => 'array',
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
+        'is_hot' => 'boolean',
         'price' => 'float',
         'sale_price' => 'float',
         'cost_price' => 'float',

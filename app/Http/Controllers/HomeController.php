@@ -9,10 +9,12 @@ use Illuminate\Http\Request;
 use App\Models\CatePost;
 use App\Models\Slider;
 use App\Models\Icons;
+use App\Models\News;
 use App\Application\Catalog\Services\BrandService;
 use App\Application\Catalog\Services\CategoryService;
 use App\Application\Catalog\Services\ProductDiscoveryTrackingService;
 use App\Application\Catalog\Services\ProductService;
+use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Cms\BlogPost;
 use App\Support\ProductPriceSql;
@@ -60,153 +62,356 @@ class HomeController extends Controller
 
     public function index(Request $request)
     {
-        $icons = $this->legacyIcons();
-        $category_post = $this->legacyCategoryPosts();
-        $slider = $this->legacyActiveSliders();
+        return view('home', [
+            'category' => $this->categoryService->listActive(),
+            'brand' => $this->brandService->listAll(['is_active' => true]),
+            'category_post' => $this->legacyCategoryPosts(),
+            'meta_desc' => 'Cửa hàng công nghệ chuyên laptop, điện thoại và phụ kiện chính hãng.',
+            'meta_keywords' => 'laptop, dien thoai, iphone, samsung, macbook, flash sale cong nghe',
+            'meta_title' => 'Shop công nghệ - Laptop, điện thoại, phụ kiện',
+            'url_canonical' => $request->url(),
+            'slider' => $this->legacyActiveSliders(5),
+            'featuredProducts' => $this->resolveTechHomeProducts(8, preferHot: true),
+            'flashSaleProducts' => $this->resolveTechHomeProducts(10, preferHot: true, onlyDiscounted: true),
+            'newsItems' => $this->resolveTechHomeNews(3),
+            'brandItems' => $this->resolveTechHomeBrands(8),
+            'policyItems' => $this->resolveTechHomePolicyItems(),
+            'paymentItems' => $this->resolveTechHomePaymentItems(),
+        ]);
+    }
 
-        $meta_desc = "Chuyên bán những phụ kiện ,thiết bị game";
-        $meta_keywords = "thiet bi game,phu kien game,game phu kien,game giai tri";
-        $meta_title = "Laravel 11 web bán hàng";
-        $url_canonical = $request->url();
+    private function resolveTechHomeProducts(int $limit = 8, bool $preferHot = false, bool $onlyDiscounted = false): Collection
+    {
+        $productTable = (new Product())->getTable();
 
-        $cate_product = $this->categoryService->listActive();
-        $brand_product = $this->brandService->listAll(['is_active' => true]);
-        $all_product = $this->productService->getRandomProducts(6);
-        $all_product->appends($request->query());
-        $cate_pro_tabs = $this->categoryService->listRootActive();
-        $recommendationData = $this->productService->getRecommendedProducts(
-            (int) session('customer_id') ?: null,
-            $request->ip(),
-            null,
-            4,
-            'homepage'
-        );
-        $heroRatio = $this->calculateHeroRatio($slider);
-        $heroSlideTargets = $this->resolveHeroSlideTargets($slider);
-        $flashSale = $this->resolveFlashSaleSection();
-        $homepageFeaturedProducts = $this->resolveHomepageFeaturedProducts(8);
-        $homepageSaleProducts = $this->resolveHomepageSaleProducts(4, $homepageFeaturedProducts);
-        $homepageBestSellerProducts = $this->resolveHomepageBestSellerProducts(6);
-        $homepageNewsPosts = $this->resolveHomepageNewsPosts(3);
+        if (Schema::hasTable($productTable)) {
+            try {
+                $hasIsHotColumn = Schema::hasColumn($productTable, 'is_hot');
+                $hasIsFeaturedColumn = Schema::hasColumn($productTable, 'is_featured');
+                $hasDisplayOrderColumn = Schema::hasColumn($productTable, 'display_order');
+                $hasSalePriceColumn = Schema::hasColumn($productTable, 'sale_price');
+                $hasSaleValueColumn = Schema::hasColumn($productTable, 'sale_value');
+                $hasPriceColumn = Schema::hasColumn($productTable, 'price');
 
-        $categoriesByParent = $cate_product->groupBy(static function ($category) {
-            return $category->category_parent ?? 0;
-        });
-        $rootCategories = $categoriesByParent->get(0, collect())->sortBy('category_order');
-        $accessoryRoot = $cate_product->firstWhere('slug_category_product', 'phu-kien');
-        $accessoryChildren = $accessoryRoot
-            ? $categoriesByParent->get($accessoryRoot->category_id, collect())->sortBy('category_order')
-            : collect();
+                $query = Product::query()
+                    ->with('brand')
+                    ->where('is_active', true);
 
-        $megaMenuData = [];
+                if ($onlyDiscounted && $hasPriceColumn && ($hasSalePriceColumn || $hasSaleValueColumn)) {
+                    $query->where(function ($discountQuery) use ($hasSalePriceColumn, $hasSaleValueColumn) {
+                        if ($hasSalePriceColumn) {
+                            $discountQuery->where(function ($salePriceQuery) {
+                                $salePriceQuery->whereNotNull('sale_price')
+                                    ->where('sale_price', '>', 0)
+                                    ->whereColumn('sale_price', '<', 'price');
+                            });
+                        }
 
-        foreach ($rootCategories as $rootCategory) {
-            $rootId = (int) $rootCategory->category_id;
-            $descendantIds = array_merge([$rootId], $this->categoryService->getDescendantIds($rootCategory));
+                        if ($hasSaleValueColumn) {
+                            $method = $hasSalePriceColumn ? 'orWhere' : 'where';
+                            $discountQuery->{$method}(function ($saleValueQuery) {
+                                $saleValueQuery->whereNotNull('sale_value')
+                                    ->where('sale_value', '>', 0);
+                            });
+                        }
+                    });
+                }
 
-            $productQuery = Product::query()
-                ->where('is_active', true)
-                ->whereHas('categories', function ($query) use ($descendantIds) {
-                    $query->whereIn('product_categories.id', $descendantIds);
-                });
+                if ($preferHot && $hasIsHotColumn) {
+                    $query->orderByDesc('is_hot');
+                }
 
-            $brandIds = (clone $productQuery)
-                ->whereNotNull('brand_id')
-                ->distinct()
-                ->pluck('brand_id')
-                ->map(static fn ($id) => (int) $id)
-                ->all();
+                if ($hasIsFeaturedColumn) {
+                    $query->orderByDesc('is_featured');
+                }
 
-            $brands = $brand_product->whereIn('id', $brandIds)
-                ->sortBy('display_order')
-                ->take(8)
-                ->map(static function ($brand) {
-                    return [
-                        'name' => $brand->brand_name,
-                        'url' => $brand->brand_slug ? url('/thuong-hieu/' . $brand->brand_slug) : null,
-                    ];
-                })
-                ->values()
-                ->all();
+                if ($hasDisplayOrderColumn) {
+                    $query->orderBy('display_order');
+                }
 
-            if (empty($brands)) {
-                $brands = $brand_product->sortBy('display_order')
-                    ->take(8)
-                    ->map(static function ($brand) {
-                        return [
-                            'name' => $brand->brand_name,
-                            'url' => $brand->brand_slug ? url('/thuong-hieu/' . $brand->brand_slug) : null,
-                        ];
-                    })
-                    ->values()
-                    ->all();
+                $products = $query
+                    ->orderByDesc('views_count')
+                    ->orderByDesc('id')
+                    ->limit($limit * 3)
+                    ->get()
+                    ->map(fn (Product $product) => $this->mapTechHomeProduct($product));
+
+                if ($onlyDiscounted) {
+                    $products = $products->filter(fn (array $product) => $product['discount_percent'] > 0)->values();
+                }
+
+                if ($products->isNotEmpty()) {
+                    return $products->take($limit)->values();
+                }
+            } catch (\Throwable) {
+                // Keep the homepage available even before optional catalog data is ready.
             }
-
-            $priceRow = (clone $productQuery)
-                ->selectRaw(
-                    'MIN(' . $this->effectivePriceExpression() . ') as min_price, MAX(' . $this->effectivePriceExpression() . ') as max_price'
-                )
-                ->first();
-
-            $priceBuckets = $this->buildPriceBuckets(
-                (float) ($priceRow->min_price ?? 0),
-                (float) ($priceRow->max_price ?? 0),
-                $rootCategory->slug_category_product
-            );
-
-            $usage = $categoriesByParent->get($rootId, collect())
-                ->sortBy('category_order')
-                ->take(6)
-                ->map(static function ($category) {
-                    return [
-                        'name' => $category->category_name,
-                        'url' => url('/danh-muc/' . $category->slug_category_product),
-                    ];
-                })
-                ->values()
-                ->all();
-
-            $accessories = $rootCategory->slug_category_product === 'phu-kien'
-                ? []
-                : $accessoryChildren->take(6)->map(static function ($category) {
-                    return [
-                        'name' => $category->category_name,
-                        'url' => url('/danh-muc/' . $category->slug_category_product),
-                    ];
-                })->values()->all();
-
-            $megaMenuData[$rootCategory->slug_category_product] = [
-                'brands' => $brands,
-                'prices' => $priceBuckets,
-                'usage' => $usage,
-                'accessories' => $accessories,
-            ];
         }
 
-        return view('home', [
-            'category' => $cate_product,
-            'brand' => $brand_product,
-            'all_product' => $all_product,
-            'meta_desc' => $meta_desc,
-            'meta_keywords' => $meta_keywords,
-            'meta_title' => $meta_title,
-            'url_canonical' => $url_canonical,
-            'slider' => $slider,
-            'category_post' => $category_post,
-            'cate_pro_tabs' => $cate_pro_tabs,
-            'icons' => $icons,
-            'mega_menu_data' => $megaMenuData,
-            'hero_ratio' => $heroRatio,
-            'hero_slide_targets' => $heroSlideTargets,
-            'hero_best_selling_url' => $this->buildBestSellingListingUrl(),
-            'flash_sale' => $flashSale,
-            'recommended_products' => $recommendationData['products'],
-            'recommendation_description' => $recommendationData['description'],
-            'homepage_featured_products' => $homepageFeaturedProducts,
-            'homepage_sale_products' => $homepageSaleProducts,
-            'homepage_best_seller_products' => $homepageBestSellerProducts,
-            'homepage_news_posts' => $homepageNewsPosts,
+        return $this->fallbackTechHomeProducts($limit, $onlyDiscounted);
+    }
+
+    private function mapTechHomeProduct(Product $product): array
+    {
+        $originalPrice = (float) ($product->getRawOriginal('price') ?? $product->price ?? 0);
+        $finalPrice = (float) ($product->final_price ?? $product->sale_price ?? $originalPrice);
+
+        if ($finalPrice <= 0) {
+            $finalPrice = $originalPrice;
+        }
+
+        if ($originalPrice > 0 && $finalPrice > $originalPrice) {
+            $finalPrice = $originalPrice;
+        }
+
+        $discountPercent = $originalPrice > 0 && $finalPrice < $originalPrice
+            ? (int) round((($originalPrice - $finalPrice) / $originalPrice) * 100)
+            : 0;
+        $brandName = trim((string) ($product->brand?->brand_name ?? $product->brand?->name ?? 'ShopW'));
+
+        return [
+            'id' => $product->id,
+            'name' => $product->name,
+            'url' => filled($product->slug) ? url('/chi-tiet/' . $product->slug) : url('/tim-kiem'),
+            'brand' => $brandName,
+            'brand_logo' => $this->resolveTechHomeAssetUrl($product->brand?->logo_path),
+            'brand_initials' => $this->brandInitials($brandName),
+            'image' => $this->resolveTechHomeAssetUrl($product->thumbnail_path, 'uploads/product/no-image.svg'),
+            'original_price' => $originalPrice,
+            'price' => $finalPrice,
+            'discount_percent' => $discountPercent,
+            'is_hot' => (bool) ($product->is_hot ?? false),
+        ];
+    }
+
+    private function fallbackTechHomeProducts(int $limit, bool $onlyDiscounted = false): Collection
+    {
+        $samples = collect([
+            [
+                'name' => 'MacBook Air M3 13 inch 16GB/512GB',
+                'brand' => 'Apple',
+                'query' => 'MacBook Air M3',
+                'original_price' => 32990000,
+                'price' => 29990000,
+                'discount_percent' => 9,
+                'is_hot' => true,
+            ],
+            [
+                'name' => 'iPhone 15 Pro Max 256GB',
+                'brand' => 'Apple',
+                'query' => 'iPhone 15 Pro Max',
+                'original_price' => 34990000,
+                'price' => 30990000,
+                'discount_percent' => 11,
+                'is_hot' => true,
+            ],
+            [
+                'name' => 'Samsung Galaxy S24 Ultra 512GB',
+                'brand' => 'Samsung',
+                'query' => 'Samsung Galaxy S24 Ultra',
+                'original_price' => 32990000,
+                'price' => 28990000,
+                'discount_percent' => 12,
+                'is_hot' => true,
+            ],
+            [
+                'name' => 'ASUS Vivobook 15 OLED Ryzen 7',
+                'brand' => 'ASUS',
+                'query' => 'ASUS Vivobook 15 OLED',
+                'original_price' => 18990000,
+                'price' => 16490000,
+                'discount_percent' => 13,
+                'is_hot' => false,
+            ],
+            [
+                'name' => 'Dell Inspiron 14 Plus Core Ultra 7',
+                'brand' => 'Dell',
+                'query' => 'Dell Inspiron 14 Plus',
+                'original_price' => 24990000,
+                'price' => 21990000,
+                'discount_percent' => 12,
+                'is_hot' => false,
+            ],
+            [
+                'name' => 'Xiaomi 14T Pro 12GB/512GB',
+                'brand' => 'Xiaomi',
+                'query' => 'Xiaomi 14T Pro',
+                'original_price' => 16990000,
+                'price' => 14990000,
+                'discount_percent' => 12,
+                'is_hot' => false,
+            ],
         ]);
+
+        return $samples
+            ->filter(fn (array $sample) => ! $onlyDiscounted || $sample['discount_percent'] > 0)
+            ->map(function (array $sample, int $index) {
+                return [
+                    'id' => 'demo-' . $index,
+                    'name' => $sample['name'],
+                    'url' => url('/tim-kiem?' . http_build_query(['keywords_submit' => $sample['query']])),
+                    'brand' => $sample['brand'],
+                    'brand_logo' => null,
+                    'brand_initials' => $this->brandInitials($sample['brand']),
+                    'image' => $this->resolveTechHomeAssetUrl(null, 'uploads/product/no-image.svg'),
+                    'original_price' => $sample['original_price'],
+                    'price' => $sample['price'],
+                    'discount_percent' => $sample['discount_percent'],
+                    'is_hot' => $sample['is_hot'],
+                ];
+            })
+            ->take($limit)
+            ->values();
+    }
+
+    private function resolveTechHomeNews(int $limit = 3): Collection
+    {
+        if (Schema::hasTable('news')) {
+            try {
+                $newsItems = News::query()
+                    ->where('is_active', true)
+                    ->orderByDesc('is_featured')
+                    ->orderByRaw('CASE WHEN published_at IS NULL THEN 1 ELSE 0 END ASC')
+                    ->orderByDesc('published_at')
+                    ->orderByDesc('id')
+                    ->limit($limit)
+                    ->get()
+                    ->map(fn (News $news) => [
+                        'title' => $news->title,
+                        'url' => '#',
+                        'summary' => $news->summary,
+                        'published_at' => $news->published_at,
+                        'thumbnail' => $this->resolveTechHomeAssetUrl($news->thumbnail_path, 'uploads/contact/blog-three41.jpg'),
+                    ]);
+
+                if ($newsItems->isNotEmpty()) {
+                    return $newsItems;
+                }
+            } catch (\Throwable) {
+                // Fall through to demo news.
+            }
+        }
+
+        return collect([
+            [
+                'title' => '5 mẫu laptop mỏng nhẹ đáng mua cho sinh viên và dân văn phòng',
+                'url' => '#',
+                'summary' => 'Gợi ý cấu hình cân bằng giữa hiệu năng, pin và mức giá cho nhu cầu học tập, làm việc hằng ngày.',
+                'published_at' => now()->subDays(1),
+                'thumbnail' => $this->resolveTechHomeAssetUrl('uploads/post/smartphone12.jpg', 'uploads/contact/blog-three41.jpg'),
+            ],
+            [
+                'title' => 'So sánh iPhone và Galaxy: chọn flagship nào trong năm nay?',
+                'url' => '#',
+                'summary' => 'Những khác biệt quan trọng về camera, màn hình, pin và hệ sinh thái trước khi nâng cấp điện thoại.',
+                'published_at' => now()->subDays(3),
+                'thumbnail' => $this->resolveTechHomeAssetUrl('uploads/post/smartphone24.jpg', 'uploads/contact/blog-three41.jpg'),
+            ],
+            [
+                'title' => 'Cách săn deal công nghệ an toàn trong mùa Flash Sale',
+                'url' => '#',
+                'summary' => 'Kiểm tra giá gốc, bảo hành và phương thức thanh toán để mua đúng sản phẩm cần thiết.',
+                'published_at' => now()->subDays(5),
+                'thumbnail' => $this->resolveTechHomeAssetUrl('uploads/post/smartphone31.jpg', 'uploads/contact/blog-three41.jpg'),
+            ],
+        ])->take($limit)->values();
+    }
+
+    private function resolveTechHomeBrands(int $limit = 8): Collection
+    {
+        if (Schema::hasTable((new Brand())->getTable())) {
+            try {
+                $brands = Brand::query()
+                    ->where('is_active', true)
+                    ->orderBy('display_order')
+                    ->orderBy('name')
+                    ->limit($limit)
+                    ->get()
+                    ->map(fn (Brand $brand) => [
+                        'name' => $brand->brand_name ?? $brand->name,
+                        'url' => filled($brand->brand_slug ?? $brand->slug) ? url('/thuong-hieu/' . ($brand->brand_slug ?? $brand->slug)) : '#',
+                        'logo' => $this->resolveTechHomeAssetUrl($brand->logo_path),
+                        'initials' => $this->brandInitials($brand->brand_name ?? $brand->name),
+                    ]);
+
+                if ($brands->isNotEmpty()) {
+                    return $brands;
+                }
+            } catch (\Throwable) {
+                // Fall through to demo brands.
+            }
+        }
+
+        return collect(['Apple', 'Samsung', 'ASUS', 'Dell', 'Lenovo', 'Xiaomi', 'OPPO', 'Acer'])
+            ->take($limit)
+            ->map(fn (string $name) => [
+                'name' => $name,
+                'url' => url('/thuong-hieu/' . Str::slug($name)),
+                'logo' => null,
+                'initials' => $this->brandInitials($name),
+            ])
+            ->values();
+    }
+
+    private function resolveTechHomePolicyItems(): Collection
+    {
+        return collect([
+            [
+                'icon' => 'fa-truck',
+                'title' => 'Miễn phí giao hàng',
+                'description' => 'Áp dụng cho đơn hàng công nghệ đủ điều kiện trong nội thành.',
+            ],
+            [
+                'icon' => 'fa-refresh',
+                'title' => 'Đổi trả hàng',
+                'description' => 'Hỗ trợ đổi trả minh bạch theo chính sách từng nhóm sản phẩm.',
+            ],
+            [
+                'icon' => 'fa-shield',
+                'title' => 'Thanh toán an toàn',
+                'description' => 'Bảo vệ thông tin thanh toán và xác nhận đơn hàng rõ ràng.',
+            ],
+            [
+                'icon' => 'fa-headphones',
+                'title' => 'Hỗ trợ tư vấn 24/7',
+                'description' => 'Tư vấn chọn laptop, điện thoại và phụ kiện phù hợp nhu cầu.',
+            ],
+        ]);
+    }
+
+    private function resolveTechHomePaymentItems(): Collection
+    {
+        return collect(['Momo', 'MB', 'VNPAY']);
+    }
+
+    private function resolveTechHomeAssetUrl(?string $path, ?string $fallback = null): ?string
+    {
+        $path = trim((string) $path);
+
+        if ($path !== '' && (str_starts_with($path, 'http://') || str_starts_with($path, 'https://'))) {
+            return $path;
+        }
+
+        if ($path !== '' && file_exists(public_path($path))) {
+            return asset($path);
+        }
+
+        if ($fallback && file_exists(public_path($fallback))) {
+            return asset($fallback);
+        }
+
+        return null;
+    }
+
+    private function brandInitials(?string $brandName): string
+    {
+        $brandName = trim((string) $brandName);
+
+        if ($brandName === '') {
+            return 'SW';
+        }
+
+        return Str::upper(Str::substr($brandName, 0, 2));
     }
 
     public function yeu_thich(Request $request)
@@ -1252,12 +1457,15 @@ class HomeController extends Controller
         return CatePost::orderBy('cate_post_id', 'DESC')->get();
     }
 
-    private function legacyActiveSliders()
+    private function legacyActiveSliders(int $limit = 4)
     {
         if (! Schema::hasTable('tbl_slider')) {
             return collect();
         }
 
-        return Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
+        return Slider::orderBy('slider_id', 'DESC')
+            ->where('slider_status', '1')
+            ->take(max(1, $limit))
+            ->get();
     }
 }

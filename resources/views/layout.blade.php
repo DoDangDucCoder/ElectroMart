@@ -7,6 +7,8 @@
 
     @include('partials.storefront.header')
 
+    @include('partials.storefront.support-dock')
+
     <!-------------------Slider Section------------------------->
     @yield('slider')
     <!-------------------Slider Attribute------------------------->

@@ -34,6 +34,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
     <link href="{{ asset('frontend/css/shopw-theme.css') }}" rel="stylesheet">
+    <link href="{{ asset('frontend/css/site-theme-homepage.css') }}" rel="stylesheet">
+    <link href="{{ asset('frontend/css/home-tech.css') }}" rel="stylesheet">
 
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 

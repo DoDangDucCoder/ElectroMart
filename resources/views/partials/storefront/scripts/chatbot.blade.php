@@ -21,6 +21,12 @@
         let conversationId = 0;
         let pollTimer = null;
 
+        function setExpanded(isExpanded) {
+            if (toggle) {
+                toggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+            }
+        }
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text || '';
@@ -220,21 +226,23 @@
             }
         }
 
-        toggle.addEventListener('click', async function () {
-            const isOpen = !panel.hasAttribute('hidden');
+        if (toggle) {
+            toggle.addEventListener('click', async function () {
+                const isOpen = !panel.hasAttribute('hidden');
 
-            if (isOpen) {
-                panel.setAttribute('hidden', 'hidden');
-                toggle.setAttribute('aria-expanded', 'false');
-                return;
-            }
+                if (isOpen) {
+                    panel.setAttribute('hidden', 'hidden');
+                    setExpanded(false);
+                    return;
+                }
 
-            panel.removeAttribute('hidden');
-            toggle.setAttribute('aria-expanded', 'true');
-            await bootstrapConversation();
-            startPolling();
-            input.focus();
-        });
+                panel.removeAttribute('hidden');
+                setExpanded(true);
+                await bootstrapConversation();
+                startPolling();
+                input.focus();
+            });
+        }
 
         launchers.forEach((launcher) => {
             launcher.addEventListener('click', async function (event) {
@@ -242,7 +250,7 @@
 
                 if (panel.hasAttribute('hidden')) {
                     panel.removeAttribute('hidden');
-                    toggle.setAttribute('aria-expanded', 'true');
+                    setExpanded(true);
                     await bootstrapConversation();
                     startPolling();
                 }
@@ -253,7 +261,7 @@
 
         closeButton.addEventListener('click', function () {
             panel.setAttribute('hidden', 'hidden');
-            toggle.setAttribute('aria-expanded', 'false');
+            setExpanded(false);
             stopPolling();
         });
 
@@ -281,7 +289,7 @@
 
                 if (panel.hasAttribute('hidden')) {
                     panel.removeAttribute('hidden');
-                    toggle.setAttribute('aria-expanded', 'true');
+                    setExpanded(true);
                     await bootstrapConversation();
                     startPolling();
                 }
