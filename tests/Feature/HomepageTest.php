@@ -34,12 +34,10 @@ class HomepageTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('id="slider-carousel"', false)
-            ->assertSee('data-hero-layout="split"', false)
+            ->assertSee('data-hero-layout="wide"', false)
             ->assertSee('data-hero-rotate="carousel"', false)
             ->assertDontSee('data-hero-rotate="swap"', false)
             ->assertSee('shopw-hero-slide', false)
-            ->assertSee('shopw-hero-sidebar-head', false)
-            ->assertSee('shopw-hero-sidebar-note', false)
             ->assertSee('shopw-hero-slide-copy', false)
             ->assertSee('shopw-hero-slide-meta', false)
             ->assertSee('shopw-hero-support', false)
@@ -55,6 +53,10 @@ class HomepageTest extends TestCase
             ->assertSee('shopw-home-brand-grid', false)
             ->assertSee('shopw-home-service-grid', false)
             ->assertSee('shopw-home-content-list', false)
+            ->assertSee('shopw-flash-sale-shell', false)
+            ->assertSee('data-flash-sale-carousel', false)
+            ->assertSee('data-flash-nav="next"', false)
+            ->assertSee('shopw-flash-sale-track', false)
             ->assertSee('Chat Facebook')
             ->assertSee('Chat Zalo')
             ->assertSee('1900.0000')
@@ -96,12 +98,10 @@ class HomepageTest extends TestCase
         $this->get('/trang-chu')
             ->assertOk()
             ->assertSee('id="slider-carousel"', false)
-            ->assertSee('data-hero-layout="split"', false)
+            ->assertSee('data-hero-layout="wide"', false)
             ->assertSee('data-hero-rotate="carousel"', false)
             ->assertDontSee('data-hero-rotate="swap"', false)
             ->assertSee('shopw-hero-slide', false)
-            ->assertSee('shopw-hero-sidebar-head', false)
-            ->assertSee('shopw-hero-sidebar-note', false)
             ->assertSee('shopw-hero-slide-copy', false)
             ->assertSee('shopw-hero-slide-meta', false)
             ->assertSee('shopw-hero-support', false)
@@ -238,27 +238,34 @@ class HomepageTest extends TestCase
             ->assertOk()
             ->assertSee('shopw-flash-sale-shell', false)
             ->assertSee('data-flash-sale-countdown=', false)
+            ->assertSee('data-flash-nav="prev"', false)
             ->assertSee('Flash Sale Product One')
             ->assertSee('Flash Sale Product Two')
+            ->assertSee('shopw-flash-sale-card', false)
             ->assertSee('Xem tất cả deal');
     }
 
-    public function test_homepage_hides_flash_sale_when_curated_products_are_missing(): void
+    public function test_homepage_renders_demo_flash_sale_when_curated_products_are_missing(): void
     {
         config()->set('storefront.flash_sale', [
             'enabled' => true,
-            'kicker' => 'Hot deal',
-            'title' => 'Flash Sale',
-            'cta_label' => 'Xem tất cả deal',
+            'kicker' => 'Flash',
+            'title' => 'Sale',
+            'cta_label' => 'Xem tất cả',
             'cta_url' => '/tim-kiem',
             'countdown_ends_at' => now()->addDay()->toDateTimeString(),
             'product_slugs' => ['missing-flash-sale-product'],
+            'target_count' => 8,
+            'use_demo_products' => true,
         ]);
 
         $this->get('/')
             ->assertOk()
-            ->assertDontSee('shopw-flash-sale-shell', false)
-            ->assertDontSee('Flash Sale');
+            ->assertSee('shopw-flash-sale-shell', false)
+            ->assertSee('shopw-flash-sale-card', false)
+            ->assertSee('Ghế xếp cắm trại Camping Mountain')
+            ->assertSee('Áo ống trắng nữ', false)
+            ->assertSee('Xem tất cả');
     }
 
     public function test_product_tabs_returns_home_cards_fragment(): void

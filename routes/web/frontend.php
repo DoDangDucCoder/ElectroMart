@@ -36,6 +36,7 @@ Route::get('/404', [HomeController::class, 'error_page']);
 Route::post('/load-more-product', [HomeController::class, 'load_more_product']);
 Route::get('/show_quick_cart', [CartController::class, 'show_quick_cart']);
 Route::match(['get', 'post'], '/tim-kiem', [HomeController::class, 'search']);
+Route::get('/san-pham-ban-chay', [HomeController::class, 'best_selling']);
 Route::post('/autocomplete-ajax', [HomeController::class, 'autocomplete_ajax']);
 Route::get('/yeu-thich', [HomeController::class, 'yeu_thich']);
 Route::get('/goi-y-san-pham', [HomeController::class, 'recommendations']);
@@ -83,6 +84,7 @@ Route::get('/cart-session', [CartController::class, 'cart_session']);
 
 // Checkout flow
 Route::get('/dang-nhap', [CheckoutController::class, 'login_checkout']);
+Route::get('/dang-ky', [CheckoutController::class, 'register_checkout']);
 Route::get('/dang-xuat-khach-hang', [CheckoutController::class, 'dang_xuat_khachhang']);
 Route::get('/del-fee', [CheckoutController::class, 'del_fee']);
 Route::get('/logout-checkout', [CheckoutController::class, 'logout_checkout']);

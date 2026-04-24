@@ -41,11 +41,12 @@
                 $isCartSection = request()->is('gio-hang');
                 $isContactSection = request()->is('lien-he');
                 $isHistorySection = request()->is('history') || request()->is('view-history-order/*');
-                $isLoginSection = request()->is('dang-nhap');
+                $isLoginSection = request()->is('dang-nhap') || request()->is('dang-ky') || request()->is('quen-mat-khau') || request()->is('update-new-pass');
                 $headerCustomer = null;
+                $defaultStorefrontAvatar = asset('frontend/images/storefront-account-avatar.svg');
                 if ($customer_id && \Illuminate\Support\Facades\Schema::hasTable('customers')) {
                     $headerCustomer = \App\Infrastructure\Persistence\Eloquent\Customer\Customer::query()
-                        ->select(['id', 'name', 'email', 'phone', 'is_active'])
+                        ->select(['id', 'name', 'email', 'phone', 'avatar_path', 'is_active'])
                         ->whereKey((int) $customer_id)
                         ->where('is_active', true)
                         ->first();
@@ -53,20 +54,20 @@
                 $headerCustomerName = $headerCustomer?->name ?: Session::get($storefrontCustomerAuth::SESSION_NAME_KEY);
                 $headerCustomerEmail = $headerCustomer?->email ?: Session::get($storefrontCustomerAuth::SESSION_EMAIL_KEY);
                 $headerCustomerPhone = $headerCustomer?->phone;
-                $headerCustomerPicture = Session::get($storefrontCustomerAuth::SESSION_PICTURE_KEY);
-                $headerCustomerInitials = collect(explode(' ', \Illuminate\Support\Str::upper(trim((string) $headerCustomerName))))
-                    ->filter()
-                    ->take(2)
-                    ->map(fn($part) => \Illuminate\Support\Str::substr($part, 0, 1))
-                    ->implode('');
-                $headerCustomerInitials = $headerCustomerInitials !== '' ? $headerCustomerInitials : 'TK';
+                $headerCustomerPicture = $headerCustomer?->avatar_path
+                    ? asset($headerCustomer->avatar_path)
+                    : Session::get($storefrontCustomerAuth::SESSION_PICTURE_KEY);
+                $headerCustomerAvatar = $headerCustomerPicture ?: $defaultStorefrontAvatar;
                 $isAuthenticatedCustomer = ! empty($headerCustomerName) || ! empty($headerCustomerEmail);
                 $isAccountSection = $isAuthenticatedCustomer ? $isHistorySection : $isLoginSection;
                 $isStorefrontAuthRoute = request()->is('dang-nhap') ||
+                    request()->is('dang-ky') ||
                     request()->is('login-customer') ||
                     request()->is('add-customer') ||
                     request()->is('dang-xuat-khach-hang') ||
                     request()->is('logout-checkout') ||
+                    request()->is('quen-mat-khau') ||
+                    request()->is('update-new-pass') ||
                     request()->is('login-facebook-customer') ||
                     request()->is('customer/facebook/callback') ||
                     request()->is('login-customer-google') ||
@@ -224,10 +225,23 @@
                     ],
                 ]);
                 $desktopCategoryNavQuicklinks = $desktopCategoryUtilityLinks->take(2)->values();
-                $desktopCategoryCatalogReady =
-                    \Illuminate\Support\Facades\Schema::hasTable('products') &&
-                    \Illuminate\Support\Facades\Schema::hasTable('brands') &&
-                    \Illuminate\Support\Facades\Schema::hasColumn('products', 'primary_category_id');
+                $desktopCategoryProductTable = (new \App\Infrastructure\Persistence\Eloquent\Catalog\Product())->getTable();
+                $desktopCategoryBrandTable = (new \App\Infrastructure\Persistence\Eloquent\Catalog\Brand())->getTable();
+                $desktopCategoryHasProductTable = \Illuminate\Support\Facades\Schema::hasTable($desktopCategoryProductTable);
+                $desktopCategoryHasBrandTable = \Illuminate\Support\Facades\Schema::hasTable($desktopCategoryBrandTable);
+                $desktopCategoryProductColumns = [
+                    'is_active' => $desktopCategoryHasProductTable && \Illuminate\Support\Facades\Schema::hasColumn($desktopCategoryProductTable, 'is_active'),
+                    'primary_category_id' => $desktopCategoryHasProductTable && \Illuminate\Support\Facades\Schema::hasColumn($desktopCategoryProductTable, 'primary_category_id'),
+                    'brand_id' => $desktopCategoryHasProductTable && \Illuminate\Support\Facades\Schema::hasColumn($desktopCategoryProductTable, 'brand_id'),
+                    'price' => $desktopCategoryHasProductTable && \Illuminate\Support\Facades\Schema::hasColumn($desktopCategoryProductTable, 'price'),
+                    'sale_price' => $desktopCategoryHasProductTable && \Illuminate\Support\Facades\Schema::hasColumn($desktopCategoryProductTable, 'sale_price'),
+                    'is_featured' => $desktopCategoryHasProductTable && \Illuminate\Support\Facades\Schema::hasColumn($desktopCategoryProductTable, 'is_featured'),
+                    'views_count' => $desktopCategoryHasProductTable && \Illuminate\Support\Facades\Schema::hasColumn($desktopCategoryProductTable, 'views_count'),
+                ];
+                $desktopCategoryCatalogReady = $desktopCategoryProductColumns['is_active'] && $desktopCategoryProductColumns['primary_category_id'];
+                $desktopCategoryCanSummarizeBrands = $desktopCategoryCatalogReady && $desktopCategoryHasBrandTable && $desktopCategoryProductColumns['brand_id'];
+                $desktopCategoryCanQueryPriceRanges = $desktopCategoryCatalogReady && \App\Support\ProductPriceSql::canQueryEffectivePrice($desktopCategoryProductTable);
+                $desktopCategoryCanLoadFeaturedProducts = $desktopCategoryCatalogReady;
                 $desktopCategoryDescendantIds = function (int $rootId) use ($categoryItems) {
                     $pending = collect([$rootId]);
                     $seen = collect();
@@ -264,7 +278,7 @@
 
                     return $formatted . ' triệu';
                 };
-                $desktopCategoryEffectivePriceExpression = 'CASE WHEN sale_price IS NOT NULL AND sale_price > 0 THEN sale_price ELSE price END';
+                $desktopCategoryEffectivePriceExpression = \App\Support\ProductPriceSql::effectivePriceExpression($desktopCategoryProductTable);
                 $desktopCategoryPriceLinks = function (float $minPrice, float $maxPrice, string $slug) use ($formatDesktopCategoryPrice) {
                     if ($minPrice <= 0 || $maxPrice <= 0 || blank($slug)) {
                         return collect();
@@ -331,7 +345,7 @@
                 $currentCategorySlug = request()->is('danh-muc/*') ? request()->segment(2) : null;
                 $desktopCategoryGroups = $rootCategoryItems
                     ->take(9)
-                    ->map(function ($item) use ($categoryItems, $rootCategoryItems, $storefrontLabel, $desktopCategoryIconMap, $desktopCategoryUtilityLinks, $desktopCategoryCatalogReady, $desktopCategoryDescendantIds, $desktopCategoryPriceLinks, $desktopCategoryEffectivePriceExpression, $desktopCategoryThemeForSlug, $currentCategorySlug, $featuredCategoryLabel, $featuredBlogLabel) {
+                    ->map(function ($item) use ($categoryItems, $rootCategoryItems, $storefrontLabel, $desktopCategoryIconMap, $desktopCategoryUtilityLinks, $desktopCategoryCatalogReady, $desktopCategoryCanSummarizeBrands, $desktopCategoryCanQueryPriceRanges, $desktopCategoryCanLoadFeaturedProducts, $desktopCategoryProductColumns, $desktopCategoryDescendantIds, $desktopCategoryPriceLinks, $desktopCategoryEffectivePriceExpression, $desktopCategoryThemeForSlug, $currentCategorySlug, $featuredCategoryLabel, $featuredBlogLabel) {
                         $children = $categoryItems
                             ->filter(
                                 fn($child) => (int) ($child->category_parent ?? 0) === (int) ($item->category_id ?? 0) &&
@@ -386,84 +400,103 @@
                                 ->where('is_active', true)
                                 ->whereIn('primary_category_id', $descendantIds->all());
 
-                            $brandSummary = (clone $productsQuery)
-                                ->selectRaw('brand_id, COUNT(*) as product_count')
-                                ->whereNotNull('brand_id')
-                                ->groupBy('brand_id')
-                                ->orderByDesc('product_count')
-                                ->limit(6)
-                                ->get();
+                            if ($desktopCategoryCanSummarizeBrands) {
+                                $brandSummary = (clone $productsQuery)
+                                    ->selectRaw('brand_id, COUNT(*) as product_count')
+                                    ->whereNotNull('brand_id')
+                                    ->groupBy('brand_id')
+                                    ->orderByDesc('product_count')
+                                    ->limit(6)
+                                    ->get();
 
-                            if ($brandSummary->isNotEmpty()) {
-                                $brandMap = \App\Infrastructure\Persistence\Eloquent\Catalog\Brand::query()
-                                    ->where('is_active', true)
-                                    ->whereIn(
-                                        'id',
-                                        $brandSummary->pluck('brand_id')->map(fn($id) => (int) $id)->all(),
-                                    )
-                                    ->get()
-                                    ->keyBy('id');
+                                if ($brandSummary->isNotEmpty()) {
+                                    $brandMap = \App\Infrastructure\Persistence\Eloquent\Catalog\Brand::query()
+                                        ->where('is_active', true)
+                                        ->whereIn(
+                                            'id',
+                                            $brandSummary->pluck('brand_id')->map(fn($id) => (int) $id)->all(),
+                                        )
+                                        ->get()
+                                        ->keyBy('id');
 
-                                $brandLinks = $brandSummary
-                                    ->map(function ($summary) use ($brandMap) {
-                                        $brand = $brandMap->get((int) $summary->brand_id);
+                                    $brandLinks = $brandSummary
+                                        ->map(function ($summary) use ($brandMap) {
+                                            $brand = $brandMap->get((int) $summary->brand_id);
 
-                                        if (! $brand || blank($brand->brand_slug)) {
-                                            return null;
-                                        }
+                                            if (! $brand || blank($brand->brand_slug)) {
+                                                return null;
+                                            }
 
-                                        return [
-                                            'label' => $brand->brand_name,
-                                            'url' => url('/thuong-hieu/' . $brand->brand_slug),
-                                            'icon' => 'fa-certificate',
-                                            'note' => (int) ($summary->product_count ?? 0) . ' sản phẩm đang mở bán',
-                                        ];
-                                    })
-                                    ->filter()
-                                    ->values();
-
-                                if ($brandLinks->isEmpty()) {
-                                    $brandLinks = $brandMap
-                                        ->take(6)
-                                        ->map(fn($brand) => [
-                                            'label' => $brand->brand_name,
-                                            'url' => blank($brand->brand_slug) ? url('/danh-muc/' . $slug) : url('/thuong-hieu/' . $brand->brand_slug),
-                                            'icon' => 'fa-certificate',
-                                            'note' => 'Thương hiệu đang có trong nhóm này',
-                                        ])
+                                            return [
+                                                'label' => $brand->brand_name,
+                                                'url' => url('/thuong-hieu/' . $brand->brand_slug),
+                                                'icon' => 'fa-certificate',
+                                                'note' => (int) ($summary->product_count ?? 0) . ' sản phẩm đang mở bán',
+                                            ];
+                                        })
+                                        ->filter()
                                         ->values();
+
+                                    if ($brandLinks->isEmpty()) {
+                                        $brandLinks = $brandMap
+                                            ->take(6)
+                                            ->map(fn($brand) => [
+                                                'label' => $brand->brand_name,
+                                                'url' => blank($brand->brand_slug) ? url('/danh-muc/' . $slug) : url('/thuong-hieu/' . $brand->brand_slug),
+                                                'icon' => 'fa-certificate',
+                                                'note' => 'Thương hiệu đang có trong nhóm này',
+                                            ])
+                                            ->values();
+                                    }
                                 }
                             }
 
-                            $priceStats = (clone $productsQuery)
-                                ->selectRaw(
-                                    'MIN(' . $desktopCategoryEffectivePriceExpression . ') as min_price, MAX(' . $desktopCategoryEffectivePriceExpression . ') as max_price'
-                                )
-                                ->first();
+                            if ($desktopCategoryCanQueryPriceRanges) {
+                                $priceStats = (clone $productsQuery)
+                                    ->selectRaw(
+                                        'MIN(' . $desktopCategoryEffectivePriceExpression . ') as min_price, MAX(' . $desktopCategoryEffectivePriceExpression . ') as max_price'
+                                    )
+                                    ->first();
 
-                            $priceLinks = $desktopCategoryPriceLinks(
-                                (float) ($priceStats->min_price ?? 0),
-                                (float) ($priceStats->max_price ?? 0),
-                                $slug,
-                            );
+                                $priceLinks = $desktopCategoryPriceLinks(
+                                    (float) ($priceStats->min_price ?? 0),
+                                    (float) ($priceStats->max_price ?? 0),
+                                    $slug,
+                                );
+                            }
 
-                            $featuredProducts = (clone $productsQuery)
-                                ->with('brand')
-                                ->orderByDesc('is_featured')
-                                ->orderByDesc('views_count')
-                                ->limit(3)
-                                ->get()
-                                ->map(function ($product) {
-                                    return [
-                                        'label' => $product->product_name,
-                                        'url' => url('/chi-tiet/' . $product->product_slug),
-                                        'image' => $product->product_image ? asset($product->product_image) : asset('uploads/product/no-image.svg'),
-                                        'brand' => $product->brand_name,
-                                        'price' => (float) $product->final_price,
-                                        'original_price' => (float) ($product->price ?? $product->final_price),
-                                    ];
-                                })
-                                ->values();
+                            if ($desktopCategoryCanLoadFeaturedProducts) {
+                                $featuredProductsQuery = clone $productsQuery;
+
+                                if ($desktopCategoryCanSummarizeBrands) {
+                                    $featuredProductsQuery->with('brand');
+                                }
+
+                                if ($desktopCategoryProductColumns['is_featured']) {
+                                    $featuredProductsQuery->orderByDesc('is_featured');
+                                }
+
+                                if ($desktopCategoryProductColumns['views_count']) {
+                                    $featuredProductsQuery->orderByDesc('views_count');
+                                }
+
+                                $featuredProducts = $featuredProductsQuery
+                                    ->limit(3)
+                                    ->get()
+                                    ->map(function ($product) use ($desktopCategoryCanSummarizeBrands) {
+                                        return [
+                                            'label' => $product->product_name,
+                                            'url' => url('/chi-tiet/' . $product->product_slug),
+                                            'image' => $product->product_image ? asset($product->product_image) : asset('uploads/product/no-image.svg'),
+                                            'brand' => $desktopCategoryCanSummarizeBrands && $product->relationLoaded('brand')
+                                                ? $product->brand?->brand_name
+                                                : null,
+                                            'price' => (float) $product->final_price,
+                                            'original_price' => (float) ($product->price ?? $product->final_price),
+                                        ];
+                                    })
+                                    ->values();
+                            }
                         }
 
                         $contextLabel = \Illuminate\Support\Str::lower($label);
@@ -895,17 +928,22 @@
                         </div>
                     </div>
                     <div class="shopw-search-shell">
+                        <span data-search-rotator-marker hidden></span>
                         <form action="{{ URL::to('/tim-kiem') }}" autocomplete="off" method="POST" class="shopw-search">
                             {{ csrf_field() }}
-                            <span class="shopw-search-rotator is-visible" data-search-rotator aria-hidden="true">
-                                <span class="shopw-search-rotator-prefix">Bạn cần gì?</span>
-                                <span class="shopw-search-rotator-word" data-search-rotator-word>{{ $searchTrendingKeywords->first() ?: 'Laptop gaming' }}</span>
-                            </span>
-                            <input type="text" name="keywords_submit" id="keywords"
-                                value="{{ old('keywords_submit') }}"
-                                placeholder="Tìm sản phẩm, thương hiệu, cấu hình..."
-                                data-placeholder-base="Tìm sản phẩm, thương hiệu, cấu hình..."
-                                data-search-trends='@json($searchTrendingKeywords->all())'>
+                            <label class="shopw-search-entry" for="keywords">
+                                <span class="shopw-search-prefix">Bạn cần gì?</span>
+                                <span class="shopw-search-input-stage">
+                                    <input type="text" name="keywords_submit" id="keywords"
+                                        value="{{ old('keywords_submit') }}"
+                                        placeholder=""
+                                        data-placeholder-base=""
+                                        data-search-trends='@json($searchTrendingKeywords->all())'>
+                                    <span class="shopw-search-rotator is-visible" data-search-rotator aria-hidden="true">
+                                        <span class="shopw-search-rotator-word" data-search-rotator-word>{{ $searchTrendingKeywords->first() ?: 'Laptop gaming' }}</span>
+                                    </span>
+                                </span>
+                            </label>
                             <button type="submit" class="shopw-search-btn" aria-label="Tìm kiếm">
                                 <i class="fa fa-search"></i>
                             </button>
@@ -952,23 +990,20 @@
                         </li>
                         @if ($isAuthenticatedCustomer)
                             <li class="shopw-util shopw-auth shopw-auth-menu">
-                                <details class="shopw-account-menu" @if($isAccountSection) open @endif>
-                                    <summary class="shopw-account-summary shopw-account-summary--avatar-only" title="{{ $headerCustomerSummaryTitle }}">
+                                <details class="shopw-account-menu">
+                                    <summary @class([
+                                        'shopw-account-summary',
+                                        'shopw-account-summary--avatar-only',
+                                        'is-current' => $isAccountSection,
+                                    ]) title="{{ $headerCustomerSummaryTitle }}" aria-haspopup="menu" aria-expanded="false">
                                         <span class="shopw-account-avatar">
-                                            @if ($headerCustomerPicture)
-                                                <img src="{{ $headerCustomerPicture }}" alt="{{ $headerCustomerName ?: 'Tài khoản' }}">
-                                            @else
-                                                <span>{{ $headerCustomerInitials }}</span>
-                                            @endif
-                                        </span>
-                                        <span class="shopw-account-caret">
-                                            <i class="fa fa-angle-down"></i>
+                                            <img src="{{ $headerCustomerAvatar }}" alt="{{ $headerCustomerName ?: 'Tài khoản' }}">
                                         </span>
                                     </summary>
 
-                                    <div class="shopw-account-dropdown">
+                                    <div class="shopw-account-dropdown" role="menu">
                                         <div class="shopw-account-dropdown-head">
-                                            <span class="shopw-account-dropdown-kicker">Tài khoản storefront</span>
+                                            <span class="shopw-account-dropdown-kicker">Tài khoản</span>
                                             <strong>{{ $headerCustomerName ?: 'Tài khoản của bạn' }}</strong>
                                             @if ($headerCustomerEmail)
                                                 <small>{{ $headerCustomerEmail }}</small>
@@ -980,17 +1015,17 @@
 
                                         <div class="shopw-account-dropdown-links">
                                             @if ($hasCartInSession)
-                                                <a href="{{ $checkoutUrl }}" class="shopw-account-dropdown-link">
+                                                <a href="{{ $checkoutUrl }}" class="shopw-account-dropdown-link" role="menuitem">
                                                     <i class="fa fa-credit-card"></i>
                                                     <span>Tiếp tục thanh toán</span>
                                                 </a>
                                             @endif
-                                            <a href="{{ url('/history') }}" class="shopw-account-dropdown-link">
+                                            <a href="{{ url('/history') }}" class="shopw-account-dropdown-link" role="menuitem">
                                                 <i class="fa fa-history"></i>
                                                 <span>Đơn hàng của tôi</span>
                                             </a>
                                             <a href="{{ url('/dang-xuat-khach-hang?redirect=login') }}"
-                                                class="shopw-account-dropdown-link is-danger">
+                                                class="shopw-account-dropdown-link is-danger" role="menuitem">
                                                 <i class="fa fa-sign-out"></i>
                                                 <span>Đăng xuất</span>
                                             </a>
@@ -1193,4 +1228,3 @@
     <button type="button" class="shopw-mobile-nav-overlay" aria-label="Đóng menu"></button>
 
 </header><!--/header-->
-

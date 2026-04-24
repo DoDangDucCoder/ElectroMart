@@ -40,22 +40,12 @@ class CheckoutController extends Controller
 
     public function login_checkout(Request $request)
     {
-        $currentCustomer = $this->sessionCustomer();
-        $authRedirect = StorefrontCustomerAuth::rememberIntendedDestination($request, 'checkout');
-        $authRedirectKey = $authRedirect['key'];
+        return view('pages.checkout.login_checkout', $this->storefrontAuthPageContext($request, 'login'));
+    }
 
-        return view('pages.checkout.login_checkout', array_merge(
-            $this->seoContext($request),
-            $this->catalogContext(),
-            $this->cartContext(),
-            [
-                'currentCustomer' => $currentCustomer,
-                'authRedirectKey' => $authRedirectKey,
-                'authRedirectUrl' => $authRedirect['url'],
-                'authRedirectLabel' => $this->redirectLabel($authRedirectKey),
-                'storefrontCustomerPicture' => Session::get(StorefrontCustomerAuth::SESSION_PICTURE_KEY),
-            ]
-        ));
+    public function register_checkout(Request $request)
+    {
+        return view('pages.checkout.register_checkout', $this->storefrontAuthPageContext($request, 'register'));
     }
 
     public function add_customer(RegisterCustomerRequest $request): RedirectResponse
@@ -383,6 +373,66 @@ class CheckoutController extends Controller
             'payment' => 'bước thanh toán',
             default => 'bước checkout',
         };
+    }
+
+    protected function continueActionLabel(string $redirectKey): string
+    {
+        return match ($redirectKey) {
+            'history' => 'Xem đơn hàng của tôi',
+            'payment' => 'Tiếp tục tới thanh toán',
+            default => 'Tiếp tục tới checkout',
+        };
+    }
+
+    protected function storefrontAuthPageContext(Request $request, string $mode): array
+    {
+        $currentCustomer = $this->sessionCustomer();
+        $authRedirect = StorefrontCustomerAuth::rememberIntendedDestination($request, 'checkout');
+        $authRedirectKey = $authRedirect['key'];
+        $authRedirectUrl = $authRedirect['url'];
+
+        $authCustomerDisplayName = $currentCustomer?->name ?: ($currentCustomer?->email ?: 'Tài khoản của bạn');
+
+        $authRoutes = [
+            'login' => $this->storefrontAuthLink('/dang-nhap', $authRedirectKey, $authRedirectUrl),
+            'register' => $this->storefrontAuthLink('/dang-ky', $authRedirectKey, $authRedirectUrl),
+        ];
+
+        return array_merge(
+            $this->seoContext(
+                $request,
+                $mode === 'register' ? 'Đăng ký tài khoản' : 'Đăng nhập tài khoản',
+                $mode === 'register' ? 'dang-ky' : 'dang-nhap'
+            ),
+            $this->catalogContext(),
+            [
+                'authPageMode' => $mode,
+                'authPageHeading' => $mode === 'register' ? 'Tạo tài khoản mới' : 'Đăng nhập tài khoản',
+                'authPageDescription' => $mode === 'register'
+                    ? 'Điền thông tin cơ bản để tạo tài khoản và tiếp tục mua sắm.'
+                    : 'Dùng tài khoản hiện có để tiếp tục đặt hàng và theo dõi lịch sử đơn mua.',
+                'authLoginUrl' => $authRoutes['login'],
+                'authRegisterUrl' => $authRoutes['register'],
+                'currentCustomer' => $currentCustomer,
+                'authRedirectKey' => $authRedirectKey,
+                'authRedirectUrl' => $authRedirectUrl,
+                'authRedirectLabel' => $this->redirectLabel($authRedirectKey),
+                'authContinueLabel' => $this->continueActionLabel($authRedirectKey),
+                'authLoggedInDescription' => 'Tài khoản của bạn đã sẵn sàng. Bạn có thể tiếp tục tới ' . $this->redirectLabel($authRedirectKey) . ' ngay bây giờ.',
+                'authCustomerDisplayName' => $authCustomerDisplayName,
+                'authCustomerEmail' => $currentCustomer?->email,
+                'authCustomerPhone' => $currentCustomer?->phone,
+                'storefrontCustomerPicture' => Session::get(StorefrontCustomerAuth::SESSION_PICTURE_KEY),
+            ]
+        );
+    }
+
+    protected function storefrontAuthLink(string $path, string $redirectKey, string $redirectUrl): string
+    {
+        return url($path) . '?' . http_build_query([
+            'redirect' => $redirectKey,
+            'redirect_to' => $redirectUrl,
+        ]);
     }
 
     protected function legacyCategoryPosts()

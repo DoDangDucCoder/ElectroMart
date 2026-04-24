@@ -8,7 +8,11 @@ use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
+use App\Models\Slider;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -90,7 +94,10 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertSee('Theo tầm giá')
             ->assertSee('start_price=', false)
             ->assertDontSee('price_min=', false)
-            ->assertSee('placeholder="Tìm sản phẩm, thương hiệu, cấu hình..."', false)
+            ->assertSee('id="keywords"', false)
+            ->assertDontSee('placeholder="Tìm sản phẩm, thương hiệu, cấu hình..."', false)
+            ->assertSee('shopw-featured-showcase-shell', false)
+            ->assertSee('shopw-featured-showcase-card', false)
             ->assertSee('data-search-trends=', false)
             ->assertSee('data-desktop-panel="#shopw-desktop-category-panel"', false)
             ->assertDontSee('aria-controls="shopw-mobile-drawer"', false)
@@ -101,7 +108,6 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertSee('shopw-util-label', false)
             ->assertSee('Đăng nhập')
             ->assertSee('redirect_to=', false)
-            ->assertDontSee('shopw-account-menu', false)
             ->assertDontSee('shopw-util-minor', false)
             ->assertDontSee('shopw-util-text', false)
             ->assertSee('id="sosanh"', false)
@@ -124,11 +130,19 @@ class StorefrontLayoutShellTest extends TestCase
 
         $homeMarkup = $this->get('/')->getContent();
         $this->assertDoesNotMatchRegularExpression(
+            '/<details class="shopw-account-menu"[^>]*>/',
+            $homeMarkup
+        );
+        $this->assertDoesNotMatchRegularExpression(
             '/<a[^>]*data-storefront-nav-parent="categories"[^>]*href="#"/',
             $homeMarkup
         );
         $this->assertDoesNotMatchRegularExpression(
             '/<a[^>]*data-storefront-nav-parent="blogs"[^>]*href="#"/',
+            $homeMarkup
+        );
+        $this->assertMatchesRegularExpression(
+            '/<div class="shopw-search-shell">[\s\S]*data-search-rotator[\s\S]*<form[^>]*class="shopw-search"/',
             $homeMarkup
         );
     }
@@ -166,7 +180,8 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertSee('shopw-desktop-category-rail', false)
             ->assertSee('shopw-desktop-category-section-link-icon', false)
             ->assertSee('shopw-desktop-category-promo-icon', false)
-            ->assertSee('placeholder="Tìm sản phẩm, thương hiệu, cấu hình..."', false)
+            ->assertSee('id="keywords"', false)
+            ->assertDontSee('placeholder="Tìm sản phẩm, thương hiệu, cấu hình..."', false)
             ->assertSee('data-search-trends=', false)
             ->assertSee('data-desktop-panel="#shopw-desktop-category-panel"', false)
             ->assertDontSee('aria-controls="shopw-mobile-drawer"', false)
@@ -185,6 +200,24 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertSee('function requestQuickview', false)
             ->assertSee('function add_wistlist', false)
             ->assertDontSee('frontend/js/dark-light-mode.js');
+    }
+
+    public function test_register_route_reuses_same_storefront_shell(): void
+    {
+        $product = $this->createProduct('Shell Register Product');
+        $this->cartService->addItem($product->product_id, 1);
+
+        $this->get('/dang-ky')
+            ->assertOk()
+            ->assertSee('g-login-checkout')
+            ->assertSee('class="shopw-topbar shopw-topbar--compact"', false)
+            ->assertSee('shopw-header-brand', false)
+            ->assertSee('shopw-header-center', false)
+            ->assertSee('shopw-header-actions', false)
+            ->assertSee('shopw-utilities--desktop', false)
+            ->assertSee('shopw-footer-shell', false)
+            ->assertSee('frontend/css/shopw-theme.css')
+            ->assertSee('frontend/js/jquery.js');
     }
 
     public function test_logged_in_customer_sees_account_dropdown_in_storefront_header(): void
@@ -206,6 +239,8 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertOk()
             ->assertSee('shopw-account-menu', false)
             ->assertSee('shopw-account-summary--avatar-only', false)
+            ->assertDontSee('shopw-account-caret', false)
+            ->assertSee('frontend/images/storefront-account-avatar.svg', false)
             ->assertSee('Header Customer')
             ->assertSee('Đơn hàng của tôi')
             ->assertSee('Đăng xuất')
@@ -248,6 +283,80 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertDontSee('start_price=22000000', false);
     }
 
+    public function test_storefront_header_renders_after_view_recompile_without_sale_price_column(): void
+    {
+        $this->createProduct('Shell Schema Fallback Product', [
+            'price' => 22000000,
+            'sale_type' => 'fixed',
+            'sale_value' => 7000000,
+        ]);
+
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropColumn('sale_price');
+        });
+
+        Artisan::call('view:clear');
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('start_price=22000000', false)
+            ->assertDontSee('start_price=15000000', false);
+
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('start_price=22000000', false)
+            ->assertDontSee('start_price=15000000', false);
+    }
+
+    public function test_storefront_homepage_renders_when_sale_value_column_is_missing(): void
+    {
+        $this->createProduct('Shell Sale Value Schema Fallback Product', [
+            'price' => 22000000,
+            'sale_type' => 'fixed',
+            'sale_value' => 7000000,
+        ]);
+
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropColumn('sale_value');
+        });
+
+        Artisan::call('view:clear');
+
+        $this->get('/')
+            ->assertOk();
+
+        $this->get('/')
+            ->assertOk();
+    }
+
+    public function test_home_route_renders_when_active_slider_exists(): void
+    {
+        $this->createProduct('Shell Slider Target Product');
+        $this->ensureSliderTableExists();
+        $sliderDirectory = public_path('uploads/slider');
+        $sliderImage = 'shell-slider-test.jpg';
+        $sliderPath = $sliderDirectory . DIRECTORY_SEPARATOR . $sliderImage;
+
+        File::ensureDirectoryExists($sliderDirectory);
+        File::put($sliderPath, 'slider');
+
+        try {
+            Slider::create([
+                'slider_name' => 'Shell Hero Slider',
+                'slider_alt' => 'Banner test có dữ liệu',
+                'slider_image' => $sliderImage,
+                'slider_status' => 1,
+                'slider_desc' => 'Slider này dùng để kiểm tra scope biến trong view.',
+                'slider_tone' => 'mobile',
+            ]);
+
+            $this->get('/')
+                ->assertOk();
+        } finally {
+            File::delete($sliderPath);
+        }
+    }
+
     public function test_brand_route_renders_when_legacy_slider_table_is_missing(): void
     {
         $product = $this->createProduct('Shell Brand Product');
@@ -275,6 +384,23 @@ class StorefrontLayoutShellTest extends TestCase
             'tags' => 'layout,shell',
             'is_active' => true,
         ], $overrides));
+    }
+
+    protected function ensureSliderTableExists(): void
+    {
+        if (Schema::hasTable('tbl_slider')) {
+            return;
+        }
+
+        Schema::create('tbl_slider', function (Blueprint $table) {
+            $table->increments('slider_id');
+            $table->string('slider_name')->nullable();
+            $table->string('slider_alt')->nullable();
+            $table->string('slider_image')->nullable();
+            $table->integer('slider_status')->default(0);
+            $table->text('slider_desc')->nullable();
+            $table->string('slider_tone', 30)->nullable();
+        });
     }
 }
 

@@ -207,6 +207,155 @@
                 'description' => 'Một lối vào gọn cho các video giới thiệu, hướng dẫn và nội dung công nghệ ngắn.',
                 'url' => url('/video-shop'),
             ]);
+            $featuredShowcaseTargetCount = 5;
+            $featuredShowcaseLogo = $resolvePublicAsset('uploads/contact/laptop-symbol-azy3.png');
+            $buildSearchUrl = static function (?string $query = null): string {
+                $query = trim((string) $query);
+
+                return $query === ''
+                    ? url('/tim-kiem')
+                    : url('/tim-kiem') . '?' . http_build_query([
+                        'keywords_submit' => $query,
+                    ]);
+            };
+            $formatShowcasePrice = static function (float|int|string|null $amount): ?string {
+                $amount = (float) ($amount ?? 0);
+
+                return $amount > 0 ? number_format($amount, 0, ',', '.') . 'đ' : null;
+            };
+            $featuredShowcaseSeedCards = collect($homepage_featured_products ?? [])
+                ->values()
+                ->map(function ($product) use ($resolvePublicAsset, $buildSearchUrl, $formatShowcasePrice) {
+                    $name = trim((string) ($product->product_name ?? $product->name ?? 'Sản phẩm nổi bật'));
+                    $brand = trim((string) (optional($product->brand)->brand_name ?? $product->brand_name ?? 'ShopW Picks'));
+                    $categoryName = trim((string) (optional($product->primaryCategory)->category_name ?? $product->category_name ?? 'Cấu hình được quan tâm'));
+                    $image = $resolvePublicAsset($product->product_image ?? null) ?: asset('uploads/product/no-image.svg');
+                    $finalPrice = (float) ($product->final_price ?? $product->product_price ?? $product->price ?? 0);
+                    $originalPrice = (float) ($product->price ?? $product->product_price ?? $finalPrice);
+                    $saleAmount = (float) ($product->sale_amount ?? 0);
+
+                    return [
+                        'name' => $name,
+                        'brand' => $brand !== '' ? $brand : 'ShopW Picks',
+                        'category' => $categoryName !== '' ? $categoryName : 'Nhóm sản phẩm nổi bật',
+                        'image' => $image,
+                        'url' => filled($product->product_slug ?? null)
+                            ? url('/chi-tiet/' . $product->product_slug)
+                            : $buildSearchUrl($name),
+                        'price' => $formatShowcasePrice($finalPrice) ?: 'Liên hệ',
+                        'original_price' => $originalPrice > $finalPrice
+                            ? $formatShowcasePrice($originalPrice)
+                            : null,
+                        'badge' => $saleAmount > 0 ? 'Deal hot' : 'Nổi bật',
+                        'tone' => $saleAmount > 0 ? 'hot' : 'core',
+                        'chips' => collect([
+                            $brand !== '' ? $brand : null,
+                            $saleAmount > 0 ? 'Giá đang tốt' : null,
+                            $categoryName !== '' ? $categoryName : null,
+                        ])->filter()->unique()->take(2)->values()->all(),
+                        'note' => $saleAmount > 0
+                            ? 'Mẫu đang có ưu đãi tốt trong nhóm sản phẩm này.'
+                            : 'Được người dùng xem nhiều trong ngày trên storefront.',
+                        'is_mock' => false,
+                    ];
+                })
+                ->take($featuredShowcaseTargetCount)
+                ->values();
+            $featuredShowcaseFallbackCards = collect([
+                [
+                    'name' => 'ASUS Vivobook Go 15 OLED Ryzen 7',
+                    'brand' => 'ASUS',
+                    'category' => 'Laptop học tập • văn phòng',
+                    'image' => $resolvePublicAsset('uploads/product/product-3xhqm7.jpg') ?: asset('uploads/product/no-image.svg'),
+                    'url' => $buildSearchUrl('ASUS Vivobook Go 15 OLED'),
+                    'price' => $formatShowcasePrice(16990000),
+                    'original_price' => $formatShowcasePrice(18990000),
+                    'badge' => 'Mẫu demo',
+                    'tone' => 'warm',
+                    'chips' => ['OLED', '16GB RAM'],
+                    'note' => 'Card demo để section luôn kín và dễ hình dung bố cục.',
+                    'is_mock' => true,
+                ],
+                [
+                    'name' => 'Samsung Galaxy A56 5G 12GB/256GB',
+                    'brand' => 'Samsung',
+                    'category' => 'Điện thoại tầm trung',
+                    'image' => $resolvePublicAsset('uploads/product/samsung80.jpg') ?: asset('uploads/product/no-image.svg'),
+                    'url' => $buildSearchUrl('Samsung Galaxy A56 5G'),
+                    'price' => $formatShowcasePrice(9990000),
+                    'original_price' => $formatShowcasePrice(10990000),
+                    'badge' => 'Mẫu demo',
+                    'tone' => 'cool',
+                    'chips' => ['120Hz', 'Pin lớn'],
+                    'note' => 'Mẫu demo phù hợp để lấp đầy nhóm smartphone nổi bật.',
+                    'is_mock' => true,
+                ],
+                [
+                    'name' => 'MacBook Air M4 13 inch 16GB/512GB',
+                    'brand' => 'Apple',
+                    'category' => 'Laptop mỏng nhẹ cao cấp',
+                    'image' => $resolvePublicAsset('uploads/product/product-4blj4w.jpg')
+                        ?: ($resolvePublicAsset('uploads/product/product-kv482q.jpg') ?: asset('uploads/product/no-image.svg')),
+                    'url' => $buildSearchUrl('MacBook Air M4 13 inch'),
+                    'price' => $formatShowcasePrice(31990000),
+                    'original_price' => $formatShowcasePrice(33990000),
+                    'badge' => 'Mẫu demo',
+                    'tone' => 'neutral',
+                    'chips' => ['Apple M4', '512GB SSD'],
+                    'note' => 'Card demo cho phân khúc máy gọn, hiệu năng ổn định.',
+                    'is_mock' => true,
+                ],
+                [
+                    'name' => 'Lenovo LOQ 15 RTX 4060 144Hz',
+                    'brand' => 'Lenovo',
+                    'category' => 'Laptop gaming phổ biến',
+                    'image' => $resolvePublicAsset('uploads/product/product-kv482q.jpg') ?: asset('uploads/product/no-image.svg'),
+                    'url' => $buildSearchUrl('Lenovo LOQ 15 RTX 4060'),
+                    'price' => $formatShowcasePrice(23990000),
+                    'original_price' => $formatShowcasePrice(25990000),
+                    'badge' => 'Mẫu demo',
+                    'tone' => 'hot',
+                    'chips' => ['RTX 4060', '144Hz'],
+                    'note' => 'Card demo để nhóm gaming không bị trống ở desktop.',
+                    'is_mock' => true,
+                ],
+                [
+                    'name' => 'iPhone 16 Pro 256GB Titanium',
+                    'brand' => 'Apple',
+                    'category' => 'Flagship được quan tâm',
+                    'image' => $resolvePublicAsset('uploads/product/iphone-16-pro79.jpg') ?: asset('uploads/product/no-image.svg'),
+                    'url' => $buildSearchUrl('iPhone 16 Pro 256GB'),
+                    'price' => $formatShowcasePrice(28990000),
+                    'original_price' => $formatShowcasePrice(30990000),
+                    'badge' => 'Mẫu demo',
+                    'tone' => 'cool',
+                    'chips' => ['Titanium', 'A18 Pro'],
+                    'note' => 'Card demo giúp section giữ đúng cảm giác storefront công nghệ.',
+                    'is_mock' => true,
+                ],
+                [
+                    'name' => 'LG UltraGear 27 inch QHD 180Hz',
+                    'brand' => 'LG',
+                    'category' => 'Màn hình gaming',
+                    'image' => $resolvePublicAsset('uploads/product/product-lwq0f2.jpg') ?: asset('uploads/product/no-image.svg'),
+                    'url' => $buildSearchUrl('LG UltraGear 27 inch QHD'),
+                    'price' => $formatShowcasePrice(6490000),
+                    'original_price' => $formatShowcasePrice(7290000),
+                    'badge' => 'Mẫu demo',
+                    'tone' => 'warm',
+                    'chips' => ['QHD', '180Hz'],
+                    'note' => 'Card demo cho nhóm phụ kiện hiển thị thêm chiều sâu.',
+                    'is_mock' => true,
+                ],
+            ]);
+            $featuredShowcaseCards = $featuredShowcaseSeedCards
+                ->concat(
+                    $featuredShowcaseFallbackCards->reject(
+                        fn (array $fallbackCard) => $featuredShowcaseSeedCards->contains('name', $fallbackCard['name']),
+                    ),
+                )
+                ->take($featuredShowcaseTargetCount)
+                ->values();
             $recommendedProducts = collect($recommended_products ?? [])->values();
             $recommendationGridClass = match (true) {
                 $recommendedProducts->count() <= 1 => 'shopw-home-recommendation-grid--solo',
@@ -254,6 +403,15 @@
 
         @include('pages.home.partials.campaign_board', [
             'campaignCards' => $campaignCards,
+        ])
+
+        @include('pages.home.partials.featured_showcase', [
+            'cards' => $featuredShowcaseCards,
+            'logo' => $featuredShowcaseLogo,
+            'title' => 'Sản phẩm nổi bật',
+            'description' => 'Giữ khu này luôn đầy bằng sản phẩm đang nổi, và tự đệm thêm card demo khi dữ liệu thật chưa đủ.',
+            'ctaLabel' => 'Xem thêm sản phẩm',
+            'ctaUrl' => url('/tim-kiem'),
         ])
 
         <section class="features_items shopw-home-section shopw-home-latest-section">
@@ -424,4 +582,3 @@
         </div>
     </div>
 @endsection
-

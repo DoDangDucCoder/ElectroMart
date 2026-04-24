@@ -53,6 +53,21 @@ class OrderHistoryPageTest extends TestCase
             ->assertSee('Lịch sử đơn hàng');
     }
 
+    public function test_history_page_marks_account_menu_current_without_opening_dropdown_by_default(): void
+    {
+        [$customer] = $this->createModernOrder();
+
+        $response = $this->withSession(['customer_id' => $customer->id])->get('/history');
+
+        $response->assertOk()
+            ->assertSee('shopw-account-summary--avatar-only is-current', false);
+
+        $this->assertDoesNotMatchRegularExpression(
+            '/<details class="shopw-account-menu"[^>]*\sopen(?:[\s>]|="open")/i',
+            $response->getContent()
+        );
+    }
+
     public function test_customer_can_view_modern_order_detail(): void
     {
         [$customer, $order] = $this->createModernOrder();

@@ -90,14 +90,24 @@
             </div>
             @if ($showWishlist || $showCompare)
                 <div class="choose shopw-card-meta">
-                    <ul class="nav nav-pills nav-justified">
+                    <ul class="shopw-card-meta-list">
                         @if ($showWishlist)
-                            <li><a style="cursor:pointer" onclick="add_wistlist({{ $productId }})"><i
-                                        class="fa fa-heart-o"></i>Yêu thích</a></li>
+                            <li class="shopw-card-meta-item">
+                                <button type="button" class="shopw-card-meta-link shopw-card-meta-link--wishlist"
+                                    onclick="add_wistlist({{ $productId }})">
+                                    <i class="fa fa-heart-o" aria-hidden="true"></i>
+                                    <span>Yêu thích</span>
+                                </button>
+                            </li>
                         @endif
                         @if ($showCompare)
-                            <li><a style="cursor:pointer" onclick="add_compare({{ $productId }})"><i
-                                        class="fa fa-exchange"></i>So sánh</a></li>
+                            <li class="shopw-card-meta-item">
+                                <button type="button" class="shopw-card-meta-link shopw-card-meta-link--compare"
+                                    onclick="add_compare({{ $productId }})">
+                                    <i class="fa fa-exchange" aria-hidden="true"></i>
+                                    <span>So sánh</span>
+                                </button>
+                            </li>
                         @endif
                     </ul>
                 </div>

@@ -150,10 +150,13 @@ class StorefrontCustomerAuth
         $normalizedPath = strtok($pathWithQuery, '?') ?: '/';
         $blockedPaths = [
             '/dang-nhap',
+            '/dang-ky',
             '/login-customer',
             '/add-customer',
             '/dang-xuat-khach-hang',
             '/logout-checkout',
+            '/quen-mat-khau',
+            '/update-new-pass',
             '/login-facebook-customer',
             '/customer/facebook/callback',
             '/login-customer-google',

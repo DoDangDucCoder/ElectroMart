@@ -489,7 +489,7 @@
             var $searchRotator = $('[data-search-rotator]');
             var $searchRotatorWord = $('[data-search-rotator-word]');
 
-            if (!$searchInput.length) {
+            if (!$searchInput.length || !$searchRotator.length || !$searchRotatorWord.length) {
                 return;
             }
 
@@ -502,37 +502,35 @@
                 trendingKeywords = [];
             }
 
-            if (!Array.isArray(trendingKeywords) || trendingKeywords.length === 0 || !$searchRotator.length || !$searchRotatorWord.length) {
-                return;
+            if (!Array.isArray(trendingKeywords)) {
+                trendingKeywords = [];
+            }
+
+            var fallbackKeyword = $.trim($searchRotatorWord.text());
+
+            if (trendingKeywords.length === 0 && fallbackKeyword !== '') {
+                trendingKeywords = [fallbackKeyword];
             }
 
             var activeIndex = 0;
             var swapDelay = 220;
 
-            function showRotator() {
-                if ($.trim($searchInput.val()) !== '') {
-                    hideRotator();
-                    return;
-                }
-
-                $searchInput.attr('placeholder', '');
-                $searchRotator.addClass('is-visible');
-            }
-
-            function hideRotator() {
+            function syncRotatorState() {
+                var hasValue = $.trim($searchInput.val()) !== '';
                 $searchInput.attr('placeholder', basePlaceholder);
-                $searchRotator.removeClass('is-visible');
+                $searchRotator
+                    .addClass('is-visible')
+                    .toggleClass('is-condensed', hasValue);
+
+                return hasValue;
             }
 
             function renderTrendingPlaceholder(forceImmediate) {
-                var isTyping = $.trim($searchInput.val()) !== '';
+                var isTyping = syncRotatorState();
 
-                if (isTyping) {
-                    hideRotator();
+                if (isTyping || trendingKeywords.length === 0) {
                     return;
                 }
-
-                showRotator();
 
                 if (forceImmediate) {
                     $searchRotatorWord.text(trendingKeywords[activeIndex]);
@@ -543,10 +541,9 @@
                 $searchRotatorWord.addClass('is-swapping');
 
                 window.setTimeout(function() {
-                    var stillTyping = $.trim($searchInput.val()) !== '';
+                    var stillTyping = syncRotatorState();
 
                     if (stillTyping) {
-                        hideRotator();
                         return;
                     }
 
@@ -559,34 +556,32 @@
                 }, swapDelay);
             }
 
-            renderTrendingPlaceholder(true);
+            syncRotatorState();
+
+            if (trendingKeywords.length > 0) {
+                renderTrendingPlaceholder(true);
+            }
 
             if (searchPlaceholderTimer) {
                 clearInterval(searchPlaceholderTimer);
             }
 
-            searchPlaceholderTimer = setInterval(function() {
-                renderTrendingPlaceholder(false);
-            }, 6200);
+            if (trendingKeywords.length > 1) {
+                searchPlaceholderTimer = setInterval(function() {
+                    renderTrendingPlaceholder(false);
+                }, 6200);
+            }
 
             $searchInput.on('focus', function() {
-                if ($.trim($searchInput.val()) === '') {
-                    showRotator();
-                }
+                syncRotatorState();
             });
 
             $searchInput.on('input', function() {
-                if ($.trim($searchInput.val()) === '') {
-                    showRotator();
-                } else {
-                    hideRotator();
-                }
+                syncRotatorState();
             });
 
             $searchInput.on('blur', function() {
-                if ($.trim($searchInput.val()) === '') {
-                    showRotator();
-                }
+                syncRotatorState();
             });
         }
 
@@ -730,6 +725,279 @@
 
         $('[data-flash-sale-countdown]').each(function() {
             initFlashSaleCountdown($(this));
+        });
+
+        function initFlashSaleCarousel($carousel) {
+            var $track = $carousel.find('[data-flash-sale-track]');
+            var $prev = $carousel.find('[data-flash-nav="prev"]');
+            var $next = $carousel.find('[data-flash-nav="next"]');
+            var suppressClick = false;
+            var interactionTimer = null;
+            var dragState = {
+                active: false,
+                pointerId: null,
+                startX: 0,
+                startY: 0,
+                startScrollLeft: 0,
+                axis: null,
+                moved: false
+            };
+
+            if (!$track.length || !$prev.length || !$next.length) {
+                return;
+            }
+
+            function getTrackNode() {
+                return $track.get(0);
+            }
+
+            function getNativeEvent(event) {
+                return event && event.originalEvent ? event.originalEvent : event;
+            }
+
+            function getPointerPayload(event) {
+                var nativeEvent = getNativeEvent(event) || {};
+
+                return {
+                    button: typeof nativeEvent.button === 'number' ? nativeEvent.button : 0,
+                    clientX: typeof nativeEvent.clientX === 'number' ? nativeEvent.clientX : 0,
+                    clientY: typeof nativeEvent.clientY === 'number' ? nativeEvent.clientY : 0,
+                    pointerId: nativeEvent.pointerId ?? null,
+                    pointerType: nativeEvent.pointerType || 'mouse'
+                };
+            }
+
+            function getCardWidth() {
+                return $track.find('.shopw-flash-sale-card').first().outerWidth(true) || 0;
+            }
+
+            function setCarouselEngaged(active, ttl) {
+                if (interactionTimer) {
+                    window.clearTimeout(interactionTimer);
+                    interactionTimer = null;
+                }
+
+                $carousel.toggleClass('is-engaged', !!active);
+
+                if (active && ttl) {
+                    interactionTimer = window.setTimeout(function() {
+                        $carousel.removeClass('is-engaged');
+                        interactionTimer = null;
+                    }, ttl);
+                }
+            }
+
+            function getStep() {
+                var track = getTrackNode();
+                var cardWidth = getCardWidth();
+
+                if (!track) {
+                    return 0;
+                }
+
+                if (!cardWidth) {
+                    return Math.max(0, track.clientWidth - 40);
+                }
+
+                var visibleCards = Math.max(1, Math.floor(track.clientWidth / cardWidth));
+                return Math.max(cardWidth, Math.min(track.clientWidth - 28, cardWidth * visibleCards));
+            }
+
+            function syncButtons() {
+                var track = getTrackNode();
+
+                if (!track) {
+                    return;
+                }
+
+                var hasOverflow = track.scrollWidth > track.clientWidth + 4;
+                var isAtStart = track.scrollLeft <= 4;
+                var isAtEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
+
+                $prev.prop('disabled', !hasOverflow || isAtStart);
+                $next.prop('disabled', !hasOverflow || isAtEnd);
+            }
+
+            function scrollByStep(direction) {
+                var track = getTrackNode();
+                var step = getStep();
+
+                if (!track || !step) {
+                    return;
+                }
+
+                if (direction === 'next' && track.scrollLeft + track.clientWidth >= track.scrollWidth - 4) {
+                    track.scrollTo({
+                        left: 0,
+                        behavior: 'smooth'
+                    });
+                    return;
+                }
+
+                if (direction === 'prev' && track.scrollLeft <= 4) {
+                    track.scrollTo({
+                        left: Math.max(0, track.scrollWidth - track.clientWidth),
+                        behavior: 'smooth'
+                    });
+                    return;
+                }
+
+                track.scrollBy({
+                    left: (direction === 'prev' ? -1 : 1) * step,
+                    behavior: 'smooth'
+                });
+            }
+
+            function resetDragState() {
+                dragState.active = false;
+                dragState.pointerId = null;
+                dragState.axis = null;
+                dragState.moved = false;
+                $track.removeClass('is-dragging');
+            }
+
+            function endDrag() {
+                var track = getTrackNode();
+
+                if (!dragState.active) {
+                    return;
+                }
+
+                if (track && dragState.pointerId !== null && typeof track.releasePointerCapture === 'function') {
+                    try {
+                        track.releasePointerCapture(dragState.pointerId);
+                    } catch (error) {
+                        // Pointer capture can already be released; ignore and continue cleanup.
+                    }
+                }
+
+                if (dragState.moved) {
+                    window.setTimeout(function() {
+                        suppressClick = false;
+                    }, 140);
+                }
+
+                resetDragState();
+                syncButtons();
+            }
+
+            $prev.on('click', function() {
+                setCarouselEngaged(true, 1400);
+                scrollByStep('prev');
+            });
+
+            $next.on('click', function() {
+                setCarouselEngaged(true, 1400);
+                scrollByStep('next');
+            });
+
+            $track.on('pointerdown', function(event) {
+                var track = getTrackNode();
+                var pointer = getPointerPayload(event);
+
+                if (!track || (pointer.pointerType === 'mouse' && pointer.button !== 0)) {
+                    return;
+                }
+
+                dragState.active = true;
+                dragState.pointerId = pointer.pointerId;
+                dragState.startX = pointer.clientX;
+                dragState.startY = pointer.clientY;
+                dragState.startScrollLeft = track.scrollLeft;
+                dragState.axis = null;
+                dragState.moved = false;
+                suppressClick = false;
+                setCarouselEngaged(true, 1800);
+
+                event.preventDefault();
+            });
+
+            $(document).on('pointermove.flashSaleCarousel', function(event) {
+                var track = getTrackNode();
+                var pointer = getPointerPayload(event);
+                var deltaX;
+                var deltaY;
+
+                if (!dragState.active || !track) {
+                    return;
+                }
+
+                if (dragState.pointerId !== null && pointer.pointerId !== null && dragState.pointerId !== pointer.pointerId) {
+                    return;
+                }
+
+                deltaX = pointer.clientX - dragState.startX;
+                deltaY = pointer.clientY - dragState.startY;
+
+                if (!dragState.axis) {
+                    if (Math.abs(deltaX) < 4 && Math.abs(deltaY) < 4) {
+                        return;
+                    }
+
+                    dragState.axis = Math.abs(deltaX) > Math.abs(deltaY) ? 'x' : 'y';
+
+                    if (dragState.axis === 'x') {
+                        $track.addClass('is-dragging');
+                        setCarouselEngaged(true, 1800);
+                    }
+                }
+
+                if (dragState.axis !== 'x') {
+                    return;
+                }
+
+                dragState.moved = Math.abs(deltaX) > 8;
+                suppressClick = dragState.moved;
+                track.scrollLeft = dragState.startScrollLeft - deltaX;
+
+                syncButtons();
+                event.preventDefault();
+            });
+
+            $(document).on('pointerup.flashSaleCarousel pointercancel.flashSaleCarousel', function(event) {
+                var pointer = getPointerPayload(event);
+
+                if (dragState.pointerId !== null && pointer.pointerId !== null && dragState.pointerId !== pointer.pointerId) {
+                    return;
+                }
+
+                endDrag();
+            });
+
+            $track.on('dragstart', 'a, img', function(event) {
+                event.preventDefault();
+            });
+
+            $track.on('click', 'a', function(event) {
+                if (!suppressClick) {
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            });
+
+            $carousel.on('mouseenter focusin', function() {
+                setCarouselEngaged(true);
+            });
+
+            $carousel.on('mouseleave focusout', function() {
+                if (!dragState.active) {
+                    setCarouselEngaged(false);
+                }
+            });
+
+            $track.on('scroll', syncButtons);
+            $(window).on('resize', function() {
+                endDrag();
+                syncButtons();
+            });
+
+            window.setTimeout(syncButtons, 80);
+        }
+
+        $('[data-flash-sale-carousel]').each(function() {
+            initFlashSaleCarousel($(this));
         });
     </script>
 

@@ -6,7 +6,9 @@ use App\Application\Catalog\Services\ProductService;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -145,6 +147,22 @@ class CategoryPageTest extends TestCase
             ->assertSee('18.000.000 VND')
             ->assertSee('-2.000.000đ', false)
             ->assertSee('Giá sau giảm = 20.000.000đ - 2.000.000đ = 18.000.000đ');
+    }
+
+    public function test_category_page_still_renders_when_sale_price_column_is_missing(): void
+    {
+        $product = $this->createProduct('Gaming Laptop Schema Fallback', 22000000, [
+            'sale_type' => 'fixed',
+            'sale_value' => 7000000,
+        ]);
+
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropColumn('sale_price');
+        });
+
+        $this->get('/danh-muc/' . $this->category->slug_category_product . '?sort_by=tang_dan')
+            ->assertOk()
+            ->assertSee($product->product_name);
     }
 
     protected function createProduct(string $name, float $price, array $overrides = []): Product

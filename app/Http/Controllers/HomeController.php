@@ -14,8 +14,11 @@ use App\Application\Catalog\Services\CategoryService;
 use App\Application\Catalog\Services\ProductDiscoveryTrackingService;
 use App\Application\Catalog\Services\ProductService;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
+use App\Infrastructure\Persistence\Eloquent\Cms\BlogPost;
+use App\Support\ProductPriceSql;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -79,7 +82,12 @@ class HomeController extends Controller
             'homepage'
         );
         $heroRatio = $this->calculateHeroRatio($slider);
+        $heroSlideTargets = $this->resolveHeroSlideTargets($slider);
         $flashSale = $this->resolveFlashSaleSection();
+        $homepageFeaturedProducts = $this->resolveHomepageFeaturedProducts(8);
+        $homepageSaleProducts = $this->resolveHomepageSaleProducts(4, $homepageFeaturedProducts);
+        $homepageBestSellerProducts = $this->resolveHomepageBestSellerProducts(6);
+        $homepageNewsPosts = $this->resolveHomepageNewsPosts(3);
 
         $categoriesByParent = $cate_product->groupBy(static function ($category) {
             return $category->category_parent ?? 0;
@@ -189,9 +197,15 @@ class HomeController extends Controller
             'icons' => $icons,
             'mega_menu_data' => $megaMenuData,
             'hero_ratio' => $heroRatio,
+            'hero_slide_targets' => $heroSlideTargets,
+            'hero_best_selling_url' => $this->buildBestSellingListingUrl(),
             'flash_sale' => $flashSale,
             'recommended_products' => $recommendationData['products'],
             'recommendation_description' => $recommendationData['description'],
+            'homepage_featured_products' => $homepageFeaturedProducts,
+            'homepage_sale_products' => $homepageSaleProducts,
+            'homepage_best_seller_products' => $homepageBestSellerProducts,
+            'homepage_news_posts' => $homepageNewsPosts,
         ]);
     }
 
@@ -225,34 +239,81 @@ class HomeController extends Controller
 
     public function search(SearchProductsRequest $request)
     {
+        return $this->renderCatalogListingPage($request, [
+            'meta_desc' => 'Tìm kiếm sản phẩm',
+            'meta_keywords' => 'Tìm kiếm sản phẩm',
+            'meta_title' => 'Tìm kiếm sản phẩm',
+            'default_sort' => 'popular',
+            'search_page_kicker' => 'Tìm kiếm sản phẩm',
+            'search_page_title' => 'Kết quả tìm kiếm',
+            'search_form_action' => url('/tim-kiem'),
+            'search_clear_url' => url('/tim-kiem'),
+            'search_results_kicker' => 'Danh sách kết quả',
+            'tracking_context' => 'search_page',
+        ]);
+    }
+
+    public function best_selling(SearchProductsRequest $request)
+    {
+        return $this->renderCatalogListingPage($request, [
+            'meta_desc' => 'Sản phẩm đang bán chạy',
+            'meta_keywords' => 'sản phẩm bán chạy, top sản phẩm bán chạy',
+            'meta_title' => 'Sản phẩm đang bán chạy',
+            'default_sort' => 'best_selling',
+            'search_page_mode' => 'best_selling',
+            'search_page_kicker' => 'Sản phẩm đang bán chạy',
+            'search_page_title' => 'Top sản phẩm bán chạy',
+            'search_form_action' => url('/san-pham-ban-chay'),
+            'search_clear_url' => url('/san-pham-ban-chay'),
+            'search_results_kicker' => 'Bảng xếp hạng bán chạy',
+            'tracking_context' => 'best_selling_page',
+        ]);
+    }
+
+    private function renderCatalogListingPage(SearchProductsRequest $request, array $overrides = [])
+    {
         $category_post = $this->legacyCategoryPosts();
         $slider = $this->legacyActiveSliders();
-
-        $meta_desc = "Tìm kiếm sản phẩm";
-        $meta_keywords = "Tìm kiếm sản phẩm";
-        $meta_title = "Tìm kiếm sản phẩm";
         $url_canonical = $request->url();
         $validated = $request->validated();
         $keywords = $validated['keywords_submit'] ?? '';
+        $defaultSort = $overrides['default_sort'] ?? 'popular';
+        $highlightProductSlug = trim((string) ($validated['highlight_product'] ?? ''));
+        $highlightProduct = $highlightProductSlug !== ''
+            ? $this->productService->findProductBySlug($highlightProductSlug)
+            : null;
+
         $filters = [
             'keyword' => $keywords,
             'product_code' => $validated['product_code'] ?? null,
             'category_id' => $validated['category_id'] ?? null,
             'price_min' => $validated['price_min'] ?? null,
             'price_max' => $validated['price_max'] ?? null,
-            'sort' => $validated['sort'] ?? 'popular',
+            'sort' => $validated['sort'] ?? $defaultSort,
+            'highlight_product' => $highlightProduct?->slug,
+            'highlight_product_slug' => $highlightProduct?->slug,
         ];
 
         $cate_product = $this->categoryService->listActive();
         $brand_product = $this->brandService->listAll(['is_active' => true]);
         $search_product = $this->productService->searchCatalog($filters, 12);
-        $search_product->appends(array_filter($validated, static fn ($value) => $value !== null && $value !== ''));
+        $search_product->appends(array_filter([
+            'keywords_submit' => $validated['keywords_submit'] ?? null,
+            'product_code' => $validated['product_code'] ?? null,
+            'category_id' => $validated['category_id'] ?? null,
+            'price_min' => $validated['price_min'] ?? null,
+            'price_max' => $validated['price_max'] ?? null,
+            'sort' => $validated['sort'] ?? null,
+            'highlight_product' => $highlightProduct?->slug,
+        ], static fn ($value) => $value !== null && $value !== ''));
+
+        $trackingContext = trim((string) ($overrides['tracking_context'] ?? 'search_page'));
         $recommendationData = $this->productService->getRecommendedProducts(
             (int) session('customer_id') ?: null,
             $request->ip(),
-            null,
+            $highlightProduct?->id,
             4,
-            'search_page'
+            $trackingContext
         );
 
         if (! $request->has('page') || (int) $request->query('page', 1) === 1) {
@@ -265,6 +326,19 @@ class HomeController extends Controller
             );
         }
 
+        $pageMode = trim((string) ($overrides['search_page_mode'] ?? 'search'));
+        $searchPageSummary = $overrides['search_page_summary'] ?? null;
+        $searchResultsTitle = $overrides['search_results_title'] ?? null;
+
+        if ($pageMode === 'best_selling') {
+            $searchPageSummary ??= $highlightProduct
+                ? 'Danh sách đang được xếp theo số lượng bán thành công. Chiến dịch hiện tại ưu tiên ' . $highlightProduct->name . ' ở đầu danh sách để người dùng mở ra thấy ngay.'
+                : 'Danh sách được xếp theo số lượng bán thành công gần đây và mức độ quan tâm thực tế của người dùng.';
+            $searchResultsTitle ??= $highlightProduct
+                ? 'Ưu tiên từ banner: ' . $highlightProduct->name
+                : 'Sản phẩm bán chạy hiện tại';
+        }
+
         return view('pages.sanpham.search', [
             'category' => $cate_product,
             'brand' => $brand_product,
@@ -274,12 +348,188 @@ class HomeController extends Controller
             'search_categories' => $cate_product,
             'recommended_products' => $recommendationData['products'],
             'recommendation_description' => $recommendationData['description'],
-            'meta_desc' => $meta_desc,
-            'meta_keywords' => $meta_keywords,
-            'meta_title' => $meta_title,
+            'meta_desc' => $overrides['meta_desc'] ?? 'Tìm kiếm sản phẩm',
+            'meta_keywords' => $overrides['meta_keywords'] ?? 'Tìm kiếm sản phẩm',
+            'meta_title' => $overrides['meta_title'] ?? 'Tìm kiếm sản phẩm',
             'url_canonical' => $url_canonical,
             'slider' => $slider,
             'category_post' => $category_post,
+            'search_page_mode' => $pageMode,
+            'search_page_kicker' => $overrides['search_page_kicker'] ?? 'Tìm kiếm sản phẩm',
+            'search_page_title' => $overrides['search_page_title'] ?? 'Kết quả tìm kiếm',
+            'search_page_summary' => $searchPageSummary,
+            'search_form_action' => $overrides['search_form_action'] ?? url('/tim-kiem'),
+            'search_clear_url' => $overrides['search_clear_url'] ?? url('/tim-kiem'),
+            'search_results_kicker' => $overrides['search_results_kicker'] ?? 'Danh sách kết quả',
+            'search_results_title' => $searchResultsTitle,
+            'search_highlight_product' => $highlightProduct,
+        ]);
+    }
+
+    private function resolveHeroSlideTargets(Collection $slides): array
+    {
+        return $slides
+            ->mapWithKeys(function ($slide) {
+                $imageKey = basename((string) ($slide->slider_image ?? ''));
+
+                if ($imageKey === '') {
+                    return [];
+                }
+
+                return [
+                    $imageKey => $this->resolveHeroSlideTarget($slide),
+                ];
+            })
+            ->all();
+    }
+
+    private function resolveHeroSlideTarget(mixed $slide): array
+    {
+        $imageKey = basename((string) ($slide->slider_image ?? ''));
+        $configuredHints = (array) config('storefront.hero_slider.product_hints', []);
+        $configuredTarget = $imageKey === ''
+            ? []
+            : (array) ($configuredHints[$imageKey] ?? []);
+        $configuredProductSlug = trim((string) ($configuredTarget['product_slug'] ?? ''));
+        $product = $this->resolveHeroSlideProduct($slide, $configuredTarget);
+        $highlightProductSlug = $product?->slug ?: ($configuredProductSlug !== '' ? $configuredProductSlug : null);
+
+        return [
+            'url' => $this->buildBestSellingListingUrl($highlightProductSlug),
+            'highlight_product_slug' => $highlightProductSlug,
+            'highlight_product_name' => $product?->name,
+        ];
+    }
+
+    private function resolveHeroSlideProduct(mixed $slide, array $configuredTarget = []): ?Product
+    {
+        $configuredProductSlug = trim((string) ($configuredTarget['product_slug'] ?? ''));
+
+        if ($configuredProductSlug !== '') {
+            $configuredProduct = $this->productService->findProductBySlug($configuredProductSlug);
+
+            if ($configuredProduct) {
+                return $configuredProduct;
+            }
+        }
+
+        $candidateHints = collect([
+            $configuredTarget['search_hint'] ?? null,
+            $slide->slider_alt ?? null,
+            $slide->slider_name ?? null,
+            $slide->slider_desc ?? null,
+        ])
+            ->flatMap(fn ($text) => $this->extractHeroProductHints($text))
+            ->unique()
+            ->values();
+
+        foreach ($candidateHints as $hint) {
+            $matchedProduct = $this->productService->searchSuggestions($hint, 1)->first();
+
+            if ($matchedProduct) {
+                return $matchedProduct;
+            }
+        }
+
+        return null;
+    }
+
+    private function extractHeroProductHints(?string $text): array
+    {
+        $cleanedText = trim((string) Str::of((string) $text)
+            ->replaceMatches('/[^A-Za-z0-9+\- ]+/u', ' ')
+            ->squish());
+
+        if ($cleanedText === '') {
+            return [];
+        }
+
+        $tokens = array_values(array_filter(preg_split('/\s+/', $cleanedText) ?: []));
+        $stopWords = [
+            'arena',
+            'banner',
+            'ban',
+            'baner',
+            'chinh',
+            'cong',
+            'deal',
+            'demo',
+            'de',
+            'dien',
+            'hot',
+            'khuyen',
+            'len',
+            'mai',
+            'moi',
+            'ngay',
+            'nghe',
+            'pham',
+            'sale',
+            'slider',
+            'tech',
+            'thong',
+            'tu',
+            'uu',
+            'xem',
+        ];
+        $candidatePhrases = [$cleanedText];
+
+        preg_match_all(
+            '/\b[A-Za-z]{2,}(?:\s+[A-Za-z]{1,12})?\s+[A-Za-z0-9+\-]*\d[A-Za-z0-9+\-]*\b/u',
+            $cleanedText,
+            $matchedPhrases
+        );
+
+        foreach ($matchedPhrases[0] ?? [] as $matchedPhrase) {
+            $candidatePhrases[] = trim((string) $matchedPhrase);
+        }
+
+        foreach ($tokens as $index => $token) {
+            if (! preg_match('/\d/', $token)) {
+                continue;
+            }
+
+            $previousToken = $tokens[$index - 1] ?? null;
+            $nextToken = $tokens[$index + 1] ?? null;
+            $candidatePhrases[] = $token;
+
+            if ($previousToken !== null) {
+                $candidatePhrases[] = trim($previousToken . ' ' . $token);
+            }
+
+            if ($previousToken !== null && $nextToken !== null) {
+                $candidatePhrases[] = trim($previousToken . ' ' . $token . ' ' . $nextToken);
+            }
+        }
+
+        $filteredTokens = collect($tokens)
+            ->reject(fn ($token) => in_array(Str::lower((string) $token), $stopWords, true))
+            ->values();
+
+        if ($filteredTokens->count() >= 2) {
+            $candidatePhrases[] = $filteredTokens->take(3)->implode(' ');
+        }
+
+        return collect($candidatePhrases)
+            ->map(fn ($phrase) => trim((string) $phrase))
+            ->filter(fn ($phrase) => Str::length($phrase) >= 2)
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function buildBestSellingListingUrl(?string $highlightProductSlug = null): string
+    {
+        $bestSellingPath = trim((string) config('storefront.hero_slider.best_selling_path', '/san-pham-ban-chay'));
+        $baseUrl = $this->resolveStorefrontUrl($bestSellingPath, url('/san-pham-ban-chay'));
+        $highlightProductSlug = trim((string) $highlightProductSlug);
+
+        if ($highlightProductSlug === '') {
+            return $baseUrl;
+        }
+
+        return $baseUrl . (str_contains($baseUrl, '?') ? '&' : '?') . http_build_query([
+            'highlight_product' => $highlightProductSlug,
         ]);
     }
 
@@ -465,30 +715,26 @@ class HomeController extends Controller
             return null;
         }
 
+        $targetCount = max(1, (int) ($config['target_count'] ?? 6));
+        $useDemoProducts = (bool) ($config['use_demo_products'] ?? true);
         $productSlugs = collect($config['product_slugs'] ?? [])
             ->map(static fn ($slug) => trim((string) $slug))
             ->filter()
             ->values();
 
-        if ($productSlugs->isEmpty()) {
-            return null;
-        }
-
-        $productsBySlug = Product::query()
-            ->with(['brand', 'primaryCategory'])
-            ->where('is_active', true)
-            ->whereIn('slug', $productSlugs->all())
-            ->get()
-            ->keyBy('slug');
+        $productsBySlug = $productSlugs->isNotEmpty()
+            ? Product::query()
+                ->with(['brand', 'primaryCategory'])
+                ->where('is_active', true)
+                ->whereIn('slug', $productSlugs->all())
+                ->get()
+                ->keyBy('slug')
+            : collect();
 
         $orderedProducts = $productSlugs
             ->map(fn ($slug) => $productsBySlug->get($slug))
             ->filter()
             ->values();
-
-        if ($orderedProducts->isEmpty()) {
-            return null;
-        }
 
         $soldQuantities = $this->resolveFlashSaleSoldQuantities($orderedProducts->pluck('id')->all());
         $hasSoldMetrics = $soldQuantities !== null;
@@ -504,6 +750,17 @@ class HomeController extends Controller
             ->filter()
             ->values();
 
+        if ($useDemoProducts && $cards->count() < $targetCount) {
+            $cards = $cards
+                ->concat($this->resolveFlashSaleDemoCards(
+                    $targetCount - $cards->count(),
+                    $cards->pluck('name')->all(),
+                ))
+                ->values();
+        }
+
+        $cards = $cards->take($targetCount)->values();
+
         if ($cards->isEmpty()) {
             return null;
         }
@@ -511,9 +768,9 @@ class HomeController extends Controller
         $countdownEndsAt = $this->parseStorefrontDate($config['countdown_ends_at'] ?? null);
 
         return [
-            'kicker' => trim((string) ($config['kicker'] ?? 'Hot deal')),
-            'title' => trim((string) ($config['title'] ?? 'Flash Sale')),
-            'cta_label' => trim((string) ($config['cta_label'] ?? 'Xem tất cả deal')),
+            'kicker' => trim((string) ($config['kicker'] ?? 'Flash')),
+            'title' => trim((string) ($config['title'] ?? 'Sale')),
+            'cta_label' => trim((string) ($config['cta_label'] ?? 'Xem tất cả')),
             'cta_url' => $this->resolveStorefrontUrl($config['cta_url'] ?? '/tim-kiem', url('/tim-kiem')),
             'countdown_ends_at' => $countdownEndsAt?->toIso8601String(),
             'products' => $cards,
@@ -535,6 +792,9 @@ class HomeController extends Controller
 
         $stockQuantity = max(0, (int) ($product->stock_quantity ?? 0));
         $progressMax = max(1, $soldQuantity + $stockQuantity);
+        $progressValue = $hasSoldMetrics
+            ? (int) round(($soldQuantity / $progressMax) * 100)
+            : max(34, min(92, 52 + (int) floor($discountPercent / 2)));
 
         $specs = collect([
             [
@@ -561,9 +821,91 @@ class HomeController extends Controller
             'final_price' => $finalPrice,
             'discount_percent' => $discountPercent,
             'specs' => $specs,
+            'seller_badge' => $discountPercent >= 45 ? 'Yêu thích+' : 'Yêu thích',
+            'seller_badge_variant' => 'favorite',
+            'campaign_tags' => ['25.4', 'VOUCHER', 'SIÊU RẺ'],
             'sold_quantity' => $hasSoldMetrics ? $soldQuantity : null,
-            'sold_progress' => $hasSoldMetrics ? (int) round(($soldQuantity / $progressMax) * 100) : null,
+            'sold_percentage' => $progressValue,
+            'sold_progress' => $progressValue,
+            'sold_message' => $hasSoldMetrics
+                ? 'Đã bán ' . number_format(max(0, $soldQuantity)) . ' sản phẩm'
+                : 'Số lượng có hạn, chốt đơn nhanh trong ngày',
+            'deal_bar_label' => $hasSoldMetrics && $soldQuantity > 0
+                ? 'ĐÃ BÁN ' . number_format(max(0, $soldQuantity))
+                : 'ĐANG BÁN CHẠY',
+            'is_mock' => false,
         ];
+    }
+
+    private function resolveFlashSaleDemoCards(int $limit, array $excludeNames = []): Collection
+    {
+        if ($limit <= 0) {
+            return collect();
+        }
+
+        $samples = $this->loadFlashSaleDemoProductData();
+
+        return $samples
+            ->reject(fn (array $sample) => in_array($sample['name'], $excludeNames, true))
+            ->take($limit)
+            ->values()
+            ->map(function (array $sample, int $index) {
+                $price = (float) ($sample['price'] ?? 0);
+                $finalPrice = (float) ($sample['final_price'] ?? $price);
+                $sampleDiscountPercent = isset($sample['discount_percent'])
+                    ? (int) $sample['discount_percent']
+                    : null;
+                $discountPercent = $sampleDiscountPercent !== null
+                    ? max(0, $sampleDiscountPercent)
+                    : (
+                        $price > 0 && $finalPrice < $price
+                            ? (int) round((($price - $finalPrice) / $price) * 100)
+                            : 0
+                    );
+
+                return [
+                    'id' => 'flash-demo-' . $index,
+                    'name' => $sample['name'],
+                    'slug' => Str::slug($sample['name']),
+                    'url' => $this->buildSearchResultUrl((string) ($sample['query'] ?? $sample['name'])),
+                    'image' => $this->resolvePublicAssetUrl((string) ($sample['image'] ?? null)),
+                    'price' => $price,
+                    'final_price' => $finalPrice,
+                    'discount_percent' => $discountPercent,
+                    'specs' => [],
+                    'seller_badge' => $sample['seller_badge'] ?? 'Yêu thích',
+                    'seller_badge_variant' => $sample['seller_badge_variant'] ?? 'favorite',
+                    'campaign_tags' => collect($sample['campaign_tags'] ?? [])->filter()->take(3)->values()->all(),
+                    'sold_quantity' => null,
+                    'sold_percentage' => (int) ($sample['sold_progress'] ?? 68),
+                    'sold_progress' => (int) ($sample['sold_progress'] ?? 68),
+                    'sold_message' => $sample['sold_message'] ?? 'Số lượng có hạn, chốt đơn nhanh trong ngày',
+                    'deal_bar_label' => $sample['deal_bar_label']
+                        ?? ('ĐÃ BÁN ' . (int) ($sample['sold_progress'] ?? 68)),
+                    'is_mock' => true,
+                ];
+            });
+    }
+
+    private function loadFlashSaleDemoProductData(): Collection
+    {
+        $path = resource_path('data/flash-sale-products.json');
+
+        if (! is_file($path)) {
+            return collect();
+        }
+
+        $decoded = json_decode((string) file_get_contents($path), true);
+
+        if (! is_array($decoded)) {
+            return collect();
+        }
+
+        return collect($decoded)->filter(function ($item) {
+            return is_array($item)
+                && filled($item['name'] ?? null)
+                && filled($item['image'] ?? null);
+        })->values();
     }
 
     private function resolveFlashSaleSoldQuantities(array $productIds): ?Collection
@@ -587,6 +929,175 @@ class HomeController extends Controller
             ->groupBy('order_items.product_id')
             ->selectRaw('order_items.product_id, SUM(order_items.quantity) as sold_quantity')
             ->pluck('sold_quantity', 'order_items.product_id');
+    }
+
+    private function resolveHomepageFeaturedProducts(int $limit = 8): Collection
+    {
+        $limit = max(1, $limit);
+
+        $featuredProducts = $this->baseHomepageProductQuery()
+            ->where('is_featured', true)
+            ->orderByDesc('views_count')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+
+        if ($featuredProducts->count() >= $limit) {
+            return $featuredProducts->values();
+        }
+
+        $fallbackProducts = $this->baseHomepageProductQuery()
+            ->whereNotIn('id', $featuredProducts->pluck('id')->all())
+            ->orderByDesc('views_count')
+            ->orderByDesc('id')
+            ->limit($limit - $featuredProducts->count())
+            ->get();
+
+        return $featuredProducts
+            ->concat($fallbackProducts)
+            ->values();
+    }
+
+    private function resolveHomepageSaleProducts(int $limit = 4, ?Collection $featuredProducts = null): Collection
+    {
+        $limit = max(1, $limit);
+        $productTable = (new Product())->getTable();
+        $hasSalePriceColumn = Schema::hasColumn($productTable, 'sale_price');
+        $hasSaleValueColumn = Schema::hasColumn($productTable, 'sale_value');
+        $excludeIds = collect($featuredProducts)
+            ->pluck('id')
+            ->map(static fn ($id) => (int) $id)
+            ->filter(static fn ($id) => $id > 0)
+            ->values();
+
+        $saleProducts = $this->baseHomepageProductQuery()
+            ->when(
+                $excludeIds->isNotEmpty(),
+                fn ($query) => $query->whereNotIn('id', $excludeIds->all())
+            )
+            ->when($hasSalePriceColumn || $hasSaleValueColumn, function ($query) use ($hasSalePriceColumn, $hasSaleValueColumn) {
+                $query->where(function ($discountQuery) use ($hasSalePriceColumn, $hasSaleValueColumn) {
+                    if ($hasSalePriceColumn) {
+                        $discountQuery->where(function ($saleQuery) {
+                            $saleQuery->whereNotNull('sale_price')
+                                ->where('sale_price', '>', 0);
+                        });
+                    }
+
+                    if ($hasSaleValueColumn) {
+                        $method = $hasSalePriceColumn ? 'orWhere' : 'where';
+
+                        $discountQuery->{$method}(function ($saleQuery) {
+                            $saleQuery->whereNotNull('sale_value')
+                                ->where('sale_value', '>', 0);
+                        });
+                    }
+                });
+            })
+            ->orderByDesc('is_featured')
+            ->when($hasSaleValueColumn, fn ($query) => $query->orderByDesc('sale_value'))
+            ->orderByDesc('views_count')
+            ->orderByDesc('id')
+            ->limit($limit * 2)
+            ->get()
+            ->filter(function (Product $product) {
+                $originalPrice = (float) ($product->getRawOriginal('price') ?? $product->price ?? 0);
+                $finalPrice = (float) ($product->final_price ?? $originalPrice);
+
+                return $originalPrice > 0 && $finalPrice > 0 && $finalPrice < $originalPrice;
+            })
+            ->take($limit)
+            ->values();
+
+        if ($saleProducts->count() >= $limit) {
+            return $saleProducts;
+        }
+
+        $fallbackProducts = $this->baseHomepageProductQuery()
+            ->when(
+                $excludeIds->isNotEmpty() || $saleProducts->isNotEmpty(),
+                fn ($query) => $query->whereNotIn(
+                    'id',
+                    $excludeIds->merge($saleProducts->pluck('id'))->unique()->values()->all()
+                )
+            )
+            ->orderByDesc('is_featured')
+            ->orderByDesc('views_count')
+            ->orderByDesc('id')
+            ->limit($limit - $saleProducts->count())
+            ->get();
+
+        return $saleProducts
+            ->concat($fallbackProducts)
+            ->take($limit)
+            ->values();
+    }
+
+    private function resolveHomepageBestSellerProducts(int $limit = 6): Collection
+    {
+        $limit = max(1, $limit);
+        $query = $this->baseHomepageProductQuery();
+
+        if ($this->canUseBestSellingRanking()) {
+            $productTable = (new Product())->getTable();
+            $salesRanking = DB::table('order_items')
+                ->join('orders', 'orders.id', '=', 'order_items.order_id')
+                ->where('orders.status', 'completed')
+                ->whereNotNull('order_items.product_id')
+                ->groupBy('order_items.product_id')
+                ->selectRaw('order_items.product_id, SUM(order_items.quantity) as sold_quantity');
+
+            $query->leftJoinSub($salesRanking, 'homepage_sales_rank', function ($join) use ($productTable) {
+                $join->on('homepage_sales_rank.product_id', '=', $productTable . '.id');
+            });
+
+            $query->select($productTable . '.*')
+                ->selectRaw('COALESCE(homepage_sales_rank.sold_quantity, 0) as sold_quantity_rank')
+                ->orderByRaw('COALESCE(homepage_sales_rank.sold_quantity, 0) DESC')
+                ->orderByDesc($productTable . '.views_count')
+                ->orderByDesc($productTable . '.is_featured')
+                ->orderByDesc($productTable . '.id');
+        } else {
+            $query->orderByDesc('views_count')
+                ->orderByDesc('is_featured')
+                ->orderByDesc('id');
+        }
+
+        return $query->limit($limit)->get();
+    }
+
+    private function resolveHomepageNewsPosts(int $limit = 3): Collection
+    {
+        if (! Schema::hasTable((new BlogPost())->getTable())) {
+            return collect();
+        }
+
+        return BlogPost::query()
+            ->with('category')
+            ->where('status', 'published')
+            ->orderByDesc('is_featured')
+            ->orderByRaw('CASE WHEN published_at IS NULL THEN 1 ELSE 0 END ASC')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->limit(max(1, $limit))
+            ->get();
+    }
+
+    private function baseHomepageProductQuery()
+    {
+        return Product::query()
+            ->with(['brand', 'primaryCategory'])
+            ->where('is_active', true);
+    }
+
+    private function canUseBestSellingRanking(): bool
+    {
+        return Schema::hasTable('orders')
+            && Schema::hasTable('order_items')
+            && Schema::hasColumn('orders', 'status')
+            && Schema::hasColumn('order_items', 'order_id')
+            && Schema::hasColumn('order_items', 'product_id')
+            && Schema::hasColumn('order_items', 'quantity');
     }
 
     private function resolveSearchSuggestPayload(?string $query = null): array
@@ -720,7 +1231,7 @@ class HomeController extends Controller
 
     private function effectivePriceExpression(): string
     {
-        return 'CAST(CASE WHEN sale_price IS NOT NULL AND sale_price > 0 THEN sale_price ELSE price END AS REAL)';
+        return ProductPriceSql::effectivePriceExpression();
     }
 
     private function legacyIcons()

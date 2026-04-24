@@ -9,47 +9,20 @@
         $discountCode = data_get($coupon, 'code');
         $discountType = data_get($coupon, 'type');
         $discountValue = (float) data_get($coupon, 'value', 0);
-        $supportConfig = config('services.storefront_support', []);
-        $supportPhoneDisplay = $supportConfig['phone_display'] ?? '1900.0000';
-        $supportPhoneHref = $supportConfig['phone_href'] ?? 'tel:19000000';
-        $checkoutUrl = Session::get('customer_id')
+        $isLoggedIn = (bool) Session::get('customer_id');
+        $checkoutUrl = $isLoggedIn
             ? url('/checkout')
             : (url('/dang-nhap') . '?' . http_build_query([
                 'redirect' => 'checkout',
                 'redirect_to' => url('/checkout'),
             ]));
-        $cartFlowSteps = [
-            ['label' => 'Giỏ hàng', 'state' => 'is-active'],
-            ['label' => 'Thanh toán', 'state' => ''],
-            ['label' => 'Hoàn tất', 'state' => ''],
-        ];
-        $cartSupportItems = [
-            [
-                'icon' => 'fa-phone',
-                'title' => config('storefront.labels.hotline_ordering', 'Hotline đặt hàng'),
-                'text' => $supportPhoneDisplay,
-                'url' => $supportPhoneHref,
-            ],
-            [
-                'icon' => 'fa-comments',
-                'title' => 'Chat tư vấn',
-                'text' => config('storefront.copy.cart_chat_help', 'Mở khung chat để được hỗ trợ chọn cấu hình nhanh.'),
-                'url' => url('/lien-he'),
-            ],
-            [
-                'icon' => 'fa-history',
-                'title' => 'Theo dõi đơn',
-                'text' => config('storefront.copy.cart_order_tracking_help', 'Xem lịch sử mua sắm và trạng thái giao hàng hiện tại.'),
-                'url' => url('/history'),
-            ],
-        ];
     @endphp
 
     <section id="cart_items" class="shopw-cart-page">
         <div class="shopw-cart-breadcrumbs">
             <ol class="breadcrumb">
                 <li><a href="{{ url('/') }}">Trang chủ</a></li>
-                <li class="active">Giỏ hàng của bạn</li>
+                <li class="active">Giỏ hàng</li>
             </ol>
         </div>
 
@@ -59,215 +32,185 @@
             <div class="alert alert-danger">{!! session('error') !!}</div>
         @endif
 
-        <div class="shopw-cart-hero">
-            <div class="shopw-cart-hero-copy">
-                <span class="shopw-cart-kicker">Giỏ hàng</span>
-                <h1>Giỏ hàng của bạn</h1>
-                <p>Kiểm tra lại sản phẩm, cập nhật số lượng và áp dụng mã giảm giá trước khi chuyển sang bước thanh toán.</p>
+        <div class="shopw-cart-shell">
+            <div class="shopw-cart-primary">
+                <section class="shopw-cart-panel shopw-cart-overview-panel">
+                    <div class="shopw-cart-section-head">
+                        <div>
+                            <h1>Giỏ hàng</h1>
+                            <p>Kiểm tra lại sản phẩm, số lượng và mã giảm giá trước khi sang bước thanh toán.</p>
+                        </div>
+                        <span class="shopw-cart-section-meta">{{ number_format($cartCount) }} sản phẩm</span>
+                    </div>
 
-                <div class="shopw-cart-flow" aria-label="Các bước mua hàng">
-                    @foreach ($cartFlowSteps as $step)
-                        <span class="shopw-cart-flow-step {{ $step['state'] }}">{{ $step['label'] }}</span>
-                    @endforeach
-                </div>
-            </div>
-            <div class="shopw-cart-hero-stats">
-                <div class="shopw-cart-stat">
-                    <span>Sản phẩm trong giỏ</span>
-                    <strong>{{ number_format($cartCount) }}</strong>
-                </div>
-                <div class="shopw-cart-stat">
-                    <span>Tạm tính</span>
-                    <strong>{{ number_format($cartTotals['subtotal'], 0, ',', '.') }} VND</strong>
-                </div>
-                <div class="shopw-cart-stat">
-                    <span>Tổng thanh toán</span>
-                    <strong>{{ number_format($cartTotals['total'], 0, ',', '.') }} VND</strong>
-                </div>
-            </div>
-        </div>
+                    @if ($cartItems->isEmpty())
+                        <div class="shopw-cart-empty-inline">
+                            <p>
+                                Giỏ hàng của bạn đang trống. Mời bạn mua thêm sản phẩm
+                                <a href="{{ url('/') }}">tại đây</a>.
+                            </p>
+                        </div>
+                    @else
+                        <form action="{{ url('/update-cart') }}" method="POST" class="shopw-cart-items-form">
+                            @csrf
+                            <div class="shopw-cart-items">
+                                @foreach ($cartItems as $item)
+                                    @php
+                                        $image = $item['product_image']
+                                            ? asset($item['product_image'])
+                                            : asset('uploads/product/no-image.svg');
+                                        $subtotal = (float) $item['product_price'] * (int) $item['product_qty'];
+                                        $stock = max(1, (int) ($item['product_quantity'] ?? 1));
+                                        $attribute = trim((string) ($item['product_attribute'] ?? ''));
+                                    @endphp
 
-        @if ($cartItems->isEmpty())
-            <div class="shopw-cart-empty">
-                <div class="shopw-cart-empty-icon">
-                    <i class="fa fa-shopping-basket"></i>
-                </div>
-                <h2>Giỏ hàng đang trống</h2>
-                <p>Chưa có sản phẩm nào trong giỏ. Quay lại cửa hàng để tiếp tục mua sắm.</p>
-                <a href="{{ url('/') }}" class="shopw-cart-primary-link">
-                    <i class="fa fa-arrow-left"></i>Tiếp tục mua sắm
-                </a>
-            </div>
-        @else
-            <div class="shopw-cart-layout">
-                <div class="shopw-cart-main">
-                    <form action="{{ url('/update-cart') }}" method="POST" class="shopw-cart-items-form">
-                        @csrf
-                        <div class="shopw-cart-items">
-                            @foreach ($cartItems as $item)
-                                @php
-                                    $image = $item['product_image']
-                                        ? asset($item['product_image'])
-                                        : asset('uploads/product/no-image.svg');
-                                    $subtotal = (float) $item['product_price'] * (int) $item['product_qty'];
-                                @endphp
-                                <article class="shopw-cart-item">
-                                    <div class="shopw-cart-item-media">
-                                        <img src="{{ $image }}" alt="{{ $item['product_name'] }}">
-                                    </div>
+                                    <article class="shopw-cart-line">
+                                        <div class="shopw-cart-line-media">
+                                            <img src="{{ $image }}" alt="{{ $item['product_name'] }}">
+                                        </div>
 
-                                    <div class="shopw-cart-item-copy">
-                                        <div class="shopw-cart-item-top">
-                                            <div>
-                                                <h3>{{ $item['product_name'] }}</h3>
-                                                <div class="shopw-cart-item-meta">
-                                                    <span>Thuộc tính: {{ $item['product_attribute'] ?? 'Mặc định' }}</span>
-                                                    <span>Tồn kho: {{ number_format((int) ($item['product_quantity'] ?? 0)) }}</span>
+                                        <div class="shopw-cart-line-body">
+                                            <div class="shopw-cart-line-head">
+                                                <div class="shopw-cart-line-copy">
+                                                    <h2>{{ $item['product_name'] }}</h2>
+                                                    <div class="shopw-cart-line-meta">
+                                                        <span>Phân loại: {{ $attribute !== '' ? $attribute : 'Mặc định' }}</span>
+                                                        <span>Tồn kho: {{ number_format((int) ($item['product_quantity'] ?? 0)) }}</span>
+                                                    </div>
+                                                </div>
+
+                                                <a class="shopw-cart-remove-link"
+                                                    href="{{ url('/del-product/' . $item['session_id']) }}">
+                                                    <i class="fa fa-times"></i>
+                                                    <span>Xóa</span>
+                                                </a>
+                                            </div>
+
+                                            <div class="shopw-cart-line-foot">
+                                                <div class="shopw-cart-line-price">
+                                                    <span>Đơn giá</span>
+                                                    <strong>{{ number_format($item['product_price'], 0, ',', '.') }}đ</strong>
+                                                </div>
+
+                                                <label class="shopw-cart-qty-field">
+                                                    <span>Số lượng</span>
+                                                    <input class="cart_quantity" type="number" min="1"
+                                                        max="{{ $stock }}" name="cart_qty[{{ $item['session_id'] }}]"
+                                                        value="{{ $item['product_qty'] }}">
+                                                </label>
+
+                                                <div class="shopw-cart-line-total">
+                                                    <span>Thành tiền</span>
+                                                    <strong>{{ number_format($subtotal, 0, ',', '.') }}đ</strong>
                                                 </div>
                                             </div>
-
-                                            <a class="shopw-cart-item-remove"
-                                                href="{{ url('/del-product/' . $item['session_id']) }}">
-                                                <i class="fa fa-times"></i>
-                                                <span>Xóa</span>
-                                            </a>
                                         </div>
+                                    </article>
+                                @endforeach
+                            </div>
 
-                                        <div class="shopw-cart-item-bottom">
-                                            <div class="shopw-cart-price-stack">
-                                                <span>Đơn giá</span>
-                                                <strong>{{ number_format($item['product_price'], 0, ',', '.') }} VND</strong>
-                                            </div>
-
-                                            <label class="shopw-cart-qty-field">
-                                                <span>Số lượng</span>
-                                                <input class="cart_quantity" type="number" min="1"
-                                                    max="{{ max(1, (int) ($item['product_quantity'] ?? 1)) }}"
-                                                    name="cart_qty[{{ $item['session_id'] }}]"
-                                                    value="{{ $item['product_qty'] }}">
-                                            </label>
-
-                                            <div class="shopw-cart-price-stack is-total">
-                                                <span>Thành tiền</span>
-                                                <strong>{{ number_format($subtotal, 0, ',', '.') }} VND</strong>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </article>
-                            @endforeach
-                        </div>
-
-                        <div class="shopw-cart-actions-row">
-                            <button type="submit" name="update_qty" class="btn btn-default shopw-cart-secondary-btn">
-                                <i class="fa fa-refresh"></i>Cập nhật giỏ hàng
-                            </button>
-                            <a class="shopw-cart-secondary-btn" href="{{ url('/del-all-product') }}">
-                                <i class="fa fa-trash"></i>Xóa tất cả
-                            </a>
-                            <a class="shopw-cart-secondary-btn" href="{{ url('/') }}">
-                                <i class="fa fa-arrow-left"></i>Tiếp tục mua sắm
-                            </a>
-                        </div>
-                    </form>
-                </div>
-
-                <aside class="shopw-cart-sidebar">
-                    <div class="shopw-cart-summary-card">
-                        <div class="shopw-cart-card-head">
-                            <h2>Tóm tắt đơn hàng</h2>
-                            <p>Toàn bộ số tiền đang được tính từ session cart hiện tại.</p>
-                        </div>
-
-                        <ul class="shopw-cart-summary-list">
-                            <li>
-                                <span>Tạm tính</span>
-                                <strong>{{ number_format($cartTotals['subtotal'], 0, ',', '.') }} VND</strong>
-                            </li>
-                            <li>
-                                <span>Giảm giá</span>
-                                <strong class="is-discount">-{{ number_format($cartTotals['discount'], 0, ',', '.') }} VND</strong>
-                            </li>
-                            <li>
-                                <span>Phí vận chuyển</span>
-                                <strong>{{ number_format($cartTotals['shipping'], 0, ',', '.') }} VND</strong>
-                            </li>
-                            <li class="is-grand-total">
-                                <span>Tổng cộng</span>
-                                <strong>{{ number_format($cartTotals['total'], 0, ',', '.') }} VND</strong>
-                            </li>
-                        </ul>
-
-                        @if ($hasCoupon)
-                            <div class="shopw-cart-coupon-active">
-                                <div>
-                                    <span>Mã đang áp dụng</span>
-                                    <strong>{{ $discountCode }}</strong>
-                                </div>
-                                <p>
-                                    @if ($discountType === 'percent')
-                                        Giảm {{ rtrim(rtrim(number_format($discountValue, 2, '.', ''), '0'), '.') }}%
-                                    @elseif ($discountType === 'fixed')
-                                        Giảm {{ number_format($discountValue, 0, ',', '.') }} VND
-                                    @elseif ($discountType === 'shipping')
-                                        Hỗ trợ phí ship {{ number_format($discountValue, 0, ',', '.') }} VND
-                                    @else
-                                        Mã giảm giá đã được áp dụng.
-                                    @endif
-                                </p>
-                                <a class="shopw-cart-inline-link" href="{{ url('/unset-coupon') }}">
-                                    <i class="fa fa-times-circle"></i>Gỡ mã khuyến mại
+                            <div class="shopw-cart-actions-row">
+                                <button type="submit" name="update_qty" class="shopw-cart-secondary-btn">
+                                    <i class="fa fa-refresh"></i>Cập nhật giỏ hàng
+                                </button>
+                                <a class="shopw-cart-secondary-btn" href="{{ url('/del-all-product') }}">
+                                    <i class="fa fa-trash"></i>Xóa tất cả
+                                </a>
+                                <a class="shopw-cart-secondary-btn" href="{{ url('/') }}">
+                                    <i class="fa fa-arrow-left"></i>Tiếp tục mua hàng
                                 </a>
                             </div>
-                        @endif
-
-                        <a class="shopw-cart-primary-link" href="{{ $checkoutUrl }}">
-                            <i class="fa fa-credit-card"></i>{{ Session::get('customer_id') ? 'Tiến hành thanh toán' : 'Đăng nhập để thanh toán' }}
-                        </a>
-                    </div>
-
-                    <div class="shopw-cart-summary-card shopw-cart-support-card">
-                        <div class="shopw-cart-card-head">
-                            <h2>Hỗ trợ trước khi chốt đơn</h2>
-                            <p>Giữ nhịp mua hàng liên tục với các lối tắt hỗ trợ thiết thực trước khi chốt đơn.</p>
-                        </div>
-
-                        <div class="shopw-cart-support-list">
-                            @foreach ($cartSupportItems as $supportItem)
-                                <a href="{{ $supportItem['url'] }}" class="shopw-cart-support-item">
-                                    <span class="shopw-cart-support-icon">
-                                        <i class="fa {{ $supportItem['icon'] }}"></i>
-                                    </span>
-                                    <span class="shopw-cart-support-copy">
-                                        <strong>{{ $supportItem['title'] }}</strong>
-                                        <small>{{ $supportItem['text'] }}</small>
-                                    </span>
-                                    <span class="shopw-cart-support-arrow">
-                                        <i class="fa fa-angle-right"></i>
-                                    </span>
-                                </a>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <div class="shopw-cart-summary-card">
-                        <div class="shopw-cart-card-head">
-                            <h2>Mã giảm giá</h2>
-                            <p>Áp dụng mã giảm giá trực tiếp trên giỏ hàng trước khi sang bước thanh toán.</p>
-                        </div>
-
-                        <form method="POST" action="{{ url('/check-coupon') }}" class="shopw-cart-coupon-form">
-                            @csrf
-                            <label for="coupon" class="shopw-cart-field-label">Nhập mã giảm giá</label>
-                            <input type="text" class="form-control" id="coupon" name="coupon"
-                                value="{{ old('coupon') }}" placeholder="Ví dụ: SALE10">
-                            <button type="submit" class="btn btn-default shopw-cart-secondary-btn is-full">
-                                <i class="fa fa-ticket"></i>Áp dụng mã
-                            </button>
                         </form>
+                    @endif
+                </section>
+
+                <section class="shopw-cart-panel shopw-cart-viewed-panel">
+                    <div class="shopw-cart-section-head">
+                        <div>
+                            <h2>Sản phẩm đã xem</h2>
+                            <p>Quay lại nhanh những sản phẩm bạn vừa xem gần đây.</p>
+                        </div>
                     </div>
-                </aside>
+
+                    <div id="shopw_cart_viewed_grid" class="shopw-cart-viewed-grid"></div>
+                </section>
             </div>
-        @endif
+
+            <aside class="shopw-cart-sidebar">
+                <section class="shopw-cart-panel shopw-cart-summary-panel">
+                    <div class="shopw-cart-section-head is-sidebar">
+                        <div>
+                            <h2>Thông tin đơn hàng</h2>
+                            <p>Tổng tiền được tính trực tiếp từ giỏ hàng hiện tại.</p>
+                        </div>
+                    </div>
+
+                    <div class="shopw-cart-summary-total">
+                        <span>Tổng tiền</span>
+                        <strong>{{ number_format($cartTotals['total'], 0, ',', '.') }}đ</strong>
+                    </div>
+
+                    <ul class="shopw-cart-summary-list">
+                        <li>
+                            <span>Tạm tính</span>
+                            <strong>{{ number_format($cartTotals['subtotal'], 0, ',', '.') }}đ</strong>
+                        </li>
+                        <li>
+                            <span>Giảm giá</span>
+                            <strong class="{{ $cartTotals['discount'] > 0 ? 'is-discount' : '' }}">
+                                -{{ number_format($cartTotals['discount'], 0, ',', '.') }}đ
+                            </strong>
+                        </li>
+                        <li>
+                            <span>Phí vận chuyển</span>
+                            <strong>{{ number_format($cartTotals['shipping'], 0, ',', '.') }}đ</strong>
+                        </li>
+                    </ul>
+
+                    @if ($hasCoupon)
+                        <div class="shopw-cart-coupon-active">
+                            <div>
+                                <span>Mã đang áp dụng</span>
+                                <strong>{{ $discountCode }}</strong>
+                            </div>
+                            <p>
+                                @if ($discountType === 'percent')
+                                    Giảm {{ rtrim(rtrim(number_format($discountValue, 2, '.', ''), '0'), '.') }}%
+                                @elseif ($discountType === 'fixed')
+                                    Giảm {{ number_format($discountValue, 0, ',', '.') }}đ
+                                @elseif ($discountType === 'shipping')
+                                    Hỗ trợ phí ship {{ number_format($discountValue, 0, ',', '.') }}đ
+                                @else
+                                    Mã giảm giá đã được áp dụng.
+                                @endif
+                            </p>
+                            <a class="shopw-cart-inline-link" href="{{ url('/unset-coupon') }}">
+                                <i class="fa fa-times-circle"></i>Gỡ mã khuyến mại
+                            </a>
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ url('/check-coupon') }}" class="shopw-cart-coupon-form">
+                        @csrf
+                        <label for="coupon" class="shopw-cart-field-label">Mã khuyến mại</label>
+                        <input type="text" class="form-control" id="coupon" name="coupon"
+                            value="{{ old('coupon') }}" placeholder="Nhập mã khuyến mại (nếu có)">
+                        <button type="submit" class="shopw-cart-secondary-btn shopw-cart-secondary-btn--full">
+                            <i class="fa fa-ticket"></i>Áp dụng mã
+                        </button>
+                    </form>
+
+                    @if ($cartItems->isEmpty())
+                        <span class="shopw-cart-primary-link is-disabled">Chọn sản phẩm để thanh toán</span>
+                    @else
+                        <a class="shopw-cart-primary-link" href="{{ $checkoutUrl }}">
+                            <i class="fa fa-credit-card"></i>{{ $isLoggedIn ? 'Thanh toán ngay' : 'Đăng nhập để thanh toán' }}
+                        </a>
+                    @endif
+
+                    <a class="shopw-cart-continue-link" href="{{ url('/') }}">Tiếp tục mua hàng</a>
+                </section>
+            </aside>
+        </div>
     </section>
 @endsection
-

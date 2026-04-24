@@ -57,13 +57,32 @@ class StorefrontLoginAndSearchPageTest extends TestCase
         $this->get('/dang-nhap')
             ->assertOk()
             ->assertSee('g-login-checkout')
-            ->assertSee('shopw-auth-flow', false)
-            ->assertSee('shopw-auth-assurance-grid', false)
-            ->assertSee('shopw-auth-support-strip', false)
-            ->assertSee('Đăng nhập để tiếp tục thanh toán')
+            ->assertDontSee('shopw-auth-flow', false)
+            ->assertDontSee('shopw-auth-assurance-grid', false)
+            ->assertDontSee('shopw-auth-support-strip', false)
+            ->assertDontSee('shopw-auth-hero', false)
+            ->assertSee('Đăng nhập tài khoản')
             ->assertSee('name="email_account"', false)
+            ->assertDontSee('name="customer_name"', false)
+            ->assertDontSee('Đăng nhập bằng Google')
+            ->assertDontSee('Ghi nhớ đăng nhập')
+            ->assertSee('Quên mật khẩu')
+            ->assertSee('/dang-ky?redirect=checkout', false);
+    }
+
+    public function test_register_page_renders_standalone_customer_registration_form(): void
+    {
+        $this->get('/dang-ky?redirect=checkout')
+            ->assertOk()
+            ->assertSee('g-login-checkout')
+            ->assertSee('Tạo tài khoản mới')
             ->assertSee('name="customer_name"', false)
-            ->assertSee('Đăng nhập bằng Google');
+            ->assertSee('name="customer_email"', false)
+            ->assertSee('name="customer_password"', false)
+            ->assertSee('name="customer_phone"', false)
+            ->assertDontSee('name="email_account"', false)
+            ->assertSee('Đã có tài khoản?')
+            ->assertSee('/dang-nhap?redirect=checkout', false);
     }
 
     public function test_logged_in_customer_sees_continue_checkout_state_on_login_page(): void
@@ -80,11 +99,10 @@ class StorefrontLoginAndSearchPageTest extends TestCase
             'customer_id' => $customer->id,
         ])->get('/dang-nhap?redirect=checkout')
             ->assertOk()
-            ->assertSee('Bạn đã đăng nhập thành công')
             ->assertSee('Tài khoản đã xác thực')
-            ->assertSee('Tiếp tục thanh toán')
+            ->assertSee('Tiếp tục tới checkout')
             ->assertSee($customer->email)
-            ->assertSee('shopw-auth-switcher', false);
+            ->assertDontSee('shopw-auth-switcher', false);
     }
 
     public function test_search_page_renders_live_result_cards(): void

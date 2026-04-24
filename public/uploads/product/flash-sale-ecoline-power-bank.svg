@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" role="img" aria-labelledby="title desc">
+  <title id="title">Eco-Line power bank product set</title>
+  <desc id="desc">Eco-Line power bank with cable, product box, small labels and accessories.</desc>
+  <rect width="500" height="500" fill="#ffe7dd"/>
+  <rect x="0" y="0" width="500" height="44" fill="#e36a3b"/>
+  <text x="250" y="29" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="21" font-weight="800" fill="#fff">SHOP SAN MEN TIN + 3M</text>
+
+  <rect x="170" y="70" width="124" height="330" rx="17" fill="#fff6f1" stroke="#bb9d91" stroke-width="4"/>
+  <rect x="185" y="92" width="94" height="196" rx="9" fill="#f7dfd4" stroke="#d7b7aa"/>
+  <text x="232" y="129" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="23" font-weight="800" fill="#4b5563">ECO-LINE</text>
+  <text x="232" y="160" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" fill="#e36a3b">POWER BANK</text>
+  <text x="232" y="202" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="36" font-weight="900" fill="#111827">15W</text>
+  <text x="232" y="231" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="800" fill="#111827">5000 mAh</text>
+  <rect x="197" y="311" width="70" height="47" rx="8" fill="#fff" stroke="#e1c7bd"/>
+  <text x="232" y="340" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="800" fill="#e36a3b">USB-C</text>
+
+  <path d="M90 93h70c12 0 22 10 22 22v208c0 12-10 22-22 22H90c-12 0-22-10-22-22V115c0-12 10-22 22-22z" fill="#fafafa" stroke="#b58b83" stroke-width="4"/>
+  <rect x="86" y="112" width="78" height="196" rx="14" fill="#dfc0bb"/>
+  <rect x="103" y="124" width="44" height="172" rx="10" fill="#f4e5e1"/>
+  <text x="125" y="331" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="800" fill="#744b42">BOOST</text>
+
+  <circle cx="345" cy="167" r="47" fill="none" stroke="#111827" stroke-width="13"/>
+  <rect x="381" y="204" width="58" height="24" rx="8" fill="#111827"/>
+  <rect x="396" y="221" width="26" height="52" rx="6" fill="#111827"/>
+  <text x="345" y="248" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="14" font-weight="800" fill="#111827">CABLE</text>
+
+  <rect x="319" y="301" width="44" height="88" rx="9" fill="#f2b5a2" stroke="#bd7967" stroke-width="3"/>
+  <rect x="378" y="286" width="49" height="103" rx="11" fill="#fff" stroke="#bd7967" stroke-width="3"/>
+  <rect x="388" y="265" width="30" height="24" rx="6" fill="#e36a3b"/>
+  <text x="403" y="341" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="900" fill="#e36a3b">ECO</text>
+
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="15" fill="#fff">
+    <rect x="68" y="418" width="90" height="31" rx="4" fill="#1167d8"/>
+    <text x="113" y="439" text-anchor="middle">25.4</text>
+    <rect x="166" y="418" width="112" height="31" rx="4" fill="#f49b16"/>
+    <text x="222" y="439" text-anchor="middle">VOUCHER</text>
+    <rect x="286" y="418" width="122" height="31" rx="4" fill="#1167d8"/>
+    <text x="347" y="439" text-anchor="middle">SIEU RE</text>
+  </g>
+</svg>

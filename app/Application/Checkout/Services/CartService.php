@@ -28,7 +28,14 @@ class CartService
      */
     public function items(): Collection
     {
-        return collect(Session::get(self::SESSION_KEY, []));
+        $raw = Session::get(self::SESSION_KEY);
+
+        // Session::get($key, $default) still returns null when the key exists with a null value.
+        if (! is_array($raw)) {
+            return collect();
+        }
+
+        return collect($raw);
     }
 
     public function getCart(?int $customerId = null): array

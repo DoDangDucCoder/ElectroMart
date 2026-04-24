@@ -7,7 +7,17 @@
         $searchCount = method_exists($search_product, 'total') ? $search_product->total() : $search_product->count();
         $keyword = trim((string) ($search_keyword ?? ''));
         $filters = $search_filters ?? [];
+        $pageMode = $search_page_mode ?? 'search';
         $selectedCategory = $filters['category_id'] ?? null;
+        $searchPageKicker = $search_page_kicker ?? 'Tìm kiếm sản phẩm';
+        $searchPageTitle = $search_page_title ?? 'Kết quả tìm kiếm';
+        $searchPageSummary = $search_page_summary ?? null;
+        $searchFormAction = $search_form_action ?? url('/tim-kiem');
+        $searchClearUrl = $search_clear_url ?? $searchFormAction;
+        $searchResultsKicker = $search_results_kicker ?? 'Danh sách kết quả';
+        $searchResultsTitle = $search_results_title
+            ?? ($keyword !== '' ? $keyword : ($pageMode === 'best_selling' ? 'Sản phẩm bán chạy hiện tại' : 'Kết quả theo bộ lọc hiện tại'));
+        $highlightProduct = $search_highlight_product ?? null;
         $searchGridClass = match (true) {
             $searchCount <= 1 => 'shopw-search-grid--single',
             $searchCount === 2 => 'shopw-search-grid--duo',
@@ -28,14 +38,16 @@
     <div class="shopw-search-page">
         <section class="shopw-search-hero">
             <div class="shopw-search-hero-copy">
-                <span class="shopw-search-kicker">Tìm kiếm sản phẩm</span>
-                <h1>Kết quả tìm kiếm</h1>
+                <span class="shopw-search-kicker">{{ $searchPageKicker }}</span>
+                <h1>{{ $searchPageTitle }}</h1>
                 @if ($errors->has('keywords_submit'))
                     <div class="alert alert-danger">
                         {{ $errors->first('keywords_submit') }}
                     </div>
                 @endif
-                @if ($keyword !== '')
+                @if ($searchPageSummary)
+                    <p>{{ $searchPageSummary }}</p>
+                @elseif ($keyword !== '')
                     <p>Tìm thấy {{ number_format($searchCount) }} sản phẩm cho từ khóa <strong>"{{ $keyword }}"</strong>.</p>
                 @else
                     <p>Nhập từ khóa từ thanh tìm kiếm để xem danh sách sản phẩm phù hợp trong cửa hàng hiện tại.</p>
@@ -56,12 +68,15 @@
             <div class="shopw-search-results-head">
                 <div>
                     <span class="shopw-search-kicker">Bộ lọc tìm kiếm</span>
-                    <h2>Tìm theo tên, mã, danh mục và khoảng giá</h2>
-                    <p>Bạn có thể kết hợp nhiều điều kiện để thu hẹp kết quả sản phẩm nhanh hơn.</p>
+                    <h2>{{ $pageMode === 'best_selling' ? 'Lọc tiếp danh sách bán chạy' : 'Tìm theo tên, mã, danh mục và khoảng giá' }}</h2>
+                    <p>{{ $pageMode === 'best_selling' ? 'Giữ nguyên bảng xếp hạng bán chạy nhưng thu hẹp theo danh mục, giá hoặc từ khóa khi cần.' : 'Bạn có thể kết hợp nhiều điều kiện để thu hẹp kết quả sản phẩm nhanh hơn.' }}</p>
                 </div>
             </div>
 
-            <form action="{{ url('/tim-kiem') }}" method="GET" class="shopw-search-filter-form">
+            <form action="{{ $searchFormAction }}" method="GET" class="shopw-search-filter-form">
+                @if (!empty($filters['highlight_product']))
+                    <input type="hidden" name="highlight_product" value="{{ $filters['highlight_product'] }}">
+                @endif
                 <div class="shopw-search-filter-grid">
                     <div class="shopw-search-filter-field">
                         <label for="keywords_submit">Tên sản phẩm</label>
@@ -100,6 +115,7 @@
                         <label for="sort">Sắp xếp</label>
                         <select id="sort" name="sort">
                             <option value="popular" @selected(($filters['sort'] ?? 'popular') === 'popular')>Phổ biến</option>
+                            <option value="best_selling" @selected(($filters['sort'] ?? null) === 'best_selling')>Bán chạy</option>
                             <option value="price_asc" @selected(($filters['sort'] ?? null) === 'price_asc')>Giá thấp đến cao</option>
                             <option value="price_desc" @selected(($filters['sort'] ?? null) === 'price_desc')>Giá cao đến thấp</option>
                             <option value="name_asc" @selected(($filters['sort'] ?? null) === 'name_asc')>Tên A-Z</option>
@@ -110,9 +126,9 @@
 
                 <div class="shopw-search-filter-actions">
                     <button type="submit" class="shopw-search-submit-btn">
-                        <i class="fa fa-search"></i>Tìm sản phẩm
+                        <i class="fa fa-search"></i>{{ $pageMode === 'best_selling' ? 'Lọc danh sách' : 'Tìm sản phẩm' }}
                     </button>
-                    <a href="{{ url('/tim-kiem') }}" class="shopw-search-secondary-link">Xóa bộ lọc</a>
+                    <a href="{{ $searchClearUrl }}" class="shopw-search-secondary-link">Xóa bộ lọc</a>
                 </div>
             </form>
         </section>
@@ -120,11 +136,17 @@
         <section class="shopw-search-results">
             <div class="shopw-search-results-head">
                 <div>
-                    <span class="shopw-search-kicker">Danh sách kết quả</span>
-                    <h2>{{ $keyword !== '' ? $keyword : 'Kết quả theo bộ lọc hiện tại' }}</h2>
+                    <span class="shopw-search-kicker">{{ $searchResultsKicker }}</span>
+                    <h2>{{ $searchResultsTitle }}</h2>
                     <p>{{ number_format($searchCount) }} sản phẩm đang được hiển thị trong danh sách này.</p>
                 </div>
                 <div class="shopw-search-chip-group">
+                    @if (($filters['sort'] ?? null) === 'best_selling' || $pageMode === 'best_selling')
+                        <div class="shopw-search-chip">Sắp xếp: Bán chạy</div>
+                    @endif
+                    @if ($highlightProduct)
+                        <div class="shopw-search-chip">Ưu tiên: {{ $highlightProduct->name }}</div>
+                    @endif
                     @if ($keyword !== '')
                         <div class="shopw-search-chip">Tên: {{ $keyword }}</div>
                     @endif

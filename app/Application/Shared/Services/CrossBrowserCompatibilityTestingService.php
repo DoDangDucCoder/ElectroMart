@@ -1309,7 +1309,8 @@ class CrossBrowserCompatibilityTestingService
             '/products' => '/tim-kiem',
             '/categories' => $this->resolveCategoryPath(),
             '/contact' => '/lien-he',
-            '/login', '/register' => '/dang-nhap',
+            '/login' => '/dang-nhap',
+            '/register' => '/dang-ky',
             default => $path,
         };
     }

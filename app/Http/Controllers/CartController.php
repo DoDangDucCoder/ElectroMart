@@ -19,6 +19,7 @@ use App\Models\Slider;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Schema;
@@ -38,14 +39,15 @@ class CartController extends Controller
 
     public function show_cart_menu(): Response
     {
-        $count = $this->cartService->count();
+        $items = $this->safeCartItems();
+        $count = $this->safeCartCount($items);
 
         return $this->renderCartPartial('pages.cart.partials.cart_badge', compact('count'));
     }
 
     public function hover_cart(): Response
     {
-        $items = $this->cartService->items();
+        $items = $this->safeCartItems();
 
         return $this->renderCartPartial('pages.cart.partials.hover_cart', compact('items'));
     }
@@ -95,10 +97,12 @@ class CartController extends Controller
             return response()->json(['error' => $e->getMessage()], 422);
         }
 
+        $cartItems = $this->safeCartItems();
+
         return response()->json([
             'message' => 'Đã thêm sản phẩm vào giỏ hàng.',
-            'cart_count' => $this->cartService->count(),
-            'cart_items' => $this->cartService->items()->values(),
+            'cart_count' => $this->safeCartCount($cartItems),
+            'cart_items' => $cartItems->values(),
             'cart_totals' => $this->cartService->totals(
                 $this->couponService->current(),
                 $this->shippingService->getFee()
@@ -109,7 +113,7 @@ class CartController extends Controller
 
     public function show_quick_cart(): Response
     {
-        $items = $this->cartService->items();
+        $items = $this->safeCartItems();
         $coupon = $this->couponService->current();
         $fee = $this->shippingService->getFee();
         $totals = $this->cartService->totals($coupon, $fee);
@@ -130,7 +134,7 @@ class CartController extends Controller
 
     public function cart_session(): Response
     {
-        $items = $this->cartService->items();
+        $items = $this->safeCartItems();
 
         return $this->renderCartPartial('pages.cart.partials.cart_session_inputs', compact('items'));
     }
@@ -188,7 +192,8 @@ class CartController extends Controller
 
     public function show_cart(): Response
     {
-        $count = $this->cartService->count();
+        $items = $this->safeCartItems();
+        $count = $this->safeCartCount($items);
 
         return $this->renderCartPartial('pages.cart.partials.cart_badge', compact('count'));
     }
@@ -213,7 +218,7 @@ class CartController extends Controller
 
     protected function cartContext(): array
     {
-        $items = $this->cartService->items();
+        $items = $this->safeCartItems();
 
         if ($items->isEmpty()) {
             $this->couponService->clear();
@@ -258,5 +263,18 @@ class CartController extends Controller
     protected function renderCartPartial(string $view, array $data = []): Response
     {
         return response()->view($view, $data);
+    }
+
+    protected function safeCartItems(): Collection
+    {
+        return collect($this->cartService->items())
+            ->filter(fn ($item) => is_array($item))
+            ->values();
+    }
+
+    protected function safeCartCount(?Collection $items = null): int
+    {
+        return ($items ?? $this->safeCartItems())
+            ->sum(fn (array $item) => (int) ($item['product_qty'] ?? 0));
     }
 }

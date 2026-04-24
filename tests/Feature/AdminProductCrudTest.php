@@ -11,8 +11,10 @@ use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -122,6 +124,81 @@ class AdminProductCrudTest extends TestCase
 
         $this->assertFileExists(public_path($product->product_image));
         $this->assertFileExists(public_path('uploads/document/' . $product->product_file));
+
+        $this->registerPathForCleanup($product->product_image);
+        $this->registerPathForCleanup('uploads/document/' . $product->product_file);
+    }
+
+    public function test_admin_can_create_product_when_optional_sale_columns_are_missing(): void
+    {
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropColumn('sale_type');
+        });
+
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropColumn('sale_value');
+        });
+
+        [$product] = $this->createProductThroughForm();
+
+        $this->assertNotNull($product);
+        $this->assertNull($product->sale_type);
+        $this->assertNull($product->sale_value);
+        $this->assertSame(1350000.0, (float) $product->sale_price);
+        $this->assertSame(150000.0, (float) $product->sale_amount);
+        $this->assertSame(1350000.0, (float) $product->final_price);
+
+        $this->registerPathForCleanup($product->product_image);
+        $this->registerPathForCleanup('uploads/document/' . $product->product_file);
+    }
+
+    public function test_admin_can_update_product_when_optional_sale_columns_are_missing(): void
+    {
+        [$product] = $this->createProductThroughForm();
+        $oldImage = $product->product_image;
+        $oldDocument = 'uploads/document/' . $product->product_file;
+
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropColumn('sale_type');
+        });
+
+        Schema::table('products', function (Blueprint $table) {
+            $table->dropColumn('sale_value');
+        });
+
+        $newCategory = $this->createCategory(['name' => 'Schema Fallback Category', 'slug' => 'schema-fallback-category']);
+
+        $response = $this->post("/update-product/{$product->product_id}", [
+            'product_name' => 'Updated Product Without Sale Columns',
+            'product_slug' => 'updated-product-without-sale-columns',
+            'product_price' => '2500000',
+            'price_cost' => '2000000',
+            'sale_type' => 'percent',
+            'sale_value' => '10',
+            'product_quantity' => 3,
+            'product_desc' => 'Updated description',
+            'product_content' => 'Updated content',
+            'product_cate' => $newCategory->id,
+            'product_brand' => $product->brand_id,
+            'product_status' => 1,
+            'product_tags' => 'updated',
+            'product_image' => UploadedFile::fake()->create('updated-without-sale-columns.jpg', 200, 'image/jpeg'),
+            'document' => UploadedFile::fake()->create('updated-without-sale-columns.pdf', 30, 'application/pdf'),
+        ]);
+
+        $response->assertRedirect('all-product');
+
+        $product->refresh();
+
+        $this->assertEquals('Updated Product Without Sale Columns', $product->product_name);
+        $this->assertEquals($newCategory->id, $product->primary_category_id);
+        $this->assertNull($product->sale_type);
+        $this->assertNull($product->sale_value);
+        $this->assertSame(2250000.0, (float) $product->sale_price);
+        $this->assertSame(250000.0, (float) $product->sale_amount);
+        $this->assertSame(2250000.0, (float) $product->final_price);
+        $this->assertFalse(File::exists(public_path($oldImage)));
+        $this->assertFalse(File::exists(public_path($oldDocument)));
 
         $this->registerPathForCleanup($product->product_image);
         $this->registerPathForCleanup('uploads/document/' . $product->product_file);

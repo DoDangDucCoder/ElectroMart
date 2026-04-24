@@ -4,9 +4,11 @@ namespace App\Infrastructure\Persistence\Repositories\Catalog;
 
 use App\Domain\Catalog\Repositories\ProductRepositoryInterface;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
+use App\Support\ProductPriceSql;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class EloquentProductRepository implements ProductRepositoryInterface
 {
@@ -215,12 +217,18 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
         $priceMin = $filters['price_min'] ?? $filters['min_price'] ?? null;
         if ($priceMin !== null && $priceMin !== '') {
-            $query->whereRaw($this->effectivePriceExpression() . ' >= ?', [(float) $priceMin]);
+            $query->whereRaw(
+                $this->effectivePriceExpression() . ' >= ?',
+                [ProductPriceSql::normalizeFilterBinding($priceMin)]
+            );
         }
 
         $priceMax = $filters['price_max'] ?? $filters['max_price'] ?? null;
         if ($priceMax !== null && $priceMax !== '') {
-            $query->whereRaw($this->effectivePriceExpression() . ' <= ?', [(float) $priceMax]);
+            $query->whereRaw(
+                $this->effectivePriceExpression() . ' <= ?',
+                [ProductPriceSql::normalizeFilterBinding($priceMax)]
+            );
         }
 
         if (! empty($filters['category_ids'])) {
@@ -278,7 +286,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
     protected function effectivePriceExpression(): string
     {
-        return 'CAST(CASE WHEN sale_price IS NOT NULL AND sale_price > 0 THEN sale_price ELSE price END AS REAL)';
+        return ProductPriceSql::effectivePriceExpression();
     }
 
     protected function normalizeBooleanFilter(mixed $value): ?bool
@@ -304,12 +312,12 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
     public function create(array $data): Product
     {
-        return Product::create($data);
+        return Product::create($this->filterPersistableData($data));
     }
 
     public function update(Product $product, array $data): Product
     {
-        $product->fill($data);
+        $product->fill($this->filterPersistableData($data));
         $product->save();
 
         return $product;
@@ -326,5 +334,26 @@ class EloquentProductRepository implements ProductRepositoryInterface
         $product->save();
 
         return $product;
+    }
+
+    protected function filterPersistableData(array $data): array
+    {
+        $table = (new Product())->getTable();
+
+        if (! Schema::hasTable($table)) {
+            return $data;
+        }
+
+        try {
+            $columns = array_flip(Schema::getColumnListing($table));
+        } catch (\Throwable) {
+            return $data;
+        }
+
+        return array_filter(
+            $data,
+            static fn ($value, $key) => isset($columns[$key]),
+            ARRAY_FILTER_USE_BOTH
+        );
     }
 }

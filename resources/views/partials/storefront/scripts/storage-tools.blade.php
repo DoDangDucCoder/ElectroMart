@@ -51,9 +51,11 @@
     }
 
     function renderViewedRow(item, ctaText) {
+        var image = normalizeStorefrontImage(item.image);
+
         return `
             <div class="row" style="margin:10px 0">
-                <div class="col-md-4"><img width="100%" src="${escapeHtml(item.image)}"></div>
+                <div class="col-md-4"><img width="100%" src="${escapeHtml(image)}"></div>
                 <div class="col-md-8 info_wishlist">
                     <p>${escapeHtml(item.name)}</p>
                     <p style="color:#FE980F">${escapeHtml(item.price)}</p>
@@ -63,10 +65,33 @@
         `;
     }
 
+    function renderViewedCard(item, ctaText) {
+        var image = normalizeStorefrontImage(item.image);
+        var url = item.url || "{{ url('/') }}";
+        var price = item.price
+            ? `<p class="shopw-cart-viewed-price">${escapeHtml(item.price)}</p>`
+            : '';
+
+        return `
+            <article class="shopw-cart-viewed-card">
+                <a class="shopw-cart-viewed-media" href="${escapeHtml(url)}">
+                    <img src="${escapeHtml(image)}" alt="${escapeHtml(item.name)}">
+                </a>
+                <div class="shopw-cart-viewed-copy">
+                    <h3><a href="${escapeHtml(url)}">${escapeHtml(item.name)}</a></h3>
+                    ${price}
+                    <a class="shopw-cart-viewed-link" href="${escapeHtml(url)}">${escapeHtml(ctaText)}</a>
+                </div>
+            </article>
+        `;
+    }
+
     function renderWishlistRow(item) {
+        var image = normalizeStorefrontImage(item.image);
+
         return `
             <div class="row" id="wishlist_item${item.id}" style="margin:10px 0">
-                <div class="col-md-4"><img width="100%" src="${escapeHtml(item.image)}"></div>
+                <div class="col-md-4"><img width="100%" src="${escapeHtml(image)}"></div>
                 <div class="col-md-8 info_wishlist">
                     <p>${escapeHtml(item.name)}</p>
                     <p style="color:#FE980F">${escapeHtml(item.price)}</p>
@@ -247,31 +272,53 @@
 
     function viewed() {
         var rowViewed = document.getElementById('row_viewed');
-        if (!rowViewed) {
+        var cartViewedGrid = document.getElementById('shopw_cart_viewed_grid');
+
+        if (!rowViewed && !cartViewedGrid) {
             return;
         }
-
-        rowViewed.innerHTML = '';
 
         var data = readStorefrontStorage('viewed').slice().reverse();
 
-        if (!data.length) {
-            rowViewed.style.overflow = '';
-            rowViewed.style.height = '';
-            rowViewed.innerHTML = renderSidebarEmptyState({
-                title: 'Chưa có sản phẩm đã xem',
-                message: 'Các sản phẩm bạn vừa xem sẽ xuất hiện tại đây.',
-                icon: 'fa fa-clock-o'
-            });
-            return;
+        if (rowViewed) {
+            rowViewed.innerHTML = '';
+
+            if (!data.length) {
+                rowViewed.style.overflow = '';
+                rowViewed.style.height = '';
+                rowViewed.innerHTML = renderSidebarEmptyState({
+                    title: 'Chưa có sản phẩm đã xem',
+                    message: 'Các sản phẩm bạn vừa xem sẽ xuất hiện tại đây.',
+                    icon: 'fa fa-clock-o'
+                });
+            } else {
+                rowViewed.style.overflow = 'scroll';
+                rowViewed.style.height = '500px';
+
+                data.forEach(function(item) {
+                    $('#row_viewed').append(renderViewedRow(item, 'Xem sản phẩm'));
+                });
+            }
         }
 
-        rowViewed.style.overflow = 'scroll';
-        rowViewed.style.height = '500px';
+        if (cartViewedGrid) {
+            cartViewedGrid.innerHTML = '';
 
-        data.forEach(function(item) {
-            $('#row_viewed').append(renderViewedRow(item, 'Xem sản phẩm'));
-        });
+            if (!data.length) {
+                cartViewedGrid.innerHTML = buildStorefrontEmptyState({
+                    title: 'Chưa có sản phẩm đã xem',
+                    message: 'Các sản phẩm bạn vừa xem sẽ xuất hiện tại đây để bạn quay lại nhanh hơn.',
+                    icon: 'fa fa-clock-o',
+                    compact: true,
+                    actionText: 'Khám phá sản phẩm',
+                    actionUrl: "{{ url('/') }}"
+                });
+            } else {
+                data.slice(0, 4).forEach(function(item) {
+                    cartViewedGrid.insertAdjacentHTML('beforeend', renderViewedCard(item, 'Xem sản phẩm'));
+                });
+            }
+        }
     }
     viewed();
 

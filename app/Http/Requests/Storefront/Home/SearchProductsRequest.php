@@ -14,7 +14,8 @@ class SearchProductsRequest extends BaseFormRequest
             'category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
             'price_min' => ['nullable', 'numeric', 'min:0'],
             'price_max' => ['nullable', 'numeric', 'min:0'],
-            'sort' => ['nullable', 'in:popular,price_asc,price_desc,name_asc,name_desc'],
+            'sort' => ['nullable', 'in:popular,best_selling,price_asc,price_desc,name_asc,name_desc'],
+            'highlight_product' => ['nullable', 'string', 'max:255'],
         ];
     }
 
@@ -29,6 +30,7 @@ class SearchProductsRequest extends BaseFormRequest
             'price_min.min' => 'Giá từ không được nhỏ hơn 0.',
             'price_max.min' => 'Giá đến không được nhỏ hơn 0.',
             'sort.in' => 'Kiểu sắp xếp không hợp lệ.',
+            'highlight_product.max' => 'Thông tin sản phẩm ghim không được vượt quá 255 ký tự.',
         ];
     }
 
@@ -41,6 +43,7 @@ class SearchProductsRequest extends BaseFormRequest
             'price_min' => $this->normalizeNullableNumber($this->input('price_min')),
             'price_max' => $this->normalizeNullableNumber($this->input('price_max')),
             'sort' => $this->normalizeNullableString($this->input('sort')),
+            'highlight_product' => $this->normalizeNullableString($this->input('highlight_product')),
         ]);
     }
 

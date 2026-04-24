@@ -3,6 +3,7 @@
 namespace App\Application\Shared\Services;
 
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
+use App\Support\ProductPriceSql;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -44,11 +45,17 @@ class ProductSearchService
         }
 
         if (! empty($filters['price_min'])) {
-            $query->whereRaw($this->effectivePriceExpression() . ' >= ?', [(float) $filters['price_min']]);
+            $query->whereRaw(
+                $this->effectivePriceExpression() . ' >= ?',
+                [ProductPriceSql::normalizeFilterBinding($filters['price_min'])]
+            );
         }
 
         if (! empty($filters['price_max'])) {
-            $query->whereRaw($this->effectivePriceExpression() . ' <= ?', [(float) $filters['price_max']]);
+            $query->whereRaw(
+                $this->effectivePriceExpression() . ' <= ?',
+                [ProductPriceSql::normalizeFilterBinding($filters['price_max'])]
+            );
         }
 
         return $query;
@@ -150,7 +157,10 @@ class ProductSearchService
 
     protected function applySorting(Builder $query, array $filters): void
     {
+        $this->applyHighlightOrdering($query, $filters);
+
         match ($filters['sort'] ?? null) {
+            'best_selling' => $this->applyBestSellingSorting($query),
             'price_asc' => $query->orderByRaw($this->effectivePriceExpression() . ' asc'),
             'price_desc' => $query->orderByRaw($this->effectivePriceExpression() . ' desc'),
             'name_asc' => $query->orderBy('name'),
@@ -160,8 +170,69 @@ class ProductSearchService
         };
     }
 
+    protected function applyHighlightOrdering(Builder $query, array $filters): void
+    {
+        $highlightSlug = trim((string) ($filters['highlight_product_slug'] ?? $filters['highlight_product'] ?? ''));
+
+        if ($highlightSlug === '') {
+            return;
+        }
+
+        $table = $this->productTable();
+
+        $query->orderByRaw(
+            'CASE WHEN ' . $table . '.slug = ? THEN 1 ELSE 0 END DESC',
+            [$highlightSlug]
+        );
+    }
+
+    protected function applyBestSellingSorting(Builder $query): void
+    {
+        if (! $this->canUseBestSellingRanking()) {
+            $query->orderByDesc('views_count')
+                ->orderByDesc('is_featured')
+                ->orderByDesc('id');
+
+            return;
+        }
+
+        $table = $this->productTable();
+        $salesRanking = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.status', 'completed')
+            ->whereNotNull('order_items.product_id')
+            ->groupBy('order_items.product_id')
+            ->selectRaw('order_items.product_id, SUM(order_items.quantity) as sold_quantity');
+
+        $query->leftJoinSub($salesRanking, 'product_sales_rank', function ($join) use ($table) {
+            $join->on('product_sales_rank.product_id', '=', $table . '.id');
+        });
+
+        $query->select($table . '.*')
+            ->selectRaw('COALESCE(product_sales_rank.sold_quantity, 0) as sold_quantity_rank')
+            ->orderByRaw('COALESCE(product_sales_rank.sold_quantity, 0) DESC')
+            ->orderByDesc($table . '.views_count')
+            ->orderByDesc($table . '.is_featured')
+            ->orderByDesc($table . '.id');
+    }
+
     protected function effectivePriceExpression(): string
     {
-        return 'CAST(CASE WHEN sale_price IS NOT NULL AND sale_price > 0 THEN sale_price ELSE price END AS REAL)';
+        return ProductPriceSql::effectivePriceExpression();
+    }
+
+    protected function canUseBestSellingRanking(): bool
+    {
+        return Schema::hasTable('orders')
+            && Schema::hasTable('order_items')
+            && Schema::hasColumn('orders', 'status')
+            && Schema::hasColumn('order_items', 'order_id')
+            && Schema::hasColumn('order_items', 'product_id')
+            && Schema::hasColumn('order_items', 'quantity');
+    }
+
+    protected function productTable(): string
+    {
+        return (new Product())->getTable();
     }
 }

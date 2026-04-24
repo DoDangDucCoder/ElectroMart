@@ -57,7 +57,7 @@ class UserJourneyTestingService
                     'steps' => [
                         'login' => [
                             'url' => '/login',
-                            'expected_elements' => ['login_form', 'remember_me'],
+                            'expected_elements' => ['login_form', 'forgot_password'],
                             'actions' => ['login', 'forgot_password'],
                         ],
                         'user_dashboard' => [
@@ -1112,7 +1112,8 @@ class UserJourneyTestingService
             '/products' => '/tim-kiem',
             '/categories' => $this->resolveCategoryPath(),
             '/contact' => '/lien-he',
-            '/login', '/register' => '/dang-nhap',
+            '/login' => '/dang-nhap',
+            '/register' => '/dang-ky',
             '/cart' => '/gio-hang',
             '/orders' => '/history',
             '/profile' => '/dang-nhap',

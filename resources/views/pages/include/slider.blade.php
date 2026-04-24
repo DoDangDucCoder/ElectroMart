@@ -1,7 +1,6 @@
 <section id="slider"><!--slider-->
     <div class="container">
         @php
-            $storefrontLabel = \App\Support\StorefrontLabel::class;
             $stringHelper = \Illuminate\Support\Str::class;
             $preferredFallbackOrder = [
                 'uploads/slider/banner342.jpg',
@@ -26,21 +25,12 @@
                 $fallbackHeroPaths = $preferredFallbackOrder;
             }
 
-            $categoryIcons = [
-                'laptop' => 'fa-laptop',
-                'laptop-gaming' => 'fa-gamepad',
-                'laptop-van-phong' => 'fa-briefcase',
-                'dien-thoai' => 'fa-mobile',
-                'iphone' => 'fa-apple',
-                'samsung-galaxy' => 'fa-android',
-                'android-khac' => 'fa-android',
-                'phu-kien' => 'fa-headphones',
-                'sac-cap' => 'fa-plug',
-                'op-lung-kinh-cuong-luc' => 'fa-shield',
-            ];
             $heroRatio = isset($hero_ratio) && $hero_ratio
                 ? number_format((float) $hero_ratio, 3, '.', '')
                 : null;
+            $heroMaxSlides = max(1, (int) config('storefront.hero_slider.max_slides', 4));
+            $heroBestSellingUrl = $hero_best_selling_url ?? url('/san-pham-ban-chay');
+            $heroSlideTargets = $hero_slide_targets ?? [];
             $supportConfig = config('services.storefront_support', []);
             $supportChannels = [
                 [
@@ -127,7 +117,7 @@
 
             $heroSlides = collect($slider)
                 ->values()
-                ->map(function ($slide, $index) use ($resolveHeroProfile, $stringHelper) {
+                ->map(function ($slide, $index) use ($resolveHeroProfile, $stringHelper, $heroSlideTargets, $heroBestSellingUrl) {
                     $slidePath = 'uploads/slider/' . $slide->slider_image;
                     if (! file_exists(public_path($slidePath))) {
                         return null;
@@ -145,8 +135,12 @@
                         ? $slide->slider_desc
                         : ($profile['summary'] ?? null);
                     $alt = $slide->slider_alt ?: $slide->slider_name ?: $profile['headline'];
+                    $imageKey = basename($slidePath);
+                    $slideTarget = $heroSlideTargets[$imageKey] ?? null;
 
                     return [
+                        'path' => $slidePath,
+                        'image_key' => $imageKey,
                         'src' => asset($slidePath),
                         'alt' => $alt,
                         'tone' => $profile['tone'],
@@ -154,80 +148,61 @@
                         'headline' => $profile['headline'],
                         'summary' => $summary,
                         'meta' => $profile['meta'],
+                        'url' => $slideTarget['url'] ?? $heroBestSellingUrl,
+                        'highlight_product_name' => $slideTarget['highlight_product_name'] ?? null,
                     ];
                 })
                 ->filter()
                 ->values();
 
-            if ($heroSlides->isEmpty()) {
-                $orderedFallbackSlides = collect($preferredFallbackOrder)
-                    ->filter(static fn ($path) => file_exists(public_path($path)));
+            $orderedFallbackSlides = collect($preferredFallbackOrder)
+                ->filter(static fn ($path) => file_exists(public_path($path)));
 
-                $remainingFallbackSlides = collect(array_unique(array_filter($fallbackHeroPaths)))
-                    ->reject(fn ($path) => $orderedFallbackSlides->contains($path));
+            $remainingFallbackSlides = collect(array_unique(array_filter($fallbackHeroPaths)))
+                ->reject(fn ($path) => $orderedFallbackSlides->contains($path));
 
-                $fallbackSlides = $orderedFallbackSlides
-                    ->concat($remainingFallbackSlides)
-                    ->take(3)
+            $fallbackPool = $orderedFallbackSlides
+                ->concat($remainingFallbackSlides)
+                ->unique()
+                ->values();
+
+            if ($heroSlides->count() < $heroMaxSlides) {
+                $usedPaths = $heroSlides->pluck('path')
+                    ->filter()
                     ->values();
+                $missingSlides = max(0, $heroMaxSlides - $heroSlides->count());
 
-                if ($fallbackSlides->isEmpty()) {
-                    $fallbackSlides = collect($preferredFallbackOrder)
-                        ->filter(static fn ($path) => file_exists(public_path($path)))
-                        ->take(3)
-                        ->values();
-                }
+                $fallbackSlides = $fallbackPool
+                    ->reject(fn ($path) => $usedPaths->contains($path))
+                    ->take($missingSlides)
+                    ->values()
+                    ->map(function ($path, $index) use ($resolveHeroProfile, $heroSlides, $heroBestSellingUrl) {
+                        $absoluteIndex = $heroSlides->count() + $index;
+                        $headlineSource = 'Banner nổi bật ' . ($absoluteIndex + 1);
+                        $profile = $resolveHeroProfile($headlineSource, $absoluteIndex);
 
-                $heroSlides = $fallbackSlides->map(function ($path, $index) use ($resolveHeroProfile) {
-                    $headlineSource = 'Banner nổi bật ' . ($index + 1);
-                    $profile = $resolveHeroProfile($headlineSource, $index);
+                        return [
+                            'path' => $path,
+                            'image_key' => basename($path),
+                            'src' => asset($path),
+                            'alt' => $profile['headline'],
+                            'tone' => $profile['tone'],
+                            'kicker' => $profile['kicker'],
+                            'headline' => $profile['headline'],
+                            'summary' => $profile['summary'],
+                            'meta' => $profile['meta'],
+                            'url' => $heroBestSellingUrl,
+                            'highlight_product_name' => null,
+                        ];
+                    });
 
-                    return [
-                        'src' => asset($path),
-                        'alt' => $profile['headline'],
-                        'tone' => $profile['tone'],
-                        'kicker' => $profile['kicker'],
-                        'headline' => $profile['headline'],
-                        'summary' => $profile['summary'],
-                        'meta' => $profile['meta'],
-                    ];
-                });
+                $heroSlides = $heroSlides->concat($fallbackSlides)
+                    ->take($heroMaxSlides)
+                    ->values();
             }
         @endphp
         <div class="shopw-hero-shell" @if ($heroRatio) style="--shopw-hero-ratio: {{ $heroRatio }};" @endif>
-            <div class="shopw-hero" data-hero-layout="split">
-                <aside class="shopw-hero-sidebar" aria-label="Danh mục nổi bật">
-                    <div class="shopw-hero-categories">
-                        <div class="shopw-hero-sidebar-head">
-                            <span class="shopw-hero-sidebar-kicker">Khám phá nhanh</span>
-                            <strong class="shopw-hero-sidebar-title">Danh mục nổi bật hôm nay</strong>
-                            <p class="shopw-hero-sidebar-note">
-                                Chọn nhanh nhóm sản phẩm đang được quan tâm nhiều nhất để đi thẳng vào danh mục phù hợp.
-                            </p>
-                        </div>
-                        <ul class="shopw-cat-list">
-                            @foreach ($category as $key => $cate)
-                                @if ($cate->category_parent == 0)
-                                    @php
-                                        $slug = $cate->slug_category_product;
-                                    @endphp
-                                    <li>
-                                        <a href="{{ URL::to('/danh-muc/' . $cate->slug_category_product) }}">
-                                            <i class="fa {{ $categoryIcons[$cate->slug_category_product] ?? 'fa-tag' }}"></i>
-                                            <span>{{ $storefrontLabel::category($cate->category_name, $cate->slug_category_product) }}</span>
-                                        </a>
-                                    </li>
-                                @endif
-                            @endforeach
-                            <li class="shopw-cat-extra">
-                                <a href="{{ url('/lien-he') }}">
-                                    <i class="fa fa-gift"></i>
-                                    <span>Dịch vụ và thông tin khác</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </aside>
+            <div class="shopw-hero" data-hero-layout="wide">
                 <div class="shopw-hero-main">
                     <div id="slider-carousel" class="carousel slide hero-slot" data-ride="carousel" data-interval="4000"
                         data-pause="false" data-hero-rotate="carousel">
@@ -242,31 +217,27 @@
 
                         <div class="carousel-inner">
                             @foreach ($heroSlides as $slide)
-                                <div class="item shopw-hero-slide shopw-hero-slide--{{ $slide['tone'] }} {{ $loop->first ? 'active' : '' }}"
-                                    style="background-image: url('{{ $slide['src'] }}');">
-                                    <div class="shopw-hero-slide-copy">
-                                        <span class="shopw-hero-slide-kicker">{{ $slide['kicker'] }}</span>
-                                        <div class="shopw-hero-slide-meta" aria-hidden="true">
-                                            @foreach ($slide['meta'] as $meta)
-                                                <span>{{ $meta }}</span>
-                                            @endforeach
+                                <div class="item {{ $loop->first ? 'active' : '' }}">
+                                    <a href="{{ $slide['url'] }}"
+                                        class="shopw-hero-slide shopw-hero-slide--{{ $slide['tone'] }}"
+                                        style="background-image: url('{{ $slide['src'] }}');"
+                                        aria-label="{{ !empty($slide['highlight_product_name']) ? $slide['alt'] . ' - mở danh sách bán chạy, ưu tiên ' . $slide['highlight_product_name'] : $slide['alt'] . ' - mở danh sách bán chạy' }}">
+                                        <div class="shopw-hero-slide-copy">
+                                            <span class="shopw-hero-slide-kicker">{{ $slide['kicker'] }}</span>
+                                            <div class="shopw-hero-slide-meta" aria-hidden="true">
+                                                @foreach ($slide['meta'] as $meta)
+                                                    <span>{{ $meta }}</span>
+                                                @endforeach
+                                            </div>
+                                            <strong>{{ $slide['headline'] }}</strong>
+                                            <p>{{ $slide['summary'] }}</p>
                                         </div>
-                                        <strong>{{ $slide['headline'] }}</strong>
-                                        <p>{{ $slide['summary'] }}</p>
-                                    </div>
-                                    <span class="sr-only">{{ $slide['alt'] }}</span>
+                                        <span class="sr-only">{{ $slide['alt'] }}</span>
+                                    </a>
                                 </div>
                             @endforeach
                         </div>
 
-                        @if ($heroSlides->count() > 1)
-                            <a href="#slider-carousel" class="left control-carousel hidden-xs" data-slide="prev">
-                                <i class="fa fa-angle-left"></i>
-                            </a>
-                            <a href="#slider-carousel" class="right control-carousel hidden-xs" data-slide="next">
-                                <i class="fa fa-angle-right"></i>
-                            </a>
-                        @endif
                     </div>
                 </div>
                 <aside class="shopw-hero-support shopw-hero-support--dock" aria-label="Kênh hỗ trợ nhanh"

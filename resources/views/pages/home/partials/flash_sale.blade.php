@@ -49,9 +49,10 @@
             }
 
             .g-home .shopw-flash-sale-brand {
+                --flash-head-font: 22px;
                 display: flex;
                 align-items: center;
-                gap: 14px;
+                gap: 12px;
                 min-width: 0;
                 flex: 1 1 auto;
             }
@@ -62,7 +63,7 @@
                 gap: 4px;
                 margin: 0;
                 color: #e31d2a;
-                font-size: 24px;
+                font-size: var(--flash-head-font);
                 font-weight: 900;
                 line-height: 1;
                 letter-spacing: 0.02em;
@@ -72,7 +73,8 @@
 
             .g-home .shopw-flash-sale-title .fa-bolt {
                 color: #ffc400;
-                font-size: 22px;
+                font-size: 0.92em;
+                line-height: 1;
                 text-shadow: 0 1px 0 rgba(227, 29, 42, 0.35);
                 transform: skew(-6deg);
             }
@@ -82,36 +84,41 @@
                 align-items: center;
                 gap: 0;
                 flex: 0 0 auto;
+                font-size: var(--flash-head-font);
+                line-height: 1;
             }
 
             .g-home .shopw-flash-sale-pill {
                 position: relative;
-                min-width: 40px;
-                height: 32px;
-                padding: 0 8px;
+                box-sizing: border-box;
+                min-width: 2.1em;
+                height: auto;
+                min-height: 0;
+                padding: 2px 7px 3px;
                 border-radius: 4px;
-                background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 55%, #141414 100%);
-                color: #f8fafc;
+                background: linear-gradient(180deg, #262626 0%, #121212 100%);
+                color: #fff;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
-                border: 1px solid #2d2d2d;
+                border: 1px solid #3f3f3f;
                 box-shadow:
-                    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-                    inset 0 -2px 0 rgba(0, 0, 0, 0.45),
-                    0 2px 4px rgba(0, 0, 0, 0.2);
+                    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                    0 1px 3px rgba(0, 0, 0, 0.18);
                 overflow: hidden;
             }
 
             .g-home .shopw-flash-sale-pill strong {
                 position: relative;
                 z-index: 1;
+                margin: 0;
+                padding: 0;
                 color: inherit;
-                font-size: 15px;
+                font-size: 1em;
                 font-weight: 900;
                 line-height: 1;
                 font-variant-numeric: tabular-nums;
-                letter-spacing: 0.04em;
+                letter-spacing: 0.02em;
             }
 
             .g-home .shopw-flash-sale-pill span {
@@ -120,10 +127,11 @@
 
             .g-home .shopw-flash-sale-separator {
                 color: #111827;
-                font-size: 18px;
+                font-size: 1em;
                 font-weight: 900;
                 line-height: 1;
-                padding: 0 7px;
+                padding: 0 5px;
+                align-self: center;
             }
 
             .g-home .shopw-flash-sale-see-all {

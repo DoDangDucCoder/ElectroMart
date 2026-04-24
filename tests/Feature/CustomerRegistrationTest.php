@@ -37,16 +37,16 @@ class CustomerRegistrationTest extends TestCase
         $this->assertNotNull(session('customer_id'));
     }
 
-    public function test_customer_registration_validation_errors_are_shown_on_login_checkout_page(): void
+    public function test_customer_registration_validation_errors_are_shown_on_register_page(): void
     {
-        $response = $this->from('/dang-nhap')->post('/add-customer', [
+        $response = $this->from('/dang-ky')->post('/add-customer', [
             'customer_name' => '',
             'customer_email' => 'not-an-email',
             'customer_password' => '123',
             'customer_phone' => str_repeat('9', 40),
         ]);
 
-        $response->assertRedirect('/dang-nhap')
+        $response->assertRedirect('/dang-ky')
             ->assertSessionHasErrors([
                 'customer_name',
                 'customer_email',
@@ -55,7 +55,7 @@ class CustomerRegistrationTest extends TestCase
             ]);
 
         $this->followingRedirects()
-            ->from('/dang-nhap')
+            ->from('/dang-ky')
             ->post('/add-customer', [
                 'customer_name' => '',
                 'customer_email' => 'not-an-email',
@@ -76,12 +76,12 @@ class CustomerRegistrationTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->from('/dang-nhap')->post('/add-customer', [
+        $this->from('/dang-ky')->post('/add-customer', [
             'customer_name' => 'Another Customer',
             'customer_email' => 'existing@example.com',
             'customer_password' => 'secret123',
             'customer_phone' => '0922222222',
-        ])->assertRedirect('/dang-nhap')
+        ])->assertRedirect('/dang-ky')
             ->assertSessionHasErrors(['customer_email']);
     }
 
@@ -95,12 +95,12 @@ class CustomerRegistrationTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->from('/dang-nhap')->post('/add-customer', [
+        $this->from('/dang-ky')->post('/add-customer', [
             'customer_name' => 'Another Customer',
             'customer_email' => 'another-phone@example.com',
             'customer_password' => 'secret123',
             'customer_phone' => '0964065314',
-        ])->assertRedirect('/dang-nhap')
+        ])->assertRedirect('/dang-ky')
             ->assertSessionHasErrors(['customer_phone']);
 
         $this->assertDatabaseMissing('customers', [
@@ -252,7 +252,7 @@ class CustomerRegistrationTest extends TestCase
         ])->assertRedirect('/checkout');
     }
 
-    public function test_logged_in_customer_login_page_renders_account_identity_and_logout(): void
+    public function test_logged_in_customer_auth_pages_render_account_identity_and_logout(): void
     {
         $customer = Customer::create([
             'name' => 'Logged Customer',
@@ -266,8 +266,14 @@ class CustomerRegistrationTest extends TestCase
             'customer_id' => $customer->id,
         ])->get('/dang-nhap?redirect=checkout')
             ->assertOk()
-            ->assertSee('Bạn đã đăng nhập thành công')
-            ->assertSee('shopw-auth-switcher', false)
+            ->assertSee('Tài khoản đã xác thực')
+            ->assertSee($customer->email)
+            ->assertSee('/dang-xuat-khach-hang?redirect=checkout', false);
+
+        $this->withSession([
+            'customer_id' => $customer->id,
+        ])->get('/dang-ky?redirect=checkout')
+            ->assertOk()
             ->assertSee('Tài khoản đã xác thực')
             ->assertSee($customer->email)
             ->assertSee('/dang-xuat-khach-hang?redirect=checkout', false);

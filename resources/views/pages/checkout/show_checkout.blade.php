@@ -14,12 +14,9 @@
         $supportPhoneDisplay = $supportConfig['phone_display'] ?? '1900.0000';
         $supportPhoneHref = $supportConfig['phone_href'] ?? 'tel:19000000';
         $checkoutCustomerDisplayName = $currentCustomer?->name ?: ($currentCustomer?->email ?: 'Tài khoản của bạn');
-        $checkoutAvatarInitials = collect(explode(' ', \Illuminate\Support\Str::upper(trim((string) $checkoutCustomerDisplayName))))
-            ->filter()
-            ->take(2)
-            ->map(fn($part) => \Illuminate\Support\Str::substr($part, 0, 1))
-            ->implode('');
-        $checkoutAvatarInitials = $checkoutAvatarInitials !== '' ? $checkoutAvatarInitials : 'TK';
+        $checkoutAvatarUrl = $currentCustomer?->avatar_path
+            ? asset($currentCustomer->avatar_path)
+            : ($storefrontCustomerPicture ?: asset('frontend/images/storefront-account-avatar.svg'));
         $checkoutFlowSteps = [
             ['label' => 'Giỏ hàng', 'state' => 'is-complete'],
             ['label' => 'Thanh toán', 'state' => 'is-active'],
@@ -118,11 +115,7 @@
                     <div class="shopw-checkout-account-card">
                         <div class="shopw-checkout-account-main">
                             <span class="shopw-checkout-account-avatar">
-                                @if (!empty($storefrontCustomerPicture))
-                                    <img src="{{ $storefrontCustomerPicture }}" alt="{{ $checkoutCustomerDisplayName }}">
-                                @else
-                                    <span>{{ $checkoutAvatarInitials }}</span>
-                                @endif
+                                <img src="{{ $checkoutAvatarUrl }}" alt="{{ $checkoutCustomerDisplayName }}">
                             </span>
                             <div class="shopw-checkout-account-copy">
                                 <span class="shopw-checkout-account-kicker">Tài khoản đang sử dụng</span>

@@ -57,9 +57,21 @@
                     </div>
 
                     <div class="choose">
-                        <ul class="nav nav-pills nav-justified">
-                            <li><a style="cursor:pointer" onclick="add_wistlist({{ $productId }})"><i class="fa fa-plus-square"></i>Yêu thích</a></li>
-                            <li><a style="cursor:pointer" onclick="add_compare({{ $productId }})"><i class="fa fa-plus-square"></i>So sánh</a></li>
+                        <ul class="shopw-card-meta-list">
+                            <li class="shopw-card-meta-item">
+                                <button type="button" class="shopw-card-meta-link shopw-card-meta-link--wishlist"
+                                    onclick="add_wistlist({{ $productId }})">
+                                    <i class="fa fa-heart-o" aria-hidden="true"></i>
+                                    <span>Yêu thích</span>
+                                </button>
+                            </li>
+                            <li class="shopw-card-meta-item">
+                                <button type="button" class="shopw-card-meta-link shopw-card-meta-link--compare"
+                                    onclick="add_compare({{ $productId }})">
+                                    <i class="fa fa-exchange" aria-hidden="true"></i>
+                                    <span>So sánh</span>
+                                </button>
+                            </li>
                         </ul>
                     </div>
                 </div>

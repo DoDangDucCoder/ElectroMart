@@ -3,15 +3,23 @@
 return [
     'flash_sale' => [
         'enabled' => filter_var(env('STOREFRONT_FLASH_SALE_ENABLED', true), FILTER_VALIDATE_BOOL),
-        'kicker' => env('STOREFRONT_FLASH_SALE_KICKER', 'Hot deal'),
-        'title' => env('STOREFRONT_FLASH_SALE_TITLE', 'Flash Sale'),
-        'cta_label' => env('STOREFRONT_FLASH_SALE_CTA_LABEL', 'Xem tất cả deal'),
+        'kicker' => env('STOREFRONT_FLASH_SALE_KICKER', ''),
+        'title' => env('STOREFRONT_FLASH_SALE_TITLE', 'FLASH SALE'),
+        'cta_label' => env('STOREFRONT_FLASH_SALE_CTA_LABEL', 'Xem tất cả'),
         'cta_url' => env('STOREFRONT_FLASH_SALE_CTA_URL', '/tim-kiem'),
         'countdown_ends_at' => env('STOREFRONT_FLASH_SALE_ENDS_AT', '2026-12-31 23:59:59'),
+        'target_count' => (int) env('STOREFRONT_FLASH_SALE_TARGET_COUNT', 6),
+        'use_demo_products' => filter_var(env('STOREFRONT_FLASH_SALE_DEMO_PRODUCTS', true), FILTER_VALIDATE_BOOL),
         'product_slugs' => array_values(array_filter(array_map(
             static fn ($slug) => trim((string) $slug),
             explode(',', (string) env('STOREFRONT_FLASH_SALE_PRODUCT_SLUGS', ''))
         ))),
+    ],
+    'hero_slider' => [
+        'best_selling_path' => env('STOREFRONT_HERO_BEST_SELLING_PATH', '/san-pham-ban-chay'),
+        'max_slides' => (int) env('STOREFRONT_HERO_MAX_SLIDES', 4),
+        'product_hints' => [
+        ],
     ],
     'search_suggest' => [
         'max_products' => (int) env('STOREFRONT_SEARCH_SUGGEST_MAX_PRODUCTS', 6),
