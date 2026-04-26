@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\AssetUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -32,7 +33,7 @@ class ProductResource extends JsonResource
             'is_low_stock' => $this->stock_quantity <= $this->stock_alert_threshold,
             'is_active' => $this->is_active,
             'is_featured' => $this->is_featured,
-            'thumbnail_url' => $this->thumbnail_path ? asset($this->thumbnail_path) : null,
+            'thumbnail_url' => AssetUrl::product($this->thumbnail_path),
             'description' => $this->description,
             'content' => $this->content,
             'views_count' => $this->views_count,
@@ -44,7 +45,7 @@ class ProductResource extends JsonResource
                 'id' => $this->brand->id,
                 'name' => $this->brand->name,
                 'slug' => $this->brand->slug,
-                'logo_url' => $this->brand->logo_path ? asset($this->brand->logo_path) : null,
+                'logo_url' => AssetUrl::resolve($this->brand->logo_path, null),
             ]),
             'primary_category' => $this->whenLoaded('primaryCategory', fn() => [
                 'id' => $this->primaryCategory->id,
@@ -61,7 +62,7 @@ class ProductResource extends JsonResource
             'media' => $this->whenLoaded('media', fn() => 
                 $this->media->map(fn($media) => [
                     'id' => $media->id,
-                    'file_url' => asset($media->file_path),
+                    'file_url' => AssetUrl::product($media->file_path),
                     'collection' => $media->collection,
                     'display_order' => $media->display_order,
                 ])

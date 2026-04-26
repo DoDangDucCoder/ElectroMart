@@ -12,7 +12,7 @@ use App\Http\Requests\Storefront\Checkout\ResetPasswordRequest;
 use App\Mail\LegacyCouponCampaignMail;
 use App\Mail\LegacyPasswordRecoveryMail;
 use Illuminate\Http\Request;
-use DB;
+use Illuminate\Support\Facades\DB;
 use App\Models\CatePost;
 use App\Models\CategoryProductModel;
 use App\Models\Slider;

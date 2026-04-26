@@ -13,9 +13,14 @@ export const useProductStore = defineStore('products', () => {
     error.value = null
     
     try {
+      const sanitizedFilters = Object.fromEntries(
+        Object.entries(filters || {}).filter(([, value]) => (
+          value !== null && value !== undefined && String(value).trim() !== ''
+        ))
+      )
       const queryParams = new URLSearchParams({
         page: page.toString(),
-        ...filters
+        ...sanitizedFilters
       })
       
       const response = await fetch(`/api/v1/products?${queryParams}`)
@@ -89,7 +94,7 @@ export const useProductStore = defineStore('products', () => {
         throw new Error(data.message)
       }
     } catch (err) {
-      console.error('Failed to fetch categories:', err)
+      console.error('Không thể tải danh mục:', err)
       throw err
     }
   }
@@ -106,7 +111,7 @@ export const useProductStore = defineStore('products', () => {
         throw new Error(data.message)
       }
     } catch (err) {
-      console.error('Failed to fetch brands:', err)
+      console.error('Không thể tải thương hiệu:', err)
       throw err
     }
   }
@@ -122,7 +127,7 @@ export const useProductStore = defineStore('products', () => {
         throw new Error(data.message)
       }
     } catch (err) {
-      console.error('Failed to fetch latest products:', err)
+      console.error('Không thể tải sản phẩm mới nhất:', err)
       throw err
     }
   }
@@ -138,7 +143,7 @@ export const useProductStore = defineStore('products', () => {
         throw new Error(data.message)
       }
     } catch (err) {
-      console.error('Failed to fetch featured products:', err)
+      console.error('Không thể tải sản phẩm nổi bật:', err)
       throw err
     }
   }

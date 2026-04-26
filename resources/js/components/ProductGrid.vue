@@ -11,7 +11,7 @@
             @click="viewMode = 'grid'"
             :class="{ active: viewMode === 'grid' }"
             class="btn-view"
-            title="Grid View"
+            title="Xem dạng lưới"
           >
             <i class="fas fa-th"></i>
           </button>
@@ -19,7 +19,7 @@
             @click="viewMode = 'list'"
             :class="{ active: viewMode === 'list' }"
             class="btn-view"
-            title="List View"
+            title="Xem dạng danh sách"
           >
             <i class="fas fa-list"></i>
           </button>
@@ -33,7 +33,7 @@
         class="loading-state"
       >
         <div class="spinner"></div>
-        <p>Loading products...</p>
+        <p>Đang tải sản phẩm...</p>
       </div>
       
       <div 
@@ -43,10 +43,10 @@
         <div class="empty-icon">
           <i class="fas fa-box-open"></i>
         </div>
-        <h4>No products found</h4>
-        <p>{{ emptyMessage || 'Try adjusting your search or filter criteria.' }}</p>
+        <h4>Không tìm thấy sản phẩm</h4>
+        <p>{{ emptyMessage || 'Hãy thử điều chỉnh từ khóa tìm kiếm hoặc bộ lọc.' }}</p>
         <button @click="$emit('refresh')" class="btn btn-primary">
-          Refresh
+          Tải lại
         </button>
       </div>
       
@@ -115,7 +115,7 @@ export default {
     },
     title: {
       type: String,
-      default: 'Products'
+      default: 'Sản phẩm'
     },
     subtitle: {
       type: String,

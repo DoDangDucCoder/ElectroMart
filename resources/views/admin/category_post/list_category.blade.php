@@ -48,7 +48,7 @@
                                 </th>
                                 <th>Tên danh mục bài viết</th>
                                 <th>Mô tả</th>
-                                <th>Slug</th>
+                                <th>Đường dẫn tĩnh (slug)</th>
                                 <th>Hiển thị</th>
                                 <th style="width:30px;"></th>
                             </tr>

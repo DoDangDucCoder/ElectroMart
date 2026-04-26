@@ -276,14 +276,14 @@ class AdminStatisticsApiTest extends TestCase
         $optimizeResponse = $this->postJson('/api/v1/admin/statistics/optimize-database')
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('message', 'Database optimization completed');
+            ->assertJsonPath('message', 'Tối ưu cơ sở dữ liệu đã hoàn tất.');
 
         $this->assertIsArray($optimizeResponse->json('data'));
 
         $indexResponse = $this->postJson('/api/v1/admin/statistics/add-indexes')
             ->assertOk()
             ->assertJsonPath('success', true)
-            ->assertJsonPath('message', 'Database indexes added');
+            ->assertJsonPath('message', 'Đã thêm chỉ mục cơ sở dữ liệu.');
 
         $this->assertIsArray($indexResponse->json('data'));
 

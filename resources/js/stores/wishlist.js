@@ -39,13 +39,13 @@ export const useWishlistStore = defineStore('wishlist', () => {
       try {
         items.value = JSON.parse(saved)
       } catch (error) {
-        console.error('Failed to load wishlist from localStorage:', error)
+        console.error('Không thể tải danh sách yêu thích từ localStorage:', error)
         items.value = []
       }
     }
   }
   
-  // Load from localStorage on store creation
+  // Tải dữ liệu từ localStorage khi khởi tạo store
   loadFromLocalStorage()
   
   return {

@@ -58,7 +58,7 @@
                     'external' => false,
                 ],
             ];
-            $heroSupportCta = $supportConfig['chat_cta'] ?? 'Hỏi sản phẩm, giá sale, bảo hành';
+            $heroSupportCta = $supportConfig['chat_cta'] ?? 'Hỏi sản phẩm, giá khuyến mãi, bảo hành';
             $heroProfiles = [
                 'mobile' => [
                     'tone' => 'mobile',
@@ -72,12 +72,12 @@
                     'kicker' => 'Hiệu năng nổi bật',
                     'headline' => 'Dàn máy cho nhu cầu gaming và học tập',
                     'summary' => 'Ưu tiên những cấu hình đang có sức hút tốt, phối màu mạnh hơn và giữ nhịp đọc rõ ngay từ hero đầu trang.',
-                    'meta' => ['Cấu hình mạnh', 'Lên deal theo mùa'],
+                    'meta' => ['Cấu hình mạnh', 'Ưu đãi theo mùa'],
                 ],
                 'lifestyle' => [
                     'tone' => 'lifestyle',
                     'kicker' => 'Khuyến mãi chọn lọc',
-                    'headline' => 'Deal công nghệ dễ chọn, nhìn là muốn bấm',
+                    'headline' => 'Ưu đãi công nghệ dễ chọn, nhìn là muốn bấm',
                     'summary' => 'Hero được dùng như sân khấu chính cho các chiến dịch ngắn hạn, nhấn vào sản phẩm dễ tiếp cận nhất ở thời điểm hiện tại.',
                     'meta' => ['Giao nhanh', 'Mức giá dễ tiếp cận'],
                 ],
@@ -291,4 +291,3 @@
         </div>
     </div>
 </section><!--/slider-->
-

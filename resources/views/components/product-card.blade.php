@@ -1,4 +1,4 @@
-<!-- Modern Product Card Component -->
+<!-- Component thẻ sản phẩm hiện đại -->
 @props(['product', 'showRating' => true, 'showSold' => true])
 
 @php
@@ -22,17 +22,17 @@ $product = $product ?? (object) [
              class="product-image"
              loading="lazy">
         
-        <!-- Badges -->
+        <!-- Nhãn trạng thái -->
         <div class="absolute top-4 left-4">
             @if($product->is_featured ?? false)
-            <span class="badge badge-danger">Hot</span>
+            <span class="badge badge-danger">Nổi bật</span>
             @endif
             @if(($product->discount ?? 0) > 0)
             <span class="badge badge-success">-{{ $product->discount }}%</span>
             @endif
         </div>
         
-        <!-- Quick Actions -->
+        <!-- Thao tác nhanh -->
         <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <button class="w-10 h-10 bg-white dark:bg-gray-800 rounded-full shadow-lg flex items-center justify-center hover:bg-primary-500 hover:text-white transition-colors mb-2"
                     onclick="addToWishlist({{ $product->id }})">
@@ -54,7 +54,7 @@ $product = $product ?? (object) [
         <h3 class="product-title">{{ $product->name }}</h3>
         
         @if($showRating)
-        <!-- Rating -->
+        <!-- Đánh giá -->
         <div class="flex items-center mb-3">
             <div class="flex text-yellow-400">
                 @for($i = 0; $i < 5; $i++)
@@ -67,12 +67,12 @@ $product = $product ?? (object) [
         </div>
         @endif
         
-        <!-- Price -->
+        <!-- Giá -->
         <div class="flex items-center justify-between mb-4">
             <div>
-                <div class="product-price">{{ number_format($product->price, 0, ',', '.') }} VND</div>
+                <div class="product-price">{{ number_format($product->price, 0, ',', '.') }}đ</div>
                 @if(($product->old_price ?? 0) > 0)
-                <div class="product-price-old">{{ number_format($product->old_price, 0, ',', '.') }} VND</div>
+                <div class="product-price-old">{{ number_format($product->old_price, 0, ',', '.') }}đ</div>
                 @endif
             </div>
             @if($showSold)
@@ -82,7 +82,7 @@ $product = $product ?? (object) [
             @endif
         </div>
         
-        <!-- Add to Cart Button -->
+        <!-- Nút thêm vào giỏ hàng -->
         <button class="btn btn-primary w-full" onclick="addToCart({{ $product->id }})">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01"></path>
@@ -94,20 +94,20 @@ $product = $product ?? (object) [
 
 <script>
 function addToCart(productId) {
-    // Add to cart functionality
-    console.log('Adding product to cart:', productId);
-    // Implement actual cart logic here
+    // Chức năng thêm vào giỏ hàng
+    console.log('Đang thêm sản phẩm vào giỏ hàng:', productId);
+    // Cài đặt logic giỏ hàng thực tế tại đây
 }
 
 function addToWishlist(productId) {
-    // Add to wishlist functionality
-    console.log('Adding product to wishlist:', productId);
-    // Implement actual wishlist logic here
+    // Chức năng thêm vào danh sách yêu thích
+    console.log('Đang thêm sản phẩm vào danh sách yêu thích:', productId);
+    // Cài đặt logic danh sách yêu thích thực tế tại đây
 }
 
 function quickView(productId) {
-    // Quick view functionality
-    console.log('Quick view product:', productId);
-    // Implement actual quick view logic here
+    // Chức năng xem nhanh
+    console.log('Xem nhanh sản phẩm:', productId);
+    // Cài đặt logic xem nhanh thực tế tại đây
 }
 </script>

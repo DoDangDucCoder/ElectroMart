@@ -59,10 +59,10 @@
                                 <th>Thuộc tính</th>
                                 <th>Tài liệu</th>
                                 <th>Số lượng</th>
-                                <th>Slug</th>
+                                <th>Đường dẫn tĩnh (slug)</th>
                                 <th>Giá nhập</th>
                                 <th>Giá gốc</th>
-                                <th>Sale</th>
+                                <th>Khuyến mãi</th>
                                 <th>Giá sau sale</th>
                                 <th>Lợi nhuận đơn vị</th>
                                 <th>Hình ảnh</th>
@@ -129,7 +129,7 @@
                                     <td>{{ number_format((float) $pro->profit_per_unit, 0, ',', '.') }}đ</td>
                                     <td>
                                         @if ($pro->product_image)
-                                            <img src="{{ asset($pro->product_image) }}" alt="{{ $pro->product_name }}"
+                                            <img src="{{ \App\Support\AssetUrl::product($pro->product_image) }}" alt="{{ $pro->product_name }}"
                                                 height="100" width="100">
                                         @else
                                             <span class="text-muted">Chưa có ảnh</span>

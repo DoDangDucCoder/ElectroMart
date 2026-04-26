@@ -1,15 +1,14 @@
 ﻿/*************************
 *******Typography******
 **************************/
-@import url(http://fonts.googleapis.com/css?family=Roboto:400,300,400italic,500,700,100);
-@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,800,300,600,700);
-@import url(http://fonts.googleapis.com/css?family=Abel);
+@import url(https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap&subset=vietnamese);
+@import url(https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap&subset=vietnamese);
 
 body {
     font-family: "Roboto", sans-serif;
     background: #f2f2f2;
     position: relative;
-    font-weight: 400px;
+    font-weight: 400;
 }
 
 ul li {
@@ -414,7 +413,7 @@ ul.sub-menu {
 
 .companyinfo h2 {
     color: #b4b1ab;
-    font-family: abel;
+    font-family: "Roboto", Arial, sans-serif;
     font-size: 27px;
     text-transform: uppercase;
 }
@@ -711,7 +710,7 @@ ul.sub-menu {
 
 .item h1 {
     color: #b4b1ab;
-    font-family: abel;
+    font-family: "Roboto", Arial, sans-serif;
     font-size: 48px;
     margin-top: 115px;
 }

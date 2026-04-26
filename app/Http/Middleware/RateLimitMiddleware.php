@@ -26,7 +26,7 @@ class RateLimitMiddleware
             ]);
 
             return response()->json([
-                'message' => 'Too many requests. Please try again later.',
+                'message' => 'Bạn gửi quá nhiều yêu cầu. Vui lòng thử lại sau.',
                 'retry_after' => $retryAfter,
             ], 429);
         }

@@ -5,7 +5,7 @@
         <section class="g-admin-page-hero">
             <div>
                 <span class="g-admin-page-eyebrow">Vai trò & quyền</span>
-                <h1>Liệt kê vai trò và quyền user</h1>
+                <h1>Danh sách vai trò và quyền người dùng</h1>
                 <p>
                     Theo dõi vai trò hiện tại của từng tài khoản và các quyền đi kèm.
                 </p>
@@ -36,14 +36,14 @@
                 @endif
 
                 @if ($user->isEmpty())
-                    <div class="g-admin-empty-state">Chưa có user nào để hiển thị ma trận phân quyền.</div>
+                    <div class="g-admin-empty-state">Chưa có người dùng nào để hiển thị ma trận phân quyền.</div>
                 @else
                     <div class="table-responsive">
                         <table class="table table-striped b-t b-light g-admin-data-table">
                             <thead>
                                 <tr>
-                                    <th>Tên user</th>
-                                    <th>Email</th>
+                                    <th>Tên người dùng</th>
+                                    <th>Thư điện tử</th>
                                     <th>Vai trò</th>
                                     <th>Quyền thừa hưởng</th>
                                     <th>Quản lý</th>

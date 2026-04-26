@@ -3,9 +3,8 @@
 namespace App\Exports;
 
 use App\Models\Product;
-use Maatwebsite\Excel\Concerns\ToModel;
 
-class ExportProduct implements ToModel
+class ExportProduct
 {
     /**
      * @param array $row

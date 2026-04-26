@@ -220,7 +220,10 @@ class ProductRecommendationService
         return Product::query()
             ->with(['brand', 'categories', 'primaryCategory'])
             ->where('is_active', true)
-            ->where('stock_quantity', '>', 0)
+            ->where(function ($q) {
+                $q->where('stock_quantity', '>', 0)
+                    ->orWhereNull('stock_quantity');
+            })
             ->when(! empty($excludeIds), function (Builder $query) use ($excludeIds) {
                 $query->whereNotIn('id', array_values(array_unique(array_map('intval', $excludeIds))));
             });

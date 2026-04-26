@@ -27,13 +27,13 @@
             <header class="g-admin-panel-head">
                 <div>
                     <strong>Thông tin danh mục</strong>
-                    <p>Điền tên, slug, mô tả và chọn danh mục cha nếu muốn tạo cấp con.</p>
+                    <p>Điền tên, đường dẫn tĩnh (slug), mô tả và chọn danh mục cha nếu muốn tạo cấp con.</p>
                 </div>
             </header>
             <div class="g-admin-panel-body">
                 @unless ($hasCategoryStoreRoute)
                     <div class="alert alert-warning">
-                        Tác vụ lưu danh mục sản phẩm legacy hiện chưa được nối route trong bản này. Màn hình chỉ dùng để tham chiếu cấu trúc dữ liệu cũ.
+                        Tác vụ lưu danh mục sản phẩm phiên bản cũ hiện chưa được nối route trong bản này. Màn hình chỉ dùng để tham chiếu cấu trúc dữ liệu cũ.
                     </div>
                 @endunless
 
@@ -65,9 +65,9 @@
                                 value="{{ old('category_product_name') }}">
                         </div>
                         <div class="form-group">
-                            <label for="convert_slug">Slug</label>
+                            <label for="convert_slug">Đường dẫn tĩnh (slug)</label>
                             <input type="text" name="slug_category_product" class="form-control" id="convert_slug"
-                                placeholder="slug-danh-muc" value="{{ old('slug_category_product') }}">
+                                placeholder="duong-dan-tinh-danh-muc" value="{{ old('slug_category_product') }}">
                         </div>
                         <div class="form-group">
                             <label for="category_product_desc">Mô tả danh mục</label>

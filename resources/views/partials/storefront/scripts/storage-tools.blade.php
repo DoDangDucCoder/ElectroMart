@@ -20,11 +20,24 @@
 
         return {
             id: id,
-            name: nameEl ? nameEl.value : '',
+            name: normalizeStorefrontLabel(nameEl ? nameEl.value : ''),
             price: priceEl ? priceEl.value : '',
             image: imageEl ? (imageEl.value || imageEl.src || '') : '',
             url: urlEl ? (urlEl.href || urlEl.value || '') : ''
         };
+    }
+
+    function normalizeStorefrontLabel(value) {
+        var text = String(value || '');
+
+        return text
+            .replace(/phong\s*v[ũu]/gi, 'Đối tác phân phối')
+            .replace(/phongvu(\.com)?/gi, 'Đối tác phân phối')
+            .replace(/cellphone\s*s|cellphones(\.com\.vn)?/gi, 'Đối tác phân phối')
+            .replace(/fpt\s*shop|fptshop/gi, 'Đối tác phân phối')
+            .replace(/thế\s*giới\s*di\s*động|the\s*gioi\s*di\s*dong|thegioididong(\.com)?|tgdd/gi, 'Đối tác phân phối')
+            .replace(/gearvn|hacom|hoàng\s*hà\s*mobile|hoang\s*ha\s*mobile|hnam\s*mobile|hnam/gi, 'Đối tác phân phối')
+            .trim();
     }
 
     function normalizeStorefrontImage(image) {
@@ -37,15 +50,16 @@
 
     function renderCompareRow(item) {
         var image = normalizeStorefrontImage(item.image);
+        var url = item.url || "#";
 
         return `
             <tr id="row_compare${item.id}">
-                <td>${escapeHtml(item.name)}</td>
-                <td>${escapeHtml(item.price)}</td>
-                <td><img width="200px" src="${escapeHtml(image)}"></td>
-                <td>Đã sẵn sàng để so sánh chi tiết</td>
-                <td><a href="${escapeHtml(item.url)}">Xem sản phẩm</a></td>
-                <td><a style="cursor:pointer" onclick="delete_compare(${item.id})">Bỏ khỏi danh sách</a></td>
+                <td style="vertical-align: middle; font-weight: bold; min-width: 220px;">${escapeHtml(normalizeStorefrontLabel(item.name))}</td>
+                <td style="vertical-align: middle; color: #d50018; font-weight: 800;">${escapeHtml(item.price)}</td>
+                <td style="vertical-align: middle;"><img style="width: 80px; height: 80px; object-fit: contain; border-radius: 8px; background: #f8fafc; padding: 5px;" src="${escapeHtml(image)}"></td>
+                <td style="vertical-align: middle; font-size: 12px; color: #64748b;">Sẵn sàng so sánh</td>
+                <td style="vertical-align: middle;"><a href="${escapeHtml(url)}" class="btn btn-xs btn-info" style="border-radius: 4px; padding: 4px 8px; font-size: 11px;">Xem chi tiết</a></td>
+                <td style="vertical-align: middle;"><button type="button" class="btn btn-xs btn-danger" style="border-radius: 4px; padding: 4px 8px; font-size: 11px;" onclick="delete_compare(${item.id})"><i class="fa fa-trash"></i></button></td>
             </tr>
         `;
     }
@@ -57,7 +71,7 @@
             <div class="row" style="margin:10px 0">
                 <div class="col-md-4"><img width="100%" src="${escapeHtml(image)}"></div>
                 <div class="col-md-8 info_wishlist">
-                    <p>${escapeHtml(item.name)}</p>
+                    <p>${escapeHtml(normalizeStorefrontLabel(item.name))}</p>
                     <p style="color:#FE980F">${escapeHtml(item.price)}</p>
                     <a href="${escapeHtml(item.url)}">${escapeHtml(ctaText)}</a>
                 </div>
@@ -78,7 +92,7 @@
                     <img src="${escapeHtml(image)}" alt="${escapeHtml(item.name)}">
                 </a>
                 <div class="shopw-cart-viewed-copy">
-                    <h3><a href="${escapeHtml(url)}">${escapeHtml(item.name)}</a></h3>
+                    <h3><a href="${escapeHtml(url)}">${escapeHtml(normalizeStorefrontLabel(item.name))}</a></h3>
                     ${price}
                     <a class="shopw-cart-viewed-link" href="${escapeHtml(url)}">${escapeHtml(ctaText)}</a>
                 </div>
@@ -93,7 +107,7 @@
             <div class="row" id="wishlist_item${item.id}" style="margin:10px 0">
                 <div class="col-md-4"><img width="100%" src="${escapeHtml(image)}"></div>
                 <div class="col-md-8 info_wishlist">
-                    <p>${escapeHtml(item.name)}</p>
+                    <p>${escapeHtml(normalizeStorefrontLabel(item.name))}</p>
                     <p style="color:#FE980F">${escapeHtml(item.price)}</p>
                     <a href="${escapeHtml(item.url)}">Xem sản phẩm</a>
                 </div>
@@ -234,27 +248,70 @@
     function add_compare(product_id) {
         ensureCompareModalInBody();
 
+        product_id = parseInt(product_id, 10);
+        if (!product_id || product_id <= 0) {
+            swal("Chưa thể so sánh", "Sản phẩm không hợp lệ hoặc đã ngừng hiển thị.", "warning");
+            return;
+        }
+
         var item = getProductSnapshotFromInputs(product_id, 'wishlist');
+        item.id = product_id;
+        item.name = normalizeStorefrontLabel(item.name);
+        item.image = normalizeStorefrontImage(item.image);
+        item.url = item.url || '';
+
+        if (!item.name || !item.url || item.url.indexOf('/chi-tiet/') === -1) {
+            swal("Chưa thể so sánh", "Sản phẩm này chưa đủ thông tin để đưa vào bảng so sánh.", "warning");
+            return;
+        }
+
         var data = readStorefrontStorage('compare');
         var exists = data.some(function(entry) {
             return String(entry.id) === String(product_id);
         });
 
-        if (!exists && data.length <= 3) {
-            data.push(item);
-            writeStorefrontStorage('compare', data);
-            sosanh();
+        if (exists) {
+            swal("Đã có trong danh sách", "Sản phẩm này đã nằm trong bảng so sánh.", "info");
+            showCompareModal();
+            return;
         }
 
-        showCompareModal();
+        if (data.length >= 4) {
+            swal("Danh sách đầy", "Bạn chỉ có thể so sánh tối đa 4 sản phẩm cùng lúc.", "warning");
+            return;
+        }
+
+        data.push(item);
+        writeStorefrontStorage('compare', data);
+        sosanh();
+        
+        swal({
+            title: "Đã thêm so sánh",
+            text: "Sản phẩm đã được thêm vào danh sách so sánh.",
+            type: "success",
+            showCancelButton: true,
+            confirmButtonClass: "btn-success",
+            confirmButtonText: "Xem danh sách",
+            cancelButtonText: "Tiếp tục",
+            closeOnConfirm: true
+        }, function(isConfirm) {
+            if (isConfirm) {
+                showCompareModal();
+            }
+        });
     }
 
     function openCompareDetail() {
         var data = readStorefrontStorage('compare');
-        var emptyMessage = 'Vui lòng thêm sản phẩm vào danh sách so sánh trước.';
+        var emptyMessage = 'Vui lòng chọn ít nhất 2 sản phẩm hợp lệ để so sánh chi tiết.';
 
-        if (!data.length) {
+        data = data.filter(function(item) {
+            return item && item.id && item.name && item.url && String(item.url).indexOf('/chi-tiet/') !== -1;
+        });
+
+        if (data.length < 2) {
             showStorefrontStatus('Chưa có sản phẩm so sánh', emptyMessage, 'info');
+            swal("Cần thêm sản phẩm", "Vui lòng chọn ít nhất 2 sản phẩm hợp lệ để so sánh chi tiết.", "info");
             return;
         }
 
@@ -292,8 +349,8 @@
                     icon: 'fa fa-clock-o'
                 });
             } else {
-                rowViewed.style.overflow = 'scroll';
-                rowViewed.style.height = '500px';
+                rowViewed.style.overflowY = 'auto';
+                rowViewed.style.height = 'min(500px, 70vh)';
 
                 data.forEach(function(item) {
                     $('#row_viewed').append(renderViewedRow(item, 'Xem sản phẩm'));
@@ -364,8 +421,8 @@
             return;
         }
 
-        rowWishlist.style.overflow = 'scroll';
-        rowWishlist.style.height = '500px';
+        rowWishlist.style.overflowY = 'auto';
+        rowWishlist.style.height = 'min(500px, 70vh)';
 
         data.forEach(function(item) {
             $('#row_wishlist').append(renderWishlistRow(item));
@@ -373,7 +430,7 @@
     }
     view();
 
-    function add_wistlist(clicked_id) {
+    function add_wishlist(clicked_id) {
         var item = getProductSnapshotFromInputs(clicked_id, 'wishlist');
         var data = readStorefrontStorage('data');
         var exists = data.some(function(entry) {
@@ -384,12 +441,17 @@
             data = data.filter(function(entry) {
                 return String(entry.id) !== String(clicked_id);
             });
+            swal("Đã bỏ thích", "Sản phẩm đã được xóa khỏi danh sách yêu thích.", "info");
         } else {
             data.push(item);
+            swal("Đã yêu thích", "Sản phẩm đã được thêm vào danh sách yêu thích.", "success");
         }
 
         writeStorefrontStorage('data', data);
         view();
     }
-</script>
 
+    function add_wistlist(clicked_id) {
+        return add_wishlist(clicked_id);
+    }
+</script>

@@ -1,0 +1,19 @@
+{
+    "Login": "Đăng nhập",
+    "Register": "Đăng ký",
+    "Logout": "Đăng xuất",
+    "Email Address": "Địa chỉ email",
+    "Password": "Mật khẩu",
+    "Remember Me": "Ghi nhớ đăng nhập",
+    "Forgot Your Password?": "Quên mật khẩu?",
+    "Reset Password": "Đặt lại mật khẩu",
+    "Send Password Reset Link": "Gửi liên kết đặt lại mật khẩu",
+    "Confirm Password": "Xác nhận mật khẩu",
+    "Please confirm your password before continuing.": "Vui lòng xác nhận mật khẩu trước khi tiếp tục.",
+    "Name": "Tên",
+    "Verify Your Email Address": "Xác minh địa chỉ email",
+    "A fresh verification link has been sent to your email address.": "Liên kết xác minh mới đã được gửi tới email của bạn.",
+    "Before proceeding, please check your email for a verification link.": "Trước khi tiếp tục, vui lòng kiểm tra email để nhận liên kết xác minh.",
+    "If you did not receive the email": "Nếu bạn chưa nhận được email",
+    "click here to request another": "bấm vào đây để gửi lại"
+}

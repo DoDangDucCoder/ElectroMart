@@ -6,7 +6,7 @@
       <div class="cart-header">
         <h5 class="cart-title">
           <i class="fas fa-shopping-cart"></i>
-          Shopping Cart ({{ totalItems }})
+          Giỏ hàng ({{ totalItems }})
         </h5>
         <button @click="closeCart" class="btn-close">
           <i class="fas fa-times"></i>
@@ -54,7 +54,7 @@
               <button 
                 @click="removeItem(item.id)"
                 class="btn-remove"
-                title="Remove item"
+            title="Xóa sản phẩm"
               >
                 <i class="fas fa-trash"></i>
               </button>
@@ -64,19 +64,19 @@
         
         <div class="cart-summary">
           <div class="summary-row">
-            <span>Subtotal:</span>
+            <span>Tạm tính:</span>
             <span>{{ formatPrice(subtotal) }}</span>
           </div>
           <div class="summary-row" v-if="shipping_fee > 0">
-            <span>Shipping:</span>
+            <span>Phí vận chuyển:</span>
             <span>{{ formatPrice(shipping_fee) }}</span>
           </div>
           <div class="summary-row" v-if="discount_amount > 0">
-            <span>Discount:</span>
+            <span>Giảm giá:</span>
             <span class="text-success">-{{ formatPrice(discount_amount) }}</span>
           </div>
           <div class="summary-row total">
-            <span>Total:</span>
+            <span>Tổng cộng:</span>
             <span>{{ formatPrice(total) }}</span>
           </div>
         </div>
@@ -86,18 +86,18 @@
         <div class="empty-icon">
           <i class="fas fa-shopping-cart"></i>
         </div>
-        <p>Your cart is empty</p>
+        <p>Giỏ hàng của bạn đang trống</p>
         <button @click="closeCart" class="btn btn-primary">
-          Continue Shopping
+          Tiếp tục mua sắm
         </button>
       </div>
       
       <div class="cart-footer" v-if="items.length > 0">
         <button @click="viewCart" class="btn btn-outline-primary btn-block">
-          View Cart
+          Xem giỏ hàng
         </button>
         <button @click="checkout" class="btn btn-primary btn-block">
-          Checkout
+          Thanh toán
         </button>
       </div>
     </div>
@@ -107,7 +107,6 @@
 <script>
 import { computed } from 'vue'
 import { useCartStore } from '@/stores/cart'
-import { useRouter } from 'vue-router'
 
 export default {
   name: 'CartSidebar',
@@ -120,7 +119,6 @@ export default {
   emits: ['close'],
   setup(props, { emit }) {
     const cartStore = useCartStore()
-    const router = useRouter()
     
     const items = computed(() => cartStore.items)
     const totalItems = computed(() => cartStore.totalItems)
@@ -139,7 +137,7 @@ export default {
       try {
         await cartStore.updateItem(itemId, newQuantity)
       } catch (error) {
-        console.error('Failed to update quantity:', error)
+        console.error('Không thể cập nhật số lượng:', error)
       }
     }
     
@@ -147,18 +145,18 @@ export default {
       try {
         await cartStore.removeItem(itemId)
       } catch (error) {
-        console.error('Failed to remove item:', error)
+        console.error('Không thể xóa sản phẩm:', error)
       }
     }
     
     const viewCart = () => {
       closeCart()
-      router.push('/cart')
+      window.location.assign('/gio-hang')
     }
     
     const checkout = () => {
       closeCart()
-      router.push('/checkout')
+      window.location.assign('/checkout')
     }
     
     const formatPrice = (price) => {

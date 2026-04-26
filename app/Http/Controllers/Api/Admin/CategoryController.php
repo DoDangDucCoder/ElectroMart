@@ -55,7 +55,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Category created successfully',
+            'message' => 'Tạo danh mục thành công.',
             'data' => new CategoryResource($category),
         ], 201);
     }
@@ -88,7 +88,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Category updated successfully',
+            'message' => 'Cập nhật danh mục thành công.',
             'data' => new CategoryResource($category),
         ]);
     }
@@ -99,7 +99,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Category deleted successfully',
+            'message' => 'Xóa danh mục thành công.',
         ]);
     }
 
@@ -113,7 +113,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Category status updated successfully',
+            'message' => 'Cập nhật trạng thái danh mục thành công.',
             'data' => new CategoryResource($category),
         ]);
     }
@@ -128,7 +128,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Categories reordered successfully',
+            'message' => 'Sắp xếp lại danh mục thành công.',
         ]);
     }
 }

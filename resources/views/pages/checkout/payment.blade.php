@@ -27,7 +27,7 @@
                     <tbody>
                         @forelse ($cartItems as $item)
                             @php
-                                $image = $item['product_image'] ? asset($item['product_image']) : asset('uploads/product/no-image.svg');
+                                $image = \App\Support\AssetUrl::product($item['product_image'] ?? null);
                                 $subtotal = (float) $item['product_price'] * (int) $item['product_qty'];
                             @endphp
                             <tr>

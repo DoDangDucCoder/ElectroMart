@@ -27,7 +27,7 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error(data.message)
       }
     } catch (error) {
-      console.error('Login failed:', error)
+      console.error('Đăng nhập thất bại:', error)
       throw error
     }
   }
@@ -53,7 +53,7 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error(data.message)
       }
     } catch (error) {
-      console.error('Registration failed:', error)
+      console.error('Đăng ký thất bại:', error)
       throw error
     }
   }
@@ -69,7 +69,7 @@ export const useAuthStore = defineStore('auth', () => {
         })
       }
     } catch (error) {
-      console.error('Logout error:', error)
+      console.error('Lỗi đăng xuất:', error)
     } finally {
       user.value = null
       token.value = null
@@ -95,7 +95,7 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error(data.message)
       }
     } catch (error) {
-      console.error('Failed to fetch user:', error)
+      console.error('Không thể tải thông tin người dùng:', error)
       logout()
     }
   }
@@ -120,7 +120,7 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error(data.message)
       }
     } catch (error) {
-      console.error('Failed to update profile:', error)
+      console.error('Không thể cập nhật hồ sơ:', error)
       throw error
     }
   }

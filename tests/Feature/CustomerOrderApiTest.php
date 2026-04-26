@@ -42,7 +42,7 @@ class CustomerOrderApiTest extends TestCase
         ])->assertStatus(422)
             ->assertJson([
                 'success' => false,
-                'message' => 'Shipping address is invalid.',
+                'message' => 'Địa chỉ giao hàng không hợp lệ.',
             ]);
 
         $this->assertDatabaseCount('orders', 0);
@@ -73,7 +73,7 @@ class CustomerOrderApiTest extends TestCase
             ->assertStatus(422)
             ->assertJson([
                 'success' => false,
-                'message' => 'Order cannot be cancelled in its current status.',
+                'message' => 'Không thể hủy đơn hàng ở trạng thái hiện tại.',
             ]);
     }
 
@@ -103,7 +103,7 @@ class CustomerOrderApiTest extends TestCase
             ->assertNotFound()
             ->assertJson([
                 'success' => false,
-                'message' => 'Order not found or cannot be cancelled',
+                'message' => 'Không tìm thấy đơn hàng hoặc đơn không thể hủy.',
             ]);
     }
 
@@ -175,7 +175,7 @@ class CustomerOrderApiTest extends TestCase
         ])->assertStatus(422)
             ->assertJson([
                 'success' => false,
-                'message' => 'Order total does not meet minimum requirement',
+                'message' => 'Tổng đơn hàng chưa đạt điều kiện tối thiểu.',
             ]);
     }
 
@@ -218,7 +218,7 @@ class CustomerOrderApiTest extends TestCase
         ])->assertStatus(422)
             ->assertJson([
                 'success' => false,
-                'message' => 'Coupon not found or inactive',
+                'message' => 'Không tìm thấy mã giảm giá hoặc mã chưa được kích hoạt.',
             ]);
     }
 

@@ -1,7 +1,7 @@
 <template>
   <div class="pagination">
     <div class="pagination-info">
-      <span>Showing {{ startItem }} to {{ endItem }} of {{ total }} results</span>
+      <span>Hiển thị {{ startItem }} đến {{ endItem }} trong {{ total }} kết quả</span>
     </div>
     
     <div class="pagination-controls">
@@ -11,7 +11,7 @@
         class="btn-pagination"
       >
         <i class="fas fa-chevron-left"></i>
-        Previous
+        Trước
       </button>
       
       <div class="page-numbers">
@@ -31,7 +31,7 @@
         :disabled="currentPage >= lastPage"
         class="btn-pagination"
       >
-        Next
+        Sau
         <i class="fas fa-chevron-right"></i>
       </button>
     </div>

@@ -29,12 +29,12 @@ class RateLimitingMiddleware
             if ($request->expectsJson()) {
                 return response()->json([
                     'error' => 'Rate limit exceeded',
-                    'message' => 'Too many requests. Please try again later.',
+                    'message' => 'Bạn gửi quá nhiều yêu cầu. Vui lòng thử lại sau.',
                     'retry_after' => $this->getRetryAfter($key)
                 ], 429);
             }
 
-            return response('Too many requests. Please try again later.', 429)
+            return response('Bạn gửi quá nhiều yêu cầu. Vui lòng thử lại sau.', 429)
                 ->header('Retry-After', $this->getRetryAfter($key));
         }
 

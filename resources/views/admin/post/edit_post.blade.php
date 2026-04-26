@@ -58,7 +58,7 @@
                                 value="{{ old('post_title', $post->post_title) }}" onkeyup="ChangeToSlug();" required>
                         </div>
                         <div class="form-group">
-                            <label for="post_slug">Slug</label>
+                            <label for="post_slug">Đường dẫn tĩnh (slug)</label>
                             <input type="text" name="post_slug" class="form-control" id="convert_slug"
                                 value="{{ old('post_slug', $post->post_slug) }}">
                         </div>
@@ -136,7 +136,7 @@
                     <div class="g-admin-surface">
                         <h3>{{ $post->post_title }}</h3>
                         <ul class="g-admin-note-list">
-                            <li>Slug hiện tại: <strong>{{ $post->post_slug }}</strong></li>
+                            <li>Đường dẫn tĩnh (slug) hiện tại: <strong>{{ $post->post_slug }}</strong></li>
                             <li>Danh mục: <strong>{{ optional($post->category)->name ?? 'Chưa chọn' }}</strong></li>
                             <li>Trạng thái: <strong>{{ $post->post_status == 0 ? 'Hiển thị' : 'Ẩn' }}</strong></li>
                         </ul>

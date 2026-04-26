@@ -40,7 +40,7 @@ export const useCartStore = defineStore('cart', () => {
         throw new Error(data.message)
       }
     } catch (error) {
-      console.error('Failed to add item to cart:', error)
+      console.error('Không thể thêm sản phẩm vào giỏ hàng:', error)
       throw error
     }
   }
@@ -64,7 +64,7 @@ export const useCartStore = defineStore('cart', () => {
         throw new Error(data.message)
       }
     } catch (error) {
-      console.error('Failed to update cart item:', error)
+      console.error('Không thể cập nhật sản phẩm trong giỏ hàng:', error)
       throw error
     }
   }
@@ -86,7 +86,7 @@ export const useCartStore = defineStore('cart', () => {
         throw new Error(data.message)
       }
     } catch (error) {
-      console.error('Failed to remove cart item:', error)
+      console.error('Không thể xóa sản phẩm khỏi giỏ hàng:', error)
       throw error
     }
   }
@@ -110,7 +110,7 @@ export const useCartStore = defineStore('cart', () => {
         throw new Error(data.message)
       }
     } catch (error) {
-      console.error('Failed to clear cart:', error)
+      console.error('Không thể xóa giỏ hàng:', error)
       throw error
     }
   }
@@ -131,7 +131,7 @@ export const useCartStore = defineStore('cart', () => {
         discount_amount.value = data.data.discount_amount || 0
       }
     } catch (error) {
-      console.error('Failed to fetch cart:', error)
+      console.error('Không thể tải giỏ hàng:', error)
     }
   }
   

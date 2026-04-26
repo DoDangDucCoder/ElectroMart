@@ -11,7 +11,7 @@ class SelectDeliveryHomeRequest extends BaseFormRequest
     {
         return [
             'action' => ['required', 'string', Rule::in(['city', 'province'])],
-            'ma_id' => ['required', 'integer', 'min:1', 'exists:locations,id'],
+            'ma_id' => ['required', 'integer', 'min:1'],
         ];
     }
 
@@ -31,7 +31,24 @@ class SelectDeliveryHomeRequest extends BaseFormRequest
     {
         $this->merge([
             'action' => trim((string) $this->input('action')),
-            'ma_id' => $this->input('ma_id'),
+            'ma_id' => $this->normalizeNullableInteger($this->input('ma_id')),
         ]);
+    }
+
+    protected function normalizeNullableInteger(mixed $value): mixed
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        if (is_string($value)) {
+            $value = trim($value);
+
+            if ($value === '') {
+                return null;
+            }
+        }
+
+        return $value;
     }
 }

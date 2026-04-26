@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin\Legacy\Products;
 
 use App\Http\Requests\BaseFormRequest;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class StoreProductAttributeRequest extends BaseFormRequest
@@ -13,9 +14,11 @@ class StoreProductAttributeRequest extends BaseFormRequest
         $attributeRules = ['required', 'integer'];
         $nameRules = ['required', 'string', 'max:255'];
 
-        if (Schema::hasTable('tbl_product')) {
-            $productRules[] = 'exists:tbl_product,product_id';
-        }
+        $productRules[] = function (string $attribute, mixed $value, \Closure $fail): void {
+            if (! $this->productExists((int) $value)) {
+                $fail('Sản phẩm không tồn tại.');
+            }
+        };
 
         if (Schema::hasTable('tbl_attribute')) {
             $attributeRules[] = 'exists:tbl_attribute,id';
@@ -57,5 +60,28 @@ class StoreProductAttributeRequest extends BaseFormRequest
             'attribute_id.required' => 'Vui lòng chọn thuộc tính nền.',
             'attribute_id.exists' => 'Thuộc tính nền không tồn tại.',
         ];
+    }
+
+    protected function productExists(int $productId): bool
+    {
+        $checkedTable = false;
+
+        if (Schema::hasTable('tbl_product')) {
+            $checkedTable = true;
+
+            if (DB::table('tbl_product')->where('product_id', $productId)->exists()) {
+                return true;
+            }
+        }
+
+        if (Schema::hasTable('products')) {
+            $checkedTable = true;
+
+            if (DB::table('products')->where('id', $productId)->exists()) {
+                return true;
+            }
+        }
+
+        return ! $checkedTable;
     }
 }

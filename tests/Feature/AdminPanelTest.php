@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Application\Order\Services\LegacyOrderPresentationService;
 use App\Application\Catalog\Services\ProductService;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
+use App\Infrastructure\Persistence\Eloquent\Catalog\ProductMedia;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductReview;
 use App\Infrastructure\Persistence\Eloquent\Cms\BlogCategory;
@@ -76,7 +77,7 @@ class AdminPanelTest extends TestCase
             ->assertSee('aria-controls="sidebar"', false)
             ->assertSee('g-admin-post-list')
             ->assertSee('Liệt kê bài viết')
-            ->assertSee('Your Company Name')
+            ->assertSee('Quản trị hệ thống bán hàng.')
             ->assertSee('backend/js/jquery2.0.3.min.js')
             ->assertSee('backend/js/bootstrap.js')
             ->assertSee('backend/js/jquery.dcjqaccordion.2.7.js')
@@ -363,6 +364,98 @@ class AdminPanelTest extends TestCase
             ->delete('/delete-product/999999')
             ->assertRedirect('/all-product')
             ->assertSessionHas('error', 'Không tìm thấy sản phẩm cần xóa.');
+    }
+
+    public function test_admin_catalog_routes_render_with_online_catalog_data(): void
+    {
+        $admin = $this->createAdminUser();
+
+        $category = ProductCategory::create([
+            'name' => 'Online Phones',
+            'slug' => 'online-phones',
+            'description' => 'Online category without legacy backing rows',
+            'is_active' => true,
+            'display_order' => 1,
+            'meta' => ['source' => 'dummyjson'],
+        ]);
+
+        $brand = Brand::create([
+            'name' => 'Online Brand',
+            'slug' => 'online-brand',
+            'description' => 'Online brand without local logo',
+            'is_active' => true,
+            'display_order' => 1,
+            'meta' => ['source' => 'dummyjson'],
+        ]);
+
+        $product = $this->app->make(ProductService::class)->createProduct([
+            'name' => 'Online Admin Smoke Product',
+            'slug' => 'online-admin-smoke-product',
+            'brand_id' => $brand->id,
+            'primary_category_id' => $category->id,
+            'sku' => 'ONLINE-SMOKE-001',
+            'price' => 2500000,
+            'sale_price' => 2100000,
+            'sale_type' => 'fixed',
+            'sale_value' => 400000,
+            'cost_price' => 1700000,
+            'stock_quantity' => 8,
+            'description' => 'Online product imported from an external API.',
+            'content' => 'No legacy gallery or attribute rows are required for admin pages.',
+            'category_ids' => [$category->id],
+            'tags' => ['online', 'dummyjson'],
+            'is_active' => true,
+            'thumbnail_path' => 'https://cdn.example.test/products/online-admin-smoke.png',
+            'meta' => [
+                'source' => 'dummyjson',
+                'tags' => ['online', 'dummyjson'],
+            ],
+        ]);
+
+        ProductMedia::create([
+            'product_id' => $product->id,
+            'disk' => 'public',
+            'collection' => 'thumbnail',
+            'file_path' => 'https://cdn.example.test/products/online-admin-smoke.png',
+            'display_order' => 0,
+            'meta' => ['source' => 'dummyjson'],
+        ]);
+
+        $this->ensureLegacyAttributeProductTablesExist();
+        DB::table('tbl_gallery')->insert([
+            'product_id' => $product->product_id,
+            'gallery_name' => 'stale-legacy-gallery',
+            'gallery_image' => 'stale-legacy-gallery.png',
+        ]);
+
+        $routes = [
+            '/all-product',
+            '/add-product',
+            '/edit-product/' . $product->product_id,
+            '/all-category-product',
+            '/add-category-product',
+            '/edit-category-product/' . $category->id,
+            '/all-brand-product',
+            '/add-brand-product',
+            '/edit-brand-product/' . $brand->id,
+            '/add-gallery/' . $product->product_id,
+            '/product-attribute/' . $product->product_id,
+        ];
+
+        foreach ($routes as $route) {
+            $this->actingAs($admin, 'web')
+                ->get($route)
+                ->assertOk()
+                ->assertDontSee('alert alert-danger', false);
+        }
+
+        $this->actingAs($admin, 'web')
+            ->post('/select-gallery', [
+                'pro_id' => $product->product_id,
+            ])
+            ->assertOk()
+            ->assertSee('https://cdn.example.test/products/online-admin-smoke.png', false)
+            ->assertDontSee('stale-legacy-gallery');
     }
 
     public function test_admin_brand_pages_render_refreshed_shell(): void
@@ -1638,7 +1731,7 @@ class AdminPanelTest extends TestCase
         $this->ensureLegacyCouponTableExists();
 
         Coupon::create([
-            'coupon_name' => 'Flash Sale VIP',
+            'coupon_name' => 'Khuyến mãi VIP',
             'coupon_code' => 'FLASHVIP',
             'coupon_time' => 50,
             'coupon_number' => 15,
@@ -1678,7 +1771,7 @@ class AdminPanelTest extends TestCase
             ->get('/list-coupon')
             ->assertOk()
             ->assertSee('g-admin-coupon-list')
-            ->assertSee('Flash Sale VIP')
+            ->assertSee('Khuyến mãi VIP')
             ->assertSee('Gửi khách VIP');
 
         $this->actingAs($admin, 'web')
@@ -1718,7 +1811,7 @@ class AdminPanelTest extends TestCase
             ->assertSee('g-admin-permission-create')
             ->assertSee('value="manage orders"', false)
             ->assertSee('Cập nhật quyền cho Content Operator')
-            ->assertSee('không gán quyền trực tiếp riêng lẻ lên user');
+            ->assertSee('không gán quyền trực tiếp riêng lẻ lên người dùng');
 
         $this->actingAs($admin, 'web')
             ->post('/assign-role/' . $managedUser->id, [
@@ -1901,8 +1994,8 @@ class AdminPanelTest extends TestCase
             ->assertOk()
             ->assertSee('Locked Coupon')
             ->assertSee('Expired Coupon Admin')
-            ->assertSee('Coupon đang bị khóa')
-            ->assertSee('Coupon đã hết hạn')
+            ->assertSee('Mã giảm giá đang bị khóa')
+            ->assertSee('Mã giảm giá đã hết hạn')
             ->assertSee('button type="button" class="btn btn-primary btn-sm" disabled', false);
     }
 
@@ -2443,7 +2536,7 @@ class AdminPanelTest extends TestCase
             ])
             ->assertOk()
             ->assertJson([
-                'message' => 'ok',
+                'message' => 'Thành công.',
                 'status' => 0,
             ]);
 
@@ -2460,7 +2553,7 @@ class AdminPanelTest extends TestCase
             ])
             ->assertOk()
             ->assertJson([
-                'message' => 'ok',
+                'message' => 'Thành công.',
             ]);
 
         $this->assertDatabaseHas('product_reviews', [

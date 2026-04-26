@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Support\StorefrontCustomerAuth;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use DB;
-use Session;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
+use Laravel\Socialite\Two\InvalidStateException;
 use App\Models\SocialCustomers;
 use Socialite;
 use App\Models\Product;
@@ -30,17 +32,22 @@ class AdminController extends Controller
 {
     public function login_customer_google(Request $request)
     {
-        config(['services.google.redirect' => env('GOOGLE_CLIENT_URL')]);
         StorefrontCustomerAuth::rememberIntendedDestination($request, 'checkout');
 
         return Socialite::driver('google')->redirect();
     }
-    public function callback_customer_google()
+    public function callback_customer_google(Request $request)
     {
+        if ($this->invalidSocialCallbackRequest($request)) {
+            return $this->failedSocialCustomerLoginRedirect('google');
+        }
 
-        config(['services.google.redirect' => env('GOOGLE_CLIENT_URL')]);
+        try {
+            $users = Socialite::driver('google')->user();
+        } catch (InvalidStateException) {
+            return $this->failedSocialCustomerLoginRedirect('google');
+        }
 
-        $users = Socialite::driver('google')->stateless()->user();
         $customer = $this->findOrCreateStorefrontSocialCustomer(
             'google',
             $this->socialUserId($users),
@@ -63,48 +70,24 @@ class AdminController extends Controller
         return redirect($redirectUrl ?: StorefrontCustomerAuth::destinationUrl($redirectKey, 'checkout'))
             ->with('message', 'Đăng nhập bằng tài khoản Google thành công.');
     }
-    public function findOrCreateCustomer($users, $provider)
-    {
-        $authUser = SocialCustomers::where('provider_user_id', $users->id)->first();
-        if ($authUser) {
-            return $authUser;
-        } else {
-            $customer_new = new SocialCustomers([
-                'provider_user_id' => $users->id,
-                'provider_user_email' => $users->email,
-                'provider' => strtoupper($provider)
-            ]);
 
-            $customer = Customer::where('customer_email', $users->email)->first();
-
-            if (!$customer) {
-
-                $customer = Customer::create([
-                    'customer_name' => $users->name,
-                    'customer_picture' => $users->avatar,
-                    'customer_email' => $users->email,
-                    'customer_password' => '',
-                    'customer_phone' => ''
-                ]);
-            }
-
-            $customer_new->customer()->associate($customer);
-
-            $customer_new->save();
-            return $customer_new;
-        }
-    }
     public function login_facebook_customer(Request $request)
     {
-        config(['services.facebook.redirect' => env('FACEBOOK_CLIENT_REDIRECT')]);
         StorefrontCustomerAuth::rememberIntendedDestination($request, 'checkout');
 
         return Socialite::driver('facebook')->redirect();
     }
-    public function callback_facebook_customer()
+    public function callback_facebook_customer(Request $request)
     {
-        config(['services.facebook.redirect' => env('FACEBOOK_CLIENT_REDIRECT')]);
-        $provider = Socialite::driver('facebook')->user();
+        if ($this->invalidSocialCallbackRequest($request)) {
+            return $this->failedSocialCustomerLoginRedirect('facebook');
+        }
+
+        try {
+            $provider = Socialite::driver('facebook')->user();
+        } catch (InvalidStateException) {
+            return $this->failedSocialCustomerLoginRedirect('facebook');
+        }
 
         $customer = $this->findOrCreateStorefrontSocialCustomer(
             'facebook',
@@ -128,6 +111,25 @@ class AdminController extends Controller
         return redirect($redirectUrl ?: StorefrontCustomerAuth::destinationUrl($redirectKey, 'checkout'))
             ->with('message', 'Đăng nhập bằng tài khoản Facebook thành công.');
     }
+
+    protected function invalidSocialCallbackRequest(Request $request): bool
+    {
+        return $request->filled('error')
+            || ! $request->filled('code')
+            || ! $request->filled('state');
+    }
+
+    protected function failedSocialCustomerLoginRedirect(string $provider): RedirectResponse
+    {
+        $redirectKey = StorefrontCustomerAuth::pullIntendedRedirect('checkout');
+        StorefrontCustomerAuth::forgetIntendedRedirect();
+        $providerLabel = ucfirst(strtolower($provider));
+
+        return redirect(StorefrontCustomerAuth::destinationUrl('login') . '?' . http_build_query([
+            'redirect' => $redirectKey,
+        ]))->with('error', "Không thể hoàn tất đăng nhập bằng {$providerLabel}. Vui lòng thử lại.");
+    }
+
     public function show_dashboard(Request $request)
     {
         $user_ip_address = $request->ip();

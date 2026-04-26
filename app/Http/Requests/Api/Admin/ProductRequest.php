@@ -66,11 +66,11 @@ class ProductRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'slug.regex' => 'Slug must contain only lowercase letters, numbers, and hyphens.',
-            'sale_price.lt' => 'Sale price must be less than regular price.',
-            'image.max' => 'Image size must not exceed 2MB.',
-            'document.max' => 'Document size must not exceed 5MB.',
-            'sale_type.in' => 'Sale type must be percent or fixed.',
+            'slug.regex' => 'Đường dẫn chỉ được chứa chữ thường không dấu, số và dấu gạch ngang.',
+            'sale_price.lt' => 'Giá khuyến mãi phải nhỏ hơn giá bán gốc.',
+            'image.max' => 'Kích thước hình ảnh không được vượt quá 2MB.',
+            'document.max' => 'Kích thước tài liệu không được vượt quá 5MB.',
+            'sale_type.in' => 'Kiểu khuyến mãi phải là phần trăm hoặc số tiền cố định.',
         ];
     }
 
@@ -112,7 +112,7 @@ class ProductRequest extends FormRequest
             }
 
             if (! $saleType || $saleValue === null || $saleValue === '') {
-                $validator->errors()->add('sale_value', 'Sale type và giá trị sale phải đi cùng nhau.');
+                $validator->errors()->add('sale_value', 'Kiểu khuyến mãi và giá trị khuyến mãi phải đi cùng nhau.');
 
                 return;
             }
@@ -120,11 +120,11 @@ class ProductRequest extends FormRequest
             $saleValue = (float) $saleValue;
 
             if ($saleType === 'percent' && $saleValue > 100) {
-                $validator->errors()->add('sale_value', 'Sale phần trăm không được vượt quá 100.');
+                $validator->errors()->add('sale_value', 'Khuyến mãi theo phần trăm không được vượt quá 100.');
             }
 
             if ($saleType === 'fixed' && $saleValue >= $price) {
-                $validator->errors()->add('sale_value', 'Sale số tiền phải nhỏ hơn giá bán gốc.');
+                $validator->errors()->add('sale_value', 'Số tiền khuyến mãi phải nhỏ hơn giá bán gốc.');
             }
         });
     }

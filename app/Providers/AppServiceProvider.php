@@ -54,6 +54,7 @@ use App\Infrastructure\Persistence\Repositories\Cms\EloquentBlogCategoryReposito
 use App\Infrastructure\Persistence\Repositories\Cms\EloquentBlogPostRepository;
 use App\Support\DatabaseRuntime;
 use App\Support\AdminPermissions;
+use Carbon\Carbon;
 use Illuminate\Http\Client\Response as HttpClientResponse;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
@@ -110,6 +111,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        $locale = config('app.locale', 'vi');
+
+        app()->setLocale($locale);
+        Carbon::setLocale($locale);
+
         $this->registerHttpClientCompatibilityMacros();
 
         view()->composer('*', function ($view) {

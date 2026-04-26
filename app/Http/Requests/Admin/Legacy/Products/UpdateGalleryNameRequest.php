@@ -9,14 +9,8 @@ class UpdateGalleryNameRequest extends BaseFormRequest
 {
     public function rules(): array
     {
-        $galleryRules = ['required', 'integer'];
-
-        if (Schema::hasTable('tbl_gallery')) {
-            $galleryRules[] = 'exists:tbl_gallery,gallery_id';
-        }
-
         return [
-            'gal_id' => $galleryRules,
+            'gal_id' => ['required', 'integer'],
             'gal_text' => ['required', 'string', 'max:255'],
         ];
     }

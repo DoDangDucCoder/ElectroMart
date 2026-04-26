@@ -35,17 +35,17 @@
     <div class="g-admin-page-shell g-admin-coupon-list">
         <section class="g-admin-page-hero">
             <div>
-                <span class="g-admin-page-eyebrow">Coupon</span>
+                <span class="g-admin-page-eyebrow">Mã giảm giá</span>
                 <h1>Liệt kê mã giảm giá</h1>
                 <p>
-                    Theo dõi thời gian hiệu lực, trạng thái hoạt động và gửi coupon trực tiếp cho nhóm khách thường hoặc VIP.
+                    Theo dõi thời gian hiệu lực, trạng thái hoạt động và gửi mã giảm giá trực tiếp cho nhóm khách thường hoặc khách VIP.
                 </p>
             </div>
 
             <div class="g-admin-page-stats">
                 <article>
                     <strong>{{ number_format($coupon->total()) }}</strong>
-                    <span>Tổng coupon</span>
+                    <span>Tổng mã giảm giá</span>
                 </article>
                 <article>
                     <strong>{{ number_format($activeCoupons) }}</strong>
@@ -58,7 +58,7 @@
             <article class="g-admin-kpi-card">
                 <span>Đang hoạt động</span>
                 <strong>{{ number_format($activeCoupons) }}</strong>
-                <p>Coupon có trạng thái active trong trang hiện tại.</p>
+                <p>Mã giảm giá có trạng thái đang hoạt động trong trang hiện tại.</p>
             </article>
             <article class="g-admin-kpi-card">
                 <span>Hết hạn</span>
@@ -70,7 +70,7 @@
         <section class="g-admin-panel-card">
             <div class="g-admin-panel-head">
                 <div>
-                    <div>Danh sách coupon</div>
+                    <div>Danh sách mã giảm giá</div>
                     <p>Theo dõi hiệu lực, trạng thái và gửi mã ưu đãi tới các nhóm khách hàng phù hợp.</p>
                 </div>
                 <div class="g-admin-inline-actions">
@@ -96,8 +96,8 @@
                                 <tr>
                                     <th>Tên mã</th>
                                     <th>Hiệu lực</th>
-                                    <th>Mã coupon</th>
-                                    <th>Quota</th>
+                                    <th>Mã giảm giá</th>
+                                    <th>Số lượt</th>
                                     <th>Loại giảm</th>
                                     <th>Giá trị</th>
                                     <th>Trạng thái</th>
@@ -113,8 +113,8 @@
                                         $couponLocked = (int) ($cou->coupon_status ?? 0) !== 1;
                                         $couponExpired = ! ($couponEndDate && $couponEndDate->gte($todayDate));
                                         $campaignBlockedReason = $couponLocked
-                                            ? 'Coupon đang bị khóa'
-                                            : ($couponExpired ? 'Coupon đã hết hạn' : null);
+                                            ? 'Mã giảm giá đang bị khóa'
+                                            : ($couponExpired ? 'Mã giảm giá đã hết hạn' : null);
                                     @endphp
                                     <tr>
                                         <td>
@@ -204,7 +204,7 @@
                 <div class="row">
                     <div class="col-sm-5 text-center">
                         <small class="text-muted inline m-t-sm m-b-sm">
-                            Hiển thị {{ $coupon->count() }} / {{ $coupon->total() }} coupon
+                            Hiển thị {{ $coupon->count() }} / {{ $coupon->total() }} mã giảm giá
                         </small>
                     </div>
                     <div class="col-sm-7 text-right text-center-xs">

@@ -11,7 +11,7 @@
     <section class="features_items shopw-home-section shopw-home-campaign-section">
         <div class="shopw-section-head shopw-section-head-split">
             <div>
-                <span class="shopw-section-kicker">Deal và chiến dịch</span>
+                <span class="shopw-section-kicker">Ưu đãi và chiến dịch</span>
                 <h2 class="title text-center">Điểm chạm nổi bật trong ngày</h2>
                 <p class="shopw-section-copy">Không dàn đều quá nhiều banner. Mỗi block chỉ giữ một mục tiêu rõ để người dùng dễ hiểu và đi tiếp nhanh hơn.</p>
             </div>

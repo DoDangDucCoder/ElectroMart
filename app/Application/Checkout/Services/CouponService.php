@@ -88,14 +88,14 @@ class CouponService
         if (! $coupon) {
             return [
                 'valid' => false,
-                'message' => 'Coupon not found or inactive',
+                'message' => 'Không tìm thấy mã giảm giá hoặc mã chưa được kích hoạt.',
             ];
         }
 
         if ($coupon->min_order_total !== null && $totalAmount < (float) $coupon->min_order_total) {
             return [
                 'valid' => false,
-                'message' => 'Order total does not meet minimum requirement',
+                'message' => 'Tổng đơn hàng chưa đạt điều kiện tối thiểu.',
             ];
         }
 
@@ -113,7 +113,7 @@ class CouponService
 
         return [
             'valid' => true,
-            'message' => 'Coupon is valid',
+            'message' => 'Mã giảm giá hợp lệ.',
             'coupon' => $coupon,
             'discount_amount' => $discount,
             'final_amount' => $finalAmount,

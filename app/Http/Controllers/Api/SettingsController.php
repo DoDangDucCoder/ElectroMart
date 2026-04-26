@@ -25,7 +25,7 @@ class SettingsController extends Controller
         if (! $this->settingsTableReady()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Setting not found',
+                'message' => 'Không tìm thấy thiết lập.',
                 'tables_ready' => false,
             ], 404);
         }
@@ -41,7 +41,7 @@ class SettingsController extends Controller
         if (!$setting) {
             return response()->json([
                 'success' => false,
-                'message' => 'Setting not found',
+                'message' => 'Không tìm thấy thiết lập.',
                 'tables_ready' => true,
             ], 404);
         }

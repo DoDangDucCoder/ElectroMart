@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Application\Shared\Services\PublicUploadService;
 use App\Http\Requests\Admin\Legacy\Products\StoreProductAttributeRequest;
-use App\Models\ProductAttribute;
+use App\Infrastructure\Persistence\Eloquent\Catalog\Product as CatalogProduct;
 use App\Models\Attribute;
-use App\Models\Product;
+use App\Models\Product as LegacyProduct;
+use App\Models\ProductAttribute;
 use Illuminate\Support\Facades\Schema;
 
 class ProductAttributeController extends Controller
@@ -40,33 +41,52 @@ class ProductAttributeController extends Controller
             'attribute_id' => $validated['attribute_id'],
         ]);
 
-        return redirect()->back()->with('message', 'Product attribute added successfully.');
+        return redirect()->back()->with('message', 'Đã thêm thuộc tính sản phẩm thành công.');
     }
 
     public function show(string $id)
     {
-        $product = Product::where('product_id', $id)->first();
+        $product = Schema::hasTable((new LegacyProduct())->getTable())
+            ? LegacyProduct::where('product_id', $id)->first()
+            : null;
+
+        if (! $product) {
+            $product = CatalogProduct::query()->find($id);
+        }
+
         if (! $product) {
             return redirect('/all-product')->with('message', 'Không tìm thấy sản phẩm cần quản lý thuộc tính.');
         }
 
+        $usesModernProduct = $product instanceof CatalogProduct;
         $attributeTableReady = Schema::hasTable((new Attribute())->getTable());
         $productAttributeTableReady = Schema::hasTable((new ProductAttribute())->getTable());
+        $legacyProductTableReady = Schema::hasTable((new LegacyProduct())->getTable());
 
         $attribute = $attributeTableReady
             ? Attribute::query()->orderByDesc('id')->get()
             : collect();
 
         if ($productAttributeTableReady) {
-            $productAttributeQuery = ProductAttribute::with('product')
-                ->where('product_id', $id)
+            $productAttributeQuery = ProductAttribute::query()
+                ->where('product_id', $product->product_id)
                 ->orderByDesc('id');
+
+            if (! $usesModernProduct && $legacyProductTableReady) {
+                $productAttributeQuery->with('product');
+            }
 
             if ($attributeTableReady) {
                 $productAttributeQuery->with('attribute');
             }
 
             $product_attribute = $productAttributeQuery->get();
+
+            if ($usesModernProduct || ! $legacyProductTableReady) {
+                $product_attribute->each(function (ProductAttribute $productAttribute) use ($product): void {
+                    $productAttribute->setRelation('product', $product);
+                });
+            }
 
             if (! $attributeTableReady) {
                 $product_attribute->each(function (ProductAttribute $productAttribute): void {
@@ -94,7 +114,7 @@ class ProductAttributeController extends Controller
         $productAttribute = ProductAttribute::find($id_attribute);
 
         if (! $productAttribute) {
-            return redirect()->back()->with('message', 'Product attribute not found.');
+            return redirect()->back()->with('message', 'Không tìm thấy thuộc tính sản phẩm.');
         }
 
         $this->publicUploadService->deletePublicFile(
@@ -102,6 +122,6 @@ class ProductAttributeController extends Controller
         );
         $productAttribute->delete();
 
-        return redirect()->back()->with('message', 'Product attribute deleted successfully.');
+        return redirect()->back()->with('message', 'Đã xóa thuộc tính sản phẩm thành công.');
     }
 }

@@ -21,18 +21,20 @@ class IPWhitelistMiddleware
 
     private function allowsRequest(Request $request): bool
     {
-        $enabled = filter_var(
-            (string) env('IP_WHITELIST_ENABLED', false),
-            FILTER_VALIDATE_BOOL
-        );
+        $enabled = (bool) config('security.ip_whitelist.enabled', false);
 
         if (!$enabled) {
             return true;
         }
 
+        $configuredIps = config('security.ip_whitelist.allowed', []);
+        if (is_string($configuredIps)) {
+            $configuredIps = explode(',', $configuredIps);
+        }
+
         $allowedIps = array_values(array_filter(array_map(
-            static fn (string $ip): string => trim($ip),
-            explode(',', (string) env('IP_WHITELIST', ''))
+            static fn ($ip): string => trim((string) $ip),
+            (array) $configuredIps
         )));
 
         if ($allowedIps === []) {

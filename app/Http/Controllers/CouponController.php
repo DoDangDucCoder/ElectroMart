@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Admin\Legacy\Coupon\StoreCouponRequest;
 use App\Models\Coupon;
 use Carbon\Carbon;
-use Session;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Schema;

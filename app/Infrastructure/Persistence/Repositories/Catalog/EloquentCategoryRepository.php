@@ -76,8 +76,12 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
 
     protected function applyFilters($query, array $filters)
     {
-        if (isset($filters['parent_id'])) {
-            $query->where('parent_id', $filters['parent_id']);
+        if (array_key_exists('parent_id', $filters)) {
+            $parentId = $filters['parent_id'];
+            if ($parentId === 0 || $parentId === '0') {
+                $parentId = null;
+            }
+            $query->where('parent_id', $parentId);
         }
 
         if (! empty($filters['search'])) {

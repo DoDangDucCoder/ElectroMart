@@ -97,7 +97,7 @@
                     <tr>
                         <th>Tên khách đặt</th>
                         <th>Số điện thoại</th>
-                        <th>Email</th>
+                        <th>Thư điện tử</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -118,7 +118,7 @@
                         <th>Tên người nhận</th>
                         <th>Địa chỉ</th>
                         <th>Số điện thoại</th>
-                        <th>Email</th>
+                        <th>Thư điện tử</th>
                         <th>Ghi chú</th>
                     </tr>
                 </thead>

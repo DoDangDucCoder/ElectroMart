@@ -99,6 +99,6 @@ class BlogApiTest extends TestCase
         $this->getJson('/api/v1/blog/search?q=' . urlencode('   '))
             ->assertStatus(400)
             ->assertJsonPath('success', false)
-            ->assertJsonPath('message', 'Search keyword is required');
+            ->assertJsonPath('message', 'Cần nhập từ khóa tìm kiếm.');
     }
 }

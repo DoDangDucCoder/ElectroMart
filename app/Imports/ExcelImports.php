@@ -3,9 +3,8 @@
 namespace App\Imports;
 
 use App\Models\CategoryProductModel;
-use Maatwebsite\Excel\Concerns\ToModel;
 
-class ExcelImports implements ToModel
+class ExcelImports
 {
     /**
      * @param array $row

@@ -52,7 +52,7 @@ class CategoryController extends Controller
     {
         $this->service->delete($category);
 
-        return response()->json(['message' => 'Category deleted']);
+        return response()->json(['message' => 'Đã xóa danh mục.']);
     }
 
     public function updateStatus(Request $request, ProductCategory $category): CategoryResource
@@ -70,6 +70,6 @@ class CategoryController extends Controller
     {
         $this->service->reorder($request->validated()['ordered_ids']);
 
-        return response()->json(['message' => 'Categories reordered']);
+        return response()->json(['message' => 'Đã sắp xếp lại danh mục.']);
     }
 }

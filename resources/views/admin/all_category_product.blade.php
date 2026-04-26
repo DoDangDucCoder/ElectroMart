@@ -15,7 +15,7 @@
         <section class="g-admin-page-hero">
             <div>
                 <span class="g-admin-page-eyebrow">Danh mục sản phẩm</span>
-                <h1>Liệt kê danh mục sản phẩm</h1>
+                <h1>Danh sách danh mục sản phẩm</h1>
                 <p>Theo dõi cây danh mục, trạng thái hiển thị và thứ tự sắp xếp của các nhóm sản phẩm.</p>
             </div>
             <div class="g-admin-page-stats">
@@ -49,7 +49,7 @@
 
                 @unless ($categoryLegacyActionsReady)
                     <div class="alert alert-warning">
-                        Tác vụ quản trị danh mục sản phẩm legacy hiện chưa được nối route trong bản này. Màn hình đang ở chế độ chỉ xem để tránh dẫn tới lỗi 404, nên kéo thả sắp xếp cũng đang được tắt.
+                        Tác vụ quản trị danh mục sản phẩm phiên bản cũ hiện chưa được nối route trong bản này. Màn hình đang ở chế độ chỉ xem để tránh dẫn tới lỗi 404, nên kéo thả sắp xếp cũng đang được tắt.
                     </div>
                 @endunless
 
@@ -85,6 +85,14 @@
                         cursor: move;
                         margin-top: 12px;
                     }
+
+                    @media (max-width: 767px) {
+                        .g-admin-category-product-list .g-admin-data-table th,
+                        .g-admin-category-product-list .g-admin-data-table td {
+                            white-space: nowrap;
+                            font-size: 12px;
+                        }
+                    }
                 </style>
 
                 <div class="table-responsive">
@@ -98,7 +106,7 @@
                                 </th>
                                 <th>Tên danh mục</th>
                                 <th>Thuộc danh mục</th>
-                                <th>Slug</th>
+                                <th>Đường dẫn tĩnh (slug)</th>
                                 <th>Thứ tự danh mục</th>
                                 <th>Hiển thị</th>
                                 <th style="width:30px;"></th>
@@ -155,7 +163,7 @@
                                                 <i class="fa fa-times text-danger text"></i>
                                             </a>
                                         @else
-                                            <span class="text-muted">Legacy</span>
+                                            <span class="text-muted">Phiên bản cũ</span>
                                         @endif
                                     </td>
                                 </tr>

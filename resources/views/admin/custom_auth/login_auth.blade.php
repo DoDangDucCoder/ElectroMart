@@ -53,10 +53,10 @@
         <div class="admin-auth-meta">
             <strong>Dữ liệu seed local</strong><br>
             Khối này chỉ hiện ở môi trường local để tiện kiểm thử nhanh.<br>
-            Super Admin:
+            Quản trị cao nhất:
             <code>{{ $adminAuthSeedDefaults['primary_email'] ?? 'admin@shop.com' }}</code> /
             <code>{{ $adminAuthSeedDefaults['primary_password'] ?? 'admin123' }}</code><br>
-            Editor:
+            Biên tập viên:
             <code>{{ $adminAuthSeedDefaults['editor_email'] ?? 'editor@shop.com' }}</code> /
             <code>{{ $adminAuthSeedDefaults['editor_password'] ?? 'editor123' }}</code>
         </div>

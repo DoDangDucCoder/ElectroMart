@@ -19,10 +19,7 @@ class HTTPSRedirectMiddleware
 
     private function shouldRedirectToHttps(Request $request): bool
     {
-        $forceHttps = filter_var(
-            (string) env('FORCE_HTTPS', app()->environment('production')),
-            FILTER_VALIDATE_BOOL
-        );
+        $forceHttps = (bool) config('security.force_https', app()->environment('production'));
 
         if (!$forceHttps) {
             return false;

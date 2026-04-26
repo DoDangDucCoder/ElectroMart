@@ -13,11 +13,11 @@ CREATE TABLE IF NOT EXISTS `tbl_icons` (
 
 -- Insert data for tbl_icons
 INSERT INTO `tbl_icons` (`id_icons`, `name`, `image`, `link`, `category`) VALUES
-(15, 'HNam', 'slider168.jpg', 'https://thegioididong.com', 'doitac'),
-(16, 'Thế Giới Di Động', 'slider168.jpg', 'https://thegioididong.com', 'doitac'),
-(19, 'Vien thong A', 'slider168.jpg', 'https://thegioididong.com', 'doitac'),
-(20, 'Vien thong B', 'slider168.jpg', 'https://thegioididong.com', 'doitac'),
-(21, 'Phong Vũ', 'phongvu81.png', 'https://www.phongvu.com', 'doitac');
+(15, 'Đối tác công nghệ A', 'slider168.jpg', '#', 'doitac'),
+(16, 'Đối tác công nghệ B', 'slider168.jpg', '#', 'doitac'),
+(19, 'Đối tác viễn thông A', 'slider168.jpg', '#', 'doitac'),
+(20, 'Đối tác viễn thông B', 'slider168.jpg', '#', 'doitac'),
+(21, 'Đối tác phân phối', 'slider168.jpg', '#', 'doitac');
 
 -- Table structure for table `tbl_infomation`
 CREATE TABLE IF NOT EXISTS `tbl_infomation` (

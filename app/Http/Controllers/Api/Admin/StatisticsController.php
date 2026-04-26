@@ -155,7 +155,7 @@ class StatisticsController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Database optimization completed',
+            'message' => 'Tối ưu cơ sở dữ liệu đã hoàn tất.',
             'data' => $results,
         ]);
     }
@@ -166,7 +166,7 @@ class StatisticsController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Database indexes added',
+            'message' => 'Đã thêm chỉ mục cơ sở dữ liệu.',
             'data' => $results,
         ]);
     }

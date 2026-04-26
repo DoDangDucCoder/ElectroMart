@@ -10,12 +10,12 @@
             </div>
             <div class="g-admin-page-stats">
                 <article>
-                    <strong>Blog</strong>
+                    <strong>Tin tức</strong>
                     <span>Phân nhóm nội dung</span>
                 </article>
                 <article>
                     <strong>SEO</strong>
-                    <span>Slug và mô tả rõ ràng</span>
+                    <span>Đường dẫn tĩnh (slug) và mô tả rõ ràng</span>
                 </article>
             </div>
         </section>
@@ -52,9 +52,9 @@
                             value="{{ old('cate_post_name') }}" placeholder="Tên danh mục">
                     </div>
                     <div class="form-group">
-                        <label for="convert_slug">Slug</label>
+                        <label for="convert_slug">Đường dẫn tĩnh (slug)</label>
                         <input type="text" name="cate_post_slug" class="form-control" id="convert_slug"
-                            value="{{ old('cate_post_slug') }}" placeholder="slug-danh-muc">
+                            value="{{ old('cate_post_slug') }}" placeholder="duong-dan-tinh-danh-muc">
                     </div>
                     <div class="form-group">
                         <label for="cate_post_desc">Mô tả danh mục</label>

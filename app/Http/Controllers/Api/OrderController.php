@@ -62,7 +62,7 @@ class OrderController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Order created successfully',
+            'message' => 'Tạo đơn hàng thành công.',
             'data' => new OrderResource($order),
         ], 201);
     }
@@ -74,7 +74,7 @@ class OrderController extends Controller
         if (!$order) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found',
+                'message' => 'Không tìm thấy đơn hàng.',
             ], 404);
         }
 
@@ -98,13 +98,13 @@ class OrderController extends Controller
         if (!$order) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found or cannot be cancelled',
+                'message' => 'Không tìm thấy đơn hàng hoặc đơn không thể hủy.',
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'message' => 'Order cancelled successfully',
+            'message' => 'Hủy đơn hàng thành công.',
             'data' => new OrderResource($order),
         ]);
     }

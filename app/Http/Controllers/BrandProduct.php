@@ -6,14 +6,14 @@ use App\Application\Catalog\Services\BrandService;
 use App\Application\Catalog\Services\CategoryService;
 use App\Application\Catalog\Services\ProductService;
 use App\Application\Cms\Services\BlogCategoryService;
-use App\Models\Slider;
+use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class BrandProduct extends Controller
 {
+    use LegacyStorefrontContext;
     public function __construct(
         private readonly BrandService $brandService,
         private readonly ProductService $productService,
@@ -179,15 +179,4 @@ class BrandProduct extends Controller
         ]);
     }
 
-    protected function legacyActiveSliders()
-    {
-        if (! Schema::hasTable('tbl_slider')) {
-            return collect();
-        }
-
-        return Slider::orderBy('slider_id', 'DESC')
-            ->where('slider_status', '1')
-            ->take(4)
-            ->get();
-    }
 }

@@ -22,11 +22,12 @@ class SecurityHeadersMiddleware
         
         // Content Security Policy
         $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " .
+               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://connect.facebook.net https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; " .
                "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; " .
-               "font-src 'self' https://fonts.gstatic.com; " .
+               "font-src 'self' https://fonts.gstatic.com data:; " .
                "img-src 'self' data: https:; " .
-               "connect-src 'self'; " .
+               "connect-src 'self' https://connect.facebook.net ws: wss:; " .
+               "frame-src 'self' https://www.facebook.com https://web.facebook.com https://www.google.com/recaptcha/; " .
                "frame-ancestors 'none';";
         
         $response->headers->set('Content-Security-Policy', $csp);

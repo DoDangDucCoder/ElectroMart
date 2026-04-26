@@ -41,14 +41,14 @@ class CheckoutService
         $items = $cart->items;
 
         if ($items->isEmpty()) {
-            throw new RuntimeException('Cart is empty.');
+            throw new RuntimeException('Giỏ hàng đang trống.');
         }
 
         return DB::transaction(function () use ($customerId, $addressId, $paymentMethod, $notes, $couponCode, $cart, $items) {
             $address = Address::where('customer_id', $customerId)->find($addressId);
 
             if (! $address) {
-                throw new RuntimeException('Shipping address is invalid.');
+                throw new RuntimeException('Địa chỉ giao hàng không hợp lệ.');
             }
 
             $shippingFee = $this->shippingService->calculateFee(
@@ -131,7 +131,7 @@ class CheckoutService
         }
 
         if (in_array($order->status, ['cancelled', 'completed', 'refunded'], true)) {
-            throw new RuntimeException('Order cannot be cancelled in its current status.');
+            throw new RuntimeException('Không thể hủy đơn hàng ở trạng thái hiện tại.');
         }
 
         $order->status = 'cancelled';
@@ -146,7 +146,7 @@ class CheckoutService
         $items = $this->cartService->items();
 
         if ($items->isEmpty()) {
-            throw new RuntimeException('Cart is empty.');
+            throw new RuntimeException('Giỏ hàng đang trống.');
         }
 
         return DB::transaction(function () use ($payload, $customerId, $items) {

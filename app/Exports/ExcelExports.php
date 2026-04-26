@@ -3,9 +3,8 @@
 namespace App\Exports;
 
 use App\Models\CategoryProductModel;
-use Maatwebsite\Excel\Concerns\FromCollection;
 
-class ExcelExports implements FromCollection
+class ExcelExports
 {
     /**
      * @return \Illuminate\Support\Collection

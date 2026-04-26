@@ -156,29 +156,41 @@ class ProductionDeploymentCommand extends Command
     private function checkEnvironmentConfig(): array
     {
         try {
-            $requiredVars = [
-                'APP_NAME', 'APP_ENV', 'APP_KEY', 'APP_URL',
-                'DB_CONNECTION', 'DB_HOST', 'DB_DATABASE',
-                'CACHE_DRIVER', 'QUEUE_CONNECTION',
+            $databaseConnection = (string) config('database.default');
+            $databaseConfig = (array) config("database.connections.{$databaseConnection}", []);
+
+            $requiredConfig = [
+                'APP_NAME' => config('app.name'),
+                'APP_ENV' => config('app.env'),
+                'APP_KEY' => config('app.key'),
+                'APP_URL' => config('app.url'),
+                'DB_CONNECTION' => $databaseConnection,
+                'DB_DATABASE' => $databaseConfig['database'] ?? null,
+                'CACHE_STORE' => config('cache.default'),
+                'QUEUE_CONNECTION' => config('queue.default'),
             ];
 
-            $missingVars = [];
-            foreach ($requiredVars as $var) {
-                if (empty(env($var))) {
-                    $missingVars[] = $var;
+            if (in_array($databaseConnection, ['mysql', 'pgsql', 'sqlsrv'], true)) {
+                $requiredConfig['DB_HOST'] = $databaseConfig['host'] ?? null;
+            }
+
+            $missingConfig = [];
+            foreach ($requiredConfig as $name => $value) {
+                if ($value === null || $value === '') {
+                    $missingConfig[] = $name;
                 }
             }
 
-            if (!empty($missingVars)) {
+            if (!empty($missingConfig)) {
                 return [
                     'success' => false,
-                    'message' => 'Missing environment variables: ' . implode(', ', $missingVars),
+                    'message' => 'Missing configuration values: ' . implode(', ', $missingConfig),
                 ];
             }
 
             return [
                 'success' => true,
-                'message' => 'All required environment variables are set',
+                'message' => 'All required configuration values are set',
             ];
 
         } catch (\Exception $e) {

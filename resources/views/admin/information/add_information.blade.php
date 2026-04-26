@@ -53,7 +53,7 @@
             <section class="g-admin-panel-card">
                 <header class="g-admin-panel-head">
                     <div>
-                        <strong>Hồ sơ liên hệ và branding</strong>
+                        <strong>Hồ sơ liên hệ và thương hiệu</strong>
                         <p>Cập nhật thông tin liên hệ, bản đồ, fanpage và logo chính.</p>
                     </div>
                     <span class="g-admin-status-chip">{{ $primaryContact ? 'Đã cấu hình' : 'Chưa có dữ liệu' }}</span>

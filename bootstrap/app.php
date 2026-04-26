@@ -15,11 +15,34 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append([
+            \App\Http\Middleware\SecurityHeadersMiddleware::class,
+        ]);
+
+        $middleware->web(append: [
+            \App\Http\Middleware\XSSProtectionMiddleware::class,
+            \App\Http\Middleware\SQLInjectionProtectionMiddleware::class,
+        ]);
+
+        $middleware->api(append: [
+            \App\Http\Middleware\RateLimitMiddleware::class,
+            \App\Http\Middleware\XSSProtectionMiddleware::class,
+            \App\Http\Middleware\SQLInjectionProtectionMiddleware::class,
+        ]);
+
         $middleware->alias([
             'auth' => \App\Http\Middleware\Authenticate::class,
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
             'admin.access' => \App\Http\Middleware\EnsureAdminAccess::class,
             'admin.permission' => \App\Http\Middleware\EnsureAdminPermission::class,
+            'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,
+            'rate.limit' => \App\Http\Middleware\RateLimitMiddleware::class,
+            'security.headers' => \App\Http\Middleware\SecurityHeadersMiddleware::class,
+            'xss.protection' => \App\Http\Middleware\XSSProtectionMiddleware::class,
+            'sql.injection.protection' => \App\Http\Middleware\SQLInjectionProtectionMiddleware::class,
+            'ip.whitelist' => \App\Http\Middleware\IPWhitelistMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

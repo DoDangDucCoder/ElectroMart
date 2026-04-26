@@ -14,10 +14,11 @@
         $supportPhoneHref = $supportConfig['phone_href'] ?? 'tel:19000000';
         $categoryDescription = trim(strip_tags((string) optional($activeCategory)->category_desc));
         $productCount = method_exists($category_by_id, 'total') ? $category_by_id->total() : $category_by_id->count();
-        $rangeMinLabel = $range_min_price > 0 ? number_format($range_min_price, 0, ',', '.') . ' VND' : 'Đang cập nhật';
-        $rangeMaxLabel = $range_max_price > 0 ? number_format($range_max_price, 0, ',', '.') . ' VND' : 'Đang cập nhật';
-        $selectedMinLabel = $filter_start_price ? number_format((float) $filter_start_price, 0, ',', '.') . ' VND' : null;
-        $selectedMaxLabel = $filter_end_price ? number_format((float) $filter_end_price, 0, ',', '.') . ' VND' : null;
+        $rangeMinLabel = $range_min_price > 0 ? number_format($range_min_price, 0, ',', '.') . 'đ' : 'Đang cập nhật';
+        $rangeMaxLabel = $range_max_price > 0 ? number_format($range_max_price, 0, ',', '.') . 'đ' : 'Đang cập nhật';
+        $selectedMinLabel = number_format((float) ($filter_start_price ?? 0), 0, ',', '.') . 'đ';
+        $selectedMaxLabel = number_format((float) ($filter_end_price ?? 0), 0, ',', '.') . 'đ';
+        $hasActivePriceFilter = request()->filled('start_price') || request()->filled('end_price');
         $categoryQuickLinks = [
             [
                 'icon' => 'fa-phone',
@@ -44,6 +45,7 @@
             'giam_dan' => 'Giá giảm dần',
             'kytu_az' => 'Tên A-Z',
             'kytu_za' => 'Tên Z-A',
+            'khuyen_mai' => 'Khuyến mãi nhiều nhất',
         ];
     @endphp
 
@@ -134,6 +136,10 @@
                         {{ $selected_sort === 'kytu_za' ? 'selected' : '' }}>
                         Tên Z đến A
                     </option>
+                    <option value="{{ request()->fullUrlWithQuery(['sort_by' => 'khuyen_mai']) }}"
+                        {{ $selected_sort === 'khuyen_mai' ? 'selected' : '' }}>
+                        Khuyến mãi nhiều nhất
+                    </option>
                 </select>
             </div>
 
@@ -143,7 +149,7 @@
                         <div class="shopw-category-toolbar-label">Lọc theo khoảng giá</div>
                         <p>Thu hẹp danh sách để tập trung vào dải giá bạn muốn mua ngay hôm nay.</p>
                     </div>
-                    @if ($selectedMinLabel && $selectedMaxLabel)
+                    @if ($hasActivePriceFilter)
                         <span class="shopw-category-filter-chip">{{ $selectedMinLabel }} - {{ $selectedMaxLabel }}</span>
                     @endif
                 </div>
@@ -210,8 +216,8 @@
                     <p>{{ number_format($productCount) }} sản phẩm đang được hiển thị trong danh sách này.</p>
                 </div>
                 <div class="shopw-category-results-tags">
-                    <span class="shopw-category-result-tag">Sort: {{ $sortLabels[$selected_sort] ?? 'Mặc định' }}</span>
-                    @if ($selectedMinLabel && $selectedMaxLabel)
+                    <span class="shopw-category-result-tag">Sắp xếp: {{ $sortLabels[$selected_sort] ?? 'Mặc định' }}</span>
+                    @if ($hasActivePriceFilter)
                         <span class="shopw-category-result-tag">Giá: {{ $selectedMinLabel }} - {{ $selectedMaxLabel }}</span>
                     @endif
                 </div>
@@ -227,4 +233,3 @@
         </section>
     </div>
 @endsection
-

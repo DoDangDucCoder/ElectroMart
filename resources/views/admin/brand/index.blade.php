@@ -9,7 +9,7 @@
         <section class="g-admin-page-hero">
             <div>
                 <span class="g-admin-page-eyebrow">Thương hiệu</span>
-                <h1>Liệt kê thương hiệu</h1>
+                <h1>Danh sách thương hiệu</h1>
                 <p>Theo dõi thương hiệu hiện có, lọc nhanh theo từ khóa và cập nhật trạng thái hiển thị.</p>
             </div>
             <div class="g-admin-page-stats">
@@ -61,7 +61,7 @@
                                     </label>
                                 </th>
                                 <th>Tên thương hiệu</th>
-                                <th>Slug</th>
+                                <th>Đường dẫn tĩnh (slug)</th>
                                 <th>Mô tả</th>
                                 <th>Thứ tự</th>
                                 <th>Trạng thái</th>

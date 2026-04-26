@@ -82,10 +82,22 @@ class ProductDetailPageTest extends TestCase
 
         $this->get('/chi-tiet/' . $product->product_slug)
             ->assertOk()
-            ->assertSee('20.000.000 VND')
-            ->assertSee('18.000.000 VND')
+            ->assertSee('20.000.000đ')
+            ->assertSee('18.000.000đ')
             ->assertSee('-10%')
             ->assertSee('Giá sau giảm = 20.000.000đ - 10% = 18.000.000đ');
+    }
+
+    public function test_product_detail_page_renders_products_with_array_meta_tags(): void
+    {
+        $product = $this->createProduct('Array Tag Product', [
+            'tags' => ['smartphones', 'apple'],
+        ]);
+
+        $this->get('/chi-tiet/' . $product->product_slug)
+            ->assertOk()
+            ->assertSee('smartphones')
+            ->assertSee('apple');
     }
 
     public function test_quickview_returns_fallback_image_payload(): void
@@ -115,13 +127,15 @@ class ProductDetailPageTest extends TestCase
             'comment_name' => 'New Customer',
             'comment_content' => 'Sản phẩm ổn, cần thêm thông tin.',
         ])->assertOk()->assertJson([
-            'message' => 'ok',
+            'message' => 'Thành công.',
         ]);
 
-        $this->post('/insert-rating', [
+        $ratingResponse = $this->post('/insert-rating', [
             'product_id' => $product->product_id,
             'index' => 4,
-        ])->assertOk()->assertSee('done');
+        ])->assertOk();
+
+        $this->assertSame('Hoàn tất.', $ratingResponse->json());
 
         $this->assertDatabaseHas('product_reviews', [
             'product_id' => $product->product_id,

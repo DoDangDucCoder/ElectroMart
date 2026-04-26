@@ -9,7 +9,7 @@
     : 'Điền thông tin tài khoản mới. Nếu hệ thống yêu cầu, hãy nhập mã cấp quyền quản trị được cấp cho bạn.')
 
 @section('hero_notes')
-    <li><i class="fa fa-check-circle"></i><span>Tài khoản đầu tiên sẽ được gán vai trò <strong>Super Admin</strong> để khởi tạo hệ thống.</span></li>
+    <li><i class="fa fa-check-circle"></i><span>Tài khoản đầu tiên sẽ được gán vai trò <strong>Quản trị cao nhất</strong> để khởi tạo hệ thống.</span></li>
     <li><i class="fa fa-check-circle"></i><span>Các tài khoản đăng ký sau đó mặc định nhận vai trò <strong>{{ $adminAuthRegistrationRole }}</strong>.</span></li>
     <li><i class="fa fa-check-circle"></i><span>Quản trị viên hiện tại vẫn có thể đổi vai trò hoặc phân quyền chi tiết sau khi bạn đăng ký.</span></li>
 @endsection

@@ -9,6 +9,11 @@ class AttributeValue extends BaseModel
 {
     protected $table = 'attribute_values';
 
+    protected $casts = [
+        'meta' => 'array',
+        'is_active' => 'boolean',
+    ];
+
     public function attribute(): BelongsTo
     {
         return $this->belongsTo(Attribute::class);

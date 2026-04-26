@@ -12,9 +12,10 @@ class SearchProductsRequest extends BaseFormRequest
             'keywords_submit' => ['nullable', 'string', 'max:100'],
             'product_code' => ['nullable', 'string', 'max:100'],
             'category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
+            'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
             'price_min' => ['nullable', 'numeric', 'min:0'],
             'price_max' => ['nullable', 'numeric', 'min:0'],
-            'sort' => ['nullable', 'in:popular,best_selling,price_asc,price_desc,name_asc,name_desc'],
+            'sort' => ['nullable', 'in:popular,best_selling,price_asc,price_desc,name_asc,name_desc,sale_desc,created_at_desc'],
             'highlight_product' => ['nullable', 'string', 'max:255'],
         ];
     }
@@ -25,6 +26,7 @@ class SearchProductsRequest extends BaseFormRequest
             'keywords_submit.max' => 'Từ khóa tìm kiếm không được vượt quá 100 ký tự.',
             'product_code.max' => 'Mã sản phẩm không được vượt quá 100 ký tự.',
             'category_id.exists' => 'Danh mục tìm kiếm không hợp lệ.',
+            'brand_id.exists' => 'Thương hiệu tìm kiếm không hợp lệ.',
             'price_min.numeric' => 'Giá từ phải là số hợp lệ.',
             'price_max.numeric' => 'Giá đến phải là số hợp lệ.',
             'price_min.min' => 'Giá từ không được nhỏ hơn 0.',
@@ -40,6 +42,7 @@ class SearchProductsRequest extends BaseFormRequest
             'keywords_submit' => $this->normalizeNullableString($this->input('keywords_submit')),
             'product_code' => $this->normalizeNullableString($this->input('product_code')),
             'category_id' => $this->normalizeNullableInteger($this->input('category_id')),
+            'brand_id' => $this->normalizeNullableInteger($this->input('brand_id')),
             'price_min' => $this->normalizeNullableNumber($this->input('price_min')),
             'price_max' => $this->normalizeNullableNumber($this->input('price_max')),
             'sort' => $this->normalizeNullableString($this->input('sort')),

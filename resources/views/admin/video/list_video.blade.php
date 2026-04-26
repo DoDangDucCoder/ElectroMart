@@ -6,12 +6,12 @@
             <div>
                 <span class="g-admin-page-eyebrow">Nội dung / Video</span>
                 <h1>Quản lý video</h1>
-                <p>Quản lý video review, demo và hướng dẫn hiển thị trên website.</p>
+                <p>Quản lý video đánh giá, minh họa và hướng dẫn hiển thị trên website.</p>
             </div>
             <div class="g-admin-page-stats">
                 <article>
                     <strong>Video</strong>
-                    <span>Review, demo và hướng dẫn</span>
+                    <span>Đánh giá, minh họa và hướng dẫn</span>
                 </article>
                 <article>
                     <strong>Cập nhật</strong>
@@ -33,7 +33,7 @@
                 <header class="g-admin-panel-head">
                     <div>
                         <strong>Thêm video mới</strong>
-                        <p>Nhập tiêu đề, slug, link YouTube, mô tả và thumbnail.</p>
+                        <p>Nhập tiêu đề, đường dẫn tĩnh (slug), liên kết YouTube, mô tả và ảnh đại diện.</p>
                     </div>
                 </header>
                 <div class="g-admin-panel-body">
@@ -45,9 +45,9 @@
                                 id="slug" placeholder="Tên video">
                         </div>
                         <div class="form-group">
-                            <label for="convert_slug">Slug video</label>
+                            <label for="convert_slug">Đường dẫn tĩnh (slug)</label>
                             <input type="text" name="video_slug" class="form-control video_slug" id="convert_slug"
-                                placeholder="Slug video">
+                                placeholder="duong-dan-tinh-video">
                         </div>
                         <div class="form-group">
                             <label for="video_link_input">Link video</label>

@@ -857,14 +857,16 @@ class ToastNotification {
         $js = "
 // Push Notifications
 if ('serviceWorker' in navigator && 'PushManager' in window) {
+    let serviceWorkerRegistration;
+
     navigator.serviceWorker.register('/sw.js')
         .then(registration => {
-            console.log('Service Worker registered');
+            serviceWorkerRegistration = registration;
             return registration.pushManager.getSubscription();
         })
         .then(subscription => {
             if (!subscription) {
-                return registration.pushManager.subscribe({
+                return serviceWorkerRegistration.pushManager.subscribe({
                     userVisibleOnly: true,
                     applicationServerKey: 'YOUR_VAPID_PUBLIC_KEY'
                 });

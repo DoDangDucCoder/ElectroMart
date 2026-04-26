@@ -7,7 +7,7 @@
         @error="handleImageError"
       />
       <div class="item-badges">
-        <span v-if="product.is_featured" class="badge badge-featured">Featured</span>
+        <span v-if="product.is_featured" class="badge badge-featured">Nổi bật</span>
         <span v-if="hasSale" class="badge badge-sale">
           {{ saleBadgeText }}
         </span>
@@ -17,9 +17,9 @@
     <div class="item-content">
       <div class="item-header">
         <h5 class="item-name">
-          <router-link :to="`/products/${product.slug}`" class="text-decoration-none">
+          <a :href="productUrl" class="text-decoration-none">
             {{ product.name }}
-          </router-link>
+          </a>
         </h5>
         
         <div class="item-rating" v-if="product.average_rating">
@@ -62,10 +62,10 @@
         </div>
         
         <div class="item-stock" v-if="!product.is_in_stock">
-          <span class="text-danger">Out of Stock</span>
+          <span class="text-danger">Hết hàng</span>
         </div>
         <div class="item-stock" v-else-if="product.is_low_stock">
-          <span class="text-warning">Only {{ product.stock_quantity }} left</span>
+          <span class="text-warning">Chỉ còn {{ product.stock_quantity }} sản phẩm</span>
         </div>
         
         <div class="item-actions">
@@ -75,7 +75,7 @@
             :disabled="!product.is_in_stock"
           >
             <i class="fas fa-shopping-cart"></i>
-            Add to Cart
+            Thêm vào giỏ
           </button>
           
           <button @click="toggleWishlist" class="btn btn-outline-secondary">
@@ -93,6 +93,7 @@
 
 <script>
 import { computed } from 'vue'
+import { useToast } from 'vue-toastification'
 import { useCartStore } from '@/stores/cart'
 import { useWishlistStore } from '@/stores/wishlist'
 
@@ -108,6 +109,7 @@ export default {
   setup(props, { emit }) {
     const cartStore = useCartStore()
     const wishlistStore = useWishlistStore()
+    const toast = useToast()
     
     const isInWishlist = computed(() => 
       wishlistStore.items.some(item => item.id === props.product.id)
@@ -118,6 +120,8 @@ export default {
     )
 
     const displayPrice = computed(() => props.product.final_price || props.product.sale_price || props.product.price)
+
+    const productUrl = computed(() => `/chi-tiet/${props.product.slug}`)
 
     const calculateDiscountPercentage = () => {
       if (!hasSale.value || !props.product.price) return 0
@@ -144,19 +148,19 @@ export default {
     const addToCart = async () => {
       try {
         await cartStore.addItem(props.product.id, 1)
-        this.$toast.success('Product added to cart!')
+        toast.success('Đã thêm sản phẩm vào giỏ hàng!')
       } catch (error) {
-        this.$toast.error('Failed to add product to cart')
+        toast.error('Không thể thêm sản phẩm vào giỏ hàng')
       }
     }
     
     const toggleWishlist = () => {
       if (isInWishlist.value) {
         wishlistStore.removeItem(props.product.id)
-        this.$toast.info('Removed from wishlist')
+        toast.info('Đã xóa khỏi danh sách yêu thích')
       } else {
         wishlistStore.addItem(props.product)
-        this.$toast.success('Added to wishlist')
+        toast.success('Đã thêm vào danh sách yêu thích')
       }
     }
     
@@ -172,6 +176,7 @@ export default {
       isInWishlist,
       hasSale,
       displayPrice,
+      productUrl,
       saleBadgeText,
       calculateDiscountPercentage,
       formatPrice,

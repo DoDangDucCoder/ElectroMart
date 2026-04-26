@@ -7,7 +7,7 @@
                 <span class="g-admin-page-eyebrow">Email hệ thống</span>
                 <h1>Xem trước email hệ thống</h1>
                 <p>
-                    Kiểm tra nhanh giao diện mail đang chạy thật, đối chiếu snapshot và mở từng biến thể trong tab riêng khi cần QA.
+                    Kiểm tra nhanh giao diện email đang chạy thật, đối chiếu bản lưu và mở từng biến thể trong tab riêng khi cần kiểm thử.
                 </p>
             </div>
 
@@ -17,8 +17,8 @@
                     <span>Biến thể đang có</span>
                 </article>
                 <article>
-                    <strong>{{ $selectedPreview['snapshot'] ?? 'N/A' }}</strong>
-                    <span>Snapshot đang khóa</span>
+                    <strong>{{ $selectedPreview['snapshot'] ?? 'Chưa có' }}</strong>
+                    <span>Bản lưu đang khóa</span>
                 </article>
             </div>
         </section>
@@ -27,10 +27,10 @@
             <div class="g-admin-panel-head">
                 <div>
                     <div>Danh mục xem trước</div>
-                    <p>Chọn một biến thể để xem HTML mail thật đang render trong ứng dụng.</p>
+                    <p>Chọn một biến thể để xem HTML email thật đang hiển thị trong ứng dụng.</p>
                 </div>
                 <a href="{{ $selectedRenderUrl }}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">
-                    Mở preview ở tab mới
+                    Mở bản xem trước ở tab mới
                 </a>
             </div>
             <div class="g-admin-panel-body">

@@ -2,41 +2,43 @@
 
 namespace App\Http\Controllers;
 
+use App\Application\Catalog\Services\ProductPricingService;
+use App\Application\Catalog\Services\ProductReviewService;
+use App\Application\Catalog\Services\ProductService;
+use App\Domain\Catalog\Repositories\BrandRepositoryInterface;
+use App\Domain\Catalog\Repositories\CategoryRepositoryInterface;
+use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use App\Http\Requests\Storefront\Product\InsertRatingRequest;
 use App\Http\Requests\Storefront\Product\LoadCommentRequest;
 use App\Http\Requests\Storefront\Product\QuickviewRequest;
 use App\Http\Requests\Storefront\Product\SendCommentRequest;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Redirect;
-use Illuminate\Validation\Rule;
-use Illuminate\Support\Str;
-use App\Models\Slider;
-use App\Models\CatePost;
-use App\Models\ProductAttribute;
-use App\Application\Catalog\Services\ProductService;
-use App\Application\Catalog\Services\ProductPricingService;
-use App\Application\Catalog\Services\ProductReviewService;
-use App\Domain\Catalog\Repositories\BrandRepositoryInterface;
-use App\Domain\Catalog\Repositories\CategoryRepositoryInterface;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
+use App\Models\ProductAttribute;
+use App\Support\AssetUrl;
+use App\Support\StorefrontLabel;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
+    use LegacyStorefrontContext;
+
     public function __construct(
         private readonly ProductService $productService,
         private readonly ProductPricingService $pricingService,
         private readonly ProductReviewService $productReviewService,
         private readonly CategoryRepositoryInterface $categoryRepository,
         private readonly BrandRepositoryInterface $brandRepository
-    ) {
-    }
+    ) {}
 
     public function file_browser(Request $request)
     {
@@ -53,13 +55,14 @@ class ProductController extends Controller
 
                 return [
                     'name' => $fileName,
-                    'url' => asset('uploads/ckeditor/' . $fileName),
-                    'size_label' => number_format((int) ceil(filesize($path) / 1024)) . ' KB',
+                    'url' => asset('uploads/ckeditor/'.$fileName),
+                    'size_label' => number_format((int) ceil(filesize($path) / 1024)).' KB',
                     'updated_label' => date('d/m/Y H:i', filemtime($path) ?: time()),
                 ];
             }),
         ]);
     }
+
     public function reply_comment(Request $request): JsonResponse
     {
         $parentId = (int) $request->input('comment_id');
@@ -67,17 +70,17 @@ class ProductController extends Controller
         $content = trim((string) $request->input('comment'));
 
         if (! $parentId || ! $productId || $content === '') {
-            return response()->json(['message' => 'Invalid data'], 422);
+            return response()->json(['message' => 'Dữ liệu không hợp lệ.'], 422);
         }
 
         $adminName = Auth::user()->name ?? 'Admin';
         $reply = $this->productReviewService->replyAsAdmin($productId, $parentId, $content, $adminName);
 
         if (! $reply) {
-            return response()->json(['message' => 'Unable to reply comment'], 400);
+            return response()->json(['message' => 'Không thể phản hồi bình luận.'], 400);
         }
 
-        return response()->json(['message' => 'ok']);
+        return response()->json(['message' => 'Thành công.']);
     }
 
     public function allow_comment(Request $request): JsonResponse
@@ -88,10 +91,10 @@ class ProductController extends Controller
         $review = $this->productReviewService->updateStatus($commentId, $status);
 
         if (! $review) {
-            return response()->json(['message' => 'Comment not found'], 404);
+            return response()->json(['message' => 'Không tìm thấy bình luận.'], 404);
         }
 
-        return response()->json(['message' => 'ok', 'status' => $review->comment_status]);
+        return response()->json(['message' => 'Thành công.', 'status' => $review->comment_status]);
     }
 
     public function list_comment()
@@ -114,8 +117,9 @@ class ProductController extends Controller
 
         $this->productReviewService->createCustomerComment($productId, $author, $content);
 
-        return response()->json(['message' => 'ok']);
+        return response()->json(['message' => 'Thành công.']);
     }
+
     public function load_comment(LoadCommentRequest $request)
     {
         $productId = (int) $request->validated('product_id');
@@ -137,22 +141,22 @@ class ProductController extends Controller
         $product = $this->productService->findProductById($productId);
 
         if (! $product) {
-            return response()->json(['message' => 'Product not found'], 404);
+            return response()->json(['message' => 'Không tìm thấy sản phẩm.'], 404);
         }
 
         $mediaItems = $product->media ?? collect();
-        $fallbackPath = $product->product_image ?: 'uploads/product/no-image.svg';
-        $fallbackImage = asset($fallbackPath);
+        $fallbackPath = AssetUrl::rawOrFallback($product->product_image);
+        $fallbackImage = AssetUrl::product($product->product_image);
         $output = [
             'product_gallery' => view('pages.sanpham.partials.quickview_gallery', [
                 'mediaItems' => $mediaItems,
                 'fallbackPath' => $fallbackPath,
                 'fallbackImage' => $fallbackImage,
             ])->render(),
-            'product_name' => $product->product_name,
+            'product_name' => StorefrontLabel::neutralizeSource($product->product_name),
             'product_id' => $product->product_id,
-            'product_desc' => $product->product_desc,
-            'product_content' => $product->product_content,
+            'product_desc' => StorefrontLabel::neutralizeSourceHtml($product->product_desc),
+            'product_content' => StorefrontLabel::neutralizeSourceHtml($product->product_content),
             'product_price' => view('partials.storefront.product-price', [
                 'product' => $product,
                 'currency' => 'VND',
@@ -172,6 +176,7 @@ class ProductController extends Controller
 
         return response()->json($output);
     }
+
     public function add_product()
     {
         $cate_product = $this->categoryRepository->all();
@@ -181,12 +186,15 @@ class ProductController extends Controller
             ->with('cate_product', $cate_product)
             ->with('brand_product', $brand_product);
     }
+
     public function all_product()
     {
         $all_product = $this->productService->paginateForAdmin(['only_active' => false], 20);
-        $manager_product  = view('admin.all_product')->with('all_product', $all_product);
+        $manager_product = view('admin.all_product')->with('all_product', $all_product);
+
         return view('admin_layout')->with('admin.all_product', $manager_product);
     }
+
     public function save_product(Request $request)
     {
         $validated = $this->validateProductRequest($request);
@@ -203,6 +211,7 @@ class ProductController extends Controller
 
         return Redirect::to('add-product');
     }
+
     public function unactive_product(int $product_id)
     {
         $product = $this->productService->findProductById($product_id);
@@ -217,6 +226,7 @@ class ProductController extends Controller
 
         return Redirect::to('all-product');
     }
+
     public function active_product(int $product_id)
     {
         $product = $this->productService->findProductById($product_id);
@@ -231,6 +241,7 @@ class ProductController extends Controller
 
         return Redirect::to('all-product');
     }
+
     public function edit_product(int $product_id)
     {
         $product = $this->productService->findProductById($product_id);
@@ -249,6 +260,7 @@ class ProductController extends Controller
 
         return view('admin_layout')->with('admin.edit_product', $manager_product);
     }
+
     public function update_product(Request $request, int $product_id)
     {
         $product = $this->productService->findProductById($product_id);
@@ -272,6 +284,7 @@ class ProductController extends Controller
 
         return Redirect::to('all-product');
     }
+
     public function delete_document(Request $request): JsonResponse
     {
         $productId = (int) $request->input('product_id');
@@ -279,13 +292,14 @@ class ProductController extends Controller
         $product = $this->productService->findProductById($productId);
 
         if (! $product) {
-            return response()->json(['message' => 'Product not found'], 404);
+            return response()->json(['message' => 'Không tìm thấy sản phẩm.'], 404);
         }
 
         $this->productService->removeProductDocument($product);
 
-        return response()->json(['message' => 'ok']);
+        return response()->json(['message' => 'Thành công.']);
     }
+
     public function delete_product(int $product_id)
     {
         $product = $this->productService->findProductById($product_id);
@@ -300,6 +314,7 @@ class ProductController extends Controller
 
         return Redirect::to('all-product');
     }
+
     protected function validateProductRequest(Request $request, ?int $productId = null): array
     {
         $validator = validator($request->all(), [
@@ -332,17 +347,17 @@ class ProductController extends Controller
             }
 
             if (! $saleType || $saleValue === null || $saleValue <= 0) {
-                $validator->errors()->add('sale_value', 'Kiểu sale và giá trị sale phải được nhập đầy đủ.');
+                $validator->errors()->add('sale_value', 'Kiểu khuyến mãi và giá trị khuyến mãi phải được nhập đầy đủ.');
 
                 return;
             }
 
             if ($saleType === 'percent' && $saleValue > 100) {
-                $validator->errors()->add('sale_value', 'Sale phần trăm không được vượt quá 100.');
+                $validator->errors()->add('sale_value', 'Khuyến mãi theo phần trăm không được vượt quá 100.');
             }
 
             if ($saleType === 'fixed' && $saleValue >= $price) {
-                $validator->errors()->add('sale_value', 'Sale số tiền phải nhỏ hơn giá bán gốc.');
+                $validator->errors()->add('sale_value', 'Số tiền khuyến mãi phải nhỏ hơn giá bán gốc.');
             }
         });
 
@@ -470,6 +485,7 @@ class ProductController extends Controller
 
         return Redirect::to('all-product');
     }
+
     //End Admin Page
     public function details_product($product_slug, Request $request)
     {
@@ -503,11 +519,11 @@ class ProductController extends Controller
         $product_cate = $primaryCategory?->category_name;
         $cate_slug = $primaryCategory?->slug_category_product;
 
-        $meta_desc = $product->product_desc;
+        $meta_desc = StorefrontLabel::neutralizeSource(strip_tags((string) $product->product_desc));
         $meta_keywords = $product->product_slug;
-        $meta_title = $product->product_name;
+        $meta_title = StorefrontLabel::neutralizeSource($product->product_name);
         $url_canonical = $request->url();
-        $share_image = $product->product_image ? asset($product->product_image) : asset('uploads/product/no-image.svg');
+        $share_image = AssetUrl::product($product->product_image);
 
         $gallery = $product->media ?? collect();
         $product_attribute = $this->legacyProductAttributes($product->product_id);
@@ -542,6 +558,7 @@ class ProductController extends Controller
             ->with('share_image', $share_image)
             ->with('share_images', $share_image);
     }
+
     public function tag(Request $request, $product_tag)
     {
         $category_post = $this->legacyCategoryPosts();
@@ -560,9 +577,9 @@ class ProductController extends Controller
         $tag = str_replace('-', ' ', $product_tag);
         $pro_tag = $this->productService->getProductsByTag($tag, 30);
 
-        $meta_desc = 'Tags tìm kiếm::' . $product_tag;
-        $meta_keywords = 'Tags tìm kiếm:' . $product_tag;
-        $meta_title = 'Tags tìm kiếm:' . $product_tag;
+        $meta_desc = 'Nhãn tìm kiếm: '.$product_tag;
+        $meta_keywords = 'Nhãn tìm kiếm: '.$product_tag;
+        $meta_title = 'Nhãn tìm kiếm: '.$product_tag;
         $url_canonical = $request->url();
 
         return view('pages.sanpham.tag')
@@ -577,6 +594,7 @@ class ProductController extends Controller
             ->with('product_tag', $product_tag)
             ->with('pro_tag', $pro_tag);
     }
+
     public function insert_rating(InsertRatingRequest $request): JsonResponse
     {
         $validated = $request->validated();
@@ -585,8 +603,9 @@ class ProductController extends Controller
 
         $this->productReviewService->createRating($productId, $rating);
 
-        return response()->json('done');
+        return response()->json('Hoàn tất.');
     }
+
     public function ckeditor_image(Request $request)
     {
         $funcNum = max(0, (int) $request->input('CKEditorFuncNum', 0));
@@ -613,13 +632,13 @@ class ProductController extends Controller
 
         $originName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $safeBaseName = Str::slug($originName) ?: 'ckeditor-image';
-        $fileName = $safeBaseName . '_' . time() . '.' . strtolower($file->getClientOriginalExtension());
+        $fileName = $safeBaseName.'_'.time().'.'.strtolower($file->getClientOriginalExtension());
 
         $file->move($directory, $fileName);
 
         return $this->ckeditorCallbackResponse(
             $funcNum,
-            asset('uploads/ckeditor/' . $fileName),
+            asset('uploads/ckeditor/'.$fileName),
             'Tải ảnh thành công.'
         );
     }
@@ -627,31 +646,13 @@ class ProductController extends Controller
     protected function ckeditorCallbackResponse(int $funcNum, string $url, string $message)
     {
         $script = sprintf(
-            "<script>window.parent.CKEDITOR.tools.callFunction(%d, %s, %s);</script>",
+            '<script>window.parent.CKEDITOR.tools.callFunction(%d, %s, %s);</script>',
             $funcNum,
             json_encode($url, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
             json_encode($message, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         );
 
         return response($script, 200)->header('Content-Type', 'text/html; charset=utf-8');
-    }
-
-    protected function legacyActiveSliders()
-    {
-        if (! Schema::hasTable('tbl_slider')) {
-            return collect();
-        }
-
-        return Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
-    }
-
-    protected function legacyCategoryPosts()
-    {
-        if (! Schema::hasTable('tbl_category_post')) {
-            return collect();
-        }
-
-        return CatePost::orderBy('cate_post_id', 'DESC')->get();
     }
 
     protected function legacyProductAttributes(int $productId)
@@ -663,29 +664,3 @@ class ProductController extends Controller
         return ProductAttribute::where('product_id', $productId)->get();
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

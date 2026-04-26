@@ -3,11 +3,17 @@
 namespace App\Infrastructure\Persistence\Eloquent\Catalog;
 
 use App\Infrastructure\Persistence\Eloquent\BaseModel;
+use App\Support\AssetUrl;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductMedia extends BaseModel
 {
     protected $table = 'product_media';
+
+    protected $casts = [
+        'meta' => 'array',
+    ];
+
     protected $appends = [
         'gallery_image',
         'url',
@@ -25,6 +31,6 @@ class ProductMedia extends BaseModel
 
     public function getUrlAttribute(): ?string
     {
-        return $this->file_path ? asset($this->file_path) : null;
+        return AssetUrl::resolve($this->file_path, null);
     }
 }

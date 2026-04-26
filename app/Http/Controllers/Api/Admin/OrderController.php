@@ -92,7 +92,7 @@ class OrderController extends Controller
         if (! $order) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found',
+                'message' => 'Không tìm thấy đơn hàng.',
             ], 404);
         }
 
@@ -113,7 +113,7 @@ class OrderController extends Controller
         if ($validated === []) {
             return response()->json([
                 'success' => false,
-                'message' => 'At least one status field is required',
+                'message' => 'Cần cung cấp ít nhất một trường trạng thái.',
                 'errors' => [
                     'status' => ['Provide status, payment_status, or fulfillment_status.'],
                 ],
@@ -125,7 +125,7 @@ class OrderController extends Controller
         if (! $order) {
             return response()->json([
                 'success' => false,
-                'message' => 'Order not found',
+                'message' => 'Không tìm thấy đơn hàng.',
             ], 404);
         }
 
@@ -135,7 +135,7 @@ class OrderController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Order status updated successfully',
+            'message' => 'Cập nhật trạng thái đơn hàng thành công.',
             'data' => new OrderResource($order->load(['customer', 'items', 'shipping', 'payments'])),
         ]);
     }

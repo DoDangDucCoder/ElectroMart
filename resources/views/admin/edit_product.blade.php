@@ -75,7 +75,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="product_slug">Slug</label>
+                            <label for="product_slug">Đường dẫn tĩnh (slug)</label>
                             <input type="text" name="product_slug" id="product_slug"
                                 class="form-control @error('product_slug') is-invalid @enderror"
                                 value="{{ old('product_slug', $product->product_slug) }}">
@@ -90,7 +90,7 @@
                             @if ($product->product_image)
                                 <div class="g-admin-surface" style="margin-top:12px;">
                                     <h3>Hình ảnh hiện tại</h3>
-                                    <img src="{{ asset($product->product_image) }}" alt="{{ $product->product_name }}" height="120">
+                                    <img src="{{ \App\Support\AssetUrl::product($product->product_image) }}" alt="{{ $product->product_name }}" height="120">
                                 </div>
                             @endif
                         </div>
@@ -161,7 +161,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="product_tags">Tags sản phẩm</label>
+                            <label for="product_tags">Nhãn sản phẩm</label>
                             <input type="text" data-role="tagsinput" name="product_tags" id="product_tags"
                                 class="form-control @error('product_tags') is-invalid @enderror"
                                 value="{{ old('product_tags', $product->product_tags) }}">

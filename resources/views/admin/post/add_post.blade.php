@@ -53,9 +53,9 @@
                                 required>
                         </div>
                         <div class="form-group">
-                            <label for="post_slug">Slug</label>
+                            <label for="post_slug">Đường dẫn tĩnh (slug)</label>
                             <input type="text" name="post_slug" class="form-control" id="convert_slug"
-                                value="{{ old('post_slug') }}" placeholder="slug-bai-viet">
+                                value="{{ old('post_slug') }}" placeholder="duong-dan-tinh-bai-viet">
                         </div>
                         <div class="form-group">
                             <label for="post_desc">Tóm tắt bài viết</label>
@@ -121,7 +121,7 @@
                         <h3>Checklist nhanh</h3>
                         <ul class="g-admin-note-list">
                             <li>Tiêu đề nên rõ nghĩa và đủ từ khóa chính.</li>
-                            <li>Slug ngắn gọn để thuận tiện cho SEO và chia sẻ liên kết.</li>
+                            <li>Đường dẫn tĩnh (slug) ngắn gọn để thuận tiện cho SEO và chia sẻ liên kết.</li>
                             <li>Ảnh đại diện nên đúng tỷ lệ để hiển thị đẹp ở danh sách bài viết.</li>
                             <li>Meta mô tả nên ngắn gọn, đúng nội dung bài viết.</li>
                         </ul>

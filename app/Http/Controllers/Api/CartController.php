@@ -43,7 +43,7 @@ class CartController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Product added to cart successfully',
+            'message' => 'Đã thêm sản phẩm vào giỏ hàng.',
             'data' => new CartResource($cart),
         ], 201);
     }
@@ -62,7 +62,7 @@ class CartController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Cart item updated successfully',
+            'message' => 'Đã cập nhật sản phẩm trong giỏ hàng.',
             'data' => new CartResource($cart),
         ]);
     }
@@ -73,7 +73,7 @@ class CartController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Item removed from cart',
+            'message' => 'Đã xóa sản phẩm khỏi giỏ hàng.',
             'data' => new CartResource($cart),
         ]);
     }
@@ -84,7 +84,7 @@ class CartController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Cart cleared successfully',
+            'message' => 'Đã xóa giỏ hàng.',
         ]);
     }
 }

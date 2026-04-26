@@ -35,7 +35,7 @@ class CategoryService
     public function listRootActive(): Collection
     {
         return $this->categories->all([
-            'parent_id' => 0,
+            'parent_id' => null,
             'is_active' => true,
         ]);
     }

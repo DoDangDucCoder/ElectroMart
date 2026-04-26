@@ -1,5 +1,5 @@
 @extends('errors::minimal')
 
-@section('title', __('Server Error'))
+@section('title', __('Lỗi máy chủ'))
 {{-- @section('code', '500') --}}
-@section('message', __('404 không tìm thấy'))
+@section('message', __('Hệ thống đang gặp sự cố. Vui lòng thử lại sau.'))

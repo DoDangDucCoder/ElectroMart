@@ -66,23 +66,21 @@
                 <ul class="dropdown-menu shopw-search-suggest-list">
                     @foreach ($products as $item)
                         @php
-                            $imagePath = $item->product_image;
-                            $imageUrl = filled($imagePath) && file_exists(public_path($imagePath))
-                                ? asset($imagePath)
-                                : asset('uploads/product/no-image.svg');
-                            $brandName = $item->brand?->brand_name ?? $item->brand_name;
-                            $categoryName = $item->primaryCategory?->category_name ?? $item->category_name;
+                            $imageUrl = \App\Support\AssetUrl::product($item->product_image);
+                            $productName = \App\Support\StorefrontLabel::neutralizeSource($item->product_name);
+                            $brandName = \App\Support\StorefrontLabel::neutralizeSource($item->brand?->brand_name ?? $item->brand_name);
+                            $categoryName = \App\Support\StorefrontLabel::neutralizeSource($item->primaryCategory?->category_name ?? $item->category_name);
                             $originalPrice = (float) ($item->getRawOriginal('price') ?? $item->price ?? 0);
                             $finalPrice = (float) ($item->final_price ?? $item->product_price ?? $originalPrice);
                         @endphp
-                        <li class="li_search_ajax" data-search-keyword="{{ $item->product_name }}">
+                        <li class="li_search_ajax" data-search-keyword="{{ $productName }}">
                             <a href="{{ url('/chi-tiet/' . $item->product_slug) }}">
                                 <span class="shopw-search-suggest-card">
                                     <span class="shopw-search-suggest-thumb">
-                                        <img src="{{ $imageUrl }}" alt="{{ $item->product_name }}" loading="lazy">
+                                        <img src="{{ $imageUrl }}" alt="{{ $productName }}" loading="lazy">
                                     </span>
                                     <span class="shopw-search-suggest-item">
-                                        <strong>{{ $item->product_name }}</strong>
+                                        <strong>{{ $productName }}</strong>
                                         <small>
                                             @if ($brandName)
                                                 {{ $brandName }}

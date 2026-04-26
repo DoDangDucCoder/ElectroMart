@@ -8,9 +8,9 @@
       </button>
       
       <div class="logo">
-        <router-link to="/">
-          <img src="/images/logo.png" alt="Laravel Shop" />
-        </router-link>
+        <a href="/">
+          <img src="/images/logo.png" alt="Cửa hàng thiết bị di động" />
+        </a>
       </div>
       
       <div class="header-actions">
@@ -33,7 +33,7 @@
       
       <div class="menu-content">
         <div class="menu-header">
-          <h3>Menu</h3>
+          <h3>Danh mục</h3>
           <button @click="closeMenu" class="close-menu">
             <i class="fas fa-times"></i>
           </button>
@@ -42,40 +42,40 @@
         <nav class="menu-nav">
           <ul>
             <li>
-              <router-link to="/" @click="closeMenu">
+              <a href="/" @click="closeMenu">
                 <i class="fas fa-home"></i>
-                Home
-              </router-link>
+                Trang chủ
+              </a>
             </li>
             <li>
-              <router-link to="/products" @click="closeMenu">
+              <a href="/tim-kiem" @click="closeMenu">
                 <i class="fas fa-box"></i>
-                Products
-              </router-link>
+                Sản phẩm
+              </a>
             </li>
             <li>
-              <router-link to="/categories" @click="closeMenu">
+              <a href="/tim-kiem" @click="closeMenu">
                 <i class="fas fa-tags"></i>
-                Categories
-              </router-link>
+                Danh mục
+              </a>
             </li>
             <li>
-              <router-link to="/brands" @click="closeMenu">
+              <a href="/tim-kiem" @click="closeMenu">
                 <i class="fas fa-award"></i>
-                Brands
-              </router-link>
+                Thương hiệu
+              </a>
             </li>
             <li>
-              <router-link to="/blog" @click="closeMenu">
+              <a href="/video" @click="closeMenu">
                 <i class="fas fa-blog"></i>
-                Blog
-              </router-link>
+                Tin tức
+              </a>
             </li>
             <li>
-              <router-link to="/contact" @click="closeMenu">
+              <a href="/lien-he" @click="closeMenu">
                 <i class="fas fa-envelope"></i>
-                Contact
-              </router-link>
+                Liên hệ
+              </a>
             </li>
           </ul>
         </nav>
@@ -87,18 +87,18 @@
               <span>{{ user.name }}</span>
             </div>
             <div class="user-actions">
-              <router-link to="/profile" @click="closeMenu">Profile</router-link>
-              <router-link to="/orders" @click="closeMenu">Orders</router-link>
-              <button @click="logout" class="btn-logout">Logout</button>
+              <a href="/account" @click="closeMenu">Tài khoản</a>
+              <a href="/history" @click="closeMenu">Đơn hàng</a>
+              <button @click="logout" class="btn-logout">Đăng xuất</button>
             </div>
           </div>
           <div v-else class="auth-section">
-            <router-link to="/login" @click="closeMenu" class="btn btn-primary">
-              Login
-            </router-link>
-            <router-link to="/register" @click="closeMenu" class="btn btn-outline-primary">
-              Register
-            </router-link>
+            <a href="/dang-nhap" @click="closeMenu" class="btn btn-primary">
+              Đăng nhập
+            </a>
+            <a href="/dang-ky" @click="closeMenu" class="btn btn-outline-primary">
+              Đăng ký
+            </a>
           </div>
         </div>
       </div>
@@ -108,7 +108,6 @@
 
 <script>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useCartStore } from '@/stores/cart'
 import SearchBar from './SearchBar.vue'
@@ -120,7 +119,6 @@ export default {
   },
   emits: ['toggle-cart'],
   setup(props, { emit }) {
-    const router = useRouter()
     const authStore = useAuthStore()
     const cartStore = useCartStore()
     
@@ -155,19 +153,23 @@ export default {
     
     const handleSearch = (searchData) => {
       showSearch.value = false
-      router.push({
-        name: 'products',
-        query: searchData
-      })
+      const params = new URLSearchParams()
+      const query = searchData?.query || ''
+
+      if (query) {
+        params.set('keywords_submit', query)
+      }
+
+      window.location.assign(`/tim-kiem${params.toString() ? `?${params.toString()}` : ''}`)
     }
     
     const logout = async () => {
       try {
         await authStore.logout()
         closeMenu()
-        router.push('/')
+        window.location.assign('/')
       } catch (error) {
-        console.error('Logout failed:', error)
+        console.error('Đăng xuất thất bại:', error)
       }
     }
     
@@ -403,7 +405,7 @@ export default {
 }
 
 .menu-nav a:hover,
-.menu-nav a.router-link-active {
+.menu-nav a.active {
   background: #f8f9fa;
   color: #007bff;
   border-left-color: #007bff;

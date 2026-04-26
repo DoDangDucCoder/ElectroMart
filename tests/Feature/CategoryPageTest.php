@@ -79,8 +79,8 @@ class CategoryPageTest extends TestCase
         $response->assertOk()
             ->assertDontSee($low->product_name)
             ->assertSeeInOrder([$high->product_name, $mid->product_name])
-            ->assertSee('Sort: Giá giảm dần')
-            ->assertSee('Giá: 15.000.000 VND - 30.000.000 VND');
+            ->assertSee('Sắp xếp: Giá giảm dần')
+            ->assertSee('Giá: 15.000.000đ - 30.000.000đ');
     }
 
     public function test_category_page_applies_single_sided_min_price_filter(): void
@@ -143,8 +143,8 @@ class CategoryPageTest extends TestCase
         $this->get('/danh-muc/' . $this->category->slug_category_product)
             ->assertOk()
             ->assertSee($product->product_name)
-            ->assertSee('20.000.000 VND')
-            ->assertSee('18.000.000 VND')
+            ->assertSee('20.000.000đ')
+            ->assertSee('18.000.000đ')
             ->assertSee('-2.000.000đ', false)
             ->assertSee('Giá sau giảm = 20.000.000đ - 2.000.000đ = 18.000.000đ');
     }

@@ -61,6 +61,8 @@
         ];
     @endphp
 
+    {{-- Restored checkout layout from the tested backup template. --}}
+
     <section id="cart_items" class="shopw-checkout-page">
         <div class="shopw-checkout-breadcrumbs">
             <ol class="breadcrumb">
@@ -310,9 +312,7 @@
                     <div class="shopw-checkout-items">
                         @foreach ($cartItems as $item)
                             @php
-                                $image = $item['product_image']
-                                    ? asset($item['product_image'])
-                                    : asset('uploads/product/no-image.svg');
+                                $image = \App\Support\AssetUrl::product($item['product_image'] ?? null);
                                 $subtotal = (float) $item['product_price'] * (int) $item['product_qty'];
                             @endphp
                             <article class="shopw-checkout-item">

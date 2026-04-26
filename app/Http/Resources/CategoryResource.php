@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\AssetUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -15,7 +16,7 @@ class CategoryResource extends JsonResource
             'slug' => $this->slug,
             'code' => $this->code,
             'description' => $this->description,
-            'thumbnail_url' => $this->thumbnail_path ? asset($this->thumbnail_path) : null,
+            'thumbnail_url' => AssetUrl::resolve($this->thumbnail_path, null),
             'is_active' => $this->is_active,
             'display_order' => $this->display_order,
             'meta_title' => $this->meta_title,

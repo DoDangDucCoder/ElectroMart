@@ -5,7 +5,7 @@
         <section class="g-admin-page-hero">
             <div>
                 <span class="g-admin-page-eyebrow">Nội dung / Bài viết</span>
-                <h1>Liệt kê bài viết</h1>
+                <h1>Danh sách bài viết</h1>
                 <p>Quản lý bài viết, lọc theo danh mục và trạng thái hiển thị trên website.</p>
             </div>
             <div class="g-admin-page-stats">
@@ -15,7 +15,7 @@
                 </article>
                 <article>
                     <strong>{{ $categories->count() }}</strong>
-                    <span>Danh mục blog</span>
+                    <span>Danh mục tin tức</span>
                 </article>
             </div>
         </section>
@@ -76,9 +76,9 @@
                                 </th>
                                 <th>Tên bài viết</th>
                                 <th>Hình ảnh</th>
-                                <th>Slug</th>
+                                <th>Đường dẫn tĩnh (slug)</th>
                                 <th>Tóm tắt</th>
-                                <th>Từ khóa</th>
+                                <th>Từ khóa SEO</th>
                                 <th>Danh mục</th>
                                 <th>Hiển thị</th>
                                 <th style="width:30px;"></th>

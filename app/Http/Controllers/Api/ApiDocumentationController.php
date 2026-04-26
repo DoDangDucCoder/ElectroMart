@@ -10,139 +10,139 @@ class ApiDocumentationController extends Controller
     public function index(): JsonResponse
     {
         $documentation = [
-            'title' => 'Laravel Shop API',
+            'title' => 'ShopW API',
             'version' => '1.0.0',
-            'description' => 'RESTful API for Laravel Shop e-commerce platform',
+            'description' => 'API RESTful cho nền tảng thương mại điện tử ShopW',
             'base_url' => url('/api/v1'),
             'authentication' => [
-                'type' => 'Bearer Token',
-                'description' => 'Use Laravel Sanctum for API authentication',
+                'type' => 'Mã truy cập Bearer',
+                'description' => 'Sử dụng Laravel Sanctum để xác thực API',
                 'header' => 'Authorization: Bearer {token}',
             ],
             'rate_limiting' => [
-                'description' => 'API requests are rate limited to prevent abuse',
-                'limit' => '60 requests per minute per IP/user',
+                'description' => 'Yêu cầu API được giới hạn tần suất để tránh lạm dụng',
+                'limit' => '60 yêu cầu mỗi phút cho mỗi IP/người dùng',
                 'headers' => [
-                    'X-RateLimit-Limit' => 'Maximum requests allowed',
-                    'X-RateLimit-Remaining' => 'Remaining requests in current window',
-                    'X-RateLimit-Reset' => 'Unix timestamp when the rate limit resets',
+                    'X-RateLimit-Limit' => 'Số yêu cầu tối đa được phép',
+                    'X-RateLimit-Remaining' => 'Số yêu cầu còn lại trong cửa sổ hiện tại',
+                    'X-RateLimit-Reset' => 'Unix timestamp khi giới hạn được đặt lại',
                 ],
             ],
             'endpoints' => [
                 'products' => [
                     'GET /api/v1/products' => [
-                        'description' => 'Get paginated list of products',
+                        'description' => 'Lấy danh sách sản phẩm có phân trang',
                         'parameters' => [
-                            'page' => 'Page number (default: 1)',
-                            'per_page' => 'Items per page (max: 50, default: 12)',
-                            'category' => 'Filter by category slug',
-                            'brand' => 'Filter by brand slug',
-                            'min_price' => 'Minimum price filter',
-                            'max_price' => 'Maximum price filter',
-                            'search' => 'Search keyword',
-                            'sort' => 'Sort by: price_asc, price_desc, name_asc, name_desc, created_at_desc',
+                            'page' => 'Số trang (mặc định: 1)',
+                            'per_page' => 'Số mục mỗi trang (tối đa: 50, mặc định: 12)',
+                            'category' => 'Lọc theo slug danh mục',
+                            'brand' => 'Lọc theo slug thương hiệu',
+                            'min_price' => 'Giá tối thiểu',
+                            'max_price' => 'Giá tối đa',
+                            'search' => 'Từ khóa tìm kiếm',
+                            'sort' => 'Sắp xếp theo: price_asc, price_desc, name_asc, name_desc, created_at_desc',
                         ],
                         'response' => [
                             'success' => 'boolean',
-                            'data' => 'array of ProductResource',
-                            'pagination' => 'pagination object',
-                            'filters' => 'applied filters',
+                            'data' => 'mảng ProductResource',
+                            'pagination' => 'đối tượng phân trang',
+                            'filters' => 'bộ lọc đã áp dụng',
                         ],
                     ],
                     'GET /api/v1/products/{slug}' => [
-                        'description' => 'Get product by slug',
+                        'description' => 'Lấy sản phẩm theo slug',
                         'response' => [
                             'success' => 'boolean',
                             'data' => 'ProductResource',
-                            'related_products' => 'array of ProductResource',
-                            'recommended_products' => 'array of ProductResource',
+                            'related_products' => 'mảng ProductResource liên quan',
+                            'recommended_products' => 'mảng ProductResource gợi ý',
                         ],
                     ],
                     'GET /api/v1/products/category/{categorySlug}' => [
-                        'description' => 'Get paginated products for an active category slug',
+                        'description' => 'Lấy sản phẩm có phân trang theo slug danh mục đang hoạt động',
                         'parameters' => [
-                            'page' => 'Page number (default: 1)',
-                            'per_page' => 'Items per page (max: 50, default: 12)',
-                            'brand' => 'Filter by active brand slug',
-                            'min_price' => 'Minimum price filter',
-                            'max_price' => 'Maximum price filter',
-                            'sort' => 'Sort by: price_asc, price_desc, name_asc, name_desc',
+                            'page' => 'Số trang (mặc định: 1)',
+                            'per_page' => 'Số mục mỗi trang (tối đa: 50, mặc định: 12)',
+                            'brand' => 'Lọc theo slug thương hiệu đang hoạt động',
+                            'min_price' => 'Giá tối thiểu',
+                            'max_price' => 'Giá tối đa',
+                            'sort' => 'Sắp xếp theo: price_asc, price_desc, name_asc, name_desc',
                         ],
                     ],
                     'GET /api/v1/products/brand/{brandSlug}' => [
-                        'description' => 'Get paginated products for an active brand slug',
+                        'description' => 'Lấy sản phẩm có phân trang theo slug thương hiệu đang hoạt động',
                         'parameters' => [
-                            'page' => 'Page number (default: 1)',
-                            'per_page' => 'Items per page (max: 50, default: 12)',
-                            'category' => 'Filter by active category slug',
-                            'min_price' => 'Minimum price filter',
-                            'max_price' => 'Maximum price filter',
-                            'sort' => 'Sort by: price_asc, price_desc, name_asc, name_desc',
+                            'page' => 'Số trang (mặc định: 1)',
+                            'per_page' => 'Số mục mỗi trang (tối đa: 50, mặc định: 12)',
+                            'category' => 'Lọc theo slug danh mục đang hoạt động',
+                            'min_price' => 'Giá tối thiểu',
+                            'max_price' => 'Giá tối đa',
+                            'sort' => 'Sắp xếp theo: price_asc, price_desc, name_asc, name_desc',
                         ],
                     ],
                     'GET /api/v1/products/latest' => [
-                        'description' => 'Get latest products',
+                        'description' => 'Lấy sản phẩm mới nhất',
                         'response' => [
                             'success' => 'boolean',
-                            'data' => 'array of ProductResource',
+                            'data' => 'mảng ProductResource',
                         ],
                     ],
                     'GET /api/v1/products/featured' => [
-                        'description' => 'Get featured products',
+                        'description' => 'Lấy sản phẩm nổi bật',
                         'response' => [
                             'success' => 'boolean',
-                            'data' => 'array of ProductResource',
+                            'data' => 'mảng ProductResource',
                         ],
                     ],
                     'GET /api/v1/products/search' => [
-                        'description' => 'Search products',
+                        'description' => 'Tìm kiếm sản phẩm',
                         'parameters' => [
-                            'q' => 'Search keyword (required)',
-                            'limit' => 'Maximum results (max: 50, default: 20)',
+                            'q' => 'Từ khóa tìm kiếm (bắt buộc)',
+                            'limit' => 'Số kết quả tối đa (tối đa: 50, mặc định: 20)',
                         ],
                         'response' => [
                             'success' => 'boolean',
-                            'data' => 'array of ProductResource',
-                            'keyword' => 'search keyword',
-                            'total' => 'total results count',
+                            'data' => 'mảng ProductResource',
+                            'keyword' => 'từ khóa tìm kiếm',
+                            'total' => 'tổng số kết quả',
                         ],
                     ],
                 ],
                 'categories' => [
                     'GET /api/v1/categories' => [
-                        'description' => 'Get all active categories',
+                        'description' => 'Lấy tất cả danh mục đang hoạt động',
                         'response' => [
                             'success' => 'boolean',
-                            'data' => 'array of CategoryResource',
-                            'total' => 'total count',
+                            'data' => 'mảng CategoryResource',
+                            'total' => 'tổng số lượng',
                         ],
                     ],
                     'GET /api/v1/categories/{slug}' => [
-                        'description' => 'Get category by slug',
+                        'description' => 'Lấy danh mục theo slug',
                         'response' => [
                             'success' => 'boolean',
                             'data' => 'CategoryResource',
                         ],
                     ],
                     'GET /api/v1/categories/tree' => [
-                        'description' => 'Get category tree structure',
+                        'description' => 'Lấy cấu trúc cây danh mục',
                         'response' => [
                             'success' => 'boolean',
-                            'data' => 'hierarchical category tree',
+                            'data' => 'cây danh mục phân cấp',
                         ],
                     ],
                 ],
                 'brands' => [
                     'GET /api/v1/brands' => [
-                        'description' => 'Get all active brands',
+                        'description' => 'Lấy tất cả thương hiệu đang hoạt động',
                         'response' => [
                             'success' => 'boolean',
-                            'data' => 'array of BrandResource',
-                            'total' => 'total count',
+                            'data' => 'mảng BrandResource',
+                            'total' => 'tổng số lượng',
                         ],
                     ],
                     'GET /api/v1/brands/{slug}' => [
-                        'description' => 'Get brand by slug',
+                        'description' => 'Lấy thương hiệu theo slug',
                         'response' => [
                             'success' => 'boolean',
                             'data' => 'BrandResource',
@@ -151,42 +151,42 @@ class ApiDocumentationController extends Controller
                 ],
                 'authentication' => [
                     'POST /api/v1/auth/login' => [
-                        'description' => 'Login user',
+                        'description' => 'Đăng nhập người dùng',
                         'body' => [
-                            'email' => 'string (required)',
-                            'password' => 'string (required)',
+                            'email' => 'chuỗi (bắt buộc)',
+                            'password' => 'chuỗi (bắt buộc)',
                         ],
                         'response' => [
                             'success' => 'boolean',
                             'message' => 'string',
                             'data' => [
-                                'user' => 'user object',
+                                'user' => 'đối tượng người dùng',
                                 'token' => 'string',
                                 'token_type' => 'Bearer',
                             ],
                         ],
                     ],
                     'POST /api/v1/auth/register' => [
-                        'description' => 'Register new user',
+                        'description' => 'Đăng ký người dùng mới',
                         'body' => [
-                            'name' => 'string (required)',
-                            'email' => 'string (required, unique)',
-                            'phone' => 'string (required, unique)',
-                            'password' => 'string (required, min:8)',
-                            'password_confirmation' => 'string (required)',
+                            'name' => 'chuỗi (bắt buộc)',
+                            'email' => 'chuỗi (bắt buộc, duy nhất)',
+                            'phone' => 'chuỗi (bắt buộc, duy nhất)',
+                            'password' => 'chuỗi (bắt buộc, tối thiểu: 8)',
+                            'password_confirmation' => 'chuỗi (bắt buộc)',
                         ],
                         'response' => [
                             'success' => 'boolean',
                             'message' => 'string',
                             'data' => [
-                                'user' => 'user object',
+                                'user' => 'đối tượng người dùng',
                                 'token' => 'string',
                                 'token_type' => 'Bearer',
                             ],
                         ],
                     ],
                     'POST /api/v1/auth/logout' => [
-                        'description' => 'Logout user (requires authentication)',
+                        'description' => 'Đăng xuất người dùng (cần xác thực)',
                         'headers' => ['Authorization: Bearer {token}'],
                         'response' => [
                             'success' => 'boolean',
@@ -196,7 +196,7 @@ class ApiDocumentationController extends Controller
                 ],
                 'cart' => [
                     'GET /api/v1/cart' => [
-                        'description' => 'Get user cart (requires authentication)',
+                        'description' => 'Lấy giỏ hàng của người dùng (cần xác thực)',
                         'headers' => ['Authorization: Bearer {token}'],
                         'response' => [
                             'success' => 'boolean',
@@ -204,11 +204,11 @@ class ApiDocumentationController extends Controller
                         ],
                     ],
                     'POST /api/v1/cart/add' => [
-                        'description' => 'Add item to cart (requires authentication)',
+                        'description' => 'Thêm sản phẩm vào giỏ hàng (cần xác thực)',
                         'headers' => ['Authorization: Bearer {token}'],
                         'body' => [
-                            'product_id' => 'integer (required)',
-                            'quantity' => 'integer (required, min:1, max:10)',
+                            'product_id' => 'số nguyên (bắt buộc)',
+                            'quantity' => 'số nguyên (bắt buộc, tối thiểu: 1, tối đa: 10)',
                         ],
                         'response' => [
                             'success' => 'boolean',
@@ -219,21 +219,21 @@ class ApiDocumentationController extends Controller
                 ],
                 'orders' => [
                     'GET /api/v1/orders' => [
-                        'description' => 'Get user orders (requires authentication)',
+                        'description' => 'Lấy danh sách đơn hàng của người dùng (cần xác thực)',
                         'headers' => ['Authorization: Bearer {token}'],
                         'response' => [
                             'success' => 'boolean',
-                            'data' => 'array of OrderResource',
+                            'data' => 'mảng OrderResource',
                         ],
                     ],
                     'POST /api/v1/orders' => [
-                        'description' => 'Create new order (requires authentication)',
+                        'description' => 'Tạo đơn hàng mới (cần xác thực)',
                         'headers' => ['Authorization: Bearer {token}'],
                         'body' => [
-                            'shipping_address_id' => 'integer (required)',
-                            'payment_method' => 'string (required, in:cash,cod,card,paypal)',
-                            'notes' => 'string (optional, max:500)',
-                            'coupon_code' => 'string (optional)',
+                            'shipping_address_id' => 'số nguyên (bắt buộc)',
+                            'payment_method' => 'chuỗi (bắt buộc, thuộc: cash,cod,card,paypal)',
+                            'notes' => 'chuỗi (không bắt buộc, tối đa: 500)',
+                            'coupon_code' => 'chuỗi (không bắt buộc)',
                         ],
                         'response' => [
                             'success' => 'boolean',
@@ -244,51 +244,51 @@ class ApiDocumentationController extends Controller
                 ],
                 'health' => [
                     'GET /api/v1/health' => [
-                        'description' => 'API health check',
+                        'description' => 'Kiểm tra tình trạng API',
                         'response' => [
                             'status' => 'healthy|degraded|unhealthy',
-                            'timestamp' => 'ISO 8601 timestamp',
-                            'version' => 'API version',
-                            'environment' => 'environment name',
-                            'database' => 'connection status',
-                            'cache' => 'cache status',
-                            'storage' => 'storage status',
+                            'timestamp' => 'thời gian ISO 8601',
+                            'version' => 'phiên bản API',
+                            'environment' => 'tên môi trường',
+                            'database' => 'trạng thái kết nối',
+                            'cache' => 'trạng thái cache',
+                            'storage' => 'trạng thái lưu trữ',
                         ],
                     ],
                     'GET /api/v1/health/cache' => [
-                        'description' => 'Cache health and driver statistics',
+                        'description' => 'Tình trạng cache và thống kê driver',
                     ],
                     'GET /api/v1/health/performance' => [
-                        'description' => 'Runtime performance snapshot',
+                        'description' => 'Ảnh chụp nhanh hiệu năng runtime',
                     ],
                 ],
                 'settings' => [
                     'GET /api/v1/settings' => [
-                        'description' => 'Get public settings key/value pairs',
+                        'description' => 'Lấy các cặp khóa/giá trị thiết lập công khai',
                     ],
                     'GET /api/v1/settings/contact' => [
-                        'description' => 'Get public contact settings',
+                        'description' => 'Lấy thiết lập liên hệ công khai',
                     ],
                     'GET /api/v1/settings/seo' => [
-                        'description' => 'Get public SEO settings',
+                        'description' => 'Lấy thiết lập SEO công khai',
                     ],
                 ],
             ],
             'error_responses' => [
-                '400' => 'Bad Request - Invalid parameters',
-                '401' => 'Unauthorized - Invalid or missing token',
-                '403' => 'Forbidden - Insufficient permissions',
-                '404' => 'Not Found - Resource not found',
-                '422' => 'Unprocessable Entity - Validation errors',
-                '429' => 'Too Many Requests - Rate limit exceeded',
-                '500' => 'Internal Server Error - Server error',
+                '400' => 'Yêu cầu không hợp lệ - Tham số không hợp lệ',
+                '401' => 'Chưa xác thực - Token không hợp lệ hoặc bị thiếu',
+                '403' => 'Bị từ chối - Không đủ quyền',
+                '404' => 'Không tìm thấy - Không tìm thấy tài nguyên',
+                '422' => 'Không thể xử lý - Lỗi xác thực dữ liệu',
+                '429' => 'Quá nhiều yêu cầu - Vượt giới hạn tần suất',
+                '500' => 'Lỗi máy chủ nội bộ - Lỗi phía máy chủ',
             ],
             'response_format' => [
-                'success' => 'boolean - Indicates if request was successful',
-                'message' => 'string - Human readable message',
-                'data' => 'mixed - Response data',
-                'errors' => 'object - Validation errors (when applicable)',
-                'pagination' => 'object - Pagination info (when applicable)',
+                'success' => 'boolean - Cho biết yêu cầu có thành công hay không',
+                'message' => 'string - Thông báo dễ đọc',
+                'data' => 'mixed - Dữ liệu phản hồi',
+                'errors' => 'object - Lỗi xác thực dữ liệu (khi có)',
+                'pagination' => 'object - Thông tin phân trang (khi có)',
             ],
         ];
 

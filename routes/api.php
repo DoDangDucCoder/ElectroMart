@@ -68,7 +68,8 @@ Route::prefix('v1')->group(function () {
     // Coupons
     Route::get('/coupons', [CouponController::class, 'index']);
     Route::get('/coupons/{code}', [CouponController::class, 'show']);
-    Route::post('/coupons/validate', [CouponController::class, 'validate']);
+    Route::post('/coupons/validate', [CouponController::class, 'validate_coupon']);
+
 
     // Blog
     Route::get('/blog', [BlogController::class, 'index']);

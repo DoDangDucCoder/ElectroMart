@@ -1,5 +1,5 @@
 @php
-    $campaignTags = collect($card['campaign_tags'] ?? ['25.4', 'VOUCHER', 'SIÊU RẺ'])
+    $campaignTags = collect($card['campaign_tags'] ?? ['25.4', 'PHIẾU GIẢM', 'SIÊU RẺ'])
         ->filter()
         ->take(3)
         ->values();

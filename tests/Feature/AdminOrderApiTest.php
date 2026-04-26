@@ -57,7 +57,7 @@ class AdminOrderApiTest extends TestCase
         $this->getJson('/api/v1/admin/orders/999999')
             ->assertNotFound()
             ->assertJsonPath('success', false)
-            ->assertJsonPath('message', 'Order not found');
+            ->assertJsonPath('message', 'Không tìm thấy đơn hàng.');
     }
 
     public function test_admin_order_api_update_status_rejects_invalid_payloads_and_only_updates_provided_fields(): void

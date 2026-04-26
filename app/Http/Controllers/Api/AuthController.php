@@ -27,7 +27,7 @@ class AuthController extends Controller
         if (!Auth::guard('customer')->attempt($request->only('email', 'password'))) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid credentials',
+                'message' => 'Thông tin đăng nhập không chính xác.',
             ], 401);
         }
 
@@ -36,7 +36,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Login successful',
+            'message' => 'Đăng nhập thành công.',
             'data' => [
                 'user' => [
                     'id' => $user->id,
@@ -70,7 +70,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Registration successful',
+            'message' => 'Đăng ký thành công.',
             'data' => [
                 'user' => [
                     'id' => $user->id,
@@ -118,7 +118,7 @@ class AuthController extends Controller
             if (!Hash::check($request->current_password, $user->password)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Current password is incorrect',
+                    'message' => 'Mật khẩu hiện tại không đúng.',
                 ], 400);
             }
         }
@@ -132,7 +132,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Profile updated successfully',
+            'message' => 'Cập nhật hồ sơ thành công.',
             'data' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -149,7 +149,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Logged out successfully',
+            'message' => 'Đăng xuất thành công.',
         ]);
     }
 

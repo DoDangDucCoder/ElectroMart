@@ -8,6 +8,7 @@ use App\Application\Checkout\Services\CartService;
 use App\Application\Checkout\Services\CheckoutService;
 use App\Application\Checkout\Services\CouponService;
 use App\Application\Checkout\Services\ShippingService;
+use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use App\Http\Requests\Storefront\Checkout\CalculateFeeRequest;
 use App\Http\Requests\Storefront\Checkout\ConfirmOrderRequest;
 use App\Http\Requests\Storefront\Checkout\LoginCustomerRequest;
@@ -16,6 +17,7 @@ use App\Http\Requests\Storefront\Checkout\SelectDeliveryHomeRequest;
 use App\Models\CatePost;
 use App\Models\Slider;
 use App\Support\StorefrontCustomerAuth;
+use App\Support\StorefrontCustomerPassword;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use App\Infrastructure\Persistence\Eloquent\Geo\Location;
 use Illuminate\Database\QueryException;
@@ -28,6 +30,7 @@ use Illuminate\Support\Facades\Session;
 
 class CheckoutController extends Controller
 {
+    use LegacyStorefrontContext;
     public function __construct(
         private readonly CartService $cartService,
         private readonly CouponService $couponService,
@@ -102,7 +105,7 @@ class CheckoutController extends Controller
         if (
             ! $customer ||
             ! $customer->is_active ||
-            ! password_verify($credentials['password_account'], $customer->password)
+            ! StorefrontCustomerPassword::verifyAndUpgrade($customer, $credentials['password_account'])
         ) {
             return Redirect::back()
                 ->withInput($request->safe()->only('email_account'))
@@ -149,12 +152,23 @@ class CheckoutController extends Controller
                 ->with('error', 'Vui lòng đăng nhập để tiếp tục thanh toán.');
         }
 
+        $cities = Location::where('type', 'city')->orderBy('name')->get();
+        if ($cities->isEmpty()) {
+            $cities = collect([
+                (object)['id' => 1, 'name' => 'TP. Hồ Chí Minh'],
+                (object)['id' => 2, 'name' => 'TP. Hà Nội'],
+                (object)['id' => 3, 'name' => 'TP. Đà Nẵng'],
+                (object)['id' => 4, 'name' => 'TP. Hải Phòng'],
+                (object)['id' => 5, 'name' => 'TP. Cần Thơ'],
+            ]);
+        }
+
         return view('pages.checkout.show_checkout', array_merge(
-            $this->seoContext($request, 'Checkout', 'checkout'),
+            $this->seoContext($request, 'Thanh toán', 'thanh toán'),
             $this->catalogContext(),
             $this->cartContext(),
             [
-                'cities' => Location::where('type', 'city')->orderBy('name')->get(),
+                'cities' => $cities,
                 'currentCustomer' => $currentCustomer,
                 'storefrontCustomerPicture' => Session::get(StorefrontCustomerAuth::SESSION_PICTURE_KEY),
             ]
@@ -173,7 +187,7 @@ class CheckoutController extends Controller
         }
 
         return view('pages.checkout.payment', array_merge(
-            $this->seoContext($request, 'Checkout', 'payment'),
+            $this->seoContext($request, 'Phương thức thanh toán', 'thanh toán'),
             $this->catalogContext(),
             $this->cartContext()
         ));
@@ -221,6 +235,48 @@ class CheckoutController extends Controller
                 ->get();
         }
 
+        if ($locations->isEmpty() && $parentId > 0) {
+            if ($action === 'city') {
+                if ($parentId == 1) { // HCM
+                    $locations = collect([
+                        (object)['id' => 101, 'name' => 'Quận 1'],
+                        (object)['id' => 102, 'name' => 'Quận 3'],
+                        (object)['id' => 103, 'name' => 'Quận 7'],
+                        (object)['id' => 104, 'name' => 'Quận Bình Thạnh'],
+                    ]);
+                } elseif ($parentId == 2) { // Hà Nội
+                    $locations = collect([
+                        (object)['id' => 201, 'name' => 'Quận Hoàn Kiếm'],
+                        (object)['id' => 202, 'name' => 'Quận Ba Đình'],
+                        (object)['id' => 203, 'name' => 'Quận Đống Đa'],
+                        (object)['id' => 204, 'name' => 'Quận Cầu Giấy'],
+                    ]);
+                } else {
+                    $locations = collect([
+                        (object)['id' => 301, 'name' => 'Quận Hải Châu'],
+                        (object)['id' => 302, 'name' => 'Quận Thanh Khê'],
+                    ]);
+                }
+            } elseif ($action === 'province') {
+                if ($parentId == 101) { // Quận 1
+                    $locations = collect([
+                        (object)['id' => 1001, 'name' => 'Phường Bến Nghé'],
+                        (object)['id' => 1002, 'name' => 'Phường Bến Thành'],
+                        (object)['id' => 1003, 'name' => 'Phường Đa Kao'],
+                    ]);
+                } elseif ($parentId == 201) { // Hoàn Kiếm
+                    $locations = collect([
+                        (object)['id' => 2001, 'name' => 'Phường Cửa Đông'],
+                        (object)['id' => 2002, 'name' => 'Phường Hàng Bạc'],
+                    ]);
+                } else {
+                    $locations = collect([
+                        (object)['id' => 9001, 'name' => 'Phường Trung Tâm'],
+                    ]);
+                }
+            }
+        }
+
         foreach ($locations as $location) {
             $options .= '<option value="' . $location->id . '">' . e($location->name) . '</option>';
         }
@@ -246,7 +302,7 @@ class CheckoutController extends Controller
 
         try {
             $order = $this->checkoutService->confirmOrder(array_merge($validated, [
-                'payment_method' => $validated['shipping_method'] ?? null,
+                'payment_method' => $validated['payment_method'] ?? $validated['shipping_method'] ?? null,
             ]), $customer->id);
         } catch (\Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 422);
@@ -265,15 +321,15 @@ class CheckoutController extends Controller
 
     public function momo_payment(Request $request): RedirectResponse
     {
-        return Redirect::back()->with('error', 'MoMo payment gateway is currently disabled.');
+        return Redirect::back()->with('error', 'Cổng thanh toán MoMo hiện đang tạm tắt.');
     }
 
     public function vnpay_payment(Request $request): RedirectResponse
     {
-        return Redirect::back()->with('error', 'VNPAY payment gateway is currently disabled.');
+        return Redirect::back()->with('error', 'Cổng thanh toán VNPAY hiện đang tạm tắt.');
     }
 
-    protected function seoContext(Request $request, string $title = 'Checkout', string $keyword = 'checkout'): array
+    protected function seoContext(Request $request, string $title = 'Thanh toán', string $keyword = 'thanh toán'): array
     {
         return [
             'meta_desc' => $title,
@@ -433,24 +489,6 @@ class CheckoutController extends Controller
             'redirect' => $redirectKey,
             'redirect_to' => $redirectUrl,
         ]);
-    }
-
-    protected function legacyCategoryPosts()
-    {
-        if (! Schema::hasTable('tbl_category_post')) {
-            return collect();
-        }
-
-        return CatePost::orderBy('cate_post_id', 'DESC')->get();
-    }
-
-    protected function legacyActiveSliders()
-    {
-        if (! Schema::hasTable('tbl_slider')) {
-            return collect();
-        }
-
-        return Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
     }
 
     protected function isDuplicateCustomerKey(QueryException $exception, string $keyName): bool

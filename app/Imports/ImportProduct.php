@@ -2,10 +2,9 @@
 
 namespace App\Imports;
 
-use App\Models\Product;
-use Maatwebsite\Excel\Concerns\ToModel;
+use App\Models\CategoryProductModel;
 
-class ImportProduct implements ToModel
+class ImportProduct
 {
     /**
      * @param array $row

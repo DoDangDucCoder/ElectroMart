@@ -3,12 +3,12 @@
         <div class="tech-flash-shell">
             <div class="tech-flash-head">
                 <div>
-                    <span class="tech-eyebrow tech-eyebrow-light">Deal giới hạn</span>
-                    <h2>Flash Sale</h2>
+                    <span class="tech-eyebrow tech-eyebrow-light">Ưu đãi giới hạn</span>
+                    <h2>Khuyến mãi chớp nhoáng</h2>
                     <p>Danh sách sản phẩm giảm giá chạy ngang, tối ưu cho laptop và điện thoại đang có mức giá tốt.</p>
                 </div>
 
-                <div class="tech-countdown" data-tech-countdown aria-label="Đồng hồ đếm ngược flash sale">
+                <div class="tech-countdown" data-tech-countdown aria-label="Đồng hồ đếm ngược khuyến mãi">
                     <span><strong data-countdown-unit="hours">06</strong><small>Giờ</small></span>
                     <span><strong data-countdown-unit="minutes">24</strong><small>Phút</small></span>
                     <span><strong data-countdown-unit="seconds">12</strong><small>Giây</small></span>
@@ -19,11 +19,11 @@
                 <button type="button"
                     class="tech-sale-nav tech-sale-prev"
                     data-tech-sale-prev
-                    aria-label="Quay lại sản phẩm Flash Sale">
+                    aria-label="Quay lại sản phẩm khuyến mãi">
                     <i class="fa fa-angle-left"></i>
                 </button>
 
-                <div class="tech-sale-track" data-tech-sale-track aria-label="Danh sách sản phẩm Flash Sale">
+                <div class="tech-sale-track" data-tech-sale-track aria-label="Danh sách sản phẩm khuyến mãi">
                     @foreach ($products as $product)
                         <div class="tech-sale-item">
                             @include('partials.home.product-card', [
@@ -37,7 +37,7 @@
                 <button type="button"
                     class="tech-sale-nav tech-sale-next"
                     data-tech-sale-next
-                    aria-label="Xem thêm sản phẩm Flash Sale">
+                    aria-label="Xem thêm sản phẩm khuyến mãi">
                     <i class="fa fa-angle-right"></i>
                 </button>
             </div>

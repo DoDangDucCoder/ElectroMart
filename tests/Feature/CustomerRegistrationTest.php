@@ -231,6 +231,17 @@ class CustomerRegistrationTest extends TestCase
         ])->assertRedirect('/history');
     }
 
+    public function test_social_customer_callbacks_without_oauth_state_return_to_login(): void
+    {
+        $this->get('/customer/google/callback')
+            ->assertRedirect('/dang-nhap?redirect=checkout')
+            ->assertSessionHas('error', 'Không thể hoàn tất đăng nhập bằng Google. Vui lòng thử lại.');
+
+        $this->get('/customer/facebook/callback')
+            ->assertRedirect('/dang-nhap?redirect=checkout')
+            ->assertSessionHas('error', 'Không thể hoàn tất đăng nhập bằng Facebook. Vui lòng thử lại.');
+    }
+
     public function test_customer_login_ignores_admin_referer_and_falls_back_to_storefront_destination(): void
     {
         Customer::create([

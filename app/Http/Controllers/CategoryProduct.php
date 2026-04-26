@@ -4,16 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Application\Catalog\Services\CategoryService;
 use App\Application\Catalog\Services\ProductService;
+use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use App\Http\Requests\Storefront\Home\ProductTabsRequest;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
-use App\Models\CatePost;
-use App\Models\Slider;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 
 class CategoryProduct extends Controller
 {
+    use LegacyStorefrontContext;
     public function __construct(
         private readonly CategoryService $categoryService,
         private readonly ProductService $productService,
@@ -38,6 +37,7 @@ class CategoryProduct extends Controller
             ->get();
 
         $filters = $this->buildSortAndFilterOptions($request);
+        $selectedSort = $this->selectedSortKey($request);
 
         $products = $this->productService->getProductsByCategorySlug($slug, $filters, 12);
         if (method_exists($products, 'appends')) {
@@ -69,13 +69,13 @@ class CategoryProduct extends Controller
             'category_post' => $categoryPost,
             'min_price' => $selectedMin,
             'max_price' => $selectedMax,
-            'max_price_range' => $rangeMax > 0 ? $rangeMax + 10000000 : 0,
-            'min_price_range' => $rangeMin > 0 ? $rangeMin + 500000 : 0,
+            'max_price_range' => $rangeMax,
+            'min_price_range' => $rangeMin,
             'range_min_price' => $rangeMin,
             'range_max_price' => $rangeMax,
-            'selected_sort' => $request->input('sort_by', 'none'),
-            'filter_start_price' => $request->input('start_price'),
-            'filter_end_price' => $request->input('end_price'),
+            'selected_sort' => $selectedSort,
+            'filter_start_price' => $selectedMin,
+            'filter_end_price' => $selectedMax,
         ]);
     }
 
@@ -108,9 +108,10 @@ class CategoryProduct extends Controller
             'giam_dan' => 'price_desc',
             'kytu_az' => 'name_asc',
             'kytu_za' => 'name_desc',
+            'khuyen_mai' => 'sale_desc',
         ];
 
-        $sortBy = $request->input('sort_by');
+        $sortBy = $this->selectedSortKey($request);
         if ($sortBy && isset($sortMap[$sortBy])) {
             $filters['sort'] = $sortMap[$sortBy];
         }
@@ -138,21 +139,12 @@ class CategoryProduct extends Controller
         return $filters;
     }
 
-    protected function legacyCategoryPosts()
+    protected function selectedSortKey(Request $request): string
     {
-        if (! Schema::hasTable('tbl_category_post')) {
-            return collect();
-        }
+        $allowedSorts = ['none', 'tang_dan', 'giam_dan', 'kytu_az', 'kytu_za', 'khuyen_mai'];
+        $sortBy = (string) $request->input('sort_by', 'none');
 
-        return CatePost::orderBy('cate_post_id', 'DESC')->get();
+        return in_array($sortBy, $allowedSorts, true) ? $sortBy : 'none';
     }
 
-    protected function legacyActiveSliders()
-    {
-        if (! Schema::hasTable('tbl_slider')) {
-            return collect();
-        }
-
-        return Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
-    }
 }

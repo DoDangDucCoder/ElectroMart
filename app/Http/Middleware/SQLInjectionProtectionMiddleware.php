@@ -10,7 +10,6 @@ use Symfony\Component\HttpFoundation\Response;
 class SQLInjectionProtectionMiddleware
 {
     private array $sqlPatterns = [
-        '/(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|SCRIPT)\b)/i',
         '/(\b(OR|AND)\s+\d+\s*=\s*\d+)/i',
         '/(\b(OR|AND)\s+[\'"]\w+[\'"]\s*=\s*[\'"]\w+[\'"])/i',
         '/(\bUNION\b.*\bSELECT\b)/i',
@@ -19,7 +18,6 @@ class SQLInjectionProtectionMiddleware
         '/(\bCREATE\s+\b(TABLE|DATABASE|INDEX)\b)/i',
         '/(\bALTER\s+\b(TABLE|DATABASE)\b)/i',
         '/(\bEXEC\s*\()/i',
-        '/(\bSCRIPT\b)/i',
         '/(\b(WAITFOR|DELAY)\s+\d+)/i',
         '/(\b(BENCHMARK|SLEEP)\s*\()/i',
         '/(\b(LOAD_FILE|INTO\s+OUTFILE)\s*\()/i',
@@ -45,13 +43,13 @@ class SQLInjectionProtectionMiddleware
 
             if ($request->expectsJson()) {
                 return response()->json([
-                    'error' => 'Invalid request detected',
-                    'message' => 'Your request contains potentially harmful content.'
+                    'error' => 'Phát hiện yêu cầu không hợp lệ',
+                    'message' => 'Yêu cầu của bạn chứa nội dung có nguy cơ gây hại.',
                 ], 400);
             }
 
             return redirect()->back()->withErrors([
-                'security' => 'Invalid request detected. Please check your input and try again.'
+                'security' => 'Phát hiện yêu cầu không hợp lệ. Vui lòng kiểm tra dữ liệu và thử lại.',
             ]);
         }
 
@@ -61,12 +59,12 @@ class SQLInjectionProtectionMiddleware
     private function containsSQLInjection(Request $request): bool
     {
         $input = $request->all();
-        
+
         foreach ($input as $key => $value) {
             if (is_string($value) && $this->checkStringForSQLInjection($value)) {
                 return true;
             }
-            
+
             if (is_array($value) && $this->checkArrayForSQLInjection($value)) {
                 return true;
             }
@@ -82,6 +80,7 @@ class SQLInjectionProtectionMiddleware
                 return true;
             }
         }
+
         return false;
     }
 
@@ -91,27 +90,29 @@ class SQLInjectionProtectionMiddleware
             if (is_string($value) && $this->checkStringForSQLInjection($value)) {
                 return true;
             }
-            
+
             if (is_array($value) && $this->checkArrayForSQLInjection($value)) {
                 return true;
             }
         }
+
         return false;
     }
 
     private function sanitizeLogData(array $data): array
     {
         $sanitized = [];
-        
+
         foreach ($data as $key => $value) {
             if (is_string($value)) {
-                $sanitized[$key] = substr($value, 0, 100) . (strlen($value) > 100 ? '...' : '');
+                $sanitized[$key] = substr($value, 0, 100).(strlen($value) > 100 ? '...' : '');
             } elseif (is_array($value)) {
                 $sanitized[$key] = '[Array]';
             } else {
                 $sanitized[$key] = $value;
             }
         }
+
         return $sanitized;
     }
 }

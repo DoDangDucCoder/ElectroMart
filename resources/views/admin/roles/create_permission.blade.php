@@ -10,7 +10,7 @@
             <div>
                 <span class="g-admin-page-eyebrow">Quyền hạn</span>
                 <h1>Cập nhật quyền cho {{ $user->name }}</h1>
-                <p>Trang này cập nhật quyền cho vai trò hiện tại của tài khoản, không gán quyền trực tiếp riêng lẻ lên user.</p>
+                <p>Trang này cập nhật quyền cho vai trò hiện tại của tài khoản, không gán quyền trực tiếp riêng lẻ lên người dùng.</p>
             </div>
 
             <div class="g-admin-page-stats">
@@ -20,7 +20,7 @@
                 </article>
                 <article>
                     <strong>{{ number_format($permission->count()) }}</strong>
-                    <span>Permission có thể chọn</span>
+                    <span>Quyền có thể chọn</span>
                 </article>
             </div>
         </section>
@@ -28,7 +28,7 @@
         <section class="g-admin-panel-card">
             <div class="g-admin-panel-head">
                 <div>
-                    <div>Danh sách permission</div>
+                    <div>Danh sách quyền</div>
                     <p>Đánh dấu những quyền cần áp dụng cho tài khoản ở thời điểm hiện tại.</p>
                 </div>
             </div>

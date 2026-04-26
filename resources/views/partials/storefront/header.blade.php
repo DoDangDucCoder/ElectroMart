@@ -420,7 +420,7 @@
                                         ->keyBy('id');
 
                                     $brandLinks = $brandSummary
-                                        ->map(function ($summary) use ($brandMap) {
+                                        ->map(function ($summary) use ($brandMap, $storefrontLabel) {
                                             $brand = $brandMap->get((int) $summary->brand_id);
 
                                             if (! $brand || blank($brand->brand_slug)) {
@@ -428,7 +428,7 @@
                                             }
 
                                             return [
-                                                'label' => $brand->brand_name,
+                                                'label' => $storefrontLabel::neutralizeSource($brand->brand_name),
                                                 'url' => url('/thuong-hieu/' . $brand->brand_slug),
                                                 'icon' => 'fa-certificate',
                                                 'note' => (int) ($summary->product_count ?? 0) . ' sản phẩm đang mở bán',
@@ -441,7 +441,7 @@
                                         $brandLinks = $brandMap
                                             ->take(6)
                                             ->map(fn($brand) => [
-                                                'label' => $brand->brand_name,
+                                                'label' => $storefrontLabel::neutralizeSource($brand->brand_name),
                                                 'url' => blank($brand->brand_slug) ? url('/danh-muc/' . $slug) : url('/thuong-hieu/' . $brand->brand_slug),
                                                 'icon' => 'fa-certificate',
                                                 'note' => 'Thương hiệu đang có trong nhóm này',
@@ -483,13 +483,13 @@
                                 $featuredProducts = $featuredProductsQuery
                                     ->limit(3)
                                     ->get()
-                                    ->map(function ($product) use ($desktopCategoryCanSummarizeBrands) {
+                                    ->map(function ($product) use ($desktopCategoryCanSummarizeBrands, $storefrontLabel) {
                                         return [
-                                            'label' => $product->product_name,
+                                            'label' => $storefrontLabel::neutralizeSource($product->product_name),
                                             'url' => url('/chi-tiet/' . $product->product_slug),
-                                            'image' => $product->product_image ? asset($product->product_image) : asset('uploads/product/no-image.svg'),
+                                            'image' => \App\Support\AssetUrl::product($product->product_image),
                                             'brand' => $desktopCategoryCanSummarizeBrands && $product->relationLoaded('brand')
-                                                ? $product->brand?->brand_name
+                                                ? $storefrontLabel::neutralizeSource($product->brand?->brand_name)
                                                 : null,
                                             'price' => (float) $product->final_price,
                                             'original_price' => (float) ($product->price ?? $product->final_price),
@@ -1014,15 +1014,13 @@
                                         </div>
 
                                         <div class="shopw-account-dropdown-links">
-                                            @if ($hasCartInSession)
-                                                <a href="{{ $checkoutUrl }}" class="shopw-account-dropdown-link" role="menuitem">
-                                                    <i class="fa fa-credit-card"></i>
-                                                    <span>Tiếp tục thanh toán</span>
-                                                </a>
-                                            @endif
+                                            <a href="{{ route('customer.account') }}" class="shopw-account-dropdown-link" role="menuitem">
+                                                <i class="fa fa-user-circle"></i>
+                                                <span>Quản lý tài khoản</span>
+                                            </a>
                                             <a href="{{ url('/history') }}" class="shopw-account-dropdown-link" role="menuitem">
                                                 <i class="fa fa-history"></i>
-                                                <span>Đơn hàng của tôi</span>
+                                                <span>Lịch sử mua hàng</span>
                                             </a>
                                             <a href="{{ url('/dang-xuat-khach-hang?redirect=login') }}"
                                                 class="shopw-account-dropdown-link is-danger" role="menuitem">
@@ -1078,7 +1076,7 @@
                                             <span class="shopw-nav-label">
                                                 <span class="shopw-nav-icon"><i class="fa fa-th-large"></i></span>
                                                 <span class="shopw-nav-text">
-                                                    <strong>Danh mục sản phẩm</strong>
+                                                    <strong>Sản phẩm</strong>
                                                     <small>Laptop, PC, linh kiện và phụ kiện</small>
                                                 </span>
                                             </span>
@@ -1086,7 +1084,7 @@
                                             <span class="shopw-nav-desktop-arrow"><i class="fa fa-angle-down"></i></span>
                                         </a>
                                         <button type="button" class="shopw-submenu-toggle" aria-expanded="false"
-                                            aria-label="Mở danh mục sản phẩm">
+                                            aria-label="Mở sản phẩm">
                                             <i class="fa fa-angle-down"></i>
                                         </button>
                                     </div>

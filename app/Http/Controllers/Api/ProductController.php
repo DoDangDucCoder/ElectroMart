@@ -48,7 +48,7 @@ class ProductController extends Controller
         if (!$product) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product not found',
+                'message' => 'Không tìm thấy sản phẩm.',
             ], 404);
         }
 
@@ -158,7 +158,7 @@ class ProductController extends Controller
         if (! $category) {
             return response()->json([
                 'success' => false,
-                'message' => 'Category not found',
+                'message' => 'Không tìm thấy danh mục.',
             ], 404);
         }
 
@@ -188,7 +188,7 @@ class ProductController extends Controller
         if (! $brand) {
             return response()->json([
                 'success' => false,
-                'message' => 'Brand not found',
+                'message' => 'Không tìm thấy thương hiệu.',
             ], 404);
         }
 

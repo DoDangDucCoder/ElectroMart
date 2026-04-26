@@ -39,14 +39,14 @@ class CustomerCartService
 
         $product = Product::find($productId);
         if (! $product) {
-            throw new RuntimeException('Product not found.');
+            throw new RuntimeException('Không tìm thấy sản phẩm.');
         }
 
         $variant = null;
         if ($variantId) {
             $variant = ProductVariant::where('product_id', $productId)->find($variantId);
             if (! $variant) {
-                throw new RuntimeException('Product variant not found.');
+                throw new RuntimeException('Không tìm thấy biến thể sản phẩm.');
             }
         }
 
@@ -88,7 +88,7 @@ class CustomerCartService
         $item = $cart->items()->whereKey($itemId)->first();
 
         if (! $item) {
-            throw new RuntimeException('Cart item not found.');
+            throw new RuntimeException('Không tìm thấy sản phẩm trong giỏ hàng.');
         }
 
         if ($quantity <= 0) {

@@ -40,7 +40,7 @@
             <header class="g-admin-panel-head">
                 <div>
                     <strong>Thông tin danh mục</strong>
-                    <p>Đổi tên, slug hoặc trạng thái hiển thị của nhóm nội dung blog.</p>
+                    <p>Đổi tên, đường dẫn tĩnh (slug) hoặc trạng thái hiển thị của nhóm nội dung tin tức.</p>
                 </div>
             </header>
             <div class="g-admin-panel-body">
@@ -53,9 +53,9 @@
                             class="form-control" onkeyup="ChangeToSlug();" id="slug" placeholder="Tên danh mục">
                     </div>
                     <div class="form-group">
-                        <label for="convert_slug">Slug</label>
+                        <label for="convert_slug">Đường dẫn tĩnh (slug)</label>
                         <input type="text" name="cate_post_slug" value="{{ old('cate_post_slug', $category_post->cate_post_slug) }}"
-                            class="form-control" id="convert_slug" placeholder="Slug">
+                            class="form-control" id="convert_slug" placeholder="Đường dẫn tĩnh (slug)">
                     </div>
                     <div class="form-group">
                         <label for="cate_post_desc">Mô tả danh mục</label>

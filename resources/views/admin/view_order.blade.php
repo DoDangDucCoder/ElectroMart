@@ -13,6 +13,20 @@
     @endphp
 
     <div class="g-admin-page-shell g-admin-order-view">
+        <style>
+            @media (max-width: 767px) {
+                .g-admin-order-view .g-admin-data-table th,
+                .g-admin-order-view .g-admin-data-table td {
+                    white-space: nowrap;
+                    font-size: 12px;
+                }
+
+                .g-admin-order-view .g-admin-order-qty-editor {
+                    min-width: 170px;
+                }
+            }
+        </style>
+
         <input type="hidden" name="_token" value="{{ csrf_token() }}">
 
         <section class="g-admin-page-hero">
@@ -56,7 +70,7 @@
                             <strong>{{ data_get($customer, 'customer_phone', 'Chưa có dữ liệu') }}</strong>
                         </div>
                         <div>
-                            <span>Email</span>
+                            <span>Thư điện tử</span>
                             <strong>{{ data_get($customer, 'customer_email', 'Chưa có dữ liệu') }}</strong>
                         </div>
                     </div>
@@ -85,7 +99,7 @@
                             <strong>{{ data_get($shipping, 'shipping_phone', 'Chưa có dữ liệu') }}</strong>
                         </div>
                         <div>
-                            <span>Email</span>
+                            <span>Thư điện tử</span>
                             <strong>{{ data_get($shipping, 'shipping_email', 'Chưa có dữ liệu') }}</strong>
                         </div>
                         <div>

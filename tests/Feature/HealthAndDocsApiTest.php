@@ -40,15 +40,32 @@ class HealthAndDocsApiTest extends TestCase
         $this->getJson('/api/v1/health/cache')
             ->assertOk()
             ->assertJsonPath('success', false)
-            ->assertJsonPath('message', 'Cache statistics are temporarily unavailable')
+            ->assertJsonPath('message', 'Thống kê cache hiện tạm thời chưa sẵn sàng.')
             ->assertJsonPath('data', []);
+    }
+
+    public function test_health_performance_endpoint_returns_runtime_metrics(): void
+    {
+        $this->getJson('/api/v1/health/performance')
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure([
+                'success',
+                'data' => [
+                    'memory_usage',
+                    'memory_peak',
+                    'execution_time',
+                    'php_version',
+                    'laravel_version',
+                ],
+            ]);
     }
 
     public function test_api_docs_expose_current_product_and_health_endpoints(): void
     {
         $response = $this->getJson('/api/v1/docs')
             ->assertOk()
-            ->assertJsonPath('title', 'Laravel Shop API');
+            ->assertJsonPath('title', 'ShopW API');
 
         $documentation = $response->json();
         $products = array_keys($documentation['endpoints']['products']);
@@ -58,12 +75,27 @@ class HealthAndDocsApiTest extends TestCase
         $this->assertContains('GET /api/v1/products/category/{categorySlug}', $products);
         $this->assertContains('GET /api/v1/products/brand/{brandSlug}', $products);
         $this->assertSame(
-            'array of ProductResource',
+            'mảng ProductResource gợi ý',
             $documentation['endpoints']['products']['GET /api/v1/products/{slug}']['response']['recommended_products']
         );
         $this->assertContains('GET /api/v1/health/cache', $health);
         $this->assertContains('GET /api/v1/health/performance', $health);
         $this->assertContains('GET /api/v1/settings/contact', $settings);
         $this->assertContains('GET /api/v1/settings/seo', $settings);
+    }
+
+    public function test_l5_swagger_docs_can_be_generated_and_served(): void
+    {
+        $this->artisan('l5-swagger:generate')
+            ->assertExitCode(0);
+
+        $this->getJson('/docs')
+            ->assertOk()
+            ->assertJsonPath('info.title', 'ShopW API')
+            ->assertJsonPath('paths./api/v1/health.get.summary', 'Application health check');
+
+        $this->get('/api/documentation')
+            ->assertOk()
+            ->assertSee('SwaggerUIBundle');
     }
 }

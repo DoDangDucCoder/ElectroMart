@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use App\Http\Requests\Storefront\Home\AutocompleteProductsRequest;
 use App\Http\Requests\Storefront\Home\LoadMoreProductsRequest;
 use App\Http\Requests\Storefront\Home\SearchProductsRequest;
 use Illuminate\Http\Request;
-use App\Models\CatePost;
-use App\Models\Slider;
 use App\Models\Icons;
 use App\Models\News;
 use App\Application\Catalog\Services\BrandService;
@@ -17,7 +16,9 @@ use App\Application\Catalog\Services\ProductService;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Cms\BlogPost;
+use App\Support\AssetUrl;
 use App\Support\ProductPriceSql;
+use App\Support\StorefrontLabel;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -26,6 +27,7 @@ use Illuminate\Support\Facades\Schema;
 
 class HomeController extends Controller
 {
+    use LegacyStorefrontContext;
     public function __construct(
         private readonly CategoryService $categoryService,
         private readonly ProductService $productService,
@@ -167,11 +169,11 @@ class HomeController extends Controller
         $discountPercent = $originalPrice > 0 && $finalPrice < $originalPrice
             ? (int) round((($originalPrice - $finalPrice) / $originalPrice) * 100)
             : 0;
-        $brandName = trim((string) ($product->brand?->brand_name ?? $product->brand?->name ?? 'ShopW'));
+        $brandName = StorefrontLabel::neutralizeSource($product->brand?->brand_name ?? $product->brand?->name ?? 'ShopW');
 
         return [
             'id' => $product->id,
-            'name' => $product->name,
+            'name' => StorefrontLabel::neutralizeSource($product->name),
             'url' => filled($product->slug) ? url('/chi-tiet/' . $product->slug) : url('/tim-kiem'),
             'brand' => $brandName,
             'brand_logo' => $this->resolveTechHomeAssetUrl($product->brand?->logo_path),
@@ -308,7 +310,7 @@ class HomeController extends Controller
                 'thumbnail' => $this->resolveTechHomeAssetUrl('uploads/post/smartphone24.jpg', 'uploads/contact/blog-three41.jpg'),
             ],
             [
-                'title' => 'Cách săn deal công nghệ an toàn trong mùa Flash Sale',
+                'title' => 'Cách săn ưu đãi công nghệ an toàn trong mùa khuyến mãi',
                 'url' => '#',
                 'summary' => 'Kiểm tra giá gốc, bảo hành và phương thức thanh toán để mua đúng sản phẩm cần thiết.',
                 'published_at' => now()->subDays(5),
@@ -328,10 +330,10 @@ class HomeController extends Controller
                     ->limit($limit)
                     ->get()
                     ->map(fn (Brand $brand) => [
-                        'name' => $brand->brand_name ?? $brand->name,
+                        'name' => StorefrontLabel::neutralizeSource($brand->brand_name ?? $brand->name),
                         'url' => filled($brand->brand_slug ?? $brand->slug) ? url('/thuong-hieu/' . ($brand->brand_slug ?? $brand->slug)) : '#',
                         'logo' => $this->resolveTechHomeAssetUrl($brand->logo_path),
-                        'initials' => $this->brandInitials($brand->brand_name ?? $brand->name),
+                        'initials' => $this->brandInitials(StorefrontLabel::neutralizeSource($brand->brand_name ?? $brand->name)),
                     ]);
 
                 if ($brands->isNotEmpty()) {
@@ -386,21 +388,7 @@ class HomeController extends Controller
 
     private function resolveTechHomeAssetUrl(?string $path, ?string $fallback = null): ?string
     {
-        $path = trim((string) $path);
-
-        if ($path !== '' && (str_starts_with($path, 'http://') || str_starts_with($path, 'https://'))) {
-            return $path;
-        }
-
-        if ($path !== '' && file_exists(public_path($path))) {
-            return asset($path);
-        }
-
-        if ($fallback && file_exists(public_path($fallback))) {
-            return asset($fallback);
-        }
-
-        return null;
+        return AssetUrl::resolve($path, $fallback);
     }
 
     private function brandInitials(?string $brandName): string
@@ -492,6 +480,7 @@ class HomeController extends Controller
             'keyword' => $keywords,
             'product_code' => $validated['product_code'] ?? null,
             'category_id' => $validated['category_id'] ?? null,
+            'brand_id' => $validated['brand_id'] ?? null,
             'price_min' => $validated['price_min'] ?? null,
             'price_max' => $validated['price_max'] ?? null,
             'sort' => $validated['sort'] ?? $defaultSort,
@@ -506,6 +495,7 @@ class HomeController extends Controller
             'keywords_submit' => $validated['keywords_submit'] ?? null,
             'product_code' => $validated['product_code'] ?? null,
             'category_id' => $validated['category_id'] ?? null,
+            'brand_id' => $validated['brand_id'] ?? null,
             'price_min' => $validated['price_min'] ?? null,
             'price_max' => $validated['price_max'] ?? null,
             'sort' => $validated['sort'] ?? null,
@@ -551,6 +541,7 @@ class HomeController extends Controller
             'search_keyword' => $keywords,
             'search_filters' => $filters,
             'search_categories' => $cate_product,
+            'search_brands' => $brand_product,
             'recommended_products' => $recommendationData['products'],
             'recommendation_description' => $recommendationData['description'],
             'meta_desc' => $overrides['meta_desc'] ?? 'Tìm kiếm sản phẩm',
@@ -974,7 +965,7 @@ class HomeController extends Controller
 
         return [
             'kicker' => trim((string) ($config['kicker'] ?? 'Flash')),
-            'title' => trim((string) ($config['title'] ?? 'Sale')),
+            'title' => trim((string) ($config['title'] ?? 'Khuyến mãi')),
             'cta_label' => trim((string) ($config['cta_label'] ?? 'Xem tất cả')),
             'cta_url' => $this->resolveStorefrontUrl($config['cta_url'] ?? '/tim-kiem', url('/tim-kiem')),
             'countdown_ends_at' => $countdownEndsAt?->toIso8601String(),
@@ -1427,11 +1418,7 @@ class HomeController extends Controller
 
     private function resolvePublicAssetUrl(?string $path, string $fallback = 'uploads/product/no-image.svg'): string
     {
-        if (filled($path) && file_exists(public_path($path))) {
-            return asset($path);
-        }
-
-        return asset($fallback);
+        return AssetUrl::resolve($path, $fallback);
     }
 
     private function effectivePriceExpression(): string
@@ -1446,26 +1433,5 @@ class HomeController extends Controller
         }
 
         return Icons::orderBy('id_icons', 'DESC')->get();
-    }
-
-    private function legacyCategoryPosts()
-    {
-        if (! Schema::hasTable('tbl_category_post')) {
-            return collect();
-        }
-
-        return CatePost::orderBy('cate_post_id', 'DESC')->get();
-    }
-
-    private function legacyActiveSliders(int $limit = 4)
-    {
-        if (! Schema::hasTable('tbl_slider')) {
-            return collect();
-        }
-
-        return Slider::orderBy('slider_id', 'DESC')
-            ->where('slider_status', '1')
-            ->take(max(1, $limit))
-            ->get();
     }
 }

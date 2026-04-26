@@ -26,7 +26,7 @@
             'external' => false,
         ],
     ];
-    $heroSupportCta = $supportConfig['chat_cta'] ?? 'Hỏi sản phẩm, giá sale, bảo hành';
+    $heroSupportCta = $supportConfig['chat_cta'] ?? 'Hỏi sản phẩm, giá khuyến mãi, bảo hành';
 @endphp
 
 <section class="shopw-support-dock-host" data-storefront-support-dock>

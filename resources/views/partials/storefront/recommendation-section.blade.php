@@ -56,8 +56,8 @@
                 'emptyMessage' => $emptyTitle,
                 'emptyStateClass' => 'shopw-recommendation-empty',
                 'cardColumnClass' => $resolvedCardColumnClass,
-                'showQuickView' => false,
-                'showCartToggle' => false,
+                'showQuickView' => true,
+                'showCartToggle' => true,
                 'showWishlist' => true,
                 'showCompare' => true,
             ])

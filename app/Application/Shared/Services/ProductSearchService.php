@@ -44,14 +44,18 @@ class ProductSearchService
             });
         }
 
-        if (! empty($filters['price_min'])) {
+        if (! empty($filters['brand_id'])) {
+            $query->where($this->productTable() . '.brand_id', (int) $filters['brand_id']);
+        }
+
+        if (isset($filters['price_min']) && $filters['price_min'] !== null && $filters['price_min'] !== '') {
             $query->whereRaw(
                 $this->effectivePriceExpression() . ' >= ?',
                 [ProductPriceSql::normalizeFilterBinding($filters['price_min'])]
             );
         }
 
-        if (! empty($filters['price_max'])) {
+        if (isset($filters['price_max']) && $filters['price_max'] !== null && $filters['price_max'] !== '') {
             $query->whereRaw(
                 $this->effectivePriceExpression() . ' <= ?',
                 [ProductPriceSql::normalizeFilterBinding($filters['price_max'])]
@@ -157,14 +161,17 @@ class ProductSearchService
 
     protected function applySorting(Builder $query, array $filters): void
     {
+        $query->reorder();
         $this->applyHighlightOrdering($query, $filters);
 
         match ($filters['sort'] ?? null) {
             'best_selling' => $this->applyBestSellingSorting($query),
-            'price_asc' => $query->orderByRaw($this->effectivePriceExpression() . ' asc'),
-            'price_desc' => $query->orderByRaw($this->effectivePriceExpression() . ' desc'),
-            'name_asc' => $query->orderBy('name'),
+            'price_asc' => $query->orderByRaw($this->effectivePriceExpression() . ' ASC'),
+            'price_desc' => $query->orderByRaw($this->effectivePriceExpression() . ' DESC'),
+            'sale_desc' => $this->applySaleSorting($query),
+            'name_asc' => $query->orderBy('name', 'ASC'),
             'name_desc' => $query->orderByDesc('name'),
+            'created_at_desc' => $query->orderByDesc($this->productTable() . '.created_at')->orderByDesc($this->productTable() . '.id'),
             'popular' => $query->orderByDesc('views_count')->orderByDesc('id'),
             default => $query->orderByDesc('is_featured')->orderByDesc('views_count')->orderByDesc('id'),
         };
@@ -213,6 +220,20 @@ class ProductSearchService
             ->orderByRaw('COALESCE(product_sales_rank.sold_quantity, 0) DESC')
             ->orderByDesc($table . '.views_count')
             ->orderByDesc($table . '.is_featured')
+            ->orderByDesc($table . '.id');
+    }
+
+    protected function applySaleSorting(Builder $query): void
+    {
+        $table = $this->productTable();
+        $effectivePriceExpression = $this->effectivePriceExpression();
+
+        $query
+            ->orderByRaw(
+                'CASE WHEN ' . $table . '.price > (' . $effectivePriceExpression . ') THEN ' . $table . '.price - (' . $effectivePriceExpression . ') ELSE 0 END DESC'
+            )
+            ->orderByRaw($effectivePriceExpression . ' ASC')
+            ->orderByDesc($table . '.views_count')
             ->orderByDesc($table . '.id');
     }
 

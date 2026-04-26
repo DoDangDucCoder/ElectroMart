@@ -195,7 +195,7 @@
 
     <div class="shopw-footer-bottom">
         <div class="shopw-footer-bottom-inner">
-            <p>Copyright © 2025 {{ $footerBrandName }}</p>
+            <p>Bản quyền © 2025 {{ $footerBrandName }}</p>
             <span>{{ $footerBrandDescriptor }}</span>
         </div>
     </div>

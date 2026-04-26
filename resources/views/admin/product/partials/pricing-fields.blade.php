@@ -71,14 +71,14 @@
 
 <div class="g-admin-pricing-grid">
     <div class="form-group">
-        <label for="product_price">Giá bán gốc (VND)</label>
+        <label for="product_price">Giá bán gốc (đ)</label>
         <input type="text" name="product_price" id="product_price"
             class="form-control @error('product_price') is-invalid @enderror price_format"
             value="{{ $displayProductPrice }}" placeholder="Ví dụ: 1.500.000" required>
     </div>
 
     <div class="form-group">
-        <label for="price_cost">Giá nhập (VND)</label>
+        <label for="price_cost">Giá nhập (đ)</label>
         <input type="text" name="price_cost" id="price_cost"
             class="form-control @error('price_cost') is-invalid @enderror price_format"
             value="{{ $displayCostPrice }}" placeholder="Ví dụ: 1.200.000">
@@ -100,7 +100,7 @@
             class="form-control @error('sale_value') is-invalid @enderror"
             value="{{ $displaySaleValue }}"
             placeholder="Nhập % hoặc số tiền giảm">
-        <small class="text-muted">Nếu chọn sale %, nhập trong khoảng 0-100. Nếu chọn sale số tiền, nhập VND.</small>
+        <small class="text-muted">Nếu chọn sale %, nhập trong khoảng 0-100. Nếu chọn sale số tiền, nhập theo đơn vị đồng.</small>
     </div>
 
     <div class="form-group">
@@ -117,5 +117,5 @@
 </div>
 
 <div class="g-admin-pricing-explanation" id="sale_explanation_preview">
-    {{ $pricingService->buildSaleExplanation($priceValue, $saleTypeValue, $saleValueNumber) ?: 'Không áp dụng sale cho sản phẩm này.' }}
+    {{ $pricingService->buildSaleExplanation($priceValue, $saleTypeValue, $saleValueNumber) ?: 'Không áp dụng khuyến mãi cho sản phẩm này.' }}
 </div>

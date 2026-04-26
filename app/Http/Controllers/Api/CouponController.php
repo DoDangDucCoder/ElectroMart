@@ -47,7 +47,7 @@ class CouponController extends Controller
         if (! $coupon || ($coupon->usage_limit !== null && $coupon->used_count >= $coupon->usage_limit)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Coupon not found',
+                'message' => 'Không tìm thấy mã giảm giá.',
             ], 404);
         }
 
@@ -57,7 +57,8 @@ class CouponController extends Controller
         ]);
     }
 
-    public function validate(Request $request): JsonResponse
+    public function validate_coupon(Request $request): JsonResponse
+
     {
         $request->validate([
             'code' => 'required|string',
@@ -78,7 +79,7 @@ class CouponController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Coupon is valid',
+            'message' => 'Mã giảm giá hợp lệ.',
             'data' => [
                 'coupon' => new CouponResource($validation['coupon']),
                 'discount_amount' => $validation['discount_amount'],

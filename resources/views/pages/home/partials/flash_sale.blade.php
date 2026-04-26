@@ -2,7 +2,7 @@
     $cards = collect($flashSale['products'] ?? [])->values()->take(6);
     $flashSaleKicker = trim((string) ($flashSale['kicker'] ?? ''));
     $flashSaleTitle = trim((string) ($flashSale['title'] ?? ''));
-    $flashSaleTitle = $flashSaleTitle !== '' ? $flashSaleTitle : 'FLASH SALE';
+    $flashSaleTitle = $flashSaleTitle !== '' ? $flashSaleTitle : 'KHUYẾN MÃI CHỚP NHOÁNG';
     $flashSaleHeading = trim($flashSaleKicker !== '' ? $flashSaleKicker . ' ' . $flashSaleTitle : $flashSaleTitle);
     $flashSaleCtaLabel = filled($flashSale['cta_label'] ?? null) ? $flashSale['cta_label'] : 'Xem tất cả';
     $flashSaleCtaUrl = filled($flashSale['cta_url'] ?? null) ? $flashSale['cta_url'] : url('/tim-kiem');

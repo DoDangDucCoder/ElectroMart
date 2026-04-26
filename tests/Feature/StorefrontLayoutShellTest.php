@@ -87,7 +87,7 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertDontSee('TẶNG VOUCHER 500K')
             ->assertDontSee('class="tech-hero-card"', false)
             ->assertSee('Shell Home Product')
-            ->assertSee('Flash Sale')
+            ->assertSee('Khuyến mãi chớp nhoáng')
             ->assertSee('data-tech-wishlist', false)
             ->assertSee('tech-flash-sale-badge', false)
             ->assertSee('tech-sale-prev', false)

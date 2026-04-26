@@ -37,6 +37,24 @@ return [
         'key' => env('RESEND_KEY'),
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env(
+            'GOOGLE_CLIENT_URL',
+            rtrim((string) env('APP_URL', 'http://localhost'), '/') . '/customer/google/callback'
+        ),
+    ],
+
+    'facebook' => [
+        'client_id' => env('FACEBOOK_CLIENT_ID'),
+        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
+        'redirect' => env(
+            'FACEBOOK_CLIENT_REDIRECT',
+            rtrim((string) env('APP_URL', 'http://localhost'), '/') . '/customer/facebook/callback'
+        ),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

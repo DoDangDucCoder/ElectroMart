@@ -50,7 +50,7 @@
                             value="{{ old('brand_product_name', $brand->brand_name) }}" required>
                     </div>
                     <div class="form-group">
-                        <label for="brand_product_slug">Slug</label>
+                        <label for="brand_product_slug">Đường dẫn tĩnh (slug)</label>
                         <input type="text" name="brand_product_slug" id="brand_product_slug" class="form-control"
                             value="{{ old('brand_product_slug', $brand->brand_slug) }}">
                     </div>

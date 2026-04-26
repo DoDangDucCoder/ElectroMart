@@ -17,9 +17,11 @@ class ConfirmOrderRequest extends BaseFormRequest
             'shipping_notes' => ['nullable', 'string', 'max:500'],
             'order_note' => ['nullable', 'string', 'max:500'],
             'shipping_method' => ['nullable', 'string', 'max:50', Rule::in(['cod', 'bank_transfer', 'cash', 'card', 'paypal'])],
-            'city_id' => ['nullable', 'integer', 'min:1', 'exists:locations,id'],
-            'province_id' => ['nullable', 'integer', 'min:1', 'exists:locations,id'],
-            'ward_id' => ['nullable', 'integer', 'min:1', 'exists:locations,id'],
+            // payment_method: phương thức thanh toán độc lập (nếu form gửi riêng biệt)
+            'payment_method'  => ['nullable', 'string', 'max:50', Rule::in(['cod', 'bank_transfer', 'momo', 'vnpay', 'paypal', 'cash', 'card'])],
+            'city_id'         => ['nullable', 'integer', 'min:1'],
+            'province_id'     => ['nullable', 'integer', 'min:1'],
+            'ward_id'         => ['nullable', 'integer', 'min:1'],
         ];
     }
 

@@ -72,7 +72,7 @@ class HealthController extends Controller
         } catch (\Throwable $exception) {
             return response()->json([
                 'success' => false,
-                'message' => 'Cache statistics are temporarily unavailable',
+                'message' => 'Thống kê cache hiện tạm thời chưa sẵn sàng.',
                 'data' => [],
             ]);
         }
@@ -80,10 +80,14 @@ class HealthController extends Controller
 
     public function performance(): JsonResponse
     {
+        $startTime = defined('LARAVEL_START')
+            ? (float) constant('LARAVEL_START')
+            : (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true));
+
         $stats = [
             'memory_usage' => memory_get_usage(true),
             'memory_peak' => memory_get_peak_usage(true),
-            'execution_time' => microtime(true) - LARAVEL_START,
+            'execution_time' => max(0, microtime(true) - $startTime),
             'php_version' => PHP_VERSION,
             'laravel_version' => app()->version(),
         ];

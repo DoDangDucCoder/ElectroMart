@@ -32,7 +32,7 @@ class BrandController extends Controller
         if (!$brand) {
             return response()->json([
                 'success' => false,
-                'message' => 'Brand not found',
+                'message' => 'Không tìm thấy thương hiệu.',
             ], 404);
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\AssetUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -24,7 +25,7 @@ class CartResource extends JsonResource
                         'session_id' => $item['session_id'] ?? null,
                         'product_id' => $item['product_id'] ?? null,
                         'product_name' => $item['product_name'] ?? null,
-                        'product_image' => ! empty($item['product_image']) ? asset($item['product_image']) : null,
+                        'product_image' => AssetUrl::product($item['product_image'] ?? null),
                         'price' => $price,
                         'quantity' => $quantity,
                         'subtotal' => $price * $quantity,
@@ -47,7 +48,7 @@ class CartResource extends JsonResource
                     'product_id' => $item->product_id,
                     'product_name' => $item->product->name,
                     'product_slug' => $item->product->slug,
-                    'product_image' => $item->product->thumbnail_path ? asset($item->product->thumbnail_path) : null,
+                    'product_image' => AssetUrl::product($item->product->thumbnail_path),
                     'price' => $item->price,
                     'quantity' => $item->quantity,
                     'subtotal' => $item->price * $item->quantity,

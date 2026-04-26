@@ -10,6 +10,11 @@ class Location extends BaseModel
 {
     protected $table = 'locations';
 
+    protected $casts = [
+        'meta' => 'array',
+        'is_active' => 'boolean',
+    ];
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_id');

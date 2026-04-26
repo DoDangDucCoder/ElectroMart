@@ -97,7 +97,9 @@ class OrderHistoryPageTest extends TestCase
     {
         $this->withSession(['customer_id' => 999999])
             ->get('/history')
-            ->assertRedirect('dang-nhap');
+            ->assertRedirect('dang-nhap')
+            ->assertSessionHas('error', 'Phiên đăng nhập không còn hợp lệ.')
+            ->assertSessionMissing('customer_id');
     }
 
     public function test_customer_can_cancel_pending_modern_order(): void
@@ -142,7 +144,8 @@ class OrderHistoryPageTest extends TestCase
             ])->assertStatus(401)
             ->assertJson([
                 'message' => 'Phiên đăng nhập không còn hợp lệ.',
-            ]);
+            ])
+            ->assertSessionMissing('customer_id');
     }
 
     public function test_customer_cannot_cancel_completed_modern_order(): void
@@ -191,8 +194,8 @@ class OrderHistoryPageTest extends TestCase
             ->assertSee('Legacy History Product')
             ->assertSee('Legacy History Product Two')
             ->assertSee('VIP10')
-            ->assertSee('45.000 VND')
-            ->assertSee('3.105.000 VND');
+            ->assertSee('45.000đ')
+            ->assertSee('3.105.000đ');
 
         $totals = app(LegacyOrderPresentationService::class)->calculateTotals($order->order_code);
         $this->assertSame(3105000.0, (float) $totals['total']);
@@ -228,7 +231,7 @@ class OrderHistoryPageTest extends TestCase
             ->assertSee('g-history')
             ->assertSee($order->order_code)
             ->assertSee('Tiền mặt')
-            ->assertSee('3.145.000 VND')
+            ->assertSee('3.145.000đ')
             ->assertSee('Đơn hàng mới');
 
         $totals = app(LegacyOrderPresentationService::class)->calculateTotals($order->order_code);
@@ -261,7 +264,7 @@ class OrderHistoryPageTest extends TestCase
         ])->get('/history')
             ->assertOk()
             ->assertSee($order->order_code)
-            ->assertSee('3.105.000 VND')
+            ->assertSee('3.105.000đ')
             ->assertSee('Chưa xác định');
     }
 
@@ -277,7 +280,7 @@ class OrderHistoryPageTest extends TestCase
             ->assertOk()
             ->assertSee('Legacy History Product')
             ->assertSee('Legacy History Product Two')
-            ->assertSee('3.105.000 VND')
+            ->assertSee('3.105.000đ')
             ->assertSee('Chưa xác định');
     }
 
@@ -297,7 +300,7 @@ class OrderHistoryPageTest extends TestCase
         ])->get('/history')
             ->assertOk()
             ->assertSee($order->order_code)
-            ->assertSee('0 VND');
+            ->assertSee('0đ');
     }
 
     public function test_legacy_order_detail_redirects_when_legacy_order_table_is_missing(): void

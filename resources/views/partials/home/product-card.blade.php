@@ -22,7 +22,7 @@
 
 <article class="tech-product-card {{ $compact ? 'tech-product-card-compact' : '' }}">
     @if (!empty($product['is_hot']))
-        <span class="tech-hot-ribbon">HOT</span>
+        <span class="tech-hot-ribbon">Nổi bật</span>
     @endif
 
     @if ($compact && $discountPercent > 0)

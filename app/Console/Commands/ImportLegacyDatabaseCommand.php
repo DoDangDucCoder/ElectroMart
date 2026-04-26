@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Application\DataMigration\Services\LegacySqlImporter;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 
 class ImportLegacyDatabaseCommand extends Command
@@ -13,7 +13,9 @@ class ImportLegacyDatabaseCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'import:legacy-database {--force : Force import even if tables exist}';
+    protected $signature = 'import:legacy-database
+                            {--dump=shopbanhang.sql : Path to the legacy SQL dump}
+                            {--force : Drop and recreate existing legacy tbl_* tables}';
 
     /**
      * The console command description.
@@ -25,74 +27,41 @@ class ImportLegacyDatabaseCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(LegacySqlImporter $importer): int
     {
-        $this->info('Importing legacy database from shopbanhang.sql...');
+        $dumpPath = $this->resolveDumpPath((string) $this->option('dump'));
 
-        $sqlFile = base_path('shopbanhang.sql');
-        
-        if (!File::exists($sqlFile)) {
-            $this->error('shopbanhang.sql file not found!');
-            return 1;
+        $this->info('Importing legacy database from '.$dumpPath.'...');
+
+        if (! File::exists($dumpPath)) {
+            $this->error('SQL dump file not found.');
+
+            return self::FAILURE;
         }
 
-        $sqlContent = File::get($sqlFile);
-        
-        // Extract CREATE TABLE statements for tbl_* tables
-        preg_match_all('/CREATE TABLE `(tbl_[^`]+)`[^;]+;/', $sqlContent, $matches);
-        
-        $tables = $matches[0];
-        $tableNames = $matches[1];
-        
-        $this->info('Found ' . count($tables) . ' legacy tables to import');
-        
-        $importedCount = 0;
-        $skippedCount = 0;
-        
-        foreach ($tables as $index => $createTableSql) {
-            $tableName = $tableNames[$index];
-            
-            if (!$this->option('force') && DB::getSchemaBuilder()->hasTable($tableName)) {
-                $this->line("Skipping $tableName (already exists)");
-                $skippedCount++;
-                continue;
-            }
-            
-            try {
-                // Drop table if exists and force is enabled
-                if ($this->option('force')) {
-                    DB::statement("DROP TABLE IF EXISTS `$tableName`");
-                }
-                
-                DB::statement($createTableSql);
-                $this->info("✓ Created table: $tableName");
-                $importedCount++;
-                
-            } catch (\Exception $e) {
-                $this->error("✗ Failed to create $tableName: " . $e->getMessage());
-            }
+        $stats = $importer->import(
+            $dumpPath,
+            (bool) $this->option('force'),
+            fn (string $level, string $message) => $this->{$level}($message)
+        );
+
+        $this->info('Import completed.');
+        $this->line('Statements executed: '.$stats['statements_executed']);
+        $this->line('Tables created: '.$stats['tables_created']);
+        $this->line('Tables skipped: '.$stats['tables_skipped']);
+        $this->line('INSERT statements executed: '.$stats['inserts_executed']);
+
+        return $stats['errors'] > 0 ? self::FAILURE : self::SUCCESS;
+    }
+
+    private function resolveDumpPath(string $dump): string
+    {
+        $dump = trim($dump) ?: 'shopbanhang.sql';
+
+        if (str_starts_with($dump, DIRECTORY_SEPARATOR) || preg_match('/^[A-Za-z]:[\\\\\\/]/', $dump) === 1) {
+            return $dump;
         }
-        
-        // Extract INSERT statements for tbl_* tables
-        preg_match_all('/INSERT INTO `(tbl_[^`]+)`[^;]+;/', $sqlContent, $insertMatches);
-        
-        $this->info('Importing data for ' . count($insertMatches[0]) . ' tables...');
-        
-        foreach ($insertMatches[0] as $index => $insertSql) {
-            $tableName = $insertMatches[1][$index];
-            
-            try {
-                DB::statement($insertSql);
-                $this->line("✓ Imported data for: $tableName");
-            } catch (\Exception $e) {
-                $this->warn("⚠ Failed to import data for $tableName: " . $e->getMessage());
-            }
-        }
-        
-        $this->info("Import completed!");
-        $this->info("Tables created: $importedCount");
-        $this->info("Tables skipped: $skippedCount");
-        
-        return 0;
+
+        return base_path($dump);
     }
 }

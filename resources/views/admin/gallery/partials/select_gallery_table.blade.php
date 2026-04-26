@@ -15,7 +15,7 @@
                     <td>{{ $loop->iteration }}</td>
                     <td contenteditable class="edit_gal_name" data-gal_id="{{ $item->gallery_id }}">{{ $item->gallery_name }}</td>
                     <td>
-                        <img src="{{ url('uploads/gallery/' . $item->gallery_image) }}" class="img-thumbnail" width="120" height="120">
+                        <img src="{{ $item->gallery_image_url }}" class="img-thumbnail" width="120" height="120">
                         <input type="file" class="file_image" style="width:40%" data-gal_id="{{ $item->gallery_id }}" id="file-{{ $item->gallery_id }}" name="file" accept="image/*" />
                     </td>
                     <td>

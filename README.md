@@ -53,7 +53,7 @@ composer install hay composer update
 
 Mở file .env và sửa các thông tin kết nối database:
 
-## 🛠️ 4.1 File database shopbanhang.sql
+## 🛠️ 4.1 Nạp dữ liệu thật từ `shopbanhang.sql`
 
 APP_NAME="Laravel Shop"
 APP_URL=http://localhost:8000
@@ -68,6 +68,12 @@ DB_PASSWORD=
 
 Tạo key cho ứng dụng:
 php artisan key:generate
+
+Nạp dump thật và chuyển sang schema hiện tại:
+php artisan data:load-real --dump=shopbanhang.sql --force
+
+Nếu chỉ muốn seed demo để test nhanh, giữ nguyên `DatabaseSeeder` hiện tại và chạy:
+php artisan db:seed
 
 ## ⚙️ 5. Chạy ứng dụng
 Chạy server Laravel:

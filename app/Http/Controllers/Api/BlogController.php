@@ -41,7 +41,7 @@ class BlogController extends Controller
         if (!$post) {
             return response()->json([
                 'success' => false,
-                'message' => 'Blog post not found',
+                'message' => 'Không tìm thấy bài viết.',
             ], 404);
         }
 
@@ -85,7 +85,7 @@ class BlogController extends Controller
         if (empty($keyword)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Search keyword is required',
+                'message' => 'Cần nhập từ khóa tìm kiếm.',
             ], 400);
         }
 

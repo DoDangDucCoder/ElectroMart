@@ -29,4 +29,11 @@ export default defineConfig({
     css: {
         postcss: './postcss.config.js',
     },
+    build: {
+        rolldownOptions: {
+            checks: {
+                pluginTimings: false,
+            },
+        },
+    },
 });

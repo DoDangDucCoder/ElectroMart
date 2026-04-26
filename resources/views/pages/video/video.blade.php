@@ -80,11 +80,11 @@
                         $legacyImage = $video->video_image ?? null;
 
                         if ($thumbnailPath && file_exists(public_path($thumbnailPath))) {
-                            $thumbnailUrl = asset($thumbnailPath);
+                            $thumbnailUrl = \App\Support\AssetUrl::resolve($thumbnailPath, \App\Support\AssetUrl::PRODUCT_FALLBACK);
                         } elseif ($legacyImage && file_exists(public_path('uploads/videos/' . $legacyImage))) {
-                            $thumbnailUrl = asset('uploads/videos/' . $legacyImage);
+                            $thumbnailUrl = \App\Support\AssetUrl::resolve('uploads/videos/' . $legacyImage, \App\Support\AssetUrl::PRODUCT_FALLBACK);
                         } else {
-                            $thumbnailUrl = asset('uploads/product/no-image.svg');
+                            $thumbnailUrl = \App\Support\AssetUrl::product();
                         }
                     @endphp
 

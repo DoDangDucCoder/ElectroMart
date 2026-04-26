@@ -5,24 +5,25 @@ namespace App\Http\Controllers;
 use App\Application\Order\Services\LegacyOrderWorkflowService;
 use App\Application\Order\Services\LegacyOrderPresentationService;
 use App\Application\Order\Services\LegacyOrderHistoryService;
+use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use Illuminate\Http\Request;
-
 use App\Models\Order;
 use App\Models\OrderDetails;
-use App\Models\CatePost;
-use App\Models\Slider;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand as StorefrontBrand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory as StorefrontCategory;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer as StorefrontCustomer;
 use App\Infrastructure\Persistence\Eloquent\Order\Order as StorefrontOrder;
 use Carbon\Carbon;
-use Session;
-use DB;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Pagination\LengthAwarePaginator;
+use App\Support\StorefrontCustomerAuth;
 
 class OrderController extends Controller
 {
+    use LegacyStorefrontContext;
+
 	// public function __construct()
 	// {
 	// 	$this->middleware('permission:delete order', ['only' => ['order_code']]);
@@ -41,6 +42,8 @@ class OrderController extends Controller
 
 		$modernCustomer = $this->resolveStorefrontCustomer();
 		if ($this->expectsModernStorefrontCustomerSession() && ! $modernCustomer) {
+			$this->clearCustomerSession();
+
 			return response()->json(['message' => 'Phiên đăng nhập không còn hợp lệ.'], 401);
 		}
 
@@ -187,6 +190,8 @@ class OrderController extends Controller
 
 		$modernCustomer = $this->resolveStorefrontCustomer();
 		if ($this->expectsModernStorefrontCustomerSession() && ! $modernCustomer) {
+			$this->clearCustomerSession();
+
 			return redirect('dang-nhap')->with('error', 'Phiên đăng nhập không còn hợp lệ.');
 		}
 		$orders = $modernCustomer
@@ -209,6 +214,8 @@ class OrderController extends Controller
 
 		$modernCustomer = $this->resolveStorefrontCustomer();
 		if ($this->expectsModernStorefrontCustomerSession() && ! $modernCustomer) {
+			$this->clearCustomerSession();
+
 			return redirect('dang-nhap')->with('error', 'Phiên đăng nhập không còn hợp lệ.');
 		}
 
@@ -269,27 +276,6 @@ class OrderController extends Controller
 			'meta_title' => $title,
 			'url_canonical' => $request->url(),
 		];
-	}
-
-	protected function legacyCategoryPosts()
-	{
-		if (! Schema::hasTable('tbl_category_post')) {
-			return collect();
-		}
-
-		return CatePost::orderBy('cate_post_id', 'DESC')->get();
-	}
-
-	protected function legacyActiveSliders()
-	{
-		if (! Schema::hasTable('tbl_slider')) {
-			return collect();
-		}
-
-		return Slider::orderBy('slider_id', 'DESC')
-			->where('slider_status', '1')
-			->take(4)
-			->get();
 	}
 
 	protected function storefrontCategories()
@@ -362,6 +348,18 @@ class OrderController extends Controller
 			&& Schema::hasTable('order_items')
 			&& Schema::hasTable('order_shipping')
 			&& Schema::hasTable('payments');
+	}
+
+	protected function clearCustomerSession(): void
+	{
+		Session::forget([
+			'customer_id',
+			'shipping_id',
+			'customer_name',
+			'customer_picture',
+		]);
+
+		StorefrontCustomerAuth::clearDisplaySession();
 	}
 
 	protected function modernHistoryOrders(int $customerId)

@@ -5,7 +5,7 @@
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Search products..."
+          placeholder="Tìm sản phẩm..."
           class="search-input"
           @input="handleSearch"
           @focus="showSuggestions = true"
@@ -18,7 +18,7 @@
       
       <div class="search-suggestions" v-if="showSuggestions && suggestions.length > 0">
         <div class="suggestion-categories">
-          <h6 class="suggestion-title">Categories</h6>
+          <h6 class="suggestion-title">Danh mục</h6>
           <div class="suggestion-items">
             <div 
               v-for="category in suggestions.slice(0, 3)" 
@@ -33,7 +33,7 @@
         </div>
         
         <div class="suggestion-products">
-          <h6 class="suggestion-title">Products</h6>
+          <h6 class="suggestion-title">Sản phẩm</h6>
           <div class="suggestion-items">
             <div 
               v-for="product in suggestions.slice(3, 6)" 
@@ -56,7 +56,7 @@
         
         <div class="suggestion-footer">
           <button @click="viewAllResults" class="btn btn-link btn-sm">
-            View all results for "{{ searchQuery }}"
+            Xem tất cả kết quả cho "{{ searchQuery }}"
           </button>
         </div>
       </div>
@@ -64,66 +64,66 @@
     
     <div class="search-filters" v-if="showFilters">
       <div class="filter-group">
-        <label>Category:</label>
-        <select v-model="filters.category" @change="applyFilters">
-          <option value="">All Categories</option>
-          <option v-for="category in categories" :key="category.id" :value="category.slug">
-            {{ category.name }}
+        <label>Danh mục:</label>
+        <select v-model="filters.category_id" @change="applyFilters">
+          <option value="">Tất cả danh mục</option>
+          <option v-for="category in categories" :key="category.id || category.category_id" :value="category.id || category.category_id">
+            {{ category.name || category.category_name }}
           </option>
         </select>
       </div>
       
       <div class="filter-group">
-        <label>Brand:</label>
-        <select v-model="filters.brand" @change="applyFilters">
-          <option value="">All Brands</option>
-          <option v-for="brand in brands" :key="brand.id" :value="brand.slug">
-            {{ brand.name }}
+        <label>Thương hiệu:</label>
+        <select v-model="filters.brand_id" @change="applyFilters">
+          <option value="">Tất cả thương hiệu</option>
+          <option v-for="brand in brands" :key="brand.id || brand.brand_id" :value="brand.id || brand.brand_id">
+            {{ brand.name || brand.brand_name }}
           </option>
         </select>
       </div>
       
       <div class="filter-group">
-        <label>Price Range:</label>
+        <label>Khoảng giá:</label>
         <div class="price-range">
           <input 
             v-model.number="filters.min_price" 
             type="number" 
-            placeholder="Min"
+            placeholder="Từ"
             @change="applyFilters"
           />
           <span>-</span>
           <input 
             v-model.number="filters.max_price" 
             type="number" 
-            placeholder="Max"
+            placeholder="Đến"
             @change="applyFilters"
           />
         </div>
       </div>
       
       <div class="filter-group">
-        <label>Sort by:</label>
+        <label>Sắp xếp:</label>
         <select v-model="filters.sort" @change="applyFilters">
-          <option value="">Default</option>
-          <option value="price_asc">Price: Low to High</option>
-          <option value="price_desc">Price: High to Low</option>
-          <option value="name_asc">Name: A to Z</option>
-          <option value="name_desc">Name: Z to A</option>
-          <option value="created_at_desc">Newest First</option>
+          <option value="">Mặc định</option>
+          <option value="price_asc">Giá: thấp đến cao</option>
+          <option value="price_desc">Giá: cao đến thấp</option>
+          <option value="name_asc">Tên: A đến Z</option>
+          <option value="name_desc">Tên: Z đến A</option>
+          <option value="sale_desc">Khuyến mãi nhiều nhất</option>
+          <option value="created_at_desc">Mới nhất trước</option>
         </select>
       </div>
       
       <button @click="clearFilters" class="btn btn-outline-secondary btn-sm">
-        Clear Filters
+        Xóa bộ lọc
       </button>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, reactive, computed, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive } from 'vue'
 import { debounce } from 'lodash-es'
 
 export default {
@@ -144,16 +144,14 @@ export default {
   },
   emits: ['search', 'filter'],
   setup(props, { emit }) {
-    const router = useRouter()
-    
     const searchQuery = ref('')
     const showSuggestions = ref(false)
     const suggestions = ref([])
     const isLoading = ref(false)
     
     const filters = reactive({
-      category: '',
-      brand: '',
+      category_id: '',
+      brand_id: '',
       min_price: null,
       max_price: null,
       sort: ''
@@ -161,14 +159,29 @@ export default {
     
     const performSearch = () => {
       if (!searchQuery.value.trim()) return
-      
-      router.push({
-        name: 'products',
-        query: {
-          search: searchQuery.value,
-          ...filters
-        }
-      })
+
+      const params = new URLSearchParams()
+      params.set('keywords_submit', searchQuery.value.trim())
+
+      if (filters.category_id) {
+        params.set('category_id', filters.category_id)
+      }
+
+      if (filters.brand_id) {
+        params.set('brand_id', filters.brand_id)
+      }
+
+      if (filters.min_price !== null) {
+        params.set('price_min', filters.min_price)
+      }
+
+      if (filters.max_price !== null) {
+        params.set('price_max', filters.max_price)
+      }
+
+      if (filters.sort) {
+        params.set('sort', filters.sort)
+      }
       
       emit('search', {
         query: searchQuery.value,
@@ -176,6 +189,7 @@ export default {
       })
       
       showSuggestions.value = false
+      window.location.assign(`/tim-kiem?${params.toString()}`)
     }
     
     const handleSearch = debounce(async () => {
@@ -194,7 +208,7 @@ export default {
           suggestions.value = data.data
         }
       } catch (error) {
-        console.error('Search error:', error)
+        console.error('Lỗi tìm kiếm:', error)
       } finally {
         isLoading.value = false
       }
@@ -202,11 +216,9 @@ export default {
     
     const selectSuggestion = (item) => {
       if (item.slug) {
-        // It's a product
-        router.push(`/products/${item.slug}`)
+        window.location.assign(`/chi-tiet/${item.slug}`)
       } else {
-        // It's a category
-        router.push(`/categories/${item.slug}`)
+        window.location.assign('/tim-kiem')
       }
       
       showSuggestions.value = false

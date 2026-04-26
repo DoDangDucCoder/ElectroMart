@@ -45,7 +45,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Product created successfully',
+            'message' => 'Tạo sản phẩm thành công.',
             'data' => new ProductResource($product),
         ], 201);
     }
@@ -57,7 +57,7 @@ class ProductController extends Controller
         if (!$product) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product not found',
+                'message' => 'Không tìm thấy sản phẩm.',
             ], 404);
         }
 
@@ -74,7 +74,7 @@ class ProductController extends Controller
         if (!$product) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product not found',
+                'message' => 'Không tìm thấy sản phẩm.',
             ], 404);
         }
 
@@ -87,7 +87,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Product updated successfully',
+            'message' => 'Cập nhật sản phẩm thành công.',
             'data' => new ProductResource($product),
         ]);
     }
@@ -99,7 +99,7 @@ class ProductController extends Controller
         if (!$product) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product not found',
+                'message' => 'Không tìm thấy sản phẩm.',
             ], 404);
         }
 
@@ -107,7 +107,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Product deleted successfully',
+            'message' => 'Xóa sản phẩm thành công.',
         ]);
     }
 
@@ -118,7 +118,7 @@ class ProductController extends Controller
         if (!$product) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product not found',
+                'message' => 'Không tìm thấy sản phẩm.',
             ], 404);
         }
 
@@ -126,7 +126,7 @@ class ProductController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Product status updated successfully',
+            'message' => 'Cập nhật trạng thái sản phẩm thành công.',
             'data' => new ProductResource($product),
         ]);
     }

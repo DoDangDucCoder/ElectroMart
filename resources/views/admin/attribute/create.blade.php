@@ -40,7 +40,7 @@
             <header class="g-admin-panel-head">
                 <div>
                     <strong>Thông tin thuộc tính</strong>
-                    <p>Tên nên ngắn gọn, mô tả đủ rõ để team merch/product hiểu khi gán vào sản phẩm.</p>
+                    <p>Tên nên ngắn gọn, mô tả đủ rõ để đội phụ trách sản phẩm hiểu khi gán vào sản phẩm.</p>
                 </div>
             </header>
             <div class="g-admin-panel-body">

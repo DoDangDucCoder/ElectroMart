@@ -27,7 +27,7 @@
     <div class="g-blog-list">
         <section class="shopw-blog-list-hero">
             <div class="shopw-blog-list-hero-copy">
-                <span class="shopw-blog-kicker">Blog / {{ $storefrontLabel::blogCategory($selected_category->cate_post_name ?? null, $selected_category->cate_post_slug ?? null, $meta_title) }}</span>
+                <span class="shopw-blog-kicker">Tin tức / {{ $storefrontLabel::blogCategory($selected_category->cate_post_name ?? null, $selected_category->cate_post_slug ?? null, $meta_title) }}</span>
                 <h1>{{ $storefrontLabel::blogCategory($selected_category->cate_post_name ?? null, $selected_category->cate_post_slug ?? null, $meta_title) }}</h1>
                 <p>{{ $selected_category->cate_post_desc ?: 'Tổng hợp bài viết, tin nhanh và hướng dẫn liên quan đến nhóm nội dung này.' }}</p>
             </div>

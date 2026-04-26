@@ -11,7 +11,7 @@ use App\Models\User;
 use App\Support\AdminAccess;
 use App\Support\AdminPermissions;
 use Auth;
-use Session;
+use Illuminate\Support\Facades\Session;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 

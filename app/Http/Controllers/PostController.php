@@ -6,16 +6,16 @@ use App\Application\Catalog\Services\BrandService;
 use App\Application\Catalog\Services\CategoryService;
 use App\Application\Cms\Services\BlogCategoryService;
 use App\Application\Cms\Services\BlogPostService;
+use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use App\Http\Requests\Cms\StoreBlogPostRequest;
 use App\Http\Requests\Cms\UpdateBlogPostRequest;
-use App\Models\Slider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class PostController extends Controller
 {
+    use LegacyStorefrontContext;
     public function __construct(
         private readonly BlogCategoryService $blogCategoryService,
         private readonly BlogPostService $blogPostService,
@@ -160,15 +160,4 @@ class PostController extends Controller
         ]);
     }
 
-    protected function legacyActiveSliders()
-    {
-        if (! Schema::hasTable('tbl_slider')) {
-            return collect();
-        }
-
-        return Slider::orderBy('slider_id', 'DESC')
-            ->where('slider_status', '1')
-            ->take(4)
-            ->get();
-    }
 }

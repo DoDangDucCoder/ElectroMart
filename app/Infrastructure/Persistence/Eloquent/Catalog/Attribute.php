@@ -10,6 +10,13 @@ class Attribute extends BaseModel
 {
     protected $table = 'attributes';
 
+    protected $casts = [
+        'config' => 'array',
+        'is_filterable' => 'boolean',
+        'is_required' => 'boolean',
+        'is_active' => 'boolean',
+    ];
+
     public function group(): BelongsTo
     {
         return $this->belongsTo(AttributeGroup::class, 'attribute_group_id');

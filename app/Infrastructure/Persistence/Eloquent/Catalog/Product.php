@@ -99,7 +99,17 @@ class Product extends BaseModel
 
     public function getProductTagsAttribute(): ?string
     {
-        return $this->meta['tags'] ?? null;
+        $tags = $this->meta['tags'] ?? null;
+
+        if (is_array($tags)) {
+            return collect($tags)
+                ->filter(fn ($tag) => is_scalar($tag))
+                ->map(fn ($tag) => trim((string) $tag))
+                ->filter()
+                ->implode(',');
+        }
+
+        return is_scalar($tags) ? (string) $tags : null;
     }
 
     public function getProductViewsAttribute(): int

@@ -23,7 +23,7 @@ class AuthController extends Controller
         if (! $user || ! AdminAccess::canAccess($user)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid credentials or admin access denied.',
+                'message' => 'Thông tin đăng nhập không chính xác hoặc tài khoản không có quyền quản trị.',
             ], 401);
         }
 
@@ -31,7 +31,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Admin login successful',
+            'message' => 'Đăng nhập quản trị thành công.',
             'data' => [
                 'user' => [
                     'id' => $user->id,
@@ -66,7 +66,7 @@ class AuthController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Admin logged out successfully',
+            'message' => 'Đăng xuất quản trị thành công.',
         ]);
     }
 }

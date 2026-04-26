@@ -34,7 +34,7 @@ class CouponResource extends JsonResource
         return match ($type) {
             'fixed' => 'Fixed',
             'percent' => 'Percent',
-            'shipping' => 'Shipping',
+            'shipping' => 'Vận chuyển',
             default => '',
         };
     }

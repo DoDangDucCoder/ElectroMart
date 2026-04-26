@@ -46,7 +46,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="admin_email">Email</label>
+                        <label for="admin_email">Thư điện tử</label>
                         <input type="text" name="admin_email" class="form-control" id="admin_email" placeholder="quantri@congty.com">
                     </div>
 

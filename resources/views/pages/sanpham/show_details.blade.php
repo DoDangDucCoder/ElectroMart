@@ -6,11 +6,15 @@
     @php
         $storefrontLabel = \App\Support\StorefrontLabel::class;
         $product = $product_details->first();
-        $fallbackImage = asset('uploads/product/no-image.svg');
-        $primaryImage = $product->product_image ? asset($product->product_image) : $fallbackImage;
+        $productName = $storefrontLabel::neutralizeSource($product->product_name);
+        $productBrandLabel = $storefrontLabel::neutralizeSource($product->brand_name ?: 'Đang cập nhật');
+        $productDescriptionHtml = $storefrontLabel::neutralizeSourceHtml($product->product_desc);
+        $productContentHtml = $storefrontLabel::neutralizeSourceHtml($product->product_content);
+        $fallbackImage = \App\Support\AssetUrl::product();
+        $primaryImage = \App\Support\AssetUrl::product($product->product_image);
         $categoryUrl = $cate_slug ? url('/danh-muc/' . $cate_slug) : null;
         $brandUrl = optional($product->brand)->brand_slug ? url('/thuong-hieu/' . optional($product->brand)->brand_slug) : null;
-        $shortDescription = trim(strip_tags((string) $product->product_desc));
+        $shortDescription = trim(strip_tags($productDescriptionHtml));
         $documentUrl = data_get($product->meta, 'document_path') ? asset(data_get($product->meta, 'document_path')) : null;
         $supportConfig = config('services.storefront_support', []);
         $supportPhoneDisplay = $supportConfig['phone_display'] ?? '1900.0000';
@@ -68,18 +72,25 @@
 
         $attributeSlides = [];
         foreach ($product_attribute as $index => $attribute) {
-            $attributeImage = !empty($attribute->image) ? asset('uploads/attribute/' . $attribute->image) : $fallbackImage;
+            $attributeImage = \App\Support\AssetUrl::resolve(
+                !empty($attribute->image) ? 'uploads/attribute/' . $attribute->image : null,
+                \App\Support\AssetUrl::PRODUCT_FALLBACK,
+            );
             $attributeSlides[] = [
                 'thumb' => $attributeImage,
                 'src' => $attributeImage,
-                'alt' => $attribute->name ?: $product->product_name,
+                'alt' => $storefrontLabel::neutralizeSource($attribute->name ?: $productName),
                 'attribute_key' => $index,
             ];
         }
 
         $gallerySlides = [];
         foreach ($gallery as $media) {
-            $galleryUrl = $media->url ?? ($media->file_path ? asset($media->file_path) : (!empty($media->gallery_image) ? asset('uploads/gallery/' . $media->gallery_image) : null));
+            $galleryUrl = $media->url
+                ?? \App\Support\AssetUrl::resolve(
+                    $media->file_path ?? (!empty($media->gallery_image) ? 'uploads/gallery/' . $media->gallery_image : null),
+                    null,
+                );
 
             if (! $galleryUrl) {
                 continue;
@@ -88,7 +99,7 @@
             $gallerySlides[] = [
                 'thumb' => $galleryUrl,
                 'src' => $galleryUrl,
-                'alt' => $media->gallery_name ?? $product->product_name,
+                'alt' => $storefrontLabel::neutralizeSource($media->gallery_name ?? $productName),
                 'attribute_key' => null,
             ];
         }
@@ -98,7 +109,7 @@
             $imageSlides[] = [
                 'thumb' => $primaryImage,
                 'src' => $primaryImage,
-                'alt' => $product->product_name,
+                'alt' => $productName,
                 'attribute_key' => null,
             ];
         }
@@ -106,12 +117,12 @@
 
     <div class="shopw-pdp">
         <input type="hidden" id="product_viewed_id" value="{{ $product->product_id }}">
-        <input type="hidden" id="viewed_productname{{ $product->product_id }}" value="{{ $product->product_name }}">
+        <input type="hidden" id="viewed_productname{{ $product->product_id }}" value="{{ $productName }}">
         <input type="hidden" id="viewed_producturl{{ $product->product_id }}"
             value="{{ url('/chi-tiet/' . $product->product_slug) }}">
         <input type="hidden" id="viewed_productimage{{ $product->product_id }}" value="{{ $primaryImage }}">
         <input type="hidden" id="viewed_productprice{{ $product->product_id }}"
-            value="{{ number_format($product->final_price, 0, ',', '.') }} VND">
+            value="{{ number_format($product->final_price, 0, ',', '.') }}đ">
 
         <nav aria-label="breadcrumb" class="shopw-pdp-breadcrumb">
             <ol class="breadcrumb">
@@ -119,7 +130,7 @@
                 @if ($categoryUrl)
                     <li class="breadcrumb-item"><a href="{{ $categoryUrl }}">{{ $productCategoryLabel }}</a></li>
                 @endif
-                <li class="breadcrumb-item active" aria-current="page">{{ $product->product_name }}</li>
+                <li class="breadcrumb-item active" aria-current="page">{{ $productName }}</li>
             </ol>
         </nav>
 
@@ -149,10 +160,10 @@
                         <span class="shopw-pdp-badge is-neutral">{{ number_format($product->product_views) }} lượt xem</span>
                     </div>
 
-                    <h1 class="shopw-pdp-title">{{ $product->product_name }}</h1>
+                    <h1 class="shopw-pdp-title">{{ $productName }}</h1>
 
                     <div class="shopw-pdp-rating-summary">
-                        <div class="shopw-pdp-stars" aria-label="Average rating {{ $rating }} out of 5">
+                        <div class="shopw-pdp-stars" aria-label="Đánh giá trung bình {{ $rating }} trên 5">
                             @for ($count = 1; $count <= 5; $count++)
                                 <i class="fa {{ $count <= $rating ? 'fa-star' : 'fa-star-o' }}"></i>
                             @endfor
@@ -180,7 +191,7 @@
                                     'showExplanation' => true,
                                 ])
                             </div>
-                            <span id="price_after_click">Giá {{ number_format($product->final_price, 0, ',', '.') }} VND</span>
+                            <span id="price_after_click">Giá {{ number_format($product->final_price, 0, ',', '.') }}đ</span>
                         </div>
                     </div>
 
@@ -224,19 +235,20 @@
                             @foreach ($product_attribute as $index => $attribute)
                                 @php
                                     $attributeImage = !empty($attribute->image) ? asset('/uploads/attribute/' . $attribute->image) : $fallbackImage;
+                                    $attributeLabel = $storefrontLabel::neutralizeSource($attribute->name);
                                 @endphp
                                 <div class="box-attribute pro_attr_image_click" data-key_image="{{ $index }}"
                                     data-id_attribute="{{ $attribute->id }}"
-                                    data-name_attribute="{{ $attribute->name }}"
+                                    data-name_attribute="{{ $attributeLabel }}"
                                     data-price_attribute="{{ $attribute->price }}"
                                     data-qty_attribute="{{ $attribute->quantity }}"
                                     data-image_attribute="{{ $attribute->image }}">
                                     <div class="shopw-pdp-attribute-media">
-                                        <img src="{{ $attributeImage }}" alt="{{ $attribute->name }}">
+                                        <img src="{{ $attributeImage }}" alt="{{ $attributeLabel }}">
                                     </div>
                                     <div class="shopw-pdp-attribute-copy">
-                                        <strong>{{ $attribute->name }}</strong>
-                                        <span>{{ number_format($attribute->price, 0, ',', '.') }} VND</span>
+                                        <strong>{{ $attributeLabel }}</strong>
+                                        <span>{{ number_format($attribute->price, 0, ',', '.') }}đ</span>
                                         <small>{{ $attribute->quantity }} sản phẩm khả dụng</small>
                                     </div>
                                 </div>
@@ -249,9 +261,9 @@
                     <div class="shopw-pdp-meta-item">
                         <span>Thương hiệu</span>
                         @if ($brandUrl)
-                            <a href="{{ $brandUrl }}">{{ $product->brand_name ?: 'Đang cập nhật' }}</a>
+                            <a href="{{ $brandUrl }}">{{ $productBrandLabel }}</a>
                         @else
-                            <strong>{{ $product->brand_name ?: 'Đang cập nhật' }}</strong>
+                            <strong>{{ $productBrandLabel }}</strong>
                         @endif
                     </div>
                     <div class="shopw-pdp-meta-item">
@@ -274,7 +286,7 @@
 
                 @if ($tagList->isNotEmpty())
                     <div class="shopw-pdp-tags">
-                        <div class="shopw-pdp-block-title">Tags</div>
+                        <div class="shopw-pdp-block-title">Nhãn sản phẩm</div>
                         <div class="shopw-pdp-tag-list">
                             @foreach ($tagList as $tag)
                                 <a href="{{ url('/tag/' . \Illuminate\Support\Str::slug($tag)) }}"
@@ -316,11 +328,11 @@
             </div>
             <div class="tab-content">
                 <div class="tab-pane fade active in" id="details">
-                    {!! $product->product_desc ?: '<p class="text-muted">Hiện chưa có mô tả sản phẩm.</p>' !!}
+                    {!! $productDescriptionHtml ?: '<p class="text-muted">Hiện chưa có mô tả sản phẩm.</p>' !!}
                 </div>
 
                 <div class="tab-pane fade" id="companyprofile">
-                    {!! $product->product_content ?: '<p class="text-muted">Hiện chưa có nội dung chi tiết.</p>' !!}
+                    {!! $productContentHtml ?: '<p class="text-muted">Hiện chưa có nội dung chi tiết.</p>' !!}
                 </div>
 
                 <div class="tab-pane fade" id="reviews">
@@ -340,12 +352,12 @@
                         <div class="shopw-pdp-review-form">
                             <p class="shopw-pdp-block-title">Viết đánh giá của bạn</p>
 
-                            <ul class="list-inline rating" title="Average Rating">
+                            <ul class="list-inline rating" title="Đánh giá trung bình">
                                 @for ($count = 1; $count <= 5; $count++)
                                     @php
                                         $color = $count <= $rating ? 'color:#ffcc00;' : 'color:#cbd5e1;';
                                     @endphp
-                                    <li title="star_rating" id="{{ $product->product_id }}-{{ $count }}"
+                                    <li title="Chọn {{ $count }} sao" id="{{ $product->product_id }}-{{ $count }}"
                                         data-index="{{ $count }}" data-product_id="{{ $product->product_id }}"
                                         data-rating="{{ $rating }}" class="rating"
                                         style="cursor:pointer; {{ $color }} font-size:30px;">&#9733;</li>
@@ -367,6 +379,41 @@
                 </div>
             </div>
         </div>
+
+        @if(isset($product->meta['specs']) && is_array($product->meta['specs']))
+        <section class="shopw-pdp-specs-section">
+            <div class="shopw-pdp-specs-inner">
+                <div class="shopw-pdp-section-head">
+                    <span class="shopw-pdp-kicker">Chi tiết</span>
+                    <h2 class="title text-center">Thông số kỹ thuật</h2>
+                </div>
+                <div class="shopw-pdp-specs-table-wrapper">
+                    <table class="shopw-pdp-specs-table">
+                        <tbody>
+                            @foreach($product->meta['specs'] as $spec)
+                                @php
+                                    $specLabel = $storefrontLabel::neutralizeSource($spec['label'] ?? '');
+                                    $specValue = $spec['value'] ?? '';
+                                    if (is_array($specValue)) {
+                                        $specValue = implode(', ', array_filter(array_map(static fn($value) => is_scalar($value) ? (string) $value : '', $specValue)));
+                                    }
+                                    $specValue = $storefrontLabel::neutralizeSource((string) $specValue);
+                                @endphp
+                                <tr>
+                                    <td class="spec-label">{{ $specLabel }}</td>
+                                    <td class="spec-value">{{ $specValue }}</td>
+                                </tr>
+                            @endforeach
+                            <tr>
+                                <td class="spec-label">Thương hiệu</td>
+                                <td class="spec-value">{{ $productBrandLabel ?: 'Chính hãng' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        @endif
 
         <div class="recommended_items shopw-pdp-related">
             <div class="shopw-pdp-section-head">

@@ -58,7 +58,7 @@
                 <span class="shopw-history-badge is-{{ $orderView['status'] }}">
                     {{ $orderView['status_label'] }}
                 </span>
-                <strong>{{ number_format($totals['total'], 0, ',', '.') }} VND</strong>
+                <strong>{{ number_format($totals['total'], 0, ',', '.') }}đ</strong>
                 @if ($orderView['can_cancel'])
                     <button type="button" class="shopw-order-detail-inline-link is-button"
                         data-toggle="modal" data-target="#cancelOrderModal"
@@ -119,8 +119,8 @@
                                         <span>SL: {{ number_format($item['quantity']) }}</span>
                                     </div>
                                     <div class="shopw-order-detail-item-pricing">
-                                        <strong>{{ number_format($item['subtotal'], 0, ',', '.') }} VND</strong>
-                                        <small>{{ number_format($item['price'], 0, ',', '.') }} VND / sản phẩm</small>
+                                        <strong>{{ number_format($item['subtotal'], 0, ',', '.') }}đ</strong>
+                                        <small>{{ number_format($item['price'], 0, ',', '.') }}đ / sản phẩm</small>
                                     </div>
                                 </div>
                             </article>
@@ -203,7 +203,7 @@
                         </li>
                         <li>
                             <span>Số tiền</span>
-                            <strong>{{ number_format($payment['amount'], 0, ',', '.') }} VND</strong>
+                            <strong>{{ number_format($payment['amount'], 0, ',', '.') }}đ</strong>
                         </li>
                         @if (!empty($payment['reference']))
                             <li>
@@ -221,25 +221,25 @@
                     <ul class="shopw-order-detail-summary-list">
                         <li>
                             <span>Tạm tính</span>
-                            <strong>{{ number_format($totals['subtotal'], 0, ',', '.') }} VND</strong>
+                            <strong>{{ number_format($totals['subtotal'], 0, ',', '.') }}đ</strong>
                         </li>
                         <li>
                             <span>Giảm giá</span>
-                            <strong class="is-discount">-{{ number_format($totals['discount'], 0, ',', '.') }} VND</strong>
+                            <strong class="is-discount">-{{ number_format($totals['discount'], 0, ',', '.') }}đ</strong>
                         </li>
                         <li>
                             <span>Phí vận chuyển</span>
-                            <strong>{{ number_format($totals['shipping'], 0, ',', '.') }} VND</strong>
+                            <strong>{{ number_format($totals['shipping'], 0, ',', '.') }}đ</strong>
                         </li>
                         <li class="is-grand-total">
                             <span>Tổng thanh toán</span>
-                            <strong>{{ number_format($totals['total'], 0, ',', '.') }} VND</strong>
+                            <strong>{{ number_format($totals['total'], 0, ',', '.') }}đ</strong>
                         </li>
                     </ul>
 
                     @if (!empty($orderView['coupon_code']))
                         <div class="shopw-order-detail-chip">
-                            <span>Coupon</span>
+                            <span>Mã giảm giá</span>
                             <strong>{{ $orderView['coupon_code'] }}</strong>
                         </div>
                     @endif

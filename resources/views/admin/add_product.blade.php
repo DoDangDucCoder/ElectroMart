@@ -65,10 +65,10 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="product_slug">Slug</label>
+                        <label for="product_slug">Đường dẫn tĩnh (slug)</label>
                         <input type="text" name="product_slug" id="product_slug"
                             class="form-control @error('product_slug') is-invalid @enderror"
-                            value="{{ old('product_slug') }}" placeholder="slug-san-pham">
+                            value="{{ old('product_slug') }}" placeholder="duong-dan-tinh-san-pham">
                     </div>
 
                     @include('admin.product.partials.pricing-fields')
@@ -136,7 +136,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="product_tags">Tags sản phẩm</label>
+                        <label for="product_tags">Nhãn sản phẩm</label>
                         <input type="text" data-role="tagsinput" name="product_tags" id="product_tags"
                             class="form-control @error('product_tags') is-invalid @enderror"
                             value="{{ old('product_tags') }}">

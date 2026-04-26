@@ -34,7 +34,7 @@ class CategoryController extends Controller
         if (!$category) {
             return response()->json([
                 'success' => false,
-                'message' => 'Category not found',
+                'message' => 'Không tìm thấy danh mục.',
             ], 404);
         }
 

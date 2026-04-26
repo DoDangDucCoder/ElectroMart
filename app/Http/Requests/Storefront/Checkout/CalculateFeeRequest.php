@@ -9,9 +9,9 @@ class CalculateFeeRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'city_id' => ['required', 'integer', 'min:1', 'exists:locations,id'],
-            'province_id' => ['required', 'integer', 'min:1', 'exists:locations,id'],
-            'ward_id' => ['required', 'integer', 'min:1', 'exists:locations,id'],
+            'city_id' => ['required', 'integer', 'min:1'],
+            'province_id' => ['required', 'integer', 'min:1'],
+            'ward_id' => ['required', 'integer', 'min:1'],
         ];
     }
 

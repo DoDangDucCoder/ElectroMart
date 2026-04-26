@@ -6,6 +6,7 @@ use App\Application\Catalog\Services\CategoryService;
 use App\Application\Catalog\Services\ProductService;
 use App\Application\Shared\Services\NumericInputNormalizer;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
+use App\Support\AssetUrl;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -355,17 +356,15 @@ class RuleBasedChatbotService
         return $products
             ->filter(fn ($product) => $product instanceof Product)
             ->map(function (Product $product) {
-                $imagePath = $product->product_image ?: 'uploads/product/no-image.svg';
-
                 return [
                     'id' => $product->product_id,
                     'name' => $product->product_name,
                     'url' => url('/chi-tiet/' . $product->product_slug),
-                    'image' => asset($imagePath),
+                    'image' => AssetUrl::product($product->product_image),
                     'price' => (float) $product->final_price,
-                    'price_formatted' => number_format((float) $product->final_price, 0, ',', '.') . ' VND',
+                    'price_formatted' => number_format((float) $product->final_price, 0, ',', '.') . 'đ',
                     'original_price_formatted' => $product->sale_amount > 0
-                        ? number_format((float) $product->price, 0, ',', '.') . ' VND'
+                        ? number_format((float) $product->price, 0, ',', '.') . 'đ'
                         : null,
                     'sale_label' => $this->saleLabel($product),
                     'sale_explanation' => $product->sale_explanation,

@@ -17,11 +17,15 @@ class ProductPriceSql
             return '0';
         }
 
-        if (Schema::hasColumn($table, 'sale_price')) {
-            return 'CASE WHEN sale_price IS NOT NULL AND sale_price > 0 THEN sale_price ELSE price END';
+        $priceColumn = self::column($table, 'price');
+
+        if (! Schema::hasColumn($table, 'sale_price')) {
+            return $priceColumn;
         }
 
-        return 'price';
+        $salePriceColumn = self::column($table, 'sale_price');
+
+        return "CASE WHEN {$salePriceColumn} IS NOT NULL AND {$salePriceColumn} > 0 THEN {$salePriceColumn} ELSE {$priceColumn} END";
     }
 
     public static function normalizeFilterBinding(mixed $value): int|float|string|null
@@ -64,5 +68,10 @@ class ProductPriceSql
         }
 
         return $value;
+    }
+
+    private static function column(string $table, string $column): string
+    {
+        return $table === 'products' ? $column : "{$table}.{$column}";
     }
 }

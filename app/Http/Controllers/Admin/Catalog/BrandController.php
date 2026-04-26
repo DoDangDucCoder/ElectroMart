@@ -51,7 +51,7 @@ class BrandController extends Controller
     {
         $this->service->delete($brand);
 
-        return response()->json(['message' => 'Brand deleted']);
+        return response()->json(['message' => 'Đã xóa thương hiệu.']);
     }
 
     public function updateStatus(Request $request, Brand $brand): BrandResource

@@ -8,7 +8,7 @@
         @error="handleImageError"
       />
       <div class="product-badges">
-        <span v-if="product.is_featured" class="badge badge-featured">Featured</span>
+        <span v-if="product.is_featured" class="badge badge-featured">Nổi bật</span>
         <span v-if="hasSale" class="badge badge-sale">
           {{ saleBadgeText }}
         </span>
@@ -28,9 +28,9 @@
     
     <div class="product-info">
       <h5 class="product-name">
-        <router-link :to="`/products/${product.slug}`" class="text-decoration-none">
+        <a :href="productUrl" class="text-decoration-none">
           {{ product.name }}
-        </router-link>
+        </a>
       </h5>
       
       <div class="product-rating" v-if="product.average_rating">
@@ -60,17 +60,18 @@
       </div>
       
       <div class="product-stock" v-if="!product.is_in_stock">
-        <span class="text-danger">Out of Stock</span>
+        <span class="text-danger">Hết hàng</span>
       </div>
       <div class="product-stock" v-else-if="product.is_low_stock">
-        <span class="text-warning">Only {{ product.stock_quantity }} left</span>
+        <span class="text-warning">Chỉ còn {{ product.stock_quantity }} sản phẩm</span>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
+import { useToast } from 'vue-toastification'
 import { useCartStore } from '@/stores/cart'
 import { useWishlistStore } from '@/stores/wishlist'
 
@@ -82,9 +83,11 @@ export default {
       required: true
     }
   },
-  setup(props) {
+  emits: ['quick-view'],
+  setup(props, { emit }) {
     const cartStore = useCartStore()
     const wishlistStore = useWishlistStore()
+    const toast = useToast()
     
     const isInWishlist = computed(() => 
       wishlistStore.items.some(item => item.id === props.product.id)
@@ -95,6 +98,8 @@ export default {
     )
 
     const displayPrice = computed(() => props.product.final_price || props.product.sale_price || props.product.price)
+
+    const productUrl = computed(() => `/chi-tiet/${props.product.slug}`)
 
     const calculateDiscountPercentage = () => {
       if (!hasSale.value || !props.product.price) return 0
@@ -121,26 +126,24 @@ export default {
     const addToCart = async () => {
       try {
         await cartStore.addItem(props.product.id, 1)
-        // Show success notification
-        this.$toast.success('Product added to cart!')
+        toast.success('Đã thêm sản phẩm vào giỏ hàng!')
       } catch (error) {
-        this.$toast.error('Failed to add product to cart')
+        toast.error('Không thể thêm sản phẩm vào giỏ hàng')
       }
     }
     
     const toggleWishlist = () => {
       if (isInWishlist.value) {
         wishlistStore.removeItem(props.product.id)
-        this.$toast.info('Removed from wishlist')
+        toast.info('Đã xóa khỏi danh sách yêu thích')
       } else {
         wishlistStore.addItem(props.product)
-        this.$toast.success('Added to wishlist')
+        toast.success('Đã thêm vào danh sách yêu thích')
       }
     }
     
     const quickView = () => {
-      // Emit event to parent component
-      this.$emit('quick-view', props.product)
+      emit('quick-view', props.product)
     }
     
     const handleImageError = (event) => {
@@ -151,6 +154,7 @@ export default {
       isInWishlist,
       hasSale,
       displayPrice,
+      productUrl,
       saleBadgeText,
       calculateDiscountPercentage,
       formatPrice,

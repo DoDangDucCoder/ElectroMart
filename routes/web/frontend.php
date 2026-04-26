@@ -1,15 +1,14 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\BrandProduct;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CategoryProduct;
-use App\Http\Controllers\CheckoutController;
-use App\Http\Controllers\BrandProduct;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\CompareController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CouponController;
-use App\Http\Controllers\CompareController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\OrderController;
@@ -17,10 +16,11 @@ use App\Http\Controllers\PayPalController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\VideoController;
+use Illuminate\Support\Facades\Route;
 
-// Change language (frontend accessible)
+// Đổi ngôn ngữ giao diện (hiện chuẩn hóa về tiếng Việt)
 Route::get('lang/{locale}', function ($locale) {
-    if (! in_array($locale, ['en', 'vi', 'cn'])) {
+    if ($locale !== 'vi') {
         abort(404);
     }
 
@@ -73,13 +73,16 @@ Route::post('/save-cart', [CartController::class, 'save_cart']);
 Route::post('/add-cart-ajax', [CartController::class, 'add_cart_ajax']);
 Route::get('/show-cart', [CartController::class, 'show_cart']);
 Route::get('/gio-hang', [CartController::class, 'gio_hang']);
+// Xóa item: dùng GET để link trực tiếp từ trang cart (có nút xóa), giữ nguyên để tương thích
 Route::get('/delete-to-cart/{rowId}', [CartController::class, 'delete_to_cart']);
 Route::get('/del-product/{session_id}', [CartController::class, 'delete_product']);
 Route::post('/update-quick-cart', [CartController::class, 'update_quick_cart']);
-Route::get('/del-all-product', [CartController::class, 'delete_all_product']);
+// Xóa toàn bộ giỏ hàng: giữ GET cho các link legacy, POST cho form/AJAX mới.
+Route::match(['get', 'post'], '/del-all-product', [CartController::class, 'delete_all_product']);
 Route::get('/show-cart-menu', [CartController::class, 'show_cart_menu']);
 Route::get('/hover-cart', [CartController::class, 'hover_cart']);
-Route::get('/remove-item', [CartController::class, 'remove_item']);
+// remove-item dùng POST/DELETE để tránh CSRF
+Route::match(['get', 'post', 'delete'], '/remove-item', [CartController::class, 'remove_item']);
 Route::get('/cart-session', [CartController::class, 'cart_session']);
 
 // Checkout flow
@@ -121,9 +124,20 @@ Route::post('/reset-new-pass', [MailController::class, 'reset_new_pass']);
 Route::get('process-transaction', [PayPalController::class, 'processTransaction'])->name('processTransaction');
 Route::get('success-transaction', [PayPalController::class, 'successTransaction'])->name('successTransaction');
 Route::get('cancel-transaction', [PayPalController::class, 'cancelTransaction'])->name('cancelTransaction');
-Route::post('/vnpay_payment', [CheckoutController::class, 'vnpay_payment']);
-Route::post('/momo_payment', [CheckoutController::class, 'momo_payment']);
+// Route::post('/vnpay_payment', [CheckoutController::class, 'vnpay_payment']);
+// Route::post('/momo_payment', [CheckoutController::class, 'momo_payment']);
 
 // Laravel default auth scaffolding
 Auth::routes();
 Route::get('/home', [HomeController::class, 'index'])->name('home');
+
+// VNPay Mock Routes
+Route::get('/vnpay-mock/select-method', [\App\Http\Controllers\VnPayMockController::class, 'selectMethod']);
+Route::get('/vnpay-mock/ncb', [\App\Http\Controllers\VnPayMockController::class, 'ncb']);
+Route::get('/vnpay-mock/otp', [\App\Http\Controllers\VnPayMockController::class, 'otp']);
+
+// Account management routes
+Route::get('/account', [\App\Http\Controllers\CustomerAccountController::class, 'index'])->name('customer.account');
+Route::post('/account/update', [\App\Http\Controllers\CustomerAccountController::class, 'updateProfile'])->name('customer.account.update');
+Route::post('/account/review', [\App\Http\Controllers\CustomerAccountController::class, 'postReview'])->name('customer.account.review');
+Route::post('/account/change-password', [\App\Http\Controllers\CustomerAccountController::class, 'changePassword'])->name('customer.account.change-password');

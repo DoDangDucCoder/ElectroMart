@@ -33,6 +33,12 @@
             </div>
         </section>
 
+        @if (!empty($compareNotice))
+            <div class="alert alert-info shopw-compare-notice" role="alert">
+                {{ $compareNotice }}
+            </div>
+        @endif
+
         @if ($products->isEmpty())
             @include('partials.storefront.empty-state', [
                 'title' => 'Chưa có sản phẩm để so sánh',
@@ -47,23 +53,27 @@
                 <div class="shopw-compare-summary-copy">
                     <span class="shopw-search-kicker">Danh sách đang so sánh</span>
                     <h2>{{ number_format($productCount) }} mẫu đang có trong bảng này</h2>
-                    <p>Danh sách này luôn lấy giá và trạng thái sale hiện tại để anh đối chiếu nhanh trước khi bấm vào chi tiết.</p>
+                    <p>Danh sách này luôn lấy giá và trạng thái khuyến mãi hiện tại để bạn đối chiếu nhanh trước khi xem chi tiết.</p>
                 </div>
 
                 <div class="shopw-compare-summary-grid">
                     @foreach ($products as $product)
                         @php
-                            $imagePath = $product->product_image
-                                ? asset($product->product_image)
-                                : asset('uploads/product/no-image.svg');
-                            $productBrand = $product->brand?->name ?? '-';
+                            $imagePath = \App\Support\AssetUrl::product($product->product_image);
+                            $productBrand = \App\Support\StorefrontLabel::neutralizeSource(
+                                $product->brand?->brand_name
+                                    ?? $product->brand?->name
+                                    ?? $product->brand_name
+                                    ?? '-'
+                            );
+                            $productName = \App\Support\StorefrontLabel::neutralizeSource($product->product_name);
                         @endphp
                         <article class="shopw-compare-summary-card">
                             <a href="{{ url('chi-tiet/' . $product->product_slug) }}" class="shopw-compare-summary-media">
-                                <img src="{{ $imagePath }}" alt="{{ $product->product_name }}">
+                                <img src="{{ $imagePath }}" alt="{{ $productName }}">
                             </a>
                             <div class="shopw-compare-summary-body">
-                                <strong>{{ $product->product_name }}</strong>
+                                <strong>{{ $productName }}</strong>
                                 <small>{{ $productBrand }}</small>
                                 @include('partials.storefront.product-price', [
                                     'product' => $product,
@@ -85,17 +95,16 @@
                                 <th class="shopw-compare-table-label">Tiêu chí</th>
                                 @foreach ($products as $product)
                                     @php
-                                        $imagePath = $product->product_image
-                                            ? asset($product->product_image)
-                                            : asset('uploads/product/no-image.svg');
+                                        $imagePath = \App\Support\AssetUrl::product($product->product_image);
+                                        $productName = \App\Support\StorefrontLabel::neutralizeSource($product->product_name);
                                     @endphp
                                     <th class="shopw-compare-table-product">
                                         <a href="{{ url('chi-tiet/' . $product->product_slug) }}" class="shopw-compare-table-product-card">
                                             <span class="shopw-compare-table-product-image">
-                                                <img src="{{ $imagePath }}" alt="{{ $product->product_name }}">
+                                                <img src="{{ $imagePath }}" alt="{{ $productName }}">
                                             </span>
                                             <span class="shopw-compare-table-product-copy">
-                                                <strong>{{ $product->product_name }}</strong>
+                                                <strong>{{ $productName }}</strong>
                                                 @include('partials.storefront.product-price', [
                                                     'product' => $product,
                                                     'currency' => 'VND',
@@ -112,23 +121,23 @@
                             <tr>
                                 <th class="shopw-compare-table-label">Thương hiệu</th>
                                 @foreach ($products as $product)
-                                    <td>{{ $product->brand?->name ?? '-' }}</td>
+                                    <td>{{ \App\Support\StorefrontLabel::neutralizeSource($product->brand?->brand_name ?? $product->brand?->name ?? $product->brand_name ?? '-') }}</td>
                                 @endforeach
                             </tr>
                             <tr>
                                 <th class="shopw-compare-table-label">Danh mục</th>
                                 @foreach ($products as $product)
-                                    <td>{{ $product->primaryCategory?->name ?? '-' }}</td>
+                                    <td>{{ \App\Support\StorefrontLabel::neutralizeSource($product->primaryCategory?->category_name ?? $product->primaryCategory?->name ?? $product->category_name ?? '-') }}</td>
                                 @endforeach
                             </tr>
                             <tr>
                                 <th class="shopw-compare-table-label">Giá gốc</th>
                                 @foreach ($products as $product)
-                                    <td>{{ number_format((float) ($product->price ?? $product->product_price ?? 0), 0, ',', '.') }} VND</td>
+                                    <td>{{ number_format((float) ($product->price ?? $product->product_price ?? 0), 0, ',', '.') }}đ</td>
                                 @endforeach
                             </tr>
                             <tr>
-                                <th class="shopw-compare-table-label">Mức sale</th>
+                                <th class="shopw-compare-table-label">Khuyến mãi</th>
                                 @foreach ($products as $product)
                                     <td>
                                         @if ((float) $product->sale_amount > 0)
@@ -159,20 +168,17 @@
                             <tr>
                                 <th class="shopw-compare-table-label">Số lượng tồn</th>
                                 @foreach ($products as $product)
-                                    <td>{{ $product->stock_quantity ?? 0 }}</td>
+                                    <td>{{ $product->stock_quantity ?? $product->product_quantity ?? 0 }}</td>
                                 @endforeach
                             </tr>
 
-                            @foreach ($specKeys as $specKey)
+                            @foreach ($specRows as $specRow)
                                 <tr>
-                                    <th class="shopw-compare-table-label">{{ str_replace('_', ' ', $specKey) }}</th>
+                                    <th class="shopw-compare-table-label">{{ \App\Support\StorefrontLabel::neutralizeSource($specRow['label'] ?? '-') }}</th>
                                     @foreach ($products as $product)
                                         @php
-                                            $specs = $product->meta['specifications'] ?? [];
-                                            $value = $specs[$specKey] ?? '-';
-                                            if (is_array($value)) {
-                                                $value = implode(', ', $value);
-                                            }
+                                            $value = $specRow['values'][$product->id] ?? '-';
+                                            $value = \App\Support\StorefrontLabel::neutralizeSource((string) $value, '-');
                                         @endphp
                                         <td>{{ $value }}</td>
                                     @endforeach
@@ -190,6 +196,33 @@
             localStorage.removeItem('compare');
             window.location.href = "{{ url('/so-sanh') }}";
         }
+
+        (function pruneInvalidCompareStorage() {
+            var validIds = @json($products->pluck('product_id')->map(fn ($id) => (string) $id)->values());
+
+            if (!validIds.length) {
+                return;
+            }
+
+            try {
+                var raw = localStorage.getItem('compare');
+                var data = raw ? JSON.parse(raw) : [];
+
+                if (!Array.isArray(data)) {
+                    return;
+                }
+
+                var next = data.filter(function(item) {
+                    return item && validIds.indexOf(String(item.id)) !== -1;
+                });
+
+                if (next.length !== data.length) {
+                    localStorage.setItem('compare', JSON.stringify(next));
+                }
+            } catch (e) {
+                localStorage.removeItem('compare');
+            }
+        })();
 
         (function syncCompareIds() {
             var hasProducts = {{ $products->count() }};

@@ -14,7 +14,7 @@
             <header class="g-admin-panel-head">
                 <div>
                     <strong>Thông tin thương hiệu</strong>
-                    <p>Điền tên, slug, mô tả và thứ tự hiển thị trước khi lưu thương hiệu mới.</p>
+                    <p>Điền tên, đường dẫn tĩnh (slug), mô tả và thứ tự hiển thị trước khi lưu thương hiệu mới.</p>
                 </div>
             </header>
             <div class="g-admin-panel-body">
@@ -43,9 +43,9 @@
                             value="{{ old('brand_product_name') }}" placeholder="Nhập tên thương hiệu" required>
                     </div>
                     <div class="form-group">
-                        <label for="brand_slug">Slug</label>
+                        <label for="brand_slug">Đường dẫn tĩnh (slug)</label>
                         <input type="text" name="brand_slug" id="brand_slug" class="form-control"
-                            value="{{ old('brand_slug') }}" placeholder="Nhập slug (tùy chọn)">
+                            value="{{ old('brand_slug') }}" placeholder="Nhập đường dẫn tĩnh (slug) (tùy chọn)">
                     </div>
                     <div class="form-group">
                         <label for="brand_product_desc">Mô tả</label>

@@ -22,7 +22,7 @@ class EnsureAdminPermission
 
         if (! $user) {
             if ($request->expectsJson()) {
-                return new JsonResponse(['message' => 'Unauthenticated.'], 401);
+                return new JsonResponse(['message' => 'Chưa đăng nhập.'], 401);
             }
 
             return redirect('/admin');
@@ -30,7 +30,7 @@ class EnsureAdminPermission
 
         if (! AdminAccess::canAccess($user)) {
             if ($request->expectsJson()) {
-                return new JsonResponse(['message' => 'Forbidden.'], 403);
+                return new JsonResponse(['message' => 'Không có quyền truy cập.'], 403);
             }
 
             abort(403);
@@ -51,7 +51,7 @@ class EnsureAdminPermission
 
         if ($grantedPermissions->intersect($requiredPermissions)->isEmpty()) {
             if ($request->expectsJson()) {
-                return new JsonResponse(['message' => 'Forbidden.'], 403);
+                return new JsonResponse(['message' => 'Không có quyền truy cập.'], 403);
             }
 
             abort(403);

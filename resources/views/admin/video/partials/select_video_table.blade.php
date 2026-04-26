@@ -5,7 +5,7 @@
             <tr>
                 <th>Thứ tự</th>
                 <th>Tên video</th>
-                <th>Slug video</th>
+                <th>Đường dẫn tĩnh (slug)</th>
                 <th>Hình ảnh video</th>
                 <th>Link</th>
                 <th>Mô tả</th>

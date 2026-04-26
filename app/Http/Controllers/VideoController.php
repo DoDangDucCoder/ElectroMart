@@ -12,6 +12,7 @@ use App\Http\Requests\Admin\Legacy\Media\UpdateVideoImageRequest;
 use App\Http\Requests\Admin\Legacy\Media\UpdateVideoRequest;
 use App\Infrastructure\Persistence\Eloquent\Cms\Video as ModernVideo;
 use App\Models\Video as LegacyVideo;
+use App\Support\AssetUrl;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\File;
@@ -396,14 +397,14 @@ class VideoController extends Controller
     {
         $thumbnailPath = $video->thumbnail_path ?? null;
         if ($thumbnailPath && File::exists(public_path($thumbnailPath))) {
-            return asset($thumbnailPath);
+            return AssetUrl::resolve($thumbnailPath, AssetUrl::PRODUCT_FALLBACK);
         }
 
         $legacyImage = $video->video_image ?? null;
         if ($legacyImage && File::exists(public_path('uploads/videos/' . $legacyImage))) {
-            return asset('uploads/videos/' . $legacyImage);
+            return AssetUrl::resolve('uploads/videos/' . $legacyImage, AssetUrl::PRODUCT_FALLBACK);
         }
 
-        return asset('uploads/product/no-image.svg');
+        return AssetUrl::product();
     }
 }

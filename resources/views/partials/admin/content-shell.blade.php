@@ -8,7 +8,7 @@
             <!-- footer -->
             <div class="footer">
                 <div class="wthree-copyright">
-                    <p>&copy; <span id="year"></span> Your Company Name. All Rights Reserved.</p>
+                    <p>&copy; <span id="year"></span> {{ config('services.storefront_brand.name', 'ShopW') }}. Quản trị hệ thống bán hàng.</p>
                 </div>
             </div>
 

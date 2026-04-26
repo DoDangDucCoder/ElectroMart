@@ -236,7 +236,7 @@ class CartService
             $item = $cart[$index];
             $item['product_qty'] = $qty;
             $cart->put($index, $item);
-            $messages[] = sprintf('Updated "%s" successfully.', $cart[$index]['product_name'] ?? '');
+            $messages[] = sprintf('Đã cập nhật "%s" thành công.', $cart[$index]['product_name'] ?? '');
         }
 
         $this->persist($cart);

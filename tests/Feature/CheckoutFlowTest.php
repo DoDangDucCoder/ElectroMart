@@ -229,8 +229,30 @@ class CheckoutFlowTest extends TestCase
             'shipping_method' => 'cod',
         ])->assertStatus(422)
             ->assertJson([
-                'message' => 'Cart is empty.',
+                'message' => 'Giỏ hàng đang trống.',
             ]);
+    }
+
+    public function test_paypal_routes_fail_gracefully_without_gateway_context(): void
+    {
+        $this->get('/process-transaction')
+            ->assertRedirect('/checkout')
+            ->assertSessionHas('error', 'Không tìm thấy tổng tiền thanh toán PayPal.');
+
+        if (! class_exists('Srmklive\\PayPal\\Services\\PayPal')) {
+            $this->withSession(['total_payment' => 12.5])
+                ->get('/process-transaction')
+                ->assertRedirect('/checkout')
+                ->assertSessionHas('error', 'Thanh toán PayPal hiện chưa được cấu hình.');
+        }
+
+        $this->get('/success-transaction')
+            ->assertRedirect('/checkout')
+            ->assertSessionHas('error', 'Thiếu mã xác nhận giao dịch PayPal.');
+
+        $this->get('/cancel-transaction')
+            ->assertRedirect('/checkout')
+            ->assertSessionHas('error', 'Bạn đã hủy giao dịch PayPal.');
     }
 
     public function test_select_delivery_home_returns_expected_options_and_validates_payload(): void

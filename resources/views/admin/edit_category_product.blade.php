@@ -13,7 +13,7 @@
             <div>
                 <span class="g-admin-page-eyebrow">Danh mục sản phẩm</span>
                 <h1>Cập nhật danh mục sản phẩm</h1>
-                <p>Điều chỉnh tên, slug, mô tả và vị trí của danh mục trong cây sản phẩm.</p>
+                <p>Điều chỉnh tên, đường dẫn tĩnh (slug), mô tả và vị trí của danh mục trong cây sản phẩm.</p>
             </div>
             @if ($currentCategory)
                 <div class="g-admin-page-stats">
@@ -35,7 +35,7 @@
             <div class="g-admin-panel-body">
                 @unless ($hasCategoryUpdateRoute)
                     <div class="alert alert-warning">
-                        Tác vụ cập nhật danh mục sản phẩm legacy hiện chưa được nối route trong bản này. Màn hình đang ở chế độ chỉ xem để tránh lỗi thao tác.
+                        Tác vụ cập nhật danh mục sản phẩm phiên bản cũ hiện chưa được nối route trong bản này. Màn hình đang ở chế độ chỉ xem để tránh lỗi thao tác.
                     </div>
                 @endunless
 
@@ -69,7 +69,7 @@
                                     id="slug">
                             </div>
                             <div class="form-group">
-                                <label for="convert_slug">Slug</label>
+                                <label for="convert_slug">Đường dẫn tĩnh (slug)</label>
                                 <input type="text"
                                     value="{{ old('slug_category_product', $currentCategory->slug_category_product) }}"
                                     name="slug_category_product" class="form-control" id="convert_slug">

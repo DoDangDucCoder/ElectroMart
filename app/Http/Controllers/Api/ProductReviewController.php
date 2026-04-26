@@ -24,7 +24,7 @@ class ProductReviewController extends Controller
         if (!$productId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Product ID is required',
+                'message' => 'Cần cung cấp mã sản phẩm.',
             ], 400);
         }
 
@@ -61,7 +61,7 @@ class ProductReviewController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Review submitted successfully',
+            'message' => 'Gửi đánh giá thành công.',
             'data' => new ProductReviewResource($review),
         ], 201);
     }
@@ -73,7 +73,7 @@ class ProductReviewController extends Controller
         if (!$review) {
             return response()->json([
                 'success' => false,
-                'message' => 'Review not found',
+                'message' => 'Không tìm thấy đánh giá.',
             ], 404);
         }
 
@@ -96,7 +96,7 @@ class ProductReviewController extends Controller
         if (!$review || $review->customer_id !== Auth::id()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Review not found or unauthorized',
+                'message' => 'Không tìm thấy đánh giá hoặc bạn không có quyền thao tác.',
             ], 404);
         }
 
@@ -104,7 +104,7 @@ class ProductReviewController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Review updated successfully',
+            'message' => 'Cập nhật đánh giá thành công.',
             'data' => new ProductReviewResource($review),
         ]);
     }
@@ -116,7 +116,7 @@ class ProductReviewController extends Controller
         if (!$review || $review->customer_id !== Auth::id()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Review not found or unauthorized',
+                'message' => 'Không tìm thấy đánh giá hoặc bạn không có quyền thao tác.',
             ], 404);
         }
 
@@ -124,7 +124,7 @@ class ProductReviewController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Review deleted successfully',
+            'message' => 'Xóa đánh giá thành công.',
         ]);
     }
 }

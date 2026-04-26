@@ -275,13 +275,28 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
     protected function applySorting(Builder $query, array $filters): Builder
     {
+        $query->reorder();
+
         return match ($filters['sort'] ?? null) {
-            'price_asc' => $query->orderByRaw($this->effectivePriceExpression() . ' asc'),
-            'price_desc' => $query->orderByRaw($this->effectivePriceExpression() . ' desc'),
-            'name_asc' => $query->orderBy('name'),
-            'name_desc' => $query->orderByDesc('name'),
+            'price_asc' => $query->orderByRaw($this->effectivePriceExpression() . ' ASC'),
+            'price_desc' => $query->orderByRaw($this->effectivePriceExpression() . ' DESC'),
+            'sale_desc' => $this->applySaleSorting($query),
+            'name_asc' => $query->orderBy('name', 'ASC'),
+            'name_desc' => $query->orderBy('name', 'DESC'),
             default => $query->orderByDesc('id'),
         };
+    }
+
+    protected function applySaleSorting(Builder $query): Builder
+    {
+        $effectivePriceExpression = $this->effectivePriceExpression();
+
+        return $query
+            ->orderByRaw(
+                'CASE WHEN price > (' . $effectivePriceExpression . ') THEN price - (' . $effectivePriceExpression . ') ELSE 0 END DESC'
+            )
+            ->orderByRaw($effectivePriceExpression . ' ASC')
+            ->orderByDesc('id');
     }
 
     protected function effectivePriceExpression(): string

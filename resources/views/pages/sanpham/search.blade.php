@@ -9,6 +9,7 @@
         $filters = $search_filters ?? [];
         $pageMode = $search_page_mode ?? 'search';
         $selectedCategory = $filters['category_id'] ?? null;
+        $selectedBrand = $filters['brand_id'] ?? null;
         $searchPageKicker = $search_page_kicker ?? 'Tìm kiếm sản phẩm';
         $searchPageTitle = $search_page_title ?? 'Kết quả tìm kiếm';
         $searchPageSummary = $search_page_summary ?? null;
@@ -102,6 +103,18 @@
                         </select>
                     </div>
                     <div class="shopw-search-filter-field">
+                        <label for="brand_id">Thương hiệu</label>
+                        <select id="brand_id" name="brand_id">
+                            <option value="">Tất cả thương hiệu</option>
+                            @foreach (($search_brands ?? collect()) as $brandItem)
+                                <option value="{{ $brandItem->brand_id }}"
+                                    @selected((string) $selectedBrand === (string) $brandItem->brand_id)>
+                                    {{ \App\Support\StorefrontLabel::neutralizeSource($brandItem->brand_name) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="shopw-search-filter-field">
                         <label for="price_min">Giá từ</label>
                         <input type="number" id="price_min" name="price_min" min="0"
                             value="{{ old('price_min', $filters['price_min'] ?? '') }}" placeholder="0" />
@@ -118,8 +131,10 @@
                             <option value="best_selling" @selected(($filters['sort'] ?? null) === 'best_selling')>Bán chạy</option>
                             <option value="price_asc" @selected(($filters['sort'] ?? null) === 'price_asc')>Giá thấp đến cao</option>
                             <option value="price_desc" @selected(($filters['sort'] ?? null) === 'price_desc')>Giá cao đến thấp</option>
+                            <option value="sale_desc" @selected(($filters['sort'] ?? null) === 'sale_desc')>Khuyến mãi nhiều nhất</option>
                             <option value="name_asc" @selected(($filters['sort'] ?? null) === 'name_asc')>Tên A-Z</option>
                             <option value="name_desc" @selected(($filters['sort'] ?? null) === 'name_desc')>Tên Z-A</option>
+                            <option value="created_at_desc" @selected(($filters['sort'] ?? null) === 'created_at_desc')>Mới nhất trước</option>
                         </select>
                     </div>
                 </div>
@@ -144,8 +159,14 @@
                     @if (($filters['sort'] ?? null) === 'best_selling' || $pageMode === 'best_selling')
                         <div class="shopw-search-chip">Sắp xếp: Bán chạy</div>
                     @endif
+                    @if (($filters['sort'] ?? null) === 'sale_desc')
+                        <div class="shopw-search-chip">Sắp xếp: Khuyến mãi nhiều nhất</div>
+                    @endif
+                    @if (($filters['sort'] ?? null) === 'created_at_desc')
+                        <div class="shopw-search-chip">Sắp xếp: Mới nhất trước</div>
+                    @endif
                     @if ($highlightProduct)
-                        <div class="shopw-search-chip">Ưu tiên: {{ $highlightProduct->name }}</div>
+                        <div class="shopw-search-chip">Ưu tiên: {{ \App\Support\StorefrontLabel::neutralizeSource($highlightProduct->name) }}</div>
                     @endif
                     @if ($keyword !== '')
                         <div class="shopw-search-chip">Tên: {{ $keyword }}</div>
@@ -155,10 +176,18 @@
                     @endif
                     @if ($selectedCategory)
                         @php
-                            $activeCategoryLabel = optional($search_categories->firstWhere('category_id', (int) $selectedCategory))->category_name;
+                            $activeCategoryLabel = \App\Support\StorefrontLabel::category(optional($search_categories->firstWhere('category_id', (int) $selectedCategory))->category_name);
                         @endphp
                         @if ($activeCategoryLabel)
                             <div class="shopw-search-chip">Danh mục: {{ $activeCategoryLabel }}</div>
+                        @endif
+                    @endif
+                    @if ($selectedBrand)
+                        @php
+                            $activeBrandLabel = \App\Support\StorefrontLabel::neutralizeSource(optional(($search_brands ?? collect())->firstWhere('brand_id', (int) $selectedBrand))->brand_name);
+                        @endphp
+                        @if ($activeBrandLabel)
+                            <div class="shopw-search-chip">Thương hiệu: {{ $activeBrandLabel }}</div>
                         @endif
                     @endif
                     @if (!empty($filters['price_min']) || !empty($filters['price_max']))

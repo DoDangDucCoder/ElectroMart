@@ -47,7 +47,7 @@
                         <div class="shopw-cart-empty-inline">
                             <p>
                                 Giỏ hàng của bạn đang trống. Mời bạn mua thêm sản phẩm
-                                <a href="{{ url('/') }}">tại đây</a>.
+                                <a href="{{ url('/san-pham-ban-chay') }}">tại đây</a>.
                             </p>
                         </div>
                     @else
@@ -56,9 +56,7 @@
                             <div class="shopw-cart-items">
                                 @foreach ($cartItems as $item)
                                     @php
-                                        $image = $item['product_image']
-                                            ? asset($item['product_image'])
-                                            : asset('uploads/product/no-image.svg');
+                                        $image = \App\Support\AssetUrl::product($item['product_image'] ?? null);
                                         $subtotal = (float) $item['product_price'] * (int) $item['product_qty'];
                                         $stock = max(1, (int) ($item['product_quantity'] ?? 1));
                                         $attribute = trim((string) ($item['product_attribute'] ?? ''));
@@ -116,7 +114,7 @@
                                 <a class="shopw-cart-secondary-btn" href="{{ url('/del-all-product') }}">
                                     <i class="fa fa-trash"></i>Xóa tất cả
                                 </a>
-                                <a class="shopw-cart-secondary-btn" href="{{ url('/') }}">
+                                <a class="shopw-cart-secondary-btn" href="{{ url('/san-pham-ban-chay') }}">
                                     <i class="fa fa-arrow-left"></i>Tiếp tục mua hàng
                                 </a>
                             </div>
@@ -208,7 +206,7 @@
                         </a>
                     @endif
 
-                    <a class="shopw-cart-continue-link" href="{{ url('/') }}">Tiếp tục mua hàng</a>
+                    <a class="shopw-cart-continue-link" href="{{ url('/san-pham-ban-chay') }}">Tiếp tục mua hàng</a>
                 </section>
             </aside>
         </div>

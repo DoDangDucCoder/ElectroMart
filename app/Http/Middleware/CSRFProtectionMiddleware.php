@@ -33,7 +33,7 @@ class CSRFProtectionMiddleware
             if ($request->expectsJson()) {
                 return response()->json([
                     'error' => 'CSRF token mismatch',
-                    'message' => 'Invalid security token. Please refresh the page and try again.'
+                    'message' => 'Mã bảo mật không hợp lệ. Vui lòng tải lại trang và thử lại.'
                 ], 419);
             }
 

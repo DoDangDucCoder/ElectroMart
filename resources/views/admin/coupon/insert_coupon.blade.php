@@ -4,7 +4,7 @@
     <div class="g-admin-page-shell g-admin-coupon-create">
         <section class="g-admin-page-hero">
             <div>
-                <span class="g-admin-page-eyebrow">Coupon</span>
+                <span class="g-admin-page-eyebrow">Mã giảm giá</span>
                 <h1>Thêm mã giảm giá</h1>
                 <p>Tạo mã giảm giá mới cho các chiến dịch khuyến mãi của cửa hàng.</p>
             </div>
@@ -24,7 +24,7 @@
         <section class="g-admin-panel-card">
             <div class="g-admin-panel-head">
                 <div>
-                    <div>Thông tin coupon</div>
+                    <div>Thông tin mã giảm giá</div>
                     <p>Điền đầy đủ phạm vi hiệu lực, mã và quota trước khi gửi cho khách hàng.</p>
                 </div>
             </div>
@@ -53,7 +53,7 @@
                     <div class="form-group">
                         <label for="coupon_name">Tên mã giảm giá</label>
                         <input type="text" name="coupon_name" class="form-control" id="coupon_name"
-                            value="{{ old('coupon_name') }}" placeholder="Ví dụ: Flash Sale cuối tuần">
+                            value="{{ old('coupon_name') }}" placeholder="Ví dụ: Khuyến mãi cuối tuần">
                     </div>
 
                     <div class="form-group">

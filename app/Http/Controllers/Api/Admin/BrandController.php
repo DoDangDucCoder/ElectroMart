@@ -53,7 +53,7 @@ class BrandController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Brand created successfully',
+            'message' => 'Tạo thương hiệu thành công.',
             'data' => new BrandResource($brand),
         ], 201);
     }
@@ -84,7 +84,7 @@ class BrandController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Brand updated successfully',
+            'message' => 'Cập nhật thương hiệu thành công.',
             'data' => new BrandResource($brand),
         ]);
     }
@@ -95,7 +95,7 @@ class BrandController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Brand deleted successfully',
+            'message' => 'Xóa thương hiệu thành công.',
         ]);
     }
 
@@ -109,7 +109,7 @@ class BrandController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Brand status updated successfully',
+            'message' => 'Cập nhật trạng thái thương hiệu thành công.',
             'data' => new BrandResource($brand),
         ]);
     }

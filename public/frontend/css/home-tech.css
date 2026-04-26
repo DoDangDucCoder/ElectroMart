@@ -794,12 +794,20 @@ body.tech-home {
     height: 140px;
 }
 
+.tech-news-grid {
+    display: flex;
+    flex-wrap: wrap;
+}
+
 .tech-news-grid > [class*="col-"] {
+    display: flex;
     margin-bottom: 24px;
 }
 
 .tech-news-card {
-    height: 100%;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
     overflow: hidden;
     border: 1px solid rgba(125, 211, 252, 0.5);
     border-radius: var(--tech-radius);
@@ -810,6 +818,7 @@ body.tech-home {
 .tech-news-thumb {
     display: block;
     height: 205px;
+    flex-shrink: 0;
     overflow: hidden;
     background: #dff8ff;
 }
@@ -826,6 +835,9 @@ body.tech-home {
 }
 
 .tech-news-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
     padding: 20px;
 }
 

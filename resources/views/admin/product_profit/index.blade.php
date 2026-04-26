@@ -35,7 +35,7 @@
             <header class="g-admin-panel-head">
                 <div>
                     <strong>Bộ lọc báo cáo</strong>
-                    <p>Chỉ tính các đơn có trạng thái hoàn tất. Coupon cấp đơn vẫn được tách riêng khỏi lợi nhuận cấp sản phẩm.</p>
+                    <p>Chỉ tính các đơn có trạng thái hoàn tất. Mã giảm giá cấp đơn vẫn được tách riêng khỏi lợi nhuận cấp sản phẩm.</p>
                 </div>
             </header>
             <div class="g-admin-panel-body">
