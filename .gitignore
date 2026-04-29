@@ -50,3 +50,4 @@
 /storage/*.key
 /storage/logs/*.log
 /storage/framework/PsySH/
+.kiro/
