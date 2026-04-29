@@ -61,8 +61,7 @@ class StorefrontLayoutShellTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('<meta name="csrf-token"', false)
-            ->assertSee('frontend/css/home-tech.css')
-            ->assertSee('frontend/css/site-theme-homepage.css')
+            ->assertSee('frontend/css/storefront.css')
             ->assertSee('class="g-home tech-home"', false)
             ->assertSee('class="shopw-topbar shopw-topbar--compact"', false)
             ->assertSee('shopw-header-brand', false)
@@ -98,7 +97,7 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertSee('Momo')
             ->assertDontSee('class="header_top"', false)
             ->assertDontSee('social-icons', false)
-            ->assertSee('frontend/css/shopw-theme.css')
+            ->assertSee('frontend/css/storefront.css')
             ->assertSee('frontend/js/jquery.js')
             ->assertDontSee('frontend/js/dark-light-mode.js')
             ->assertDontSee('href="tel:tel:', false);
@@ -117,8 +116,7 @@ class StorefrontLayoutShellTest extends TestCase
                 ->assertSee('data-support-restored="true"', false)
                 ->assertSee('Chat Facebook')
                 ->assertSee('Chat Zalo')
-                ->assertSee('frontend/css/shopw-theme.css')
-                ->assertSee('frontend/css/site-theme-homepage.css')
+                ->assertSee('frontend/css/storefront.css')
                 ->assertDontSee('navbar navbar-expand-md', false);
         }
     }
@@ -174,7 +172,7 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertSee('shopw-footer-newsletter-card', false)
             ->assertSee('shopw-footer-bottom', false)
             ->assertSee('id="sosanh"', false)
-            ->assertSee('frontend/css/shopw-theme.css')
+            ->assertSee('frontend/css/storefront.css')
             ->assertSee('frontend/js/jquery.js')
             ->assertSee('function requestQuickview', false)
             ->assertSee('function add_wistlist', false)
@@ -195,7 +193,7 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertSee('shopw-header-actions', false)
             ->assertSee('shopw-utilities--desktop', false)
             ->assertSee('shopw-footer-shell', false)
-            ->assertSee('frontend/css/shopw-theme.css')
+            ->assertSee('frontend/css/storefront.css')
             ->assertSee('frontend/js/jquery.js');
     }
 

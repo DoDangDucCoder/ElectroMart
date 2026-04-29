@@ -24,8 +24,6 @@
     <link href="{{ asset('frontend/css/price-range.css') }}" rel="stylesheet">
 
     <link href="{{ asset('frontend/css/animate.css') }}" rel="stylesheet">
-    <link href="{{ asset('frontend/css/main.css') }}" rel="stylesheet">
-    <link href="{{ asset('frontend/css/responsive.css') }}" rel="stylesheet">
     <link href="{{ asset('frontend/css/sweetalert.css') }}" rel="stylesheet">
     <link href="{{ asset('frontend/css/lightgallery.min.css') }}" rel="stylesheet">
     <link href="{{ asset('frontend/css/lightslider.css') }}" rel="stylesheet">
@@ -37,9 +35,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
-    <link href="{{ asset('frontend/css/shopw-theme.css') }}" rel="stylesheet">
-    <link href="{{ asset('frontend/css/site-theme-homepage.css') }}" rel="stylesheet">
-    <link href="{{ asset('frontend/css/home-tech.css') }}" rel="stylesheet">
+    <link href="{{ asset('frontend/css/storefront.css') }}" rel="stylesheet">
 
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
