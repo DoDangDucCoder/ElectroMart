@@ -36,6 +36,7 @@ Route::get('/404', [HomeController::class, 'error_page']);
 Route::post('/load-more-product', [HomeController::class, 'load_more_product']);
 Route::get('/show_quick_cart', [CartController::class, 'show_quick_cart']);
 Route::match(['get', 'post'], '/tim-kiem', [HomeController::class, 'search']);
+Route::match(['get', 'post'], '/san-pham', [HomeController::class, 'products']);
 Route::get('/san-pham-ban-chay', [HomeController::class, 'best_selling']);
 Route::post('/autocomplete-ajax', [HomeController::class, 'autocomplete_ajax']);
 Route::get('/yeu-thich', [HomeController::class, 'yeu_thich']);

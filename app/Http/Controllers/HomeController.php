@@ -2,39 +2,39 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Concerns\LegacyStorefrontContext;
-use App\Http\Requests\Storefront\Home\AutocompleteProductsRequest;
-use App\Http\Requests\Storefront\Home\LoadMoreProductsRequest;
-use App\Http\Requests\Storefront\Home\SearchProductsRequest;
-use Illuminate\Http\Request;
-use App\Models\Icons;
-use App\Models\News;
 use App\Application\Catalog\Services\BrandService;
 use App\Application\Catalog\Services\CategoryService;
 use App\Application\Catalog\Services\ProductDiscoveryTrackingService;
 use App\Application\Catalog\Services\ProductService;
+use App\Http\Controllers\Concerns\LegacyStorefrontContext;
+use App\Http\Requests\Storefront\Home\AutocompleteProductsRequest;
+use App\Http\Requests\Storefront\Home\LoadMoreProductsRequest;
+use App\Http\Requests\Storefront\Home\SearchProductsRequest;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Cms\BlogPost;
+use App\Models\Icons;
+use App\Models\News;
 use App\Support\AssetUrl;
 use App\Support\ProductPriceSql;
 use App\Support\StorefrontLabel;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class HomeController extends Controller
 {
     use LegacyStorefrontContext;
+
     public function __construct(
         private readonly CategoryService $categoryService,
         private readonly ProductService $productService,
         private readonly BrandService $brandService,
         private readonly ProductDiscoveryTrackingService $discoveryTracking
-    ) {
-    }
+    ) {}
 
     public function error_page()
     {
@@ -84,7 +84,7 @@ class HomeController extends Controller
 
     private function resolveTechHomeProducts(int $limit = 8, bool $preferHot = false, bool $onlyDiscounted = false): Collection
     {
-        $productTable = (new Product())->getTable();
+        $productTable = (new Product)->getTable();
 
         if (Schema::hasTable($productTable)) {
             try {
@@ -174,7 +174,7 @@ class HomeController extends Controller
         return [
             'id' => $product->id,
             'name' => StorefrontLabel::neutralizeSource($product->name),
-            'url' => filled($product->slug) ? url('/chi-tiet/' . $product->slug) : url('/tim-kiem'),
+            'url' => filled($product->slug) ? url('/chi-tiet/'.$product->slug) : url('/tim-kiem'),
             'brand' => $brandName,
             'brand_logo' => $this->resolveTechHomeAssetUrl($product->brand?->logo_path),
             'brand_initials' => $this->brandInitials($brandName),
@@ -249,9 +249,9 @@ class HomeController extends Controller
             ->filter(fn (array $sample) => ! $onlyDiscounted || $sample['discount_percent'] > 0)
             ->map(function (array $sample, int $index) {
                 return [
-                    'id' => 'demo-' . $index,
+                    'id' => 'demo-'.$index,
                     'name' => $sample['name'],
-                    'url' => url('/tim-kiem?' . http_build_query(['keywords_submit' => $sample['query']])),
+                    'url' => url('/tim-kiem?'.http_build_query(['keywords_submit' => $sample['query']])),
                     'brand' => $sample['brand'],
                     'brand_logo' => null,
                     'brand_initials' => $this->brandInitials($sample['brand']),
@@ -321,7 +321,7 @@ class HomeController extends Controller
 
     private function resolveTechHomeBrands(int $limit = 8): Collection
     {
-        if (Schema::hasTable((new Brand())->getTable())) {
+        if (Schema::hasTable((new Brand)->getTable())) {
             try {
                 $brands = Brand::query()
                     ->where('is_active', true)
@@ -331,7 +331,7 @@ class HomeController extends Controller
                     ->get()
                     ->map(fn (Brand $brand) => [
                         'name' => StorefrontLabel::neutralizeSource($brand->brand_name ?? $brand->name),
-                        'url' => filled($brand->brand_slug ?? $brand->slug) ? url('/thuong-hieu/' . ($brand->brand_slug ?? $brand->slug)) : '#',
+                        'url' => filled($brand->brand_slug ?? $brand->slug) ? url('/thuong-hieu/'.($brand->brand_slug ?? $brand->slug)) : '#',
                         'logo' => $this->resolveTechHomeAssetUrl($brand->logo_path),
                         'initials' => $this->brandInitials(StorefrontLabel::neutralizeSource($brand->brand_name ?? $brand->name)),
                     ]);
@@ -348,7 +348,7 @@ class HomeController extends Controller
             ->take($limit)
             ->map(fn (string $name) => [
                 'name' => $name,
-                'url' => url('/thuong-hieu/' . Str::slug($name)),
+                'url' => url('/thuong-hieu/'.Str::slug($name)),
                 'logo' => null,
                 'initials' => $this->brandInitials($name),
             ])
@@ -407,9 +407,9 @@ class HomeController extends Controller
         $category_post = $this->legacyCategoryPosts();
         $slider = $this->legacyActiveSliders();
 
-        $meta_desc = "Yêu thích";
-        $meta_keywords = "Yêu thích";
-        $meta_title = "Yêu thích";
+        $meta_desc = 'Yêu thích';
+        $meta_keywords = 'Yêu thích';
+        $meta_title = 'Yêu thích';
         $url_canonical = $request->url();
 
         $cate_product = $this->categoryService->listActive();
@@ -443,6 +443,23 @@ class HomeController extends Controller
             'search_clear_url' => url('/tim-kiem'),
             'search_results_kicker' => 'Danh sách kết quả',
             'tracking_context' => 'search_page',
+        ]);
+    }
+
+    public function products(SearchProductsRequest $request)
+    {
+        return $this->renderCatalogListingPage($request, [
+            'meta_desc' => 'Danh sách sản phẩm - Laptop, điện thoại, phụ kiện công nghệ chính hãng',
+            'meta_keywords' => 'sản phẩm, laptop, điện thoại, phụ kiện công nghệ',
+            'meta_title' => 'Sản phẩm - Shop công nghệ',
+            'default_sort' => 'popular',
+            'search_page_mode' => 'all_products',
+            'search_page_kicker' => 'Danh mục sản phẩm',
+            'search_page_title' => 'Tất cả sản phẩm',
+            'search_form_action' => url('/san-pham'),
+            'search_clear_url' => url('/san-pham'),
+            'search_results_kicker' => 'Danh sách sản phẩm',
+            'tracking_context' => 'products_page',
         ]);
     }
 
@@ -527,14 +544,16 @@ class HomeController extends Controller
 
         if ($pageMode === 'best_selling') {
             $searchPageSummary ??= $highlightProduct
-                ? 'Danh sách đang được xếp theo số lượng bán thành công. Chiến dịch hiện tại ưu tiên ' . $highlightProduct->name . ' ở đầu danh sách để người dùng mở ra thấy ngay.'
+                ? 'Danh sách đang được xếp theo số lượng bán thành công. Chiến dịch hiện tại ưu tiên '.$highlightProduct->name.' ở đầu danh sách để người dùng mở ra thấy ngay.'
                 : 'Danh sách được xếp theo số lượng bán thành công gần đây và mức độ quan tâm thực tế của người dùng.';
             $searchResultsTitle ??= $highlightProduct
-                ? 'Ưu tiên từ banner: ' . $highlightProduct->name
+                ? 'Ưu tiên từ banner: '.$highlightProduct->name
                 : 'Sản phẩm bán chạy hiện tại';
         }
 
-        return view('pages.sanpham.search', [
+        $viewName = $pageMode === 'all_products' ? 'pages.sanpham.catalog' : 'pages.sanpham.search';
+
+        return view($viewName, [
             'category' => $cate_product,
             'brand' => $brand_product,
             'search_product' => $search_product,
@@ -690,11 +709,11 @@ class HomeController extends Controller
             $candidatePhrases[] = $token;
 
             if ($previousToken !== null) {
-                $candidatePhrases[] = trim($previousToken . ' ' . $token);
+                $candidatePhrases[] = trim($previousToken.' '.$token);
             }
 
             if ($previousToken !== null && $nextToken !== null) {
-                $candidatePhrases[] = trim($previousToken . ' ' . $token . ' ' . $nextToken);
+                $candidatePhrases[] = trim($previousToken.' '.$token.' '.$nextToken);
             }
         }
 
@@ -724,7 +743,7 @@ class HomeController extends Controller
             return $baseUrl;
         }
 
-        return $baseUrl . (str_contains($baseUrl, '?') ? '&' : '?') . http_build_query([
+        return $baseUrl.(str_contains($baseUrl, '?') ? '&' : '?').http_build_query([
             'highlight_product' => $highlightProductSlug,
         ]);
     }
@@ -796,7 +815,7 @@ class HomeController extends Controller
         if (abs($max - $min) < 1) {
             return [[
                 'label' => $this->formatPriceMillions($min),
-                'url' => url('/danh-muc/' . $slug),
+                'url' => url('/danh-muc/'.$slug),
             ]];
         }
 
@@ -820,15 +839,15 @@ class HomeController extends Controller
             $next = $i === $segments - 1 ? $end : min($end, $current + $step);
 
             if ($i === 0) {
-                $label = 'Duoi ' . $this->formatPriceMillions($next);
+                $label = 'Duoi '.$this->formatPriceMillions($next);
                 $minVal = null;
                 $maxVal = $next;
             } elseif ($i === $segments - 1) {
-                $label = 'Tren ' . $this->formatPriceMillions($current);
+                $label = 'Tren '.$this->formatPriceMillions($current);
                 $minVal = $current;
                 $maxVal = null;
             } else {
-                $label = 'Tu ' . $this->formatPriceMillions($current) . ' den ' . $this->formatPriceMillions($next);
+                $label = 'Tu '.$this->formatPriceMillions($current).' den '.$this->formatPriceMillions($next);
                 $minVal = $current;
                 $maxVal = $next;
             }
@@ -843,7 +862,7 @@ class HomeController extends Controller
 
             $buckets[] = [
                 'label' => $label,
-                'url' => url('/danh-muc/' . $slug) . ($query ? ('?' . http_build_query($query)) : ''),
+                'url' => url('/danh-muc/'.$slug).($query ? ('?'.http_build_query($query)) : ''),
             ];
 
             $current = $next;
@@ -863,7 +882,7 @@ class HomeController extends Controller
 
         $millions = (int) round($price / 1000000);
 
-        return $millions . ' trieu';
+        return $millions.' trieu';
     }
 
     private function calculateHeroRatio($slider): ?float
@@ -871,7 +890,7 @@ class HomeController extends Controller
         $ratios = [];
 
         foreach ($slider as $slide) {
-            $path = public_path('uploads/slider/' . $slide->slider_image);
+            $path = public_path('uploads/slider/'.$slide->slider_image);
             if (! file_exists($path)) {
                 continue;
             }
@@ -1003,7 +1022,7 @@ class HomeController extends Controller
             ],
             [
                 'icon' => $stockQuantity > 0 ? 'fa-cubes' : 'fa-bell-o',
-                'label' => $stockQuantity > 0 ? 'Còn ' . $stockQuantity : 'Sắp cháy hàng',
+                'label' => $stockQuantity > 0 ? 'Còn '.$stockQuantity : 'Sắp cháy hàng',
             ],
         ])->filter(fn ($item) => filled($item['label']))->take(3)->values()->all();
 
@@ -1011,7 +1030,7 @@ class HomeController extends Controller
             'id' => $product->id,
             'name' => $product->name,
             'slug' => $product->slug,
-            'url' => url('/chi-tiet/' . $product->slug),
+            'url' => url('/chi-tiet/'.$product->slug),
             'image' => $this->resolvePublicAssetUrl($product->product_image),
             'price' => $originalPrice,
             'final_price' => $finalPrice,
@@ -1024,10 +1043,10 @@ class HomeController extends Controller
             'sold_percentage' => $progressValue,
             'sold_progress' => $progressValue,
             'sold_message' => $hasSoldMetrics
-                ? 'Đã bán ' . number_format(max(0, $soldQuantity)) . ' sản phẩm'
+                ? 'Đã bán '.number_format(max(0, $soldQuantity)).' sản phẩm'
                 : 'Số lượng có hạn, chốt đơn nhanh trong ngày',
             'deal_bar_label' => $hasSoldMetrics && $soldQuantity > 0
-                ? 'ĐÃ BÁN ' . number_format(max(0, $soldQuantity))
+                ? 'ĐÃ BÁN '.number_format(max(0, $soldQuantity))
                 : 'ĐANG BÁN CHẠY',
             'is_mock' => false,
         ];
@@ -1060,7 +1079,7 @@ class HomeController extends Controller
                     );
 
                 return [
-                    'id' => 'flash-demo-' . $index,
+                    'id' => 'flash-demo-'.$index,
                     'name' => $sample['name'],
                     'slug' => Str::slug($sample['name']),
                     'url' => $this->buildSearchResultUrl((string) ($sample['query'] ?? $sample['name'])),
@@ -1077,7 +1096,7 @@ class HomeController extends Controller
                     'sold_progress' => (int) ($sample['sold_progress'] ?? 68),
                     'sold_message' => $sample['sold_message'] ?? 'Số lượng có hạn, chốt đơn nhanh trong ngày',
                     'deal_bar_label' => $sample['deal_bar_label']
-                        ?? ('ĐÃ BÁN ' . (int) ($sample['sold_progress'] ?? 68)),
+                        ?? ('ĐÃ BÁN '.(int) ($sample['sold_progress'] ?? 68)),
                     'is_mock' => true,
                 ];
             });
@@ -1157,7 +1176,7 @@ class HomeController extends Controller
     private function resolveHomepageSaleProducts(int $limit = 4, ?Collection $featuredProducts = null): Collection
     {
         $limit = max(1, $limit);
-        $productTable = (new Product())->getTable();
+        $productTable = (new Product)->getTable();
         $hasSalePriceColumn = Schema::hasColumn($productTable, 'sale_price');
         $hasSaleValueColumn = Schema::hasColumn($productTable, 'sale_value');
         $excludeIds = collect($featuredProducts)
@@ -1235,7 +1254,7 @@ class HomeController extends Controller
         $query = $this->baseHomepageProductQuery();
 
         if ($this->canUseBestSellingRanking()) {
-            $productTable = (new Product())->getTable();
+            $productTable = (new Product)->getTable();
             $salesRanking = DB::table('order_items')
                 ->join('orders', 'orders.id', '=', 'order_items.order_id')
                 ->where('orders.status', 'completed')
@@ -1244,15 +1263,15 @@ class HomeController extends Controller
                 ->selectRaw('order_items.product_id, SUM(order_items.quantity) as sold_quantity');
 
             $query->leftJoinSub($salesRanking, 'homepage_sales_rank', function ($join) use ($productTable) {
-                $join->on('homepage_sales_rank.product_id', '=', $productTable . '.id');
+                $join->on('homepage_sales_rank.product_id', '=', $productTable.'.id');
             });
 
-            $query->select($productTable . '.*')
+            $query->select($productTable.'.*')
                 ->selectRaw('COALESCE(homepage_sales_rank.sold_quantity, 0) as sold_quantity_rank')
                 ->orderByRaw('COALESCE(homepage_sales_rank.sold_quantity, 0) DESC')
-                ->orderByDesc($productTable . '.views_count')
-                ->orderByDesc($productTable . '.is_featured')
-                ->orderByDesc($productTable . '.id');
+                ->orderByDesc($productTable.'.views_count')
+                ->orderByDesc($productTable.'.is_featured')
+                ->orderByDesc($productTable.'.id');
         } else {
             $query->orderByDesc('views_count')
                 ->orderByDesc('is_featured')
@@ -1264,7 +1283,7 @@ class HomeController extends Controller
 
     private function resolveHomepageNewsPosts(int $limit = 3): Collection
     {
-        if (! Schema::hasTable((new BlogPost())->getTable())) {
+        if (! Schema::hasTable((new BlogPost)->getTable())) {
             return collect();
         }
 
@@ -1368,7 +1387,7 @@ class HomeController extends Controller
                         $category->category_name,
                         $category->slug_category_product
                     ),
-                    'url' => url('/danh-muc/' . $category->slug_category_product),
+                    'url' => url('/danh-muc/'.$category->slug_category_product),
                     'icon' => $categoryIcons[$slug] ?? 'fa-tag',
                 ];
             })
@@ -1398,7 +1417,7 @@ class HomeController extends Controller
             return url('/tim-kiem');
         }
 
-        return url('/tim-kiem?' . http_build_query([
+        return url('/tim-kiem?'.http_build_query([
             'keywords_submit' => $query,
         ]));
     }
