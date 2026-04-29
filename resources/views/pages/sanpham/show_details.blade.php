@@ -115,7 +115,7 @@
         }
     @endphp
 
-    <div class="shopw-pdp">
+    <div class="dd-pdp-page">
         <input type="hidden" id="product_viewed_id" value="{{ $product->product_id }}">
         <input type="hidden" id="viewed_productname{{ $product->product_id }}" value="{{ $productName }}">
         <input type="hidden" id="viewed_producturl{{ $product->product_id }}"
@@ -124,24 +124,20 @@
         <input type="hidden" id="viewed_productprice{{ $product->product_id }}"
             value="{{ number_format($product->final_price, 0, ',', '.') }}đ">
 
-        <nav aria-label="breadcrumb" class="shopw-pdp-breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url('/') }}">Trang chủ</a></li>
-                @if ($categoryUrl)
-                    <li class="breadcrumb-item"><a href="{{ $categoryUrl }}">{{ $productCategoryLabel }}</a></li>
-                @endif
-                <li class="breadcrumb-item active" aria-current="page">{{ $productName }}</li>
-            </ol>
+        <nav aria-label="breadcrumb" class="dd-pdp-breadcrumb">
+            <a href="{{ url('/') }}">Trang chủ</a>
+            <span>/</span>
+            @if ($categoryUrl)
+                <a href="{{ $categoryUrl }}">{{ $productCategoryLabel }}</a>
+                <span>/</span>
+            @endif
+            <strong>{{ $productName }}</strong>
         </nav>
 
-        <article class="shopw-pdp-shell">
-            <div class="shopw-pdp-gallery-card">
-                <div class="shopw-pdp-gallery-head">
-                    <span class="shopw-pdp-kicker">Bộ sưu tập hình ảnh</span>
-                    <h2>Xem nhanh sản phẩm từ nhiều góc nhìn</h2>
-                </div>
-
-                <ul id="imageGallery">
+        <article class="dd-pdp-main">
+            {{-- Left: Gallery --}}
+            <div class="dd-pdp-gallery">
+                <ul id="imageGallery" class="dd-pdp-gallery-list">
                     @foreach ($imageSlides as $slide)
                         <li
                             @if ($slide['attribute_key'] !== null) class="pro_attr_image_{{ $slide['attribute_key'] }}" @endif
@@ -150,115 +146,109 @@
                         </li>
                     @endforeach
                 </ul>
+                <p class="dd-pdp-gallery-hint">Xem nhanh sản phẩm từ nhiều góc nhìn</p>
             </div>
 
-            <div class="shopw-pdp-summary">
-                <div class="shopw-pdp-summary-top">
-                    <div class="shopw-pdp-badges">
-                        <span class="shopw-pdp-badge {{ $stockClass }}">{{ $stockLabel }}</span>
-                        <span class="shopw-pdp-badge is-neutral">Mã SP #{{ $product->product_id }}</span>
-                        <span class="shopw-pdp-badge is-neutral">{{ number_format($product->product_views) }} lượt xem</span>
-                    </div>
-
-                    <h1 class="shopw-pdp-title">{{ $productName }}</h1>
-
-                    <div class="shopw-pdp-rating-summary">
-                        <div class="shopw-pdp-stars" aria-label="Đánh giá trung bình {{ $rating }} trên 5">
+            {{-- Right: Product Info --}}
+            <div class="dd-pdp-info">
+                <div class="dd-pdp-header">
+                    <span class="dd-pdp-category-label">{{ $productCategoryLabel }}</span>
+                    <h1 class="dd-pdp-title">{{ $productName }}</h1>
+                    
+                    <div class="dd-pdp-rating">
+                        <div class="dd-pdp-stars" aria-label="Đánh giá trung bình {{ $rating }} trên 5">
                             @for ($count = 1; $count <= 5; $count++)
                                 <i class="fa {{ $count <= $rating ? 'fa-star' : 'fa-star-o' }}"></i>
                             @endfor
                         </div>
-                        <span class="shopw-pdp-rating-value">{{ number_format($rating, 0) }}/5</span>
+                        <span class="dd-pdp-rating-text">{{ number_format($rating, 1) }} ({{ $product->product_views }} đánh giá)</span>
                     </div>
+
+                    @if ($shortDescription !== '')
+                        <p class="dd-pdp-description">{{ $shortDescription }}</p>
+                    @endif
                 </div>
 
-                @if ($shortDescription !== '')
-                    <p class="shopw-pdp-short">{{ $shortDescription }}</p>
-                @endif
+                <div class="dd-pdp-badges">
+                    <span class="dd-pdp-sku">#EF4444</span>
+                    <span class="dd-pdp-stock {{ $stockClass }}">{{ $stockLabel }}</span>
+                </div>
 
-                <div class="shopw-pdp-price-panel">
-                    <div class="shopw-pdp-price-wrap">
-                        <div class="shopw-pdp-price-label">Giá bán</div>
-                        <div class="shopw-pdp-price-value">
-                            <input type="hidden" class="cart_product_id_attribute" value="0">
-                            <input type="hidden" class="product_id" value="{{ $product->product_id }}">
-                            <input type="hidden" class="cart_product_price" value="{{ $product->final_price }}">
-                            <input type="hidden" class="cart_price_attribute" value="{{ $product->final_price }}">
-                            <div id="price_init" class="shopw-pdp-price-static">
-                                @include('partials.storefront.product-price', [
-                                    'product' => $product,
-                                    'currency' => 'VND',
-                                    'showExplanation' => true,
-                                ])
-                            </div>
-                            <span id="price_after_click">Giá {{ number_format($product->final_price, 0, ',', '.') }}đ</span>
+                <div class="dd-pdp-purchase-section">
+                    @csrf
+                    <input type="hidden" class="cart_product_id_attribute" value="0">
+                    <input type="hidden" class="product_id" value="{{ $product->product_id }}">
+                    <input type="hidden" class="cart_product_price" value="{{ $product->final_price }}">
+                    <input type="hidden" class="cart_price_attribute" value="{{ $product->final_price }}">
+
+                    <div class="dd-pdp-quantity">
+                        <label>Quantity</label>
+                        <div class="dd-pdp-qty-control">
+                            <button type="button" class="dd-qty-btn dd-qty-minus" onclick="decreaseQty()">-</button>
+                            <input id="product-detail-qty" name="qty" type="number" min="1"
+                                max="{{ max(1, (int) $product->product_quantity) }}" class="cart_product_qty dd-qty-input"
+                                value="{{ $stockAvailable ? 1 : 0 }}" {{ $stockAvailable ? '' : 'disabled' }} />
+                            <button type="button" class="dd-qty-btn dd-qty-plus" onclick="increaseQty()">+</button>
                         </div>
                     </div>
 
-                    <div class="shopw-pdp-purchase"
-                        data-default-stock="{{ max(0, (int) $product->product_quantity) }}"
-                        data-default-label="{{ $stockAvailable ? 'Thêm giỏ hàng' : 'Tạm hết hàng' }}">
-                        @csrf
-                        <label for="product-detail-qty" class="shopw-pdp-qty-label">Số lượng</label>
-                        <input id="product-detail-qty" name="qty" type="number" min="1"
-                            max="{{ max(1, (int) $product->product_quantity) }}" class="cart_product_qty"
-                            value="{{ $stockAvailable ? 1 : 0 }}" {{ $stockAvailable ? '' : 'disabled' }} />
-                        <button type="button" class="btn btn-default add-to-cart"
-                            {{ $stockAvailable ? '' : 'disabled' }}>
-                            <i class="fa fa-shopping-cart"></i>
-                            <span class="shopw-pdp-purchase-btn-label">
-                                {{ $stockAvailable ? 'Thêm giỏ hàng' : 'Tạm hết hàng' }}
-                            </span>
+                    <div class="dd-pdp-actions">
+                        <button type="button" class="dd-btn-add-cart add-to-cart" {{ $stockAvailable ? '' : 'disabled' }}>
+                            Thêm vào giỏ
                         </button>
-                        <div id="product-detail-purchase-status" class="shopw-pdp-purchase-status" aria-live="polite"></div>
+                        <button type="button" class="dd-btn-buy-now" {{ $stockAvailable ? '' : 'disabled' }} onclick="buyNow()">
+                            Mua ngay
+                        </button>
+                    </div>
+
+                    <div class="dd-pdp-quick-actions">
+                        <button type="button" class="dd-quick-action" onclick="addToWishlist({{ $product->product_id }})">
+                            <i class="fa fa-heart-o"></i> Wishlist
+                        </button>
+                        <button type="button" class="dd-quick-action" onclick="addToCompare({{ $product->product_id }})">
+                            <i class="fa fa-random"></i> Compare it
+                        </button>
+                        <button type="button" class="dd-quick-action" onclick="shareProduct()">
+                            <i class="fa fa-share-alt"></i> Share info
+                        </button>
+                    </div>
+
+                    <div id="product-detail-purchase-status" class="dd-pdp-purchase-status" aria-live="polite"></div>
+                </div>
+
+                <div class="dd-pdp-features">
+                    <div class="dd-pdp-feature-card">
+                        <i class="fa fa-truck"></i>
+                        <div>
+                            <strong>Giao nhanh</strong>
+                            <p>Sản phẩm đang có sẵn để xử lý đơn</p>
+                        </div>
+                    </div>
+                    <div class="dd-pdp-feature-card">
+                        <i class="fa fa-shield"></i>
+                        <div>
+                            <strong>Bảo hành</strong>
+                            <p>Chính sách bảo hành rõ ràng theo từng loại hàng</p>
+                        </div>
+                    </div>
+                    <div class="dd-pdp-feature-card">
+                        <i class="fa fa-comments"></i>
+                        <div>
+                            <strong>Tư vấn</strong>
+                            <p>Đội ngũ tư vấn sẵn sàng hỗ trợ 24/7</p>
+                        </div>
+                    </div>
+                    <div class="dd-pdp-feature-card">
+                        <i class="fa fa-refresh"></i>
+                        <div>
+                            <strong>Đổi trả</strong>
+                            <p>Đổi trả dễ dàng trong vòng 7 ngày</p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="shopw-pdp-service-grid">
-                    @foreach ($detailSupportCards as $supportCard)
-                        <div class="shopw-pdp-service-card">
-                            <span class="shopw-pdp-service-icon">
-                                <i class="fa {{ $supportCard['icon'] }}"></i>
-                            </span>
-                            <div class="shopw-pdp-service-copy">
-                                <strong>{{ $supportCard['title'] }}</strong>
-                                <p>{{ $supportCard['text'] }}</p>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-
-                @if ($product_attribute->isNotEmpty())
-                    <div class="shopw-pdp-attributes">
-                        <div class="shopw-pdp-block-title">Phiên bản khả dụng</div>
-                        <div class="shopw-pdp-attribute-grid">
-                            @foreach ($product_attribute as $index => $attribute)
-                                @php
-                                    $attributeImage = !empty($attribute->image) ? asset('/uploads/attribute/' . $attribute->image) : $fallbackImage;
-                                    $attributeLabel = $storefrontLabel::neutralizeSource($attribute->name);
-                                @endphp
-                                <div class="box-attribute pro_attr_image_click" data-key_image="{{ $index }}"
-                                    data-id_attribute="{{ $attribute->id }}"
-                                    data-name_attribute="{{ $attributeLabel }}"
-                                    data-price_attribute="{{ $attribute->price }}"
-                                    data-qty_attribute="{{ $attribute->quantity }}"
-                                    data-image_attribute="{{ $attribute->image }}">
-                                    <div class="shopw-pdp-attribute-media">
-                                        <img src="{{ $attributeImage }}" alt="{{ $attributeLabel }}">
-                                    </div>
-                                    <div class="shopw-pdp-attribute-copy">
-                                        <strong>{{ $attributeLabel }}</strong>
-                                        <span>{{ number_format($attribute->price, 0, ',', '.') }}đ</span>
-                                        <small>{{ $attribute->quantity }} sản phẩm khả dụng</small>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                <div class="shopw-pdp-meta-grid">
-                    <div class="shopw-pdp-meta-item">
+                <div class="dd-pdp-specs-table">
+                    <div class="dd-pdp-spec-row">
                         <span>Thương hiệu</span>
                         @if ($brandUrl)
                             <a href="{{ $brandUrl }}">{{ $productBrandLabel }}</a>
@@ -266,180 +256,278 @@
                             <strong>{{ $productBrandLabel }}</strong>
                         @endif
                     </div>
-                    <div class="shopw-pdp-meta-item">
-                        <span>Danh mục</span>
-                        @if ($categoryUrl)
-                            <a href="{{ $categoryUrl }}">{{ $productCategoryLabel }}</a>
-                        @else
-                            <strong>{{ $productCategoryLabel }}</strong>
-                        @endif
+                    <div class="dd-pdp-spec-row">
+                        <span>Dòng máy</span>
+                        <strong>{{ $productCategoryLabel }}</strong>
                     </div>
-                    <div class="shopw-pdp-meta-item">
-                        <span>Tồn kho</span>
-                        <strong>{{ number_format($product->product_quantity) }} sản phẩm</strong>
+                    <div class="dd-pdp-spec-row">
+                        <span>Tên máy</span>
+                        <strong>{{ $productName }}</strong>
                     </div>
-                    <div class="shopw-pdp-meta-item">
-                        <span>Hỗ trợ nhanh</span>
+                    <div class="dd-pdp-spec-row">
+                        <span>Hotline</span>
                         <a href="{{ $supportPhoneHref }}">{{ $supportPhoneDisplay }}</a>
                     </div>
                 </div>
 
-                @if ($tagList->isNotEmpty())
-                    <div class="shopw-pdp-tags">
-                        <div class="shopw-pdp-block-title">Nhãn sản phẩm</div>
-                        <div class="shopw-pdp-tag-list">
-                            @foreach ($tagList as $tag)
-                                <a href="{{ url('/tag/' . \Illuminate\Support\Str::slug($tag)) }}"
-                                    class="shopw-pdp-tag">{{ $tag }}</a>
+                @if ($product_attribute->isNotEmpty())
+                    <div class="dd-pdp-attributes">
+                        <h3>Phiên bản khả dụng</h3>
+                        <div class="dd-pdp-attribute-grid">
+                            @foreach ($product_attribute as $index => $attribute)
+                                @php
+                                    $attributeImage = !empty($attribute->image) ? asset('/uploads/attribute/' . $attribute->image) : $fallbackImage;
+                                    $attributeLabel = $storefrontLabel::neutralizeSource($attribute->name);
+                                @endphp
+                                <div class="dd-pdp-attribute-item pro_attr_image_click" data-key_image="{{ $index }}"
+                                    data-id_attribute="{{ $attribute->id }}"
+                                    data-name_attribute="{{ $attributeLabel }}"
+                                    data-price_attribute="{{ $attribute->price }}"
+                                    data-qty_attribute="{{ $attribute->quantity }}"
+                                    data-image_attribute="{{ $attribute->image }}">
+                                    <img src="{{ $attributeImage }}" alt="{{ $attributeLabel }}">
+                                    <div>
+                                        <strong>{{ $attributeLabel }}</strong>
+                                        <span>{{ number_format($attribute->price, 0, ',', '.') }}đ</span>
+                                    </div>
+                                </div>
                             @endforeach
                         </div>
                     </div>
                 @endif
-
-                <div class="shopw-pdp-actions">
-                    @foreach ($detailQuickLinks as $detailQuickLink)
-                        <a href="{{ $detailQuickLink['url'] }}" class="shopw-pdp-action-link is-utility">
-                            <i class="fa {{ $detailQuickLink['icon'] }}"></i>{{ $detailQuickLink['label'] }}
-                        </a>
-                    @endforeach
-                    @if ($documentUrl)
-                        <a href="{{ $documentUrl }}" target="_blank" rel="noopener" class="shopw-pdp-action-link">
-                            <i class="fa fa-file-text-o"></i>Tài liệu sản phẩm
-                        </a>
-                    @endif
-                    <div class="fb-share-button" data-href="{{ $url_canonical }}" data-layout="button"
-                        data-size="small">
-                        <a target="_blank" href="{{ $url_canonical }}" rel="noopener"
-                            class="fb-xfbml-parse-ignore shopw-pdp-action-link">
-                            <i class="fa fa-share-alt"></i>Chia sẻ
-                        </a>
-                    </div>
-                </div>
             </div>
         </article>
 
-        <div class="category-tab shop-details-tab shopw-pdp-tabs">
-            <div class="shopw-pdp-tabs-head">
-                <ul class="nav nav-tabs">
-                    <li class="active"><a href="#details" data-toggle="tab">Mô tả</a></li>
-                    <li><a href="#companyprofile" data-toggle="tab">Chi tiết sản phẩm</a></li>
-                    <li><a href="#reviews" data-toggle="tab">Đánh giá</a></li>
-                </ul>
+        <div class="dd-pdp-tabs">
+            <div class="dd-pdp-tabs-nav">
+                <button class="dd-tab-btn active" data-tab="mo-ta">Mô tả</button>
+                <button class="dd-tab-btn" data-tab="thong-so">Thông số kỹ thuật</button>
+                <button class="dd-tab-btn" data-tab="danh-gia">Đánh giá</button>
             </div>
-            <div class="tab-content">
-                <div class="tab-pane fade active in" id="details">
+            <div class="dd-pdp-tabs-content">
+                <div class="dd-tab-pane active" id="mo-ta">
+                    <h3>Mô tả sản phẩm</h3>
                     {!! $productDescriptionHtml ?: '<p class="text-muted">Hiện chưa có mô tả sản phẩm.</p>' !!}
                 </div>
 
-                <div class="tab-pane fade" id="companyprofile">
+                <div class="dd-tab-pane" id="thong-so">
+                    <h3>Chi tiết sản phẩm</h3>
                     {!! $productContentHtml ?: '<p class="text-muted">Hiện chưa có nội dung chi tiết.</p>' !!}
                 </div>
 
-                <div class="tab-pane fade" id="reviews">
-                    <div class="shopw-pdp-review-shell">
-                        <div class="shopw-pdp-review-meta">
-                            <strong>Đánh giá trung bình</strong>
-                            <span>{{ number_format($rating, 0) }}/5 sao</span>
+                <div class="dd-tab-pane" id="danh-gia">
+                    <h3>Đánh giá sản phẩm</h3>
+                    <div class="dd-pdp-review-summary">
+                        <strong>Đánh giá trung bình: {{ number_format($rating, 1) }}/5 sao</strong>
+                    </div>
+
+                    <div class="dd-pdp-review-list">
+                        @csrf
+                        <input type="hidden" name="comment_product_id" class="comment_product_id"
+                            value="{{ $product->product_id }}">
+                        <div id="comment_show"></div>
+                    </div>
+
+                    <div class="dd-pdp-review-form">
+                        <h4>Viết đánh giá của bạn</h4>
+
+                        <ul class="list-inline rating" title="Đánh giá trung bình">
+                            @for ($count = 1; $count <= 5; $count++)
+                                @php
+                                    $color = $count <= $rating ? 'color:#ffcc00;' : 'color:#cbd5e1;';
+                                @endphp
+                                <li title="Chọn {{ $count }} sao" id="{{ $product->product_id }}-{{ $count }}"
+                                    data-index="{{ $count }}" data-product_id="{{ $product->product_id }}"
+                                    data-rating="{{ $rating }}" class="rating"
+                                    style="cursor:pointer; {{ $color }} font-size:30px;">&#9733;</li>
+                            @endfor
+                        </ul>
+
+                        <div class="dd-pdp-review-fields">
+                            <input type="text" class="comment_name" placeholder="Tên bình luận" />
+                            <textarea name="comment" class="comment_content" placeholder="Nội dung bình luận"></textarea>
                         </div>
-
-                        <div class="shopw-pdp-review-thread-shell">
-                            @csrf
-                            <input type="hidden" name="comment_product_id" class="comment_product_id"
-                                value="{{ $product->product_id }}">
-                            <div id="comment_show" class="shopw-pdp-review-thread"></div>
-                        </div>
-
-                        <div class="shopw-pdp-review-form">
-                            <p class="shopw-pdp-block-title">Viết đánh giá của bạn</p>
-
-                            <ul class="list-inline rating" title="Đánh giá trung bình">
-                                @for ($count = 1; $count <= 5; $count++)
-                                    @php
-                                        $color = $count <= $rating ? 'color:#ffcc00;' : 'color:#cbd5e1;';
-                                    @endphp
-                                    <li title="Chọn {{ $count }} sao" id="{{ $product->product_id }}-{{ $count }}"
-                                        data-index="{{ $count }}" data-product_id="{{ $product->product_id }}"
-                                        data-rating="{{ $rating }}" class="rating"
-                                        style="cursor:pointer; {{ $color }} font-size:30px;">&#9733;</li>
-                                @endfor
-                            </ul>
-
-                            <div class="shopw-pdp-review-form-shell">
-                                <div class="shopw-pdp-review-fields">
-                                    <input type="text" class="comment_name" placeholder="Tên bình luận" />
-                                    <textarea name="comment" class="comment_content" placeholder="Nội dung bình luận"></textarea>
-                                </div>
-                                <div id="notify_comment"></div>
-                                <button type="button" class="btn btn-default send-comment">
-                                    Gửi bình luận
-                                </button>
-                            </div>
-                        </div>
+                        <div id="notify_comment"></div>
+                        <button type="button" class="dd-btn-submit-review send-comment">
+                            Gửi bình luận
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        @if(isset($product->meta['specs']) && is_array($product->meta['specs']))
-        <section class="shopw-pdp-specs-section">
-            <div class="shopw-pdp-specs-inner">
-                <div class="shopw-pdp-section-head">
-                    <span class="shopw-pdp-kicker">Chi tiết</span>
-                    <h2 class="title text-center">Thông số kỹ thuật</h2>
-                </div>
-                <div class="shopw-pdp-specs-table-wrapper">
-                    <table class="shopw-pdp-specs-table">
-                        <tbody>
-                            @foreach($product->meta['specs'] as $spec)
-                                @php
-                                    $specLabel = $storefrontLabel::neutralizeSource($spec['label'] ?? '');
-                                    $specValue = $spec['value'] ?? '';
-                                    if (is_array($specValue)) {
-                                        $specValue = implode(', ', array_filter(array_map(static fn($value) => is_scalar($value) ? (string) $value : '', $specValue)));
-                                    }
-                                    $specValue = $storefrontLabel::neutralizeSource((string) $specValue);
-                                @endphp
-                                <tr>
-                                    <td class="spec-label">{{ $specLabel }}</td>
-                                    <td class="spec-value">{{ $specValue }}</td>
-                                </tr>
-                            @endforeach
-                            <tr>
-                                <td class="spec-label">Thương hiệu</td>
-                                <td class="spec-value">{{ $productBrandLabel ?: 'Chính hãng' }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+        <section class="dd-pdp-related">
+            <h2 class="dd-section-title">Sản phẩm liên quan</h2>
+            <div class="dd-product-grid dd-product-grid--4col">
+                @foreach ($relate as $relatedProduct)
+                    @php
+                        $relatedName = $storefrontLabel::neutralizeSource($relatedProduct->product_name);
+                        $relatedUrl = url('chi-tiet/' . $relatedProduct->product_slug);
+                        $relatedImage = \App\Support\AssetUrl::product($relatedProduct->product_image);
+                        $relatedPrice = (float) ($relatedProduct->final_price ?? $relatedProduct->product_price ?? 0);
+                    @endphp
+                    <article class="dd-product-card">
+                        <a href="{{ $relatedUrl }}" class="dd-product-media">
+                            <img src="{{ $relatedImage }}" alt="{{ $relatedName }}">
+                        </a>
+                        <div class="dd-product-info">
+                            <span class="dd-product-code">#EF4444</span>
+                            <h3 class="dd-product-name">
+                                <a href="{{ $relatedUrl }}">{{ $relatedName }}</a>
+                            </h3>
+                            <div class="dd-product-price-section">
+                                <strong class="dd-product-price-current">{{ number_format($relatedPrice, 0, ',', '.') }}đ</strong>
+                            </div>
+                        </div>
+                        <div class="dd-product-actions">
+                            <a href="{{ $relatedUrl }}" class="dd-btn-detail">trắng</a>
+                            <button type="button" class="dd-btn-cart" onclick="Addtocart({{ $relatedProduct->product_id }});">Thêm giỏ</button>
+                        </div>
+                    </article>
+                @endforeach
             </div>
         </section>
-        @endif
 
-        <div class="recommended_items shopw-pdp-related">
-            <div class="shopw-pdp-section-head">
-                <span class="shopw-pdp-kicker">Khám phá thêm</span>
-                <h2 class="title text-center">Sản phẩm liên quan</h2>
-                <p>Tiếp tục khám phá các sản phẩm cùng nhóm đang được khách hàng quan tâm trong thời điểm hiện tại.</p>
+        <section class="dd-pdp-recommended">
+            <h2 class="dd-section-title">Gợi ý dành cho bạn</h2>
+            <div class="dd-product-grid dd-product-grid--4col">
+                @foreach ($recommended_products as $recommendedProduct)
+                    @php
+                        $recommendedName = $storefrontLabel::neutralizeSource($recommendedProduct->product_name);
+                        $recommendedUrl = url('chi-tiet/' . $recommendedProduct->product_slug);
+                        $recommendedImage = \App\Support\AssetUrl::product($recommendedProduct->product_image);
+                        $recommendedPrice = (float) ($recommendedProduct->final_price ?? $recommendedProduct->product_price ?? 0);
+                    @endphp
+                    <article class="dd-product-card">
+                        <a href="{{ $recommendedUrl }}" class="dd-product-media">
+                            <img src="{{ $recommendedImage }}" alt="{{ $recommendedName }}">
+                        </a>
+                        <div class="dd-product-info">
+                            <span class="dd-product-code">#EF4444</span>
+                            <h3 class="dd-product-name">
+                                <a href="{{ $recommendedUrl }}">{{ $recommendedName }}</a>
+                            </h3>
+                            <div class="dd-product-price-section">
+                                <strong class="dd-product-price-current">{{ number_format($recommendedPrice, 0, ',', '.') }}đ</strong>
+                            </div>
+                        </div>
+                        <div class="dd-product-actions">
+                            <a href="{{ $recommendedUrl }}" class="dd-btn-detail">trắng</a>
+                            <button type="button" class="dd-btn-cart" onclick="Addtocart({{ $recommendedProduct->product_id }});">Thêm giỏ</button>
+                        </div>
+                    </article>
+                @endforeach
             </div>
-            <div class="row shopw-related-grid">
-                @include('pages.category.partials.product_cards', [
-                    'products' => $relate,
-                    'emptyMessage' => 'Chưa có sản phẩm liên quan trong cùng danh mục.',
-                    'emptyMessageClasses' => 'text-center text-muted',
-                    'cardColumnClass' => 'col-xs-12 col-sm-6 col-md-3',
-                    'showQuickView' => false,
-                    'showCartToggle' => false,
-                ])
-            </div>
-        </div>
-
-        @include('partials.storefront.recommendation-section', [
-            'title' => 'Gợi ý dành cho bạn',
-            'description' => $recommendation_description ?? 'Ưu tiên từ lịch sử mua hàng, sau đó bổ sung từ lịch sử xem và mức độ quan tâm hiện tại.',
-            'products' => $recommended_products ?? collect(),
-            'cardColumnClass' => 'col-xs-12 col-sm-6 col-md-3',
-            'emptyTitle' => 'Hệ thống chưa có thêm gợi ý phù hợp ở thời điểm này.',
-        ])
+        </section>
     </div>
+
+    <script>
+        function decreaseQty() {
+            const input = document.getElementById('product-detail-qty');
+            if (input && input.value > 1) {
+                input.value = parseInt(input.value) - 1;
+            }
+        }
+
+        function increaseQty() {
+            const input = document.getElementById('product-detail-qty');
+            const max = parseInt(input.getAttribute('max'));
+            if (input && input.value < max) {
+                input.value = parseInt(input.value) + 1;
+            }
+        }
+
+        function buyNow() {
+            // Check dependencies
+            if (typeof $ === 'undefined' || typeof addProductToCart !== 'function') {
+                console.error('buyNow: Missing dependencies (jQuery or addProductToCart)');
+                alert('Chức năng mua ngay tạm thời không khả dụng. Vui lòng thử lại sau.');
+                return;
+            }
+
+            // Get product data
+            var id_product = $('.product_id').val();
+            var id_attribute = $('.cart_product_id_attribute').val();
+            var maxQuantity = parseInt($('.cart_product_qty').attr('max') || 0, 10);
+            var cart_product_qty = parseInt($('.cart_product_qty').val() || 1, 10);
+            var _token = $('input[name="_token"]').val();
+
+            // Clear previous status
+            if (typeof clearStorefrontInlineStatus === 'function') {
+                clearStorefrontInlineStatus('#product-detail-purchase-status');
+            }
+
+            // Validate stock availability
+            if (!maxQuantity) {
+                if (typeof setStorefrontInlineStatus === 'function') {
+                    setStorefrontInlineStatus('#product-detail-purchase-status',
+                        'Sản phẩm hiện chưa sẵn sàng để mua.', 'warning');
+                }
+                if (typeof showStorefrontStatus === 'function') {
+                    showStorefrontStatus('Tạm hết hàng',
+                        'Sản phẩm hiện chưa sẵn sàng để mua.', 'warning');
+                }
+                return;
+            }
+
+            // Validate quantity
+            if (cart_product_qty > maxQuantity) {
+                $('.cart_product_qty').val(maxQuantity);
+                var quantityMessage = 'Sản phẩm chỉ còn ' + maxQuantity + ' sản phẩm.';
+                if (typeof setStorefrontInlineStatus === 'function') {
+                    setStorefrontInlineStatus('#product-detail-purchase-status', quantityMessage, 'warning');
+                }
+                if (typeof showStorefrontStatus === 'function') {
+                    showStorefrontStatus('Số lượng chưa hợp lệ', quantityMessage, 'warning');
+                }
+                return;
+            }
+
+            // Add to cart and redirect only on success
+            addProductToCart({
+                id_product: id_product,
+                id_attribute: id_attribute,
+                cart_product_qty: cart_product_qty,
+                _token: _token
+            }, {
+                onSuccess: function() {
+                    // Refresh cart UI
+                    if (typeof refreshStorefrontCartUi === 'function') {
+                        refreshStorefrontCartUi();
+                    }
+                    // Redirect to cart page only after successful add
+                    window.location.href = '{{ url("/gio-hang") }}';
+                },
+                onError: function(xhr) {
+                    // Show error without redirecting
+                    var errorMessage = 'Không thể thêm sản phẩm vào giỏ hàng lúc này.';
+                    if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                        errorMessage = xhr.responseJSON.message;
+                    }
+                    if (typeof setStorefrontInlineStatus === 'function') {
+                        setStorefrontInlineStatus('#product-detail-purchase-status', errorMessage, 'error');
+                    }
+                    if (typeof showStorefrontStatus === 'function') {
+                        showStorefrontStatus('Lỗi', errorMessage, 'error');
+                    }
+                }
+            });
+        }
+
+        // Tab switching
+        document.querySelectorAll('.dd-tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                
+                // Remove active from all buttons and panes
+                document.querySelectorAll('.dd-tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.dd-tab-pane').forEach(p => p.classList.remove('active'));
+                
+                // Add active to clicked button and corresponding pane
+                this.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+    </script>
 @endsection
 
