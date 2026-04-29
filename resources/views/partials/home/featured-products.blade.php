@@ -5,7 +5,7 @@
                 <span class="tech-eyebrow">Sản phẩm nổi bật</span>
                 <h2>Sản phẩm công nghệ đang được quan tâm</h2>
             </div>
-            <a href="{{ url('/tim-kiem') }}" class="tech-section-link">Xem tất cả</a>
+            <a href="{{ url('/san-pham') }}" class="tech-section-link">Xem tất cả</a>
         </div>
 
         <div class="row tech-product-grid">
