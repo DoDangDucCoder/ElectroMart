@@ -9,7 +9,11 @@
     <link rel="canonical" href="{{ $url_canonical }}" />
     <meta name="author" content="">
 
-    <link rel="icon" href="{{ asset('uploads/contact/laptop-symbol-azy3.png') }}" type="image/png" sizes="32x32">
+    @php
+        $brandFavicon = asset('uploads/brand/dangduc-favicon.png.png');
+        $brandShareImage = $share_image ?? asset('uploads/brand/dangduc-logo-horizontal.png.png');
+    @endphp
+    <link rel="icon" href="{{ $brandFavicon }}" type="image/png" sizes="32x32">
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -47,7 +51,7 @@
     <meta property="og:title" content="{{ $meta_title }}" />
     <meta property="og:site_name" content="{{ $meta_title }}" />
     <meta property="og:description" content="{{ $meta_desc }}" />
-    <meta property="og:image" content="{{ $share_image }}" />
+    <meta property="og:image" content="{{ $brandShareImage }}" />
     <!--//-------Seo--------->
 </head><!--/head-->
 

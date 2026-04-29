@@ -4,6 +4,14 @@
     $footerBrandName = $brandConfig['name'] ?? 'ShopW';
     $footerBrandDescriptor = $brandConfig['descriptor'] ?? 'Cửa hàng công nghệ';
     $footerPrimaryContact = $contact_footer->first();
+    $isProductsCatalogFooter = request()->is('san-pham');
+    $footerLogoPath = 'uploads/brand/dangduc-logo-dark.png.png';
+    if (! file_exists(public_path($footerLogoPath))) {
+        $footerLogoPath = 'uploads/brand/dangduc-logo-horizontal.png.png';
+    }
+    if (! file_exists(public_path($footerLogoPath))) {
+        $footerLogoPath = 'uploads/brand/dangduc-logo-icon.png.png';
+    }
 
     $selfHosts = array_filter(array_unique([
         parse_url(config('app.url'), PHP_URL_HOST),
@@ -90,7 +98,10 @@
 <footer id="footer" class="shopw-footer">
     <div class="shopw-footer-shell">
         <div class="shopw-footer-main">
-            <section class="shopw-footer-brand-card">
+            <section @class(['shopw-footer-brand-card', 'shopw-footer-brand-card--catalog' => $isProductsCatalogFooter])>
+                @if ($isProductsCatalogFooter)
+                    <img class="shopw-footer-brand-logo" src="{{ asset($footerLogoPath) }}" alt="Dang Duc">
+                @endif
                 <span class="shopw-footer-kicker">{{ $footerBrandDescriptor }}</span>
                 <h2>{{ $footerBrandName }}</h2>
                 <p>{{ $footerSlogan }}</p>
