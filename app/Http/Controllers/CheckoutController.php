@@ -40,12 +40,12 @@ class CheckoutController extends Controller
 
     public function login_checkout(Request $request)
     {
-        return view('pages.checkout.login_checkout', $this->storefrontAuthPageContext($request, 'login'));
+        return view('pages.checkout.auth_checkout', $this->storefrontAuthPageContext($request, 'login'));
     }
 
     public function register_checkout(Request $request)
     {
-        return view('pages.checkout.register_checkout', $this->storefrontAuthPageContext($request, 'register'));
+        return view('pages.checkout.auth_checkout', $this->storefrontAuthPageContext($request, 'register'));
     }
 
     public function add_customer(RegisterCustomerRequest $request): RedirectResponse
