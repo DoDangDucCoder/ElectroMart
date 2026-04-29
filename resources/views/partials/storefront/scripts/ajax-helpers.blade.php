@@ -263,14 +263,20 @@
     function populateQuickviewModal(data) {
         $('#product_quickview_title').html(data.product_name || '');
         $('#product_quickview_title_body').html(data.product_name || '');
-        $('#product_quickview_id').html(data.product_id || '');
-        $('#product_quickview_price').html(data.product_price || '');
-        $('#product_quickview_image').html(data.product_image || '');
-        $('#product_quickview_gallery').html(data.product_gallery || '');
-        $('#product_quickview_desc').html(data.product_desc || '');
-        $('#product_quickview_content').html(data.product_content || '');
-        $('#product_quickview_value').html(data.product_quickview_value || '');
-        $('#product_quickview_button').html(data.product_button || '');
+        
+        if (data.product_modal_body) {
+            $('#product_quickview_body').html(data.product_modal_body);
+        } else {
+            // Legacy fallbacks if needed, but we're moving to product_modal_body
+            $('#product_quickview_id').html(data.product_id || '');
+            $('#product_quickview_price').html(data.product_price || '');
+            $('#product_quickview_image').html(data.product_image || '');
+            $('#product_quickview_gallery').html(data.product_gallery || '');
+            $('#product_quickview_desc').html(data.product_desc || '');
+            $('#product_quickview_content').html(data.product_content || '');
+            $('#product_quickview_value').html(data.product_quickview_value || '');
+            $('#product_quickview_button').html(data.product_button || '');
+        }
 
         if ($('#product_quickview_info').length) {
             $('#product_quickview_info').html(data.product_info || '');

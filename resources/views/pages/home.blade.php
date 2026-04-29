@@ -72,72 +72,19 @@
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title product_quickview_title" id="">
-
+                    <h5 class="modal-title product_quickview_title">
                         <span id="product_quickview_title"></span>
-
                     </h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                    <style type="text/css">
-                        span#product_quickview_content img {
-                            width: 100%;
-                        }
-
-                        @media screen and (min-width: 768px) {
-                            .modal-dialog {
-                                width: 700px;
-                                /* New width for default modal */
-                            }
-
-                            .modal-sm {
-                                width: 350px;
-                                /* New width for small modal */
-                            }
-                        }
-
-                        @media screen and (min-width: 992px) {
-                            .modal-lg {
-                                width: 1200px;
-                                /* New width for large modal */
-                            }
-                        }
-                    </style>
-                    <div class="row">
-                        <div class="col-md-5">
-                            <span id="product_quickview_image"></span>
-                            <span id="product_quickview_gallery"></span>
-                        </div>
-                        <form>
-                            @csrf
-                            <div id="product_quickview_value"></div>
-                            <div class="col-md-7">
-                                <h2><span id="product_quickview_title"></span></h2>
-                                <p>Mã ID: <span id="product_quickview_id"></span></p>
-                                <p style="font-size: 20px; color: brown;font-weight: bold;">Giá sản phẩm : <span
-                                        id="product_quickview_price"></span></p>
-
-                                <label>Số lượng:</label>
-
-                                <input name="qty" type="number" min="1" class="cart_product_qty_"
-                                    value="1" />
-
-                                </span>
-                                <h4 style="font-size: 20px; color: brown;font-weight: bold;">Mô tả sản phẩm</h4>
-                                <hr>
-                                <p><span id="product_quickview_desc"></span></p>
-                                <p><span id="product_quickview_content"></span></p>
-
-                                <div id="product_quickview_button"></div>
-                                <div id="beforesend_quickview"></div>
-                            </div>
-                        </form>
-
+                <div class="modal-body" id="product_quickview_body">
+                    {{-- Content injected via AJAX --}}
+                    <div class="text-center p-5">
+                        <i class="fa fa-spinner fa-spin fa-3x"></i>
+                        <p>Đang tải thông tin sản phẩm...</p>
                     </div>
-
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>

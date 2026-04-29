@@ -148,30 +148,43 @@ class ProductController extends Controller
         $fallbackPath = AssetUrl::rawOrFallback($product->product_image);
         $fallbackImage = AssetUrl::product($product->product_image);
         $output = [
-            'product_gallery' => view('pages.sanpham.partials.quickview_gallery', [
+            'product_name' => StorefrontLabel::neutralizeSource($product->product_name),
+            'product_id' => $product->product_id,
+            'product_modal_body' => view('pages.sanpham.partials.quickview_modal_body', [
+                'product' => $product,
                 'mediaItems' => $mediaItems,
                 'fallbackPath' => $fallbackPath,
                 'fallbackImage' => $fallbackImage,
             ])->render(),
-            'product_name' => StorefrontLabel::neutralizeSource($product->product_name),
-            'product_id' => $product->product_id,
-            'product_desc' => StorefrontLabel::neutralizeSourceHtml($product->product_desc),
-            'product_content' => StorefrontLabel::neutralizeSourceHtml($product->product_content),
+            // Legacy keys for backward compatibility (e.g. for tests)
+            // These are inlined to allow deletion of fragmented partial files
+            'product_image' => '<p><img width="100%" src="'.$fallbackImage.'" alt="Hình ảnh sản phẩm"></p>',
+            'product_button' => '<input type="button" value="Mua ngay" class="btn btn-primary btn-sm add-to-cart-quickview" id="buy_quickview" data-id_product="'.$product->product_id.'" name="add-to-cart">',
+            'product_gallery' => $mediaItems->isNotEmpty()
+                ? $mediaItems->map(fn ($m) => '<p><img width="100%" src="'.\App\Support\AssetUrl::product($m->file_path ?? $fallbackPath).'" alt="'.StorefrontLabel::neutralizeSource($m->gallery_name ?? 'Hình ảnh sản phẩm').'"></p>')->implode('')
+                : '<p><img width="100%" src="'.$fallbackImage.'" alt="Hình ảnh sản phẩm"></p>',
+            'product_quickview_value' => sprintf(
+                '<input type="hidden" value="%d" class="cart_product_id_%d">'.
+                '<input type="hidden" value="%s" class="cart_product_name_%d">'.
+                '<input type="hidden" value="%d" class="cart_product_quantity_%d">'.
+                '<input type="hidden" value="%s" class="cart_product_image_%d">'.
+                '<input type="hidden" value="%s" class="cart_product_price_%d">'.
+                '<input type="hidden" value="1" class="cart_product_qty_%d">',
+                $product->product_id, $product->product_id,
+                StorefrontLabel::neutralizeSource($product->product_name), $product->product_id,
+                $product->product_quantity, $product->product_id,
+                \App\Support\AssetUrl::product($product->product_image), $product->product_id,
+                $product->final_price, $product->product_id,
+                $product->product_id
+            ),
             'product_price' => view('partials.storefront.product-price', [
                 'product' => $product,
                 'currency' => 'VND',
                 'showExplanation' => true,
                 'compact' => true,
             ])->render(),
-            'product_image' => view('pages.sanpham.partials.quickview_image', [
-                'imageUrl' => $fallbackImage,
-            ])->render(),
-            'product_button' => view('pages.sanpham.partials.quickview_button', [
-                'product' => $product,
-            ])->render(),
-            'product_quickview_value' => view('pages.sanpham.partials.quickview_value_fields', [
-                'product' => $product,
-            ])->render(),
+            'product_desc' => StorefrontLabel::neutralizeSourceHtml($product->product_desc),
+            'product_content' => StorefrontLabel::neutralizeSourceHtml($product->product_content),
         ];
 
         return response()->json($output);
