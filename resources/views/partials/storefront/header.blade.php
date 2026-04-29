@@ -21,9 +21,9 @@
                 $supportConfig = config('services.storefront_support', []);
                 $storefrontLink = \App\Support\StorefrontLink::class;
                 $headerLogo = optional($contact_footer->first())->info_logo ?: 'laptop-symbol-azy3.png';
-                $headerLogoPath = 'uploads/contact/' . $headerLogo;
+                $headerLogoPath = 'uploads/brand/dangduc-logo-horizontal.png.png';
                 if (!file_exists(public_path($headerLogoPath))) {
-                    $headerLogoPath = 'uploads/contact/laptop-symbol-azy3.png';
+                    $headerLogoPath = 'uploads/brand/dangduc-logo-icon.png.png';
                 }
                 $headerSlogan = optional($contact_footer->first())->slogan_logo ?: 'Điểm mua công nghệ gọn hơn mỗi ngày';
                 $headerSloganCompact = \Illuminate\Support\Str::limit(\Illuminate\Support\Str::squish(strip_tags($headerSlogan)), 24, '...');
