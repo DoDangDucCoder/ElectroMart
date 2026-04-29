@@ -27,7 +27,7 @@
         ? number_format((float) $hero_ratio, 3, '.', '')
         : null;
     $heroMaxSlides = max(5, (int) config('storefront.hero_slider.max_slides', 5));
-    $heroBestSellingUrl = $hero_best_selling_url ?? url('/san-pham-ban-chay');
+    $heroBestSellingUrl = $hero_best_selling_url ?? url('/san-pham');
     $heroSlideTargets = $hero_slide_targets ?? [];
     $heroProfiles = [
         'mobile' => [
@@ -183,50 +183,65 @@
 
 <section id="slider" class="tech-home-hero-slider">
     <div class="container">
-        <div class="shopw-hero-shell" @if ($heroRatio) style="--shopw-hero-ratio: {{ $heroRatio }};" @endif>
-            <div class="shopw-hero" data-hero-layout="wide">
-                <div class="shopw-hero-main">
-                    <div id="slider-carousel"
-                        class="carousel slide hero-slot"
-                        data-ride="carousel"
-                        data-interval="4000"
-                        data-pause="false"
-                        data-hero-rotate="carousel"
-                        data-hero-slide-count="{{ $heroSlides->count() }}">
-                        @if ($heroSlides->count() > 1)
-                            <ol class="carousel-indicators">
-                                @foreach ($heroSlides as $key => $slide)
-                                    <li data-target="#slider-carousel"
-                                        data-slide-to="{{ $key }}"
-                                        class="{{ $key === 0 ? 'active' : '' }}"></li>
-                                @endforeach
-                            </ol>
-                        @endif
-
-                        <div class="carousel-inner">
-                            @foreach ($heroSlides as $slide)
-                                <div class="item {{ $loop->first ? 'active' : '' }}">
-                                    <a href="{{ $slide['url'] }}"
-                                        class="shopw-hero-slide shopw-hero-slide--{{ $slide['tone'] }}"
-                                        style="background-image: url('{{ $slide['src'] }}');"
-                                        aria-label="{{ !empty($slide['highlight_product_name']) ? $slide['alt'] . ' - mở danh sách bán chạy, ưu tiên ' . $slide['highlight_product_name'] : $slide['alt'] . ' - mở danh sách bán chạy' }}">
-                                        <div class="shopw-hero-slide-copy">
-                                            <span class="shopw-hero-slide-kicker">{{ $slide['kicker'] }}</span>
-                                            <div class="shopw-hero-slide-meta" aria-hidden="true">
-                                                @foreach ($slide['meta'] as $meta)
-                                                    <span>{{ $meta }}</span>
-                                                @endforeach
-                                            </div>
-                                            <strong>{{ $slide['headline'] }}</strong>
-                                            <p>{{ $slide['summary'] }}</p>
-                                        </div>
-                                        <span class="sr-only">{{ $slide['alt'] }}</span>
-                                    </a>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
+        <div class="shopw-home-hero">
+            <div class="shopw-home-hero__content">
+                <span class="shopw-home-hero__pill">ƯU ĐÃI CÔNG NGHỆ</span>
+                <h1 class="shopw-home-hero__title">Săn công nghệ mới,<br>nhận ưu đãi khủng</h1>
+                <p class="shopw-home-hero__desc">Khám phá laptop, điện thoại và phụ kiện chính hãng với mức giá tốt mỗi ngày.</p>
+                <div class="shopw-home-hero__actions">
+                    <a href="{{ url('/san-pham') }}" class="btn-shopw btn-shopw--primary">Mua ngay</a>
+                    <a href="{{ $heroBestSellingUrl }}" class="btn-shopw btn-shopw--outline">Xem ưu đãi</a>
                 </div>
+            </div>
+
+            <div class="shopw-home-hero__slider">
+                <div id="slider-carousel"
+                    class="carousel slide"
+                    data-ride="carousel"
+                    data-interval="4000"
+                    data-pause="false"
+                    data-hero-slide-count="{{ $heroSlides->count() }}">
+
+                    <div class="carousel-inner">
+                        @foreach ($heroSlides as $slide)
+                            <div class="item {{ $loop->first ? 'active' : '' }}">
+                                <a href="{{ $slide['url'] }}" class="shopw-home-hero__slide-link" aria-label="{{ $slide['alt'] }}">
+                                    <div class="shopw-home-hero__image-wrapper">
+                                        <img src="{{ $slide['src'] }}" alt="{{ $slide['alt'] }}" class="shopw-home-hero__image">
+
+                                        @if(filled($slide['headline']) && !str_starts_with($slide['headline'], 'Banner nổi bật'))
+                                            <div class="shopw-home-hero__caption">
+                                                <strong>{{ $slide['headline'] }}</strong>
+                                                @if(filled($slide['summary']))
+                                                    <p>{{ $slide['summary'] }}</p>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </div>
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    @if ($heroSlides->count() > 1)
+                        <a class="left carousel-control" href="#slider-carousel" data-slide="prev" aria-label="Slide trước">
+                            <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        </a>
+                        <a class="right carousel-control" href="#slider-carousel" data-slide="next" aria-label="Slide sau">
+                            <i class="fa fa-angle-right" aria-hidden="true"></i>
+                        </a>
+                    @endif
+                </div>
+
+                @if ($heroSlides->count() > 1)
+                    <ol class="carousel-indicators shopw-home-hero__indicators">
+                        @foreach ($heroSlides as $key => $slide)
+                            <li data-target="#slider-carousel"
+                                data-slide-to="{{ $key }}"
+                                class="{{ $key === 0 ? 'active' : '' }}"></li>
+                        @endforeach
+                    </ol>
+                @endif
             </div>
         </div>
     </div>
