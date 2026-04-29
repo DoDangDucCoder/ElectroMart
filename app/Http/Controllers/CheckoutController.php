@@ -14,23 +14,21 @@ use App\Http\Requests\Storefront\Checkout\ConfirmOrderRequest;
 use App\Http\Requests\Storefront\Checkout\LoginCustomerRequest;
 use App\Http\Requests\Storefront\Checkout\RegisterCustomerRequest;
 use App\Http\Requests\Storefront\Checkout\SelectDeliveryHomeRequest;
-use App\Models\CatePost;
-use App\Models\Slider;
-use App\Support\StorefrontCustomerAuth;
-use App\Support\StorefrontCustomerPassword;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use App\Infrastructure\Persistence\Eloquent\Geo\Location;
+use App\Support\StorefrontCustomerAuth;
+use App\Support\StorefrontCustomerPassword;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 
 class CheckoutController extends Controller
 {
     use LegacyStorefrontContext;
+
     public function __construct(
         private readonly CartService $cartService,
         private readonly CouponService $couponService,
@@ -38,8 +36,7 @@ class CheckoutController extends Controller
         private readonly CheckoutService $checkoutService,
         private readonly CategoryService $categoryService,
         private readonly BrandService $brandService,
-    ) {
-    }
+    ) {}
 
     public function login_checkout(Request $request)
     {
@@ -129,7 +126,7 @@ class CheckoutController extends Controller
             StorefrontCustomerAuth::rememberIntendedRedirect($redirectKey, $redirectKey);
 
             return Redirect::to(
-                StorefrontCustomerAuth::destinationUrl('login') . '?redirect=' . $redirectKey
+                StorefrontCustomerAuth::destinationUrl('login').'?redirect='.$redirectKey
             )->with('message', 'Đăng xuất thành công.');
         }
 
@@ -148,18 +145,18 @@ class CheckoutController extends Controller
             $this->clearCustomerSession();
             StorefrontCustomerAuth::rememberIntendedRedirect('checkout', 'checkout');
 
-            return Redirect::to(StorefrontCustomerAuth::destinationUrl('login') . '?redirect=checkout')
+            return Redirect::to(StorefrontCustomerAuth::destinationUrl('login').'?redirect=checkout')
                 ->with('error', 'Vui lòng đăng nhập để tiếp tục thanh toán.');
         }
 
         $cities = Location::where('type', 'city')->orderBy('name')->get();
         if ($cities->isEmpty()) {
             $cities = collect([
-                (object)['id' => 1, 'name' => 'TP. Hồ Chí Minh'],
-                (object)['id' => 2, 'name' => 'TP. Hà Nội'],
-                (object)['id' => 3, 'name' => 'TP. Đà Nẵng'],
-                (object)['id' => 4, 'name' => 'TP. Hải Phòng'],
-                (object)['id' => 5, 'name' => 'TP. Cần Thơ'],
+                (object) ['id' => 1, 'name' => 'TP. Hồ Chí Minh'],
+                (object) ['id' => 2, 'name' => 'TP. Hà Nội'],
+                (object) ['id' => 3, 'name' => 'TP. Đà Nẵng'],
+                (object) ['id' => 4, 'name' => 'TP. Hải Phòng'],
+                (object) ['id' => 5, 'name' => 'TP. Cần Thơ'],
             ]);
         }
 
@@ -182,7 +179,7 @@ class CheckoutController extends Controller
             $this->clearCustomerSession();
             StorefrontCustomerAuth::rememberIntendedRedirect('payment', 'payment');
 
-            return Redirect::to(StorefrontCustomerAuth::destinationUrl('login') . '?redirect=payment')
+            return Redirect::to(StorefrontCustomerAuth::destinationUrl('login').'?redirect=payment')
                 ->with('error', 'Vui lòng đăng nhập để tiếp tục thanh toán.');
         }
 
@@ -239,46 +236,46 @@ class CheckoutController extends Controller
             if ($action === 'city') {
                 if ($parentId == 1) { // HCM
                     $locations = collect([
-                        (object)['id' => 101, 'name' => 'Quận 1'],
-                        (object)['id' => 102, 'name' => 'Quận 3'],
-                        (object)['id' => 103, 'name' => 'Quận 7'],
-                        (object)['id' => 104, 'name' => 'Quận Bình Thạnh'],
+                        (object) ['id' => 101, 'name' => 'Quận 1'],
+                        (object) ['id' => 102, 'name' => 'Quận 3'],
+                        (object) ['id' => 103, 'name' => 'Quận 7'],
+                        (object) ['id' => 104, 'name' => 'Quận Bình Thạnh'],
                     ]);
                 } elseif ($parentId == 2) { // Hà Nội
                     $locations = collect([
-                        (object)['id' => 201, 'name' => 'Quận Hoàn Kiếm'],
-                        (object)['id' => 202, 'name' => 'Quận Ba Đình'],
-                        (object)['id' => 203, 'name' => 'Quận Đống Đa'],
-                        (object)['id' => 204, 'name' => 'Quận Cầu Giấy'],
+                        (object) ['id' => 201, 'name' => 'Quận Hoàn Kiếm'],
+                        (object) ['id' => 202, 'name' => 'Quận Ba Đình'],
+                        (object) ['id' => 203, 'name' => 'Quận Đống Đa'],
+                        (object) ['id' => 204, 'name' => 'Quận Cầu Giấy'],
                     ]);
                 } else {
                     $locations = collect([
-                        (object)['id' => 301, 'name' => 'Quận Hải Châu'],
-                        (object)['id' => 302, 'name' => 'Quận Thanh Khê'],
+                        (object) ['id' => 301, 'name' => 'Quận Hải Châu'],
+                        (object) ['id' => 302, 'name' => 'Quận Thanh Khê'],
                     ]);
                 }
             } elseif ($action === 'province') {
                 if ($parentId == 101) { // Quận 1
                     $locations = collect([
-                        (object)['id' => 1001, 'name' => 'Phường Bến Nghé'],
-                        (object)['id' => 1002, 'name' => 'Phường Bến Thành'],
-                        (object)['id' => 1003, 'name' => 'Phường Đa Kao'],
+                        (object) ['id' => 1001, 'name' => 'Phường Bến Nghé'],
+                        (object) ['id' => 1002, 'name' => 'Phường Bến Thành'],
+                        (object) ['id' => 1003, 'name' => 'Phường Đa Kao'],
                     ]);
                 } elseif ($parentId == 201) { // Hoàn Kiếm
                     $locations = collect([
-                        (object)['id' => 2001, 'name' => 'Phường Cửa Đông'],
-                        (object)['id' => 2002, 'name' => 'Phường Hàng Bạc'],
+                        (object) ['id' => 2001, 'name' => 'Phường Cửa Đông'],
+                        (object) ['id' => 2002, 'name' => 'Phường Hàng Bạc'],
                     ]);
                 } else {
                     $locations = collect([
-                        (object)['id' => 9001, 'name' => 'Phường Trung Tâm'],
+                        (object) ['id' => 9001, 'name' => 'Phường Trung Tâm'],
                     ]);
                 }
             }
         }
 
         foreach ($locations as $location) {
-            $options .= '<option value="' . $location->id . '">' . e($location->name) . '</option>';
+            $options .= '<option value="'.$location->id.'">'.e($location->name).'</option>';
         }
 
         return response($options);
@@ -327,6 +324,75 @@ class CheckoutController extends Controller
     public function vnpay_payment(Request $request): RedirectResponse
     {
         return Redirect::back()->with('error', 'Cổng thanh toán VNPAY hiện đang tạm tắt.');
+    }
+
+    public function bankTransferInstructions(Request $request, string $orderCode)
+    {
+        $currentCustomer = $this->sessionCustomer();
+
+        if (! $currentCustomer) {
+            $this->clearCustomerSession();
+            StorefrontCustomerAuth::rememberIntendedRedirect('payment', 'payment');
+
+            return Redirect::to(StorefrontCustomerAuth::destinationUrl('login').'?redirect=payment')
+                ->with('error', 'Vui lòng đăng nhập để xem thông tin thanh toán.');
+        }
+
+        $order = \App\Infrastructure\Persistence\Eloquent\Order\Order::where('code', $orderCode)
+            ->with(['items', 'shipping', 'payments', 'customer'])
+            ->first();
+
+        if (! $order) {
+            return Redirect::to('/history')->with('error', 'Không tìm thấy đơn hàng.');
+        }
+
+        if ($order->customer_id !== $currentCustomer->id) {
+            return Redirect::to('/history')->with('error', 'Bạn không có quyền xem đơn hàng này.');
+        }
+
+        $paymentMethod = $order->payments->first()?->provider ?? 'unknown';
+
+        if ($paymentMethod !== 'bank_transfer') {
+            return Redirect::to('/view-history-order/'.$orderCode)
+                ->with('error', 'Đơn hàng này không sử dụng phương thức chuyển khoản ngân hàng.');
+        }
+
+        $bankInfo = config('services.bank_transfer', []);
+        $transferContent = 'DH '.$order->code;
+
+        $statusLabel = match ($order->status) {
+            'pending' => 'Chờ xác nhận',
+            'confirmed' => 'Đã xác nhận',
+            'processing' => 'Đang xử lý',
+            'shipped' => 'Đang giao hàng',
+            'completed' => 'Hoàn thành',
+            'cancelled' => 'Đã hủy',
+            'refunded' => 'Đã hoàn tiền',
+            default => 'Không xác định',
+        };
+
+        $paymentStatusLabel = match ($order->payment_status) {
+            'unpaid' => 'Chưa thanh toán',
+            'pending' => 'Đang chờ xác nhận',
+            'paid' => 'Đã thanh toán',
+            'failed' => 'Thanh toán thất bại',
+            'refunded' => 'Đã hoàn tiền',
+            default => 'Không xác định',
+        };
+
+        return view('pages.checkout.bank_transfer_instructions', array_merge(
+            $this->seoContext($request, 'Hướng dẫn chuyển khoản', 'thanh toán chuyển khoản'),
+            $this->catalogContext(),
+            [
+                'order' => $order,
+                'bankInfo' => $bankInfo,
+                'transferContent' => $transferContent,
+                'statusLabel' => $statusLabel,
+                'paymentStatusLabel' => $paymentStatusLabel,
+                'currentCustomer' => $currentCustomer,
+                'storefrontCustomerPicture' => Session::get(StorefrontCustomerAuth::SESSION_PICTURE_KEY),
+            ]
+        ));
     }
 
     protected function seoContext(Request $request, string $title = 'Thanh toán', string $keyword = 'thanh toán'): array
@@ -474,7 +540,7 @@ class CheckoutController extends Controller
                 'authRedirectUrl' => $authRedirectUrl,
                 'authRedirectLabel' => $this->redirectLabel($authRedirectKey),
                 'authContinueLabel' => $this->continueActionLabel($authRedirectKey),
-                'authLoggedInDescription' => 'Tài khoản của bạn đã sẵn sàng. Bạn có thể tiếp tục tới ' . $this->redirectLabel($authRedirectKey) . ' ngay bây giờ.',
+                'authLoggedInDescription' => 'Tài khoản của bạn đã sẵn sàng. Bạn có thể tiếp tục tới '.$this->redirectLabel($authRedirectKey).' ngay bây giờ.',
                 'authCustomerDisplayName' => $authCustomerDisplayName,
                 'authCustomerEmail' => $currentCustomer?->email,
                 'authCustomerPhone' => $currentCustomer?->phone,
@@ -485,7 +551,7 @@ class CheckoutController extends Controller
 
     protected function storefrontAuthLink(string $path, string $redirectKey, string $redirectUrl): string
     {
-        return url($path) . '?' . http_build_query([
+        return url($path).'?'.http_build_query([
             'redirect' => $redirectKey,
             'redirect_to' => $redirectUrl,
         ]);

@@ -2,14 +2,13 @@
 
 namespace App\Application\Checkout\Services;
 
+use App\Infrastructure\Persistence\Eloquent\Checkout\CartItem;
 use App\Infrastructure\Persistence\Eloquent\Customer\Address;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
-use App\Infrastructure\Persistence\Eloquent\Checkout\CartItem;
 use App\Infrastructure\Persistence\Eloquent\Order\Order;
-use App\Infrastructure\Persistence\Eloquent\Order\OrderItem;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Illuminate\Support\Collection;
 use RuntimeException;
 
 class CheckoutService
@@ -19,8 +18,7 @@ class CheckoutService
         private readonly CustomerCartService $customerCartService,
         private readonly CouponService $couponService,
         private readonly ShippingService $shippingService,
-    ) {
-    }
+    ) {}
 
     public function getCustomerOrders(int $customerId): Collection
     {
@@ -150,7 +148,7 @@ class CheckoutService
         }
 
         return DB::transaction(function () use ($payload, $customerId, $items) {
-            $shippingFee = (float) ($payload['shipping_fee'] ?? $this->shippingService->getFee());
+            $shippingFee = $this->resolveShippingFee($payload);
             $couponData = $this->couponService->validatedCurrent(
                 $this->cartService->subtotal(),
                 $customerId
@@ -175,6 +173,19 @@ class CheckoutService
 
             return $order->fresh(['items', 'shipping', 'payments']);
         });
+    }
+
+    protected function resolveShippingFee(array $payload): float
+    {
+        $cityId = (int) ($payload['city_id'] ?? 0);
+        $provinceId = (int) ($payload['province_id'] ?? 0);
+        $wardId = (int) ($payload['ward_id'] ?? 0);
+
+        if ($cityId > 0 && $provinceId > 0 && $wardId > 0) {
+            return $this->shippingService->calculateFee($cityId, $provinceId, $wardId);
+        }
+
+        return (float) ($payload['shipping_fee'] ?? $this->shippingService->getFee());
     }
 
     protected function storeCustomerAddress(array $payload, ?int $customerId): ?Address

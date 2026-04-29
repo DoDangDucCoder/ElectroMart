@@ -7,7 +7,7 @@ $storefrontContactPhoneHref = (string) env('STOREFRONT_CONTACT_PHONE_HREF', '190
 $storefrontContactPhoneDial = preg_replace('/^tel:/i', '', $storefrontContactPhoneHref) ?: '19000000';
 $storefrontContactPhoneLink = str_starts_with(strtolower($storefrontContactPhoneHref), 'tel:')
     ? $storefrontContactPhoneHref
-    : 'tel:' . $storefrontContactPhoneDial;
+    : 'tel:'.$storefrontContactPhoneDial;
 
 return [
 
@@ -42,7 +42,7 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env(
             'GOOGLE_CLIENT_URL',
-            rtrim((string) env('APP_URL', 'http://localhost'), '/') . '/customer/google/callback'
+            rtrim((string) env('APP_URL', 'http://localhost'), '/').'/customer/google/callback'
         ),
     ],
 
@@ -51,7 +51,7 @@ return [
         'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
         'redirect' => env(
             'FACEBOOK_CLIENT_REDIRECT',
-            rtrim((string) env('APP_URL', 'http://localhost'), '/') . '/customer/facebook/callback'
+            rtrim((string) env('APP_URL', 'http://localhost'), '/').'/customer/facebook/callback'
         ),
     ],
 
@@ -75,7 +75,7 @@ return [
 
     'storefront_support' => [
         'facebook_page_id' => env('STOREFRONT_FACEBOOK_PAGE_ID', '100332251915013'),
-        'facebook_url' => env('STOREFRONT_FACEBOOK_MESSENGER_URL', 'https://m.me/' . env('STOREFRONT_FACEBOOK_PAGE_ID', '100332251915013')),
+        'facebook_url' => env('STOREFRONT_FACEBOOK_MESSENGER_URL', 'https://m.me/'.env('STOREFRONT_FACEBOOK_PAGE_ID', '100332251915013')),
         'facebook_hours' => env('STOREFRONT_FACEBOOK_HOURS', '8h-21h'),
         'zalo_url' => env('STOREFRONT_ZALO_URL'),
         'zalo_hours' => env('STOREFRONT_ZALO_HOURS', '8h-21h'),
@@ -85,6 +85,13 @@ return [
         'phone_href' => $storefrontContactPhoneLink,
         'contact_hours' => env('STOREFRONT_CONTACT_HOURS', '8h-21h'),
         'chat_cta' => env('STOREFRONT_CHAT_CTA', 'Chat mua hàng trực tuyến từ 8h - 24h'),
+    ],
+
+    'bank_transfer' => [
+        'bank_name' => env('BANK_TRANSFER_BANK_NAME', 'Ngân hàng TMCP Á Châu (ACB)'),
+        'account_number' => env('BANK_TRANSFER_ACCOUNT_NUMBER', '1234567890'),
+        'account_holder' => env('BANK_TRANSFER_ACCOUNT_HOLDER', 'NGUYEN VAN A'),
+        'branch' => env('BANK_TRANSFER_BRANCH', 'Chi nhánh TP.HCM'),
     ],
 
 ];

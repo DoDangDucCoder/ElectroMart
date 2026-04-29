@@ -36,7 +36,7 @@
                 $storefrontCustomerAuth = \App\Support\StorefrontCustomerAuth::class;
                 $currentPath = request()->path();
                 $isHomeRoute = $currentPath === '/' || request()->is('trang-chu');
-                $isCategorySection = request()->is('danh-muc/*');
+                $isCategorySection = request()->is('san-pham') || request()->is('danh-muc/*');
                 $isBlogSection = request()->is('danh-muc-bai-viet/*') || request()->is('bai-viet/*') || request()->is('video') || request()->is('video-shop') || request()->is('xem-video/*');
                 $isCartSection = request()->is('gio-hang');
                 $isContactSection = request()->is('lien-he');
@@ -1069,7 +1069,7 @@
                                         @if ($isHomeRoute) aria-current="page" @endif>Trang chủ</a></li>
                                 <li class="dropdown shopw-nav-group {{ $isCategorySection ? 'is-current' : '' }}" id="shopw-nav-group-categories">
                                     <div class="shopw-nav-row">
-                                        <a href="{{ $featuredCategoryUrl }}"
+                                        <a href="{{ url('/san-pham') }}"
                                             data-storefront-nav-parent="categories"
                                             @class(['is-current' => $isCategorySection])
                                             @if ($isCategorySection) aria-current="page" @endif>

@@ -55,8 +55,8 @@
                             <i class="fa fa-shopping-cart"></i>
                         </div>
                         @if (!$isLoggedIn)
-                            <p class="dd-cart-empty-message">Bạng chưa đăng nhập</p>
-                            <p class="dd-cart-empty-hint">Bạng chưa đăng nhập vào hệ thống để tiến hành mua hàng, vui lòng đăng nhập để tiếp tục.</p>
+                            <p class="dd-cart-empty-message">Bạn chưa đăng nhập</p>
+                            <p class="dd-cart-empty-hint">Bạn chưa đăng nhập vào hệ thống để tiến hành mua hàng, vui lòng đăng nhập để tiếp tục.</p>
                             <div class="dd-cart-empty-actions">
                                 <a href="{{ url('/dang-nhap') }}" class="dd-btn-primary">Đăng nhập</a>
                                 <a href="{{ url('/san-pham') }}" class="dd-btn-secondary">Tiếp tục mua hàng</a>
@@ -153,10 +153,6 @@
                             <strong class="{{ $cartTotals['discount'] > 0 ? 'is-discount' : '' }}">
                                 -{{ number_format($cartTotals['discount'], 0, ',', '.') }}đ
                             </strong>
-                        </div>
-                        <div class="dd-cart-summary-row">
-                            <span>Giảm giá</span>
-                            <strong>0đ</strong>
                         </div>
                         <div class="dd-cart-summary-row">
                             <span>Phí vận chuyển</span>

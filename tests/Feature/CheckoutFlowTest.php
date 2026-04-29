@@ -20,7 +20,9 @@ class CheckoutFlowTest extends TestCase
     use RefreshDatabase;
 
     protected CartService $cartService;
+
     protected CouponService $couponService;
+
     protected int $productId;
 
     protected function setUp(): void
@@ -119,6 +121,87 @@ class CheckoutFlowTest extends TestCase
         $this->assertDatabaseCount('coupon_redemptions', 1);
         $this->assertTrue($this->cartService->items()->isEmpty());
         $this->assertNull($this->couponService->current());
+    }
+
+    public function test_confirm_order_recalculates_shipping_fee_from_submitted_location(): void
+    {
+        $customer = Customer::create([
+            'name' => 'Fresh Fee Customer',
+            'email' => 'fresh-fee@example.com',
+            'password' => bcrypt('secret123'),
+            'phone' => '0987654321',
+            'is_active' => true,
+        ]);
+
+        Session::put('customer_id', $customer->id);
+
+        $this->cartService->addItem($this->productId, 1);
+
+        [$oldCity, $oldProvince, $oldWard] = $this->createLocations();
+
+        $newCity = Location::create([
+            'name' => 'City Fresh',
+            'code' => 'CITY02',
+            'type' => 'city',
+            'parent_id' => null,
+            'display_order' => 1,
+            'is_active' => true,
+        ]);
+        $newProvince = Location::create([
+            'name' => 'District Fresh',
+            'code' => 'DIST02',
+            'type' => 'province',
+            'parent_id' => $newCity->id,
+            'display_order' => 1,
+            'is_active' => true,
+        ]);
+        $newWard = Location::create([
+            'name' => 'Ward Fresh',
+            'code' => 'WARD02',
+            'type' => 'ward',
+            'parent_id' => $newProvince->id,
+            'display_order' => 1,
+            'is_active' => true,
+        ]);
+
+        ShippingFee::create([
+            'city_id' => $oldCity->id,
+            'province_id' => $oldProvince->id,
+            'ward_id' => $oldWard->id,
+            'amount' => 15000,
+        ]);
+        ShippingFee::create([
+            'city_id' => $newCity->id,
+            'province_id' => $newProvince->id,
+            'ward_id' => $newWard->id,
+            'amount' => 45000,
+        ]);
+
+        $this->post('/calculate-fee', [
+            'city_id' => $oldCity->id,
+            'province_id' => $oldProvince->id,
+            'ward_id' => $oldWard->id,
+        ])->assertOk()
+            ->assertJson(['fee' => 15000.0]);
+
+        $response = $this->postJson('/confirm-order', [
+            'shipping_email' => 'fresh-fee@example.com',
+            'shipping_name' => 'Fresh Fee Customer',
+            'shipping_address' => '123 Fresh Street',
+            'shipping_phone' => '0987654321',
+            'shipping_method' => 'cod',
+            'city_id' => $newCity->id,
+            'province_id' => $newProvince->id,
+            'ward_id' => $newWard->id,
+        ]);
+
+        $response->assertOk()
+            ->assertJsonStructure(['message', 'order_code']);
+
+        $order = \App\Infrastructure\Persistence\Eloquent\Order\Order::with('shipping')->latest('id')->firstOrFail();
+
+        $this->assertEquals(45000.0, $order->shipping_total);
+        $this->assertEquals(45000.0, $order->shipping?->shipping_fee);
     }
 
     public function test_guest_is_redirected_to_login_before_accessing_checkout_steps(): void
@@ -298,7 +381,7 @@ class CheckoutFlowTest extends TestCase
 
         $discountedProduct = $this->app->make(\App\Application\Catalog\Services\ProductService::class)->createProduct([
             'name' => 'Discount Checkout Product',
-            'slug' => 'discount-checkout-product-' . Str::random(6),
+            'slug' => 'discount-checkout-product-'.Str::random(6),
             'brand_id' => $brand->id,
             'primary_category_id' => $category->id,
             'price' => 300000,
@@ -399,6 +482,166 @@ class CheckoutFlowTest extends TestCase
         $this->assertNull(session('coupon'));
     }
 
+    public function test_customer_can_view_own_bank_transfer_instruction_page(): void
+    {
+        $customer = Customer::create([
+            'name' => 'Bank Transfer Customer',
+            'email' => 'bank-transfer@example.com',
+            'password' => bcrypt('secret123'),
+            'phone' => '0966666666',
+            'is_active' => true,
+        ]);
+
+        Session::put('customer_id', $customer->id);
+
+        $this->cartService->addItem($this->productId, 1);
+
+        $response = $this->postJson('/confirm-order', [
+            'shipping_email' => 'bank-transfer@example.com',
+            'shipping_name' => 'Bank Transfer Customer',
+            'shipping_address' => '123 Bank Street',
+            'shipping_phone' => '0966666666',
+            'shipping_method' => 'bank_transfer',
+        ]);
+
+        $orderCode = $response->json('order_code');
+
+        $this->get("/payment/bank-transfer/{$orderCode}")
+            ->assertOk()
+            ->assertSee('g-bank-transfer-instructions')
+            ->assertSee('Hướng dẫn chuyển khoản')
+            ->assertSee($orderCode)
+            ->assertSee('Thông tin chuyển khoản')
+            ->assertSee('Số tài khoản')
+            ->assertSee('Nội dung chuyển khoản')
+            ->assertSee('DH '.$orderCode)
+            ->assertSee('Các bước tiếp theo')
+            ->assertSee('Xem lịch sử đơn hàng')
+            ->assertSee('Tiếp tục mua sắm');
+    }
+
+    public function test_guest_is_redirected_to_login_when_accessing_bank_transfer_instruction_page(): void
+    {
+        $this->get('/payment/bank-transfer/ABC123XYZ')
+            ->assertRedirect('/dang-nhap?redirect=payment')
+            ->assertSessionHas('error', 'Vui lòng đăng nhập để xem thông tin thanh toán.');
+    }
+
+    public function test_customer_cannot_view_other_customer_bank_transfer_order(): void
+    {
+        $customer1 = Customer::create([
+            'name' => 'Customer One',
+            'email' => 'customer1@example.com',
+            'password' => bcrypt('secret123'),
+            'phone' => '0955555555',
+            'is_active' => true,
+        ]);
+
+        $customer2 = Customer::create([
+            'name' => 'Customer Two',
+            'email' => 'customer2@example.com',
+            'password' => bcrypt('secret123'),
+            'phone' => '0944444444',
+            'is_active' => true,
+        ]);
+
+        Session::put('customer_id', $customer1->id);
+        $this->cartService->addItem($this->productId, 1);
+
+        $response = $this->postJson('/confirm-order', [
+            'shipping_email' => 'customer1@example.com',
+            'shipping_name' => 'Customer One',
+            'shipping_address' => '123 Test Street',
+            'shipping_phone' => '0955555555',
+            'shipping_method' => 'bank_transfer',
+        ]);
+
+        $orderCode = $response->json('order_code');
+
+        Session::put('customer_id', $customer2->id);
+
+        $this->get("/payment/bank-transfer/{$orderCode}")
+            ->assertRedirect('/history')
+            ->assertSessionHas('error', 'Bạn không có quyền xem đơn hàng này.');
+    }
+
+    public function test_bank_transfer_instruction_page_only_shows_for_bank_transfer_orders(): void
+    {
+        $customer = Customer::create([
+            'name' => 'COD Customer',
+            'email' => 'cod@example.com',
+            'password' => bcrypt('secret123'),
+            'phone' => '0933333333',
+            'is_active' => true,
+        ]);
+
+        Session::put('customer_id', $customer->id);
+        $this->cartService->addItem($this->productId, 1);
+
+        $response = $this->postJson('/confirm-order', [
+            'shipping_email' => 'cod@example.com',
+            'shipping_name' => 'COD Customer',
+            'shipping_address' => '123 COD Street',
+            'shipping_phone' => '0933333333',
+            'shipping_method' => 'cod',
+        ]);
+
+        $orderCode = $response->json('order_code');
+
+        $this->get("/payment/bank-transfer/{$orderCode}")
+            ->assertRedirect("/view-history-order/{$orderCode}")
+            ->assertSessionHas('error', 'Đơn hàng này không sử dụng phương thức chuyển khoản ngân hàng.');
+    }
+
+    public function test_bank_transfer_instruction_page_shows_paid_status_correctly(): void
+    {
+        $customer = Customer::create([
+            'name' => 'Paid Customer',
+            'email' => 'paid@example.com',
+            'password' => bcrypt('secret123'),
+            'phone' => '0922222222',
+            'is_active' => true,
+        ]);
+
+        Session::put('customer_id', $customer->id);
+        $this->cartService->addItem($this->productId, 1);
+
+        $response = $this->postJson('/confirm-order', [
+            'shipping_email' => 'paid@example.com',
+            'shipping_name' => 'Paid Customer',
+            'shipping_address' => '123 Paid Street',
+            'shipping_phone' => '0922222222',
+            'shipping_method' => 'bank_transfer',
+        ]);
+
+        $orderCode = $response->json('order_code');
+        $order = \App\Infrastructure\Persistence\Eloquent\Order\Order::where('code', $orderCode)->firstOrFail();
+        $order->update(['payment_status' => 'paid']);
+
+        $this->get("/payment/bank-transfer/{$orderCode}")
+            ->assertOk()
+            ->assertSee('Đơn hàng đã thanh toán')
+            ->assertSee('Đã thanh toán')
+            ->assertSee('Đơn hàng của bạn đã được thanh toán thành công');
+    }
+
+    public function test_invalid_order_code_redirects_to_history_with_error(): void
+    {
+        $customer = Customer::create([
+            'name' => 'Test Customer',
+            'email' => 'test@example.com',
+            'password' => bcrypt('secret123'),
+            'phone' => '0911111111',
+            'is_active' => true,
+        ]);
+
+        Session::put('customer_id', $customer->id);
+
+        $this->get('/payment/bank-transfer/INVALID123')
+            ->assertRedirect('/history')
+            ->assertSessionHas('error', 'Không tìm thấy đơn hàng.');
+    }
+
     protected function createProduct(): int
     {
         $brand = Brand::create([
@@ -417,7 +660,7 @@ class CheckoutFlowTest extends TestCase
 
         $product = $this->app->make(\App\Application\Catalog\Services\ProductService::class)->createProduct([
             'name' => 'Checkout Product',
-            'slug' => 'checkout-product-' . Str::random(6),
+            'slug' => 'checkout-product-'.Str::random(6),
             'brand_id' => $brand->id,
             'primary_category_id' => $category->id,
             'price' => 200000,
@@ -465,4 +708,3 @@ class CheckoutFlowTest extends TestCase
         return [$city, $province, $ward];
     }
 }
-

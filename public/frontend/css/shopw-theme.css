@@ -17083,3 +17083,1120 @@ a#scrollUp i {
         grid-template-columns: 1fr;
     }
 }
+
+
+/* ========================================
+   Product Detail Page - Additional Styles
+   ======================================== */
+
+/* Tabs Navigation */
+.g-product-detail .shopw-pdp-tabs-nav {
+  display: flex;
+  gap: 8px;
+  padding: 22px 24px 0;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.g-product-detail .shopw-tab-btn {
+  padding: 10px 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #fff;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.g-product-detail .shopw-tab-btn:hover {
+  background: #f8fafc;
+  border-color: var(--shopw-red);
+  color: var(--shopw-red);
+}
+
+.g-product-detail .shopw-tab-btn.active {
+  background: var(--shopw-red);
+  border-color: var(--shopw-red);
+  color: #fff;
+}
+
+.g-product-detail .shopw-pdp-tabs-content {
+  padding: 24px;
+}
+
+.g-product-detail .shopw-tab-pane {
+  display: none;
+  color: #334155;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.g-product-detail .shopw-tab-pane.active {
+  display: block;
+}
+
+.g-product-detail .shopw-tab-pane h3 {
+  margin: 0 0 16px;
+  color: var(--shopw-gray-900);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Product Grid */
+.shopw-product-grid {
+  display: grid;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.shopw-product-grid--4col {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 1199px) {
+  .shopw-product-grid--4col {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 991px) {
+  .shopw-product-grid--4col {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 575px) {
+  .shopw-product-grid--4col {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Product Card - Flat Structure */
+.g-product-detail .shopw-pdp-related .shopw-product-card,
+.g-product-detail .shopw-pdp-recommended .shopw-product-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.07);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.g-product-detail .shopw-pdp-related .shopw-product-card:hover,
+.g-product-detail .shopw-pdp-recommended .shopw-product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.12);
+  border-color: rgba(213, 0, 24, 0.22);
+}
+
+.g-product-detail .shopw-product-media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 16px;
+  border-radius: 12px 12px 0 0;
+  background: radial-gradient(circle at top, rgba(25, 195, 255, 0.12), rgba(255, 255, 255, 0) 58%);
+  text-decoration: none;
+}
+
+.g-product-detail .shopw-product-media img {
+  max-height: 180px;
+  width: auto;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.g-product-detail .shopw-product-card:hover .shopw-product-media img {
+  transform: scale(1.04);
+}
+
+.g-product-detail .shopw-product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 18px;
+  flex: 1 1 auto;
+}
+
+.g-product-detail .shopw-product-code {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: #EF4444;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.g-product-detail .shopw-product-name {
+  margin: 0;
+  min-height: 46px;
+}
+
+.g-product-detail .shopw-product-name a {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: var(--shopw-gray-900);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.55;
+  text-decoration: none;
+}
+
+.g-product-detail .shopw-product-name a:hover {
+  color: var(--shopw-red);
+}
+
+.g-product-detail .shopw-product-price-section {
+  margin-top: auto;
+}
+
+.g-product-detail .shopw-product-price-current {
+  color: var(--shopw-red);
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.g-product-detail .shopw-product-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px 18px;
+  border-top: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.g-product-detail .shopw-btn-detail,
+.g-product-detail .shopw-btn-cart {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.g-product-detail .shopw-btn-detail {
+  background: #fff;
+  border-color: #e5e7eb;
+  color: #475569;
+}
+
+.g-product-detail .shopw-btn-detail:hover {
+  background: #f8fafc;
+  border-color: var(--shopw-red);
+  color: var(--shopw-red);
+}
+
+.g-product-detail .shopw-btn-cart {
+  background: linear-gradient(120deg, var(--shopw-red), #ff4d5d);
+  color: #fff;
+}
+
+.g-product-detail .shopw-btn-cart:hover {
+  background: linear-gradient(120deg, #c00018, var(--shopw-red));
+  box-shadow: 0 4px 12px rgba(213, 0, 24, 0.3);
+}
+
+/* Section Titles */
+.g-product-detail .shopw-section-title {
+  margin: 0 0 20px;
+  color: var(--shopw-gray-900);
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+/* Recommended Products Section */
+.g-product-detail .shopw-pdp-recommended {
+  margin-top: 32px;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+}
+
+/* Review Section Styling */
+.g-product-detail .shopw-pdp-review-summary {
+  padding: 16px;
+  margin-bottom: 20px;
+  background: #f8fafc;
+  border-radius: 10px;
+}
+
+.g-product-detail .shopw-pdp-review-summary strong {
+  color: var(--shopw-gray-900);
+  font-size: 16px;
+}
+
+.g-product-detail .shopw-pdp-review-form {
+  margin-top: 24px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 10px;
+}
+
+.g-product-detail .shopw-pdp-review-form h4 {
+  margin: 0 0 16px;
+  color: var(--shopw-gray-900);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.g-product-detail .shopw-pdp-review-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.g-product-detail .shopw-pdp-review-fields input,
+.g-product-detail .shopw-pdp-review-fields textarea {
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.g-product-detail .shopw-pdp-review-fields input:focus,
+.g-product-detail .shopw-pdp-review-fields textarea:focus {
+  outline: none;
+  border-color: var(--shopw-red);
+  box-shadow: 0 0 0 3px rgba(213, 0, 24, 0.1);
+}
+
+.g-product-detail .shopw-btn-submit-review {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(120deg, var(--shopw-red), #ff4d5d);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.g-product-detail .shopw-btn-submit-review:hover {
+  background: linear-gradient(120deg, #c00018, var(--shopw-red));
+  box-shadow: 0 4px 12px rgba(213, 0, 24, 0.3);
+}
+
+/* Mobile Responsive */
+@media (max-width: 767px) {
+  .g-product-detail .shopw-pdp-tabs-nav {
+    padding: 16px;
+    gap: 6px;
+  }
+
+  .g-product-detail .shopw-tab-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  .g-product-detail .shopw-pdp-tabs-content {
+    padding: 16px;
+  }
+
+  .g-product-detail .shopw-section-title {
+    font-size: 20px;
+  }
+
+  .g-product-detail .shopw-product-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ========================================
+   Product Detail - Purchase Controls & Actions
+   ======================================== */
+
+/* Quantity Control */
+.g-product-detail .shopw-pdp-quantity {
+  margin-bottom: 20px;
+}
+
+.g-product-detail .shopw-pdp-quantity label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--shopw-gray-900);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.g-product-detail .shopw-pdp-qty-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  border: 2px solid #4A9B9B;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.g-product-detail .shopw-qty-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: #4A9B9B;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.g-product-detail .shopw-qty-btn:hover {
+  background: #3d8282;
+}
+
+.g-product-detail .shopw-qty-btn:active {
+  background: #2f6666;
+}
+
+.g-product-detail .shopw-qty-btn:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.g-product-detail .shopw-qty-input {
+  width: 70px;
+  height: 44px;
+  border: none;
+  background: #fff;
+  color: var(--shopw-gray-900);
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  -moz-appearance: textfield;
+}
+
+.g-product-detail .shopw-qty-input::-webkit-outer-spin-button,
+.g-product-detail .shopw-qty-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.g-product-detail .shopw-qty-input:focus {
+  outline: none;
+}
+
+.g-product-detail .shopw-qty-input:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Primary Action Buttons */
+.g-product-detail .shopw-pdp-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.g-product-detail .shopw-btn-add-cart,
+.g-product-detail .shopw-btn-buy-now {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.g-product-detail .shopw-btn-add-cart {
+  background: linear-gradient(135deg, #4A9B9B 0%, #5cb3b3 100%);
+  border-color: #4A9B9B;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(74, 155, 155, 0.3);
+}
+
+.g-product-detail .shopw-btn-add-cart:hover {
+  background: linear-gradient(135deg, #3d8282 0%, #4A9B9B 100%);
+  box-shadow: 0 6px 16px rgba(74, 155, 155, 0.4);
+  transform: translateY(-2px);
+}
+
+.g-product-detail .shopw-btn-add-cart:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(74, 155, 155, 0.3);
+}
+
+.g-product-detail .shopw-btn-add-cart:disabled {
+  background: #cbd5e1;
+  border-color: #cbd5e1;
+  color: #94a3b8;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.g-product-detail .shopw-btn-buy-now {
+  background: #fff;
+  border-color: #4A9B9B;
+  color: #4A9B9B;
+}
+
+.g-product-detail .shopw-btn-buy-now:hover {
+  background: #f0f9f9;
+  border-color: #3d8282;
+  color: #3d8282;
+  box-shadow: 0 4px 12px rgba(74, 155, 155, 0.2);
+}
+
+.g-product-detail .shopw-btn-buy-now:active {
+  background: #e6f5f5;
+}
+
+.g-product-detail .shopw-btn-buy-now:disabled {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #cbd5e1;
+  cursor: not-allowed;
+}
+
+/* Quick Action Buttons */
+.g-product-detail .shopw-pdp-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.g-product-detail .shopw-quick-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.g-product-detail .shopw-quick-action:hover {
+  background: #f8fafc;
+  border-color: #4A9B9B;
+  color: #4A9B9B;
+  box-shadow: 0 2px 8px rgba(74, 155, 155, 0.15);
+}
+
+.g-product-detail .shopw-quick-action:active {
+  background: #f0f9f9;
+  transform: scale(0.98);
+}
+
+.g-product-detail .shopw-quick-action i {
+  font-size: 14px;
+}
+
+/* Purchase Status Message */
+.g-product-detail .shopw-pdp-purchase-status {
+  min-height: 24px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.g-product-detail .shopw-pdp-purchase-status:empty {
+  display: none;
+}
+
+/* Feature/Service Cards */
+.g-product-detail .shopw-pdp-features {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.g-product-detail .shopw-pdp-feature-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f0f9f9 0%, #fff 100%);
+  border: 1px solid #d1e7e7;
+  transition: all 0.2s ease;
+}
+
+.g-product-detail .shopw-pdp-feature-card:hover {
+  background: linear-gradient(135deg, #e6f5f5 0%, #f8fafc 100%);
+  border-color: #4A9B9B;
+  box-shadow: 0 4px 12px rgba(74, 155, 155, 0.1);
+  transform: translateY(-2px);
+}
+
+.g-product-detail .shopw-pdp-feature-card i {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4A9B9B 0%, #5cb3b3 100%);
+  color: #fff;
+  font-size: 18px;
+}
+
+.g-product-detail .shopw-pdp-feature-card > div {
+  flex: 1 1 auto;
+}
+
+.g-product-detail .shopw-pdp-feature-card strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--shopw-gray-900);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.g-product-detail .shopw-pdp-feature-card p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Badges */
+.g-product-detail .shopw-pdp-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.g-product-detail .shopw-pdp-sku {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 6px;
+  background: #EF4444;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.g-product-detail .shopw-pdp-stock {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.g-product-detail .shopw-pdp-stock.is-in-stock {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+.g-product-detail .shopw-pdp-stock.is-out-stock {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+/* Purchase Section Container */
+.g-product-detail .shopw-pdp-purchase-section {
+  padding: 24px;
+  margin-top: 20px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
+  border: 2px solid #e5e7eb;
+}
+
+/* Specs Table */
+.g-product-detail .shopw-pdp-specs-table {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.g-product-detail .shopw-pdp-spec-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.g-product-detail .shopw-pdp-spec-row:last-child {
+  border-bottom: none;
+}
+
+.g-product-detail .shopw-pdp-spec-row > span {
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.g-product-detail .shopw-pdp-spec-row > strong,
+.g-product-detail .shopw-pdp-spec-row > a {
+  color: var(--shopw-gray-900);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.g-product-detail .shopw-pdp-spec-row > a:hover {
+  color: #4A9B9B;
+}
+
+/* Attributes */
+.g-product-detail .shopw-pdp-attributes {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.g-product-detail .shopw-pdp-attributes h3 {
+  margin: 0 0 16px;
+  color: var(--shopw-gray-900);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.g-product-detail .shopw-pdp-attribute-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.g-product-detail .shopw-pdp-attribute-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 2px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.g-product-detail .shopw-pdp-attribute-item:hover {
+  border-color: #4A9B9B;
+  background: #f0f9f9;
+  box-shadow: 0 4px 12px rgba(74, 155, 155, 0.15);
+}
+
+.g-product-detail .shopw-pdp-attribute-item.active {
+  border-color: #4A9B9B;
+  background: linear-gradient(135deg, #e6f5f5 0%, #f0f9f9 100%);
+  box-shadow: 0 4px 12px rgba(74, 155, 155, 0.2);
+}
+
+.g-product-detail .shopw-pdp-attribute-item img {
+  width: 100%;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.g-product-detail .shopw-pdp-attribute-item strong {
+  display: block;
+  color: var(--shopw-gray-900);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.g-product-detail .shopw-pdp-attribute-item span {
+  display: block;
+  color: #4A9B9B;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Mobile Responsive */
+@media (max-width: 767px) {
+  .g-product-detail .shopw-pdp-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .g-product-detail .shopw-pdp-features {
+    grid-template-columns: 1fr;
+  }
+
+  .g-product-detail .shopw-btn-add-cart,
+  .g-product-detail .shopw-btn-buy-now {
+    min-height: 48px;
+    font-size: 14px;
+  }
+
+  .g-product-detail .shopw-pdp-purchase-section {
+    padding: 16px;
+  }
+
+  .g-product-detail .shopw-pdp-attribute-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 575px) {
+  .g-product-detail .shopw-pdp-qty-control {
+    width: 100%;
+  }
+
+  .g-product-detail .shopw-qty-input {
+    flex: 1 1 auto;
+  }
+
+  .g-product-detail .shopw-quick-action {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-page {
+  background-color: #f8f9fa;
+  padding: 40px 0 60px;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-card {
+  margin-bottom: 20px;
+  padding: 30px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-note-card,
+.g-bank-transfer-instructions .dd-bank-transfer-total-amount,
+.g-bank-transfer-instructions .dd-bank-transfer-next-steps {
+  background-color: #f8f9fa;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-header {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid #e2e8f0;
+  text-align: center;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-header h1 {
+  margin: 0 0 10px;
+  color: #333;
+  font-size: 24px;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-header h1 i,
+.g-bank-transfer-instructions .dd-bank-transfer-info-section h3 i {
+  color: #22c55e;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-header h1 .dd-bank-transfer-title-icon--paid {
+  color: #22c55e;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-header h1 .dd-bank-transfer-title-icon--cancelled {
+  color: #ef4444;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-order-code {
+  color: #22c55e;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-status-badge.is-blue {
+  background-color: #e0f2fe;
+  color: #0369a1;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-status-badge.is-green {
+  background-color: #dcfce3;
+  color: #166534;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-status-badge.is-red {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-status-badge.is-yellow {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-status-badge.is-gray {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-info-section {
+  margin-bottom: 25px;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-info-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 15px;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-info-row:last-child {
+  border-bottom: none;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-info-row--total {
+  margin-top: 10px;
+  padding-top: 15px;
+  border-top: 2px solid #e2e8f0;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-info-label {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-info-label--total {
+  color: #333;
+  font-weight: 600;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-info-value {
+  color: #333;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-info-value.is-highlight,
+.g-bank-transfer-instructions .dd-bank-transfer-info-value--total {
+  color: #22c55e;
+  font-size: 16px;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-info-value.is-discount {
+  color: #ef4444;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-info-value--total {
+  font-size: 18px;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-total-amount {
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-total-label {
+  margin-bottom: 5px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-total-value {
+  color: #22c55e;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-alert {
+  margin-bottom: 20px;
+  padding: 15px;
+  border-left: 4px solid #f59e0b;
+  border-radius: 4px;
+  background-color: #fef3c7;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-alert--success {
+  border-left-color: #22c55e;
+  background-color: #dcfce3;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-alert--error {
+  border-left-color: #ef4444;
+  background-color: #fee2e2;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-alert p {
+  margin: 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-alert strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-next-steps {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 6px;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-next-steps h4 {
+  margin: 0 0 12px;
+  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-next-steps ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-next-steps li {
+  margin-bottom: 8px;
+  color: #555;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-action {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 200px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-action--primary {
+  background-color: #22c55e;
+  color: #fff;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-action--primary:hover {
+  background-color: #16a34a;
+  color: #fff;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-action--secondary {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-action--secondary:hover {
+  background-color: #e2e8f0;
+  color: #475569;
+}
+
+.g-bank-transfer-instructions .dd-bank-transfer-note {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .g-bank-transfer-instructions .dd-bank-transfer-card {
+    padding: 20px;
+  }
+
+  .g-bank-transfer-instructions .dd-bank-transfer-info-row {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .g-bank-transfer-instructions .dd-bank-transfer-info-value {
+    text-align: left;
+  }
+
+  .g-bank-transfer-instructions .dd-bank-transfer-actions {
+    flex-direction: column;
+  }
+
+  .g-bank-transfer-instructions .dd-bank-transfer-action {
+    width: 100%;
+  }
+}

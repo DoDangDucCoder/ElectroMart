@@ -1092,6 +1092,9 @@
     </script>
 
     <script type="text/javascript">
+        // LEGACY HANDLER - Replaced by modern handler below (line ~1540)
+        // Kept for reference only, do not use
+        /*
         $(document).ready(function() {
             $('.send_order').click(function() {
                 var total_after = $('.total_after').val();
@@ -1174,6 +1177,7 @@
 
             });
         });
+        */
     </script>
     <script type="text/javascript">
         hover_cart();
@@ -1575,10 +1579,18 @@
                         _token: _token
                     },
                     onSuccess: function(data) {
-                        swal("Thành công", "Đơn hàng của bạn đã được tiếp nhận. Chúng tôi sẽ liên hệ sớm nhất!", "success");
-                        window.setTimeout(function() {
-                            location.href = "{{ url('/history') }}";
-                        }, 2000);
+                        var orderCode = (data && data.order_code) ? data.order_code : '';
+                        
+                        if (shipping_method === 'bank_transfer') {
+                            // Redirect immediately to bank transfer instruction page
+                            location.href = "{{ url('/payment/bank-transfer') }}/" + orderCode;
+                        } else {
+                            // COD/VNPAY/other: keep existing behavior
+                            swal("Thành công", "Đơn hàng của bạn đã được tiếp nhận. Chúng tôi sẽ liên hệ sớm nhất!", "success");
+                            window.setTimeout(function() {
+                                location.href = "{{ url('/history') }}";
+                            }, 2000);
+                        }
                     },
                     onError: function(xhr) {
                         $button.prop('disabled', false);

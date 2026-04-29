@@ -105,6 +105,10 @@ Route::get('/view-history-order/{order_code}', [OrderController::class, 'view_hi
 Route::get('/history', [OrderController::class, 'history']);
 Route::post('/huy-don-hang', [OrderController::class, 'huy_don_hang']);
 
+// Bank transfer instruction page
+Route::get('/payment/bank-transfer/{order_code}', [CheckoutController::class, 'bankTransferInstructions'])
+    ->name('payment.bank-transfer');
+
 // Customer social login
 Route::get('/login-facebook-customer', [AdminController::class, 'login_facebook_customer']);
 Route::get('/customer/facebook/callback', [AdminController::class, 'callback_facebook_customer']);
