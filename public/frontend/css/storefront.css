@@ -1699,7 +1699,7 @@ body.modal-open #sosanh .modal-dialog {
 }
 
 .breadcrumbs .breadcrumb > li + li:before {
-    content: " ";
+    content: "\00a0";
 }
 
 #cart_items .cart_info {
@@ -23311,16 +23311,18 @@ body.tech-home {
     align-items: center;
     background: #ffffff;
     border-radius: 40px;
-    padding: 60px;
+    padding: 48px 56px;
     margin-top: 30px;
     margin-bottom: 30px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.04);
     border: 1px solid rgba(0, 0, 0, 0.03);
-    gap: 60px;
+    gap: 48px;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .shopw-home-hero__content {
-    flex: 1;
+    flex: 0 1 540px;
     max-width: 540px;
     padding-right: 20px;
 }
@@ -23400,12 +23402,15 @@ body.tech-home {
 }
 
 .shopw-home-hero__slider {
- flex: 1.2;
- position: relative;
- min-width: 0;
+    flex: 1 1 0;
+    max-width: 100%;
+    position: relative;
+    min-width: 0;
 }
 
 #slider-carousel.carousel {
+    width: 100%;
+    max-width: 100%;
  border-radius: 32px;
  overflow: hidden;
  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
@@ -23413,9 +23418,9 @@ body.tech-home {
 }
 
 .shopw-home-hero__image-wrapper {
- position: relative;
- width: 100%;
- padding-top: 60%; /* Adjusted for modern banner look */
+    position: relative;
+    width: 100%;
+    padding-top: 72%; /* Increased for more prominent display */
 }
 
 .shopw-home-hero__image {
@@ -23542,6 +23547,7 @@ body.tech-home {
  border-radius: 32px;
  }
  .shopw-home-hero__content {
+ flex: none;
  max-width: 100%;
  padding-right: 0;
  margin-bottom: 20px;
@@ -23553,7 +23559,9 @@ body.tech-home {
  font-size: 36px;
  }
  .shopw-home-hero__slider {
+ flex: none;
  width: 100%;
+ max-width: 100%;
  margin-bottom: 40px;
  }
  .shopw-home-hero__indicators {
