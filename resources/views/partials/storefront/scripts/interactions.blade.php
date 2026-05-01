@@ -2019,7 +2019,7 @@
         }, query.length >= 2 ? 140 : 0);
     }
 
-    $('#keywords').on('focus', function() {
+    $('#keywords').on('focus click', function() {
         scheduleSearchSuggest($.trim($(this).val()), true);
     });
 
@@ -2812,15 +2812,7 @@
                 },
                 onSuccess: function(data) {
                     var orderCode = (data && data.order_code) ? data.order_code : '';
-                    
-                    if (shipping_method === 'bank_transfer') {
-                        location.href = "{{ url('/payment/bank-transfer') }}/" + orderCode;
-                    } else {
-                        swal("Thành công", "Đơn hàng của bạn đã được tiếp nhận. Chúng tôi sẽ liên hệ sớm nhất!", "success");
-                        window.setTimeout(function() {
-                            location.href = "{{ url('/history') }}";
-                        }, 2000);
-                    }
+                    location.href = "{{ url('/view-history-order') }}/" + orderCode + "?just_placed=1";
                 },
                 onError: function(xhr) {
                     $button.prop('disabled', false);

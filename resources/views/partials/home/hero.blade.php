@@ -184,17 +184,7 @@
 <section id="slider" class="tech-home-hero-slider">
     <div class="container">
         <div class="shopw-home-hero">
-            <div class="shopw-home-hero__content">
-                <span class="shopw-home-hero__pill">ƯU ĐÃI CÔNG NGHỆ</span>
-                <h1 class="shopw-home-hero__title">Săn công nghệ mới,<br>nhận ưu đãi khủng</h1>
-                <p class="shopw-home-hero__desc">Khám phá laptop, điện thoại và phụ kiện chính hãng với mức giá tốt mỗi ngày.</p>
-                <div class="shopw-home-hero__actions">
-                    <a href="{{ url('/san-pham') }}" class="btn-shopw btn-shopw--primary">Mua ngay</a>
-                    <a href="{{ $heroBestSellingUrl }}" class="btn-shopw btn-shopw--outline">Xem ưu đãi</a>
-                </div>
-            </div>
-
-            <div class="shopw-home-hero__slider">
+            <div class="shopw-home-hero__main">
                 <div id="slider-carousel"
                     class="carousel slide"
                     data-ride="carousel"
@@ -205,18 +195,15 @@
                     <div class="carousel-inner">
                         @foreach ($heroSlides as $slide)
                             <div class="item {{ $loop->first ? 'active' : '' }}">
-                                <a href="{{ $slide['url'] }}" class="shopw-home-hero__slide-link" aria-label="{{ $slide['alt'] }}">
+                                <a href="{{ $slide['url'] }}" class="shopw-home-hero__slide-link">
                                     <div class="shopw-home-hero__image-wrapper">
                                         <img src="{{ $slide['src'] }}" alt="{{ $slide['alt'] }}" class="shopw-home-hero__image">
-
-                                        @if(filled($slide['headline']) && !str_starts_with($slide['headline'], 'Banner nổi bật'))
-                                            <div class="shopw-home-hero__caption">
-                                                <strong>{{ $slide['headline'] }}</strong>
-                                                @if(filled($slide['summary']))
-                                                    <p>{{ $slide['summary'] }}</p>
-                                                @endif
-                                            </div>
-                                        @endif
+                                        <div class="shopw-home-hero__caption">
+                                            <span class="shopw-home-hero__pill">HIỆU NĂNG BỨT PHÁ</span>
+                                            <h1 class="shopw-home-hero__title">TRẢI NGHIỆM ĐỈNH CAO</h1>
+                                            <p class="shopw-home-hero__desc">Laptop gaming chính hãng<br>Giá tốt - Bảo hành uy tín</p>
+                                            <span class="btn-shopw btn-shopw--primary">Khám phá ngay</span>
+                                        </div>
                                     </div>
                                 </a>
                             </div>
@@ -224,24 +211,45 @@
                     </div>
 
                     @if ($heroSlides->count() > 1)
-                        <a class="left carousel-control" href="#slider-carousel" data-slide="prev" aria-label="Slide trước">
-                            <i class="fa fa-angle-left" aria-hidden="true"></i>
-                        </a>
-                        <a class="right carousel-control" href="#slider-carousel" data-slide="next" aria-label="Slide sau">
-                            <i class="fa fa-angle-right" aria-hidden="true"></i>
-                        </a>
+                        <ol class="carousel-indicators shopw-home-hero__indicators">
+                            @foreach ($heroSlides as $key => $slide)
+                                <li data-target="#slider-carousel"
+                                    data-slide-to="{{ $key }}"
+                                    class="{{ $key === 0 ? 'active' : '' }}"></li>
+                            @endforeach
+                        </ol>
                     @endif
                 </div>
+            </div>
 
-                @if ($heroSlides->count() > 1)
-                    <ol class="carousel-indicators shopw-home-hero__indicators">
-                        @foreach ($heroSlides as $key => $slide)
-                            <li data-target="#slider-carousel"
-                                data-slide-to="{{ $key }}"
-                                class="{{ $key === 0 ? 'active' : '' }}"></li>
-                        @endforeach
-                    </ol>
-                @endif
+            <div class="shopw-home-hero__aside">
+                <div class="shopw-hero-util-card">
+                    <div class="shopw-hero-util-icon">
+                        <i class="fa fa-percent"></i>
+                    </div>
+                    <div class="shopw-hero-util-body">
+                        <strong>Trả góp 0%</strong>
+                        <span>Duyệt nhanh online</span>
+                    </div>
+                </div>
+                <div class="shopw-hero-util-card">
+                    <div class="shopw-hero-util-icon">
+                        <i class="fa fa-shield"></i>
+                    </div>
+                    <div class="shopw-hero-util-body">
+                        <strong>Bảo hành chính hãng</strong>
+                        <span>An tâm sử dụng</span>
+                    </div>
+                </div>
+                <div class="shopw-hero-util-card">
+                    <div class="shopw-hero-util-icon">
+                        <i class="fa fa-refresh"></i>
+                    </div>
+                    <div class="shopw-hero-util-body">
+                        <strong>1 đổi 1 trong 30 ngày</strong>
+                        <span>Lỗi kỹ thuật</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

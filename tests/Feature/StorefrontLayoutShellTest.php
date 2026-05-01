@@ -11,8 +11,8 @@ use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use App\Models\Slider;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -22,8 +22,11 @@ class StorefrontLayoutShellTest extends TestCase
     use RefreshDatabase;
 
     protected ProductService $productService;
+
     protected CartService $cartService;
+
     protected ProductCategory $category;
+
     protected Brand $brand;
 
     protected function setUp(): void
@@ -91,9 +94,9 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertSee('tech-flash-sale-badge', false)
             ->assertSee('tech-sale-prev', false)
             ->assertSee('tech-sale-next', false)
-            ->assertSee('Tin tức nổi bật')
-            ->assertSee('Thương hiệu')
-            ->assertSee('Sản phẩm')
+            ->assertSee('TIN TỨC MỚI')
+            ->assertSee('Thương hiệu đối tác')
+            ->assertSee('VỀ CHÚNG TÔI')
             ->assertSee('Momo')
             ->assertDontSee('class="header_top"', false)
             ->assertDontSee('social-icons', false)
@@ -133,8 +136,8 @@ class StorefrontLayoutShellTest extends TestCase
             ->assertDontSee('class="header_top"', false)
             ->assertDontSee('social-icons', false)
             ->assertDontSee('Storefront công nghệ')
-            ->assertSee('ShopW')
-            ->assertSee('shopw-logo-copy', false)
+            ->assertSee('DangDuc')
+            ->assertDontSee('shopw-logo-copy', false)
             ->assertDontSee('theme-toggle-container')
             ->assertSee('shopw-mobile-drawer', false)
             ->assertSee('shopw-mobile-quicklink-arrow', false)
@@ -212,7 +215,7 @@ class StorefrontLayoutShellTest extends TestCase
 
         $this->withSession([
             'customer_id' => $customer->id,
-        ])->get('/danh-muc/' . $this->category->slug)
+        ])->get('/danh-muc/'.$this->category->slug)
             ->assertOk()
             ->assertSee('shopw-account-menu', false)
             ->assertSee('shopw-account-summary--avatar-only', false)
@@ -228,7 +231,7 @@ class StorefrontLayoutShellTest extends TestCase
     {
         $this->createProduct('Shell Category Product');
 
-        $response = $this->get('/danh-muc/' . $this->category->slug);
+        $response = $this->get('/danh-muc/'.$this->category->slug);
 
         $response
             ->assertOk()
@@ -257,7 +260,7 @@ class StorefrontLayoutShellTest extends TestCase
             'sale_value' => 7000000,
         ]);
 
-        $this->get('/danh-muc/' . $this->category->slug)
+        $this->get('/danh-muc/'.$this->category->slug)
             ->assertOk()
             ->assertSee('start_price=15000000', false)
             ->assertDontSee('start_price=22000000', false);
@@ -277,12 +280,12 @@ class StorefrontLayoutShellTest extends TestCase
 
         Artisan::call('view:clear');
 
-        $this->get('/danh-muc/' . $this->category->slug)
+        $this->get('/danh-muc/'.$this->category->slug)
             ->assertOk()
             ->assertSee('start_price=22000000', false)
             ->assertDontSee('start_price=15000000', false);
 
-        $this->get('/danh-muc/' . $this->category->slug)
+        $this->get('/danh-muc/'.$this->category->slug)
             ->assertOk()
             ->assertSee('start_price=22000000', false)
             ->assertDontSee('start_price=15000000', false);
@@ -315,7 +318,7 @@ class StorefrontLayoutShellTest extends TestCase
         $this->ensureSliderTableExists();
         $sliderDirectory = public_path('uploads/slider');
         $sliderImage = 'shell-slider-test.jpg';
-        $sliderPath = $sliderDirectory . DIRECTORY_SEPARATOR . $sliderImage;
+        $sliderPath = $sliderDirectory.DIRECTORY_SEPARATOR.$sliderImage;
 
         File::ensureDirectoryExists($sliderDirectory);
         File::put($sliderPath, 'slider');
@@ -342,7 +345,7 @@ class StorefrontLayoutShellTest extends TestCase
         $product = $this->createProduct('Shell Brand Product');
         Schema::dropIfExists('tbl_slider');
 
-        $this->get('/thuong-hieu/' . $this->brand->slug)
+        $this->get('/thuong-hieu/'.$this->brand->slug)
             ->assertOk()
             ->assertSee($product->name)
             ->assertSee($this->brand->name);
@@ -352,14 +355,14 @@ class StorefrontLayoutShellTest extends TestCase
     {
         return $this->productService->createProduct(array_merge([
             'name' => $name,
-            'slug' => Str::slug($name) . '-' . Str::random(5),
+            'slug' => Str::slug($name).'-'.Str::random(5),
             'brand_id' => $this->brand->id,
             'primary_category_id' => $this->category->id,
             'price' => 13500000,
             'cost_price' => 10000000,
             'stock_quantity' => 12,
-            'description' => '<p>Mô tả ' . $name . '</p>',
-            'content' => '<p>Nội dung ' . $name . '</p>',
+            'description' => '<p>Mô tả '.$name.'</p>',
+            'content' => '<p>Nội dung '.$name.'</p>',
             'category_ids' => [$this->category->id],
             'tags' => 'layout,shell',
             'is_active' => true,
@@ -383,4 +386,3 @@ class StorefrontLayoutShellTest extends TestCase
         });
     }
 }
-

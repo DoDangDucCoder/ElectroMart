@@ -6,8 +6,8 @@ use OpenApi\Attributes as OA;
 
 #[OA\Info(
     version: '1.0.0',
-    title: 'ShopW API',
-    description: 'Tài liệu API công khai và quản trị cho nền tảng thương mại điện tử ShopW.'
+    title: 'DangDuc API',
+    description: 'Tài liệu API công khai và quản trị cho nền tảng thương mại điện tử DangDuc.'
 )]
 #[OA\Server(
     url: '/',
@@ -35,7 +35,5 @@ class ShopApiDocumentation
             ),
         ]
     )]
-    public function health(): void
-    {
-    }
+    public function health(): void {}
 }

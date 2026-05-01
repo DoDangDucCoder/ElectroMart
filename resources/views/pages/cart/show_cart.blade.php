@@ -92,14 +92,14 @@
                                         @endif
                                     </td>
                                     <td>
-                                        @if (Session::get('customer_id'))
-                                            <a class="btn btn-default check_out" href="{{ url('/checkout') }}">Đặt hàng</a>
-                                        @else
-                                            <a class="btn btn-default check_out"
-                                                href="{{ url('/dang-nhap') . '?' . http_build_query([
-                                                    'redirect' => 'checkout',
-                                                    'redirect_to' => url('/checkout'),
-                                                ]) }}">Đăng nhập để thanh toán</a>
+                                        <a class="btn btn-default check_out" href="{{ url('/checkout') }}">Thanh toán</a>
+                                        @if (!Session::get('customer_id'))
+                                            <p class="mt-2 text-muted" style="margin-top: 10px; font-size: 13px;">
+                                                <i class="fa fa-info-circle"></i> Đã có tài khoản?
+                                                <a href="{{ url('/dang-nhap') . '?' . http_build_query(['redirect' => 'checkout', 'redirect_to' => url('/checkout')]) }}">
+                                                    Đăng nhập để đặt hàng nhanh hơn
+                                                </a>
+                                            </p>
                                         @endif
                                     </td>
                                     <td colspan="3" class="cart_totals">

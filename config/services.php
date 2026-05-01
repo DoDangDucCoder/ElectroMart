@@ -1,6 +1,6 @@
 <?php
 
-$storefrontBrandName = env('STOREFRONT_BRAND_NAME', 'ShopW');
+$storefrontBrandName = env('STOREFRONT_BRAND_NAME', 'DangDuc');
 $storefrontBrandDescriptor = env('STOREFRONT_BRAND_DESCRIPTOR', 'Cửa hàng công nghệ');
 $storefrontContactPhoneDisplay = env('STOREFRONT_CONTACT_PHONE_DISPLAY', '1900.0000');
 $storefrontContactPhoneHref = (string) env('STOREFRONT_CONTACT_PHONE_HREF', '19000000');

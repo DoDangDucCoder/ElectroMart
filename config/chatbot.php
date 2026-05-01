@@ -1,12 +1,12 @@
 <?php
 
-$storefrontBrandName = env('STOREFRONT_BRAND_NAME', 'ShopW');
+$storefrontBrandName = env('STOREFRONT_BRAND_NAME', 'DangDuc');
 $storefrontHotline = env('STOREFRONT_CONTACT_PHONE_DISPLAY', '1900.0000');
 $contactSupportLabel = env('STOREFRONT_LABEL_CONTACT_SUPPORT', 'Liên hệ hỗ trợ');
 $contactPageLabel = env('STOREFRONT_LABEL_CONTACT_PAGE', 'Trang liên hệ');
 
 return [
-    'welcome_message' => 'Xin chào, tôi là trợ lý bán hàng của ' . $storefrontBrandName . '. Tôi có thể giúp bạn tìm sản phẩm, gợi ý mặt hàng phù hợp hoặc trả lời các câu hỏi thường gặp.',
+    'welcome_message' => 'Xin chào, tôi là trợ lý bán hàng của '.$storefrontBrandName.'. Tôi có thể giúp bạn tìm sản phẩm, gợi ý mặt hàng phù hợp hoặc trả lời các câu hỏi thường gặp.',
 
     'fallback_message' => 'Tôi chưa hiểu rõ yêu cầu này. Bạn có thể hỏi theo các cách như: "tìm iPhone dưới 20 triệu", "gợi ý cho tôi laptop gaming", hoặc "chính sách bảo hành thế nào?".',
 
@@ -29,7 +29,7 @@ return [
         [
             'intent' => 'warranty',
             'keywords' => ['bao hanh', 'hau mai', 'bao tri'],
-            'message' => 'Chính sách bảo hành phụ thuộc từng sản phẩm và thương hiệu. Bạn có thể xem chi tiết trong trang sản phẩm hoặc liên hệ hotline ' . $storefrontHotline . ' để được kiểm tra nhanh tình trạng bảo hành.',
+            'message' => 'Chính sách bảo hành phụ thuộc từng sản phẩm và thương hiệu. Bạn có thể xem chi tiết trong trang sản phẩm hoặc liên hệ hotline '.$storefrontHotline.' để được kiểm tra nhanh tình trạng bảo hành.',
             'actions' => [
                 ['label' => $contactSupportLabel, 'path' => '/lien-he'],
                 ['label' => 'Tra cứu đơn hàng', 'path' => '/history'],
@@ -47,7 +47,7 @@ return [
         [
             'intent' => 'support',
             'keywords' => ['hotline', 'lien he', 'ho tro', 'cua hang', 'showroom'],
-            'message' => 'Bạn có thể liên hệ hotline ' . $storefrontHotline . ' hoặc mở trang Liên hệ để xem thông tin cửa hàng, địa chỉ và khung giờ hỗ trợ.',
+            'message' => 'Bạn có thể liên hệ hotline '.$storefrontHotline.' hoặc mở trang Liên hệ để xem thông tin cửa hàng, địa chỉ và khung giờ hỗ trợ.',
             'actions' => [
                 ['label' => $contactPageLabel, 'path' => '/lien-he'],
             ],

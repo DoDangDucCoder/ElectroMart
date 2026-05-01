@@ -10,12 +10,10 @@
         $discountType = data_get($coupon, 'type');
         $discountValue = (float) data_get($coupon, 'value', 0);
         $isLoggedIn = (bool) Session::get('customer_id');
-        $checkoutUrl = $isLoggedIn
-            ? url('/checkout')
-            : (url('/dang-nhap') . '?' . http_build_query([
-                'redirect' => 'checkout',
-                'redirect_to' => url('/checkout'),
-            ]));
+        $checkoutUrl = url('/checkout');
+        /*
+        $isLoggedIn ? url('/checkout') : (url('/dang-nhap') . '?' . http_build_query(['redirect' => 'checkout', 'redirect_to' => url('/checkout')]));
+        */
     @endphp
 
     <div class="dd-cart-page">
@@ -54,20 +52,14 @@
                         <div class="dd-cart-empty-icon">
                             <i class="fa fa-shopping-cart"></i>
                         </div>
-                        @if (!$isLoggedIn)
-                            <p class="dd-cart-empty-message">Bạn chưa đăng nhập</p>
-                            <p class="dd-cart-empty-hint">Bạn chưa đăng nhập vào hệ thống để tiến hành mua hàng, vui lòng đăng nhập để tiếp tục.</p>
-                            <div class="dd-cart-empty-actions">
+                        <p class="dd-cart-empty-message">Giỏ hàng trống</p>
+                        <p class="dd-cart-empty-hint">Giỏ hàng của bạn đang trống. Hãy khám phá và thêm sản phẩm yêu thích vào giỏ hàng.</p>
+                        <div class="dd-cart-empty-actions">
+                            @if (!$isLoggedIn)
                                 <a href="{{ url('/dang-nhap') }}" class="dd-btn-primary">Đăng nhập</a>
-                                <a href="{{ url('/san-pham') }}" class="dd-btn-secondary">Tiếp tục mua hàng</a>
-                            </div>
-                        @else
-                            <p class="dd-cart-empty-message">Giỏ hàng trống</p>
-                            <p class="dd-cart-empty-hint">Giỏ hàng của bạn đang trống. Hãy khám phá và thêm sản phẩm yêu thích vào giỏ hàng.</p>
-                            <div class="dd-cart-empty-actions">
-                                <a href="{{ url('/san-pham') }}" class="dd-btn-primary">Tiếp tục mua hàng</a>
-                            </div>
-                        @endif
+                            @endif
+                            <a href="{{ url('/san-pham') }}" class="{{ $isLoggedIn ? 'dd-btn-primary' : 'dd-btn-secondary' }}">Tiếp tục mua hàng</a>
+                        </div>
                     </div>
                 @else
                     <form action="{{ url('/update-cart') }}" method="POST" class="dd-cart-form">
@@ -163,9 +155,15 @@
                     @if ($cartItems->isEmpty())
                         <button type="button" class="dd-btn-checkout" disabled>Thanh toán ngay</button>
                     @else
-                        <a href="{{ $checkoutUrl }}" class="dd-btn-checkout">
-                            {{ $isLoggedIn ? 'Thanh toán ngay' : 'Đăng nhập để thanh toán' }}
-                        </a>
+                        <a href="{{ $checkoutUrl }}" class="dd-btn-checkout">Thanh toán ngay</a>
+                        @if (!$isLoggedIn)
+                            <p style="margin-top: 10px; font-size: 13px; text-align: center; color: #64748b;">
+                                <i class="fa fa-info-circle"></i> Đã có tài khoản?
+                                <a href="{{ url('/dang-nhap') . '?' . http_build_query(['redirect' => 'checkout', 'redirect_to' => url('/checkout')]) }}" style="color: #06b6d4; font-weight: 600;">
+                                    Đăng nhập
+                                </a>
+                            </p>
+                        @endif
                     @endif
 
                     <a href="{{ url('/san-pham') }}" class="dd-link-continue">Tiếp tục mua hàng</a>

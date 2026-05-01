@@ -8,7 +8,6 @@ class PasswordRecoveryMailData
         public readonly string $title,
         public readonly string $email,
         public readonly string $resetUrl,
-        public readonly string $shopName = 'ShopW'
-    ) {
-    }
+        public readonly string $shopName = 'DangDuc'
+    ) {}
 }

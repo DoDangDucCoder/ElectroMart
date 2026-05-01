@@ -13,11 +13,11 @@ use Illuminate\Http\Request;
 class CategoryProduct extends Controller
 {
     use LegacyStorefrontContext;
+
     public function __construct(
         private readonly CategoryService $categoryService,
         private readonly ProductService $productService,
-    ) {
-    }
+    ) {}
 
     public function show_category_home(Request $request, string $slug)
     {
@@ -76,6 +76,7 @@ class CategoryProduct extends Controller
             'selected_sort' => $selectedSort,
             'filter_start_price' => $selectedMin,
             'filter_end_price' => $selectedMax,
+            'price_buckets' => $this->buildPriceBuckets($rangeMin, $rangeMax, $slug),
         ]);
     }
 
@@ -146,5 +147,4 @@ class CategoryProduct extends Controller
 
         return in_array($sortBy, $allowedSorts, true) ? $sortBy : 'none';
     }
-
 }

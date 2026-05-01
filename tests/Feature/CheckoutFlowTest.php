@@ -54,15 +54,14 @@ class CheckoutFlowTest extends TestCase
 
         $this->get('/checkout')
             ->assertOk()
-            ->assertSee('g-checkout')
-            ->assertSee('shopw-checkout-flow', false)
-            ->assertSee('shopw-checkout-assurance-grid', false)
-            ->assertSee('shopw-checkout-support-card', false)
+            ->assertSee('g-checkout-redesign')
+            ->assertSee('shopw-checkout-container', false)
+            ->assertSee('why-choose-us', false)
             ->assertSee('shipping_email')
             ->assertSee('calculate_delivery')
             ->assertSee('send_order')
-            ->assertSee('Tóm tắt đơn hàng')
-            ->assertSee('data-checkout-fee-display="hero"', false)
+            ->assertSee('Thông tin giao hàng')
+            ->assertSee('data-checkout-fee-display="method"', false)
             ->assertSee('data-checkout-grand-total-display="summary"', false)
             ->assertSee('checkout_delivery_notice', false)
             ->assertSee('checkout_base_total', false);
@@ -204,28 +203,25 @@ class CheckoutFlowTest extends TestCase
         $this->assertEquals(45000.0, $order->shipping?->shipping_fee);
     }
 
-    public function test_guest_is_redirected_to_login_before_accessing_checkout_steps(): void
+    public function test_guest_can_access_checkout_steps(): void
     {
         $this->cartService->addItem($this->productId, 1);
 
         $this->get('/checkout')
-            ->assertRedirect('/dang-nhap?redirect=checkout')
-            ->assertSessionHas('error', 'Vui lòng đăng nhập để tiếp tục thanh toán.');
+            ->assertOk();
 
         $this->get('/payment')
-            ->assertRedirect('/dang-nhap?redirect=payment')
-            ->assertSessionHas('error', 'Vui lòng đăng nhập để tiếp tục thanh toán.');
+            ->assertOk();
     }
 
-    public function test_stale_customer_session_is_redirected_back_to_login_before_checkout(): void
+    public function test_stale_customer_session_is_treated_as_guest_before_checkout(): void
     {
         $this->cartService->addItem($this->productId, 1);
 
         Session::put('customer_id', 999999);
 
         $this->get('/checkout')
-            ->assertRedirect('/dang-nhap?redirect=checkout')
-            ->assertSessionHas('error', 'Vui lòng đăng nhập để tiếp tục thanh toán.');
+            ->assertOk();
 
         $this->assertNull(session('customer_id'));
     }
@@ -260,33 +256,41 @@ class CheckoutFlowTest extends TestCase
             ->assertJsonValidationErrors(['city_id', 'province_id', 'ward_id']);
     }
 
-    public function test_checkout_requires_valid_customer_session_to_confirm_order(): void
+    public function test_guest_can_confirm_order(): void
     {
         $this->cartService->addItem($this->productId, 1);
 
-        $this->postJson('/confirm-order', [
+        $response = $this->postJson('/confirm-order', [
             'shipping_email' => 'customer@example.com',
             'shipping_name' => 'Guest Checkout',
             'shipping_address' => '123 Test Street',
             'shipping_phone' => '0900000001',
             'shipping_method' => 'cod',
-        ])->assertStatus(401)
-            ->assertJson([
-                'message' => 'Vui lòng đăng nhập trước khi đặt hàng.',
-            ]);
+        ]);
 
+        $response->assertStatus(200)
+            ->assertJsonStructure(['message', 'order_code']);
+
+        $this->assertEquals($response->json('order_code'), Session::get('guest_order_code'));
+    }
+
+    public function test_stale_session_checkout_is_treated_as_guest(): void
+    {
+        $this->cartService->addItem($this->productId, 1);
         Session::put('customer_id', 999999);
 
-        $this->postJson('/confirm-order', [
+        $response = $this->postJson('/confirm-order', [
             'shipping_email' => 'customer@example.com',
             'shipping_name' => 'Stale Session Checkout',
             'shipping_address' => '123 Test Street',
             'shipping_phone' => '0900000001',
             'shipping_method' => 'cod',
-        ])->assertStatus(401)
-            ->assertJson([
-                'message' => 'Vui lòng đăng nhập trước khi đặt hàng.',
-            ]);
+        ]);
+
+        $response->assertStatus(200)
+            ->assertJsonStructure(['message', 'order_code']);
+
+        $this->assertNull(Session::get('customer_id'));
     }
 
     public function test_checkout_handles_empty_cart_failure_paths(): void
@@ -520,11 +524,23 @@ class CheckoutFlowTest extends TestCase
             ->assertSee('Tiếp tục mua sắm');
     }
 
-    public function test_guest_is_redirected_to_login_when_accessing_bank_transfer_instruction_page(): void
+    public function test_guest_can_view_bank_transfer_instruction_page_after_checkout(): void
     {
-        $this->get('/payment/bank-transfer/ABC123XYZ')
-            ->assertRedirect('/dang-nhap?redirect=payment')
-            ->assertSessionHas('error', 'Vui lòng đăng nhập để xem thông tin thanh toán.');
+        $this->cartService->addItem($this->productId, 1);
+
+        $response = $this->postJson('/confirm-order', [
+            'shipping_email' => 'guest@example.com',
+            'shipping_name' => 'Guest Bank Transfer',
+            'shipping_address' => '123 Guest Street',
+            'shipping_phone' => '0911111111',
+            'shipping_method' => 'bank_transfer',
+        ]);
+
+        $orderCode = $response->json('order_code');
+
+        $this->get("/payment/bank-transfer/{$orderCode}")
+            ->assertOk()
+            ->assertSee('Hướng dẫn chuyển khoản');
     }
 
     public function test_customer_cannot_view_other_customer_bank_transfer_order(): void

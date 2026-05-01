@@ -17,8 +17,8 @@ class LegacyMailWorkflowService
 {
     public function sendCouponCampaign(string $couponCode, bool $vipOnly): array
     {
-        $couponTable = (new Coupon())->getTable();
-        $customerTable = (new Customer())->getTable();
+        $couponTable = (new Coupon)->getTable();
+        $customerTable = (new Customer)->getTable();
 
         if (
             ! Schema::hasTable($couponTable) ||
@@ -72,8 +72,8 @@ class LegacyMailWorkflowService
         }
 
         $now = Carbon::now('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
-        $title = 'Mã khuyến mãi ngày ' . $now;
-        $brandName = (string) config('services.storefront_brand.name', 'ShopW');
+        $title = 'Mã khuyến mãi ngày '.$now;
+        $brandName = (string) config('services.storefront_brand.name', 'DangDuc');
         $mailData = CouponCampaignMailData::fromCoupon(
             $coupon,
             $vipOnly ? 'khách hàng thân thiết' : 'khách hàng thường',
@@ -94,7 +94,7 @@ class LegacyMailWorkflowService
 
     public function sendPasswordRecovery(string $email): array
     {
-        if (! Schema::hasTable((new Customer())->getTable())) {
+        if (! Schema::hasTable((new Customer)->getTable())) {
             return $this->result(false, 'Dữ liệu khách hàng hiện chưa sẵn sàng trên môi trường này.');
         }
 
@@ -108,9 +108,9 @@ class LegacyMailWorkflowService
         $customer->save();
 
         $now = Carbon::now('Asia/Ho_Chi_Minh')->format('d-m-Y');
-        $brandName = (string) config('services.storefront_brand.name', 'ShopW');
-        $title = 'Lấy lại mật khẩu ' . $brandName . ' ' . $now;
-        $link = url('/update-new-pass?email=' . urlencode($email) . '&token=' . urlencode($token));
+        $brandName = (string) config('services.storefront_brand.name', 'DangDuc');
+        $title = 'Lấy lại mật khẩu '.$brandName.' '.$now;
+        $link = url('/update-new-pass?email='.urlencode($email).'&token='.urlencode($token));
         $mailData = new PasswordRecoveryMailData(
             title: $title,
             email: $email,
@@ -128,7 +128,7 @@ class LegacyMailWorkflowService
 
     public function resetPassword(string $email, string $token, string $password): array
     {
-        if (! Schema::hasTable((new Customer())->getTable())) {
+        if (! Schema::hasTable((new Customer)->getTable())) {
             return $this->result(false, 'Dữ liệu khách hàng hiện chưa sẵn sàng trên môi trường này.');
         }
 

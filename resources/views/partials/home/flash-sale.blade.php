@@ -1,4 +1,4 @@
-<section class="tech-section tech-flash-section" id="flash-sale">
+<section class="tech-section tech-flash-section tech-sale-section" id="flash-sale">
     <div class="container">
         <div class="tech-flash-shell">
             <div class="tech-flash-head">

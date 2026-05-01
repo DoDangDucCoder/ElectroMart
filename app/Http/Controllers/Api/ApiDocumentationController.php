@@ -10,9 +10,9 @@ class ApiDocumentationController extends Controller
     public function index(): JsonResponse
     {
         $documentation = [
-            'title' => 'ShopW API',
+            'title' => 'DangDuc API',
             'version' => '1.0.0',
-            'description' => 'API RESTful cho nền tảng thương mại điện tử ShopW',
+            'description' => 'API RESTful cho nền tảng thương mại điện tử DangDuc',
             'base_url' => url('/api/v1'),
             'authentication' => [
                 'type' => 'Mã truy cập Bearer',

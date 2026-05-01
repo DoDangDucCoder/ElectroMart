@@ -5,7 +5,7 @@
     $productId = (string) ($product['id'] ?? \Illuminate\Support\Str::slug($productName));
     $productUrl = $product['url'] ?? '#';
     $productImage = $product['image'] ?? asset('uploads/product/no-image.svg');
-    $productBrand = $product['brand'] ?? 'ShopW';
+    $productBrand = $product['brand'] ?? 'DangDuc';
     $originalPrice = (float) ($product['original_price'] ?? 0);
     $price = (float) ($product['price'] ?? 0);
 
@@ -66,16 +66,26 @@
             <a href="{{ $productUrl }}">{{ $productName }}</a>
         </h3>
 
-        <div class="tech-price-row">
-            @if ($originalPrice > $price)
-                <span class="tech-old-price">{{ $formatPrice($originalPrice) }}</span>
-            @endif
-
-            @if ($discountPercent > 0)
-                <span class="tech-discount-badge">-{{ $discountPercent }}%</span>
-            @endif
+        <div class="tech-product-rating">
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star"></i>
+            <i class="fa fa-star-o"></i>
+            <span>(128)</span>
         </div>
 
-        <div class="tech-sale-price">{{ $formatPrice($price) }}</div>
+        <div class="tech-product-footer">
+            <div class="tech-price-block">
+                @if ($originalPrice > $price)
+                    <span class="tech-old-price">{{ $formatPrice($originalPrice) }}</span>
+                @endif
+                <div class="tech-sale-price">{{ $formatPrice($price) }}</div>
+            </div>
+
+            <button type="button" class="tech-add-cart-btn" aria-label="Thêm {{ $productName }} vào giỏ">
+                <i class="fa fa-shopping-cart"></i>
+            </button>
+        </div>
     </div>
 </article>

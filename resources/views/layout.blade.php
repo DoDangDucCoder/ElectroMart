@@ -5,9 +5,14 @@
 
 <body class="@yield('body_class')">
 
-    @include('partials.storefront.header')
+    @php
+        $isMinimal = str_contains($__env->yieldContent('body_class'), 'minimal-layout');
+    @endphp
 
-    @include('partials.storefront.support-dock')
+    @if(!$isMinimal)
+        @include('partials.storefront.header')
+        @include('partials.storefront.support-dock')
+    @endif
 
     <!-------------------Slider Section------------------------->
     @yield('slider')
@@ -16,10 +21,11 @@
 
     @include('partials.storefront.content-shell')
 
-    @include('partials.storefront.compare-modal')
-    @include('partials.storefront.chatbot-widget')
-
-    @include('partials.storefront.footer')
+    @if(!$isMinimal)
+        @include('partials.storefront.compare-modal')
+        @include('partials.storefront.chatbot-widget')
+        @include('partials.storefront.footer')
+    @endif
 
     @include('partials.storefront.scripts-stack')
 

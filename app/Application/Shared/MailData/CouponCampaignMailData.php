@@ -14,18 +14,17 @@ class CouponCampaignMailData
         public readonly string $startCoupon,
         public readonly string $endCoupon,
         public readonly string $audienceLabel = 'khách hàng',
-        public readonly string $shopName = 'ShopW',
+        public readonly string $shopName = 'DangDuc',
         public readonly string $shopUrl = '',
         public readonly string $loginUrl = ''
-    ) {
-    }
+    ) {}
 
     public static function fromCoupon(
         Coupon $coupon,
         string $audienceLabel,
         ?string $shopUrl = null,
         ?string $loginUrl = null,
-        string $shopName = 'ShopW'
+        string $shopName = 'DangDuc'
     ): self {
         return new self(
             couponCode: (string) ($coupon->coupon_code ?? 'N/A'),
@@ -44,19 +43,19 @@ class CouponCampaignMailData
     public function discountLabel(): string
     {
         if ($this->couponCondition === 1) {
-            return 'Giảm ' . $this->couponNumber . '%';
+            return 'Giảm '.$this->couponNumber.'%';
         }
 
-        return 'Giảm ' . number_format($this->couponNumber, 0, ',', '.') . 'đ';
+        return 'Giảm '.number_format($this->couponNumber, 0, ',', '.').'đ';
     }
 
     public function couponTimeLabel(): string
     {
-        return number_format($this->couponTime) . ' mã';
+        return number_format($this->couponTime).' mã';
     }
 
     public function activeWindowLabel(): string
     {
-        return $this->startCoupon . ' đến ' . $this->endCoupon;
+        return $this->startCoupon.' đến '.$this->endCoupon;
     }
 }

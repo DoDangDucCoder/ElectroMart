@@ -1,51 +1,76 @@
-<footer class="tech-footer">
-    <div class="container">
+<footer class="tech-footer shopw-footer">
+    <div class="container tech-footer-inner shopw-footer-inner">
         <div class="row tech-footer-main">
-            <div class="col-xs-12 col-md-4">
-                <div class="tech-footer-brand">
-                    <span class="tech-footer-logo">
-                        <img src="{{ asset('uploads/contact/laptop-symbol-azy3.png') }}" alt="ShopW Tech">
-                    </span>
-                    <div>
-                        <h2>ShopW Tech</h2>
-                        <p>Trang mua sắm công nghệ tập trung vào laptop, điện thoại và phụ kiện chính hãng.</p>
+            <div class="col-xs-12 col-md-3">
+                <div class="tech-footer-brand shopw-footer-brand-card">
+                    <a href="{{ url('/') }}" aria-label="DangDuc">
+                        <img src="{{ asset('uploads/brand/dangduc-logo-dark-width-600.svg') }}" alt="DangDuc">
+                    </a>
+                    <p class="tech-footer-brand-description">Chuyên cung cấp laptop, linh kiện PC và phụ kiện công nghệ chính hãng. Cam kết giá tốt, bảo hành và hỗ trợ tận tâm.</p>
+                    <div class="tech-footer-social">
+                        <a href="#"><i class="fa fa-facebook"></i></a>
+                        <a href="#"><i class="fa fa-instagram"></i></a>
+                        <a href="#"><i class="fa fa-youtube-play"></i></a>
+                        <a href="#"><i class="fa fa-tiktok"></i></a>
                     </div>
                 </div>
             </div>
 
-            <div class="col-xs-6 col-md-2">
-                <h3>Thông tin</h3>
-                <a href="{{ url('/trang-chu') }}">Về cửa hàng</a>
-                <a href="{{ url('/lien-he') }}">Liên hệ</a>
-                <a href="#tech-news">Tin công nghệ</a>
+            <div class="col-xs-12 col-sm-4 col-md-3">
+                <h3>VỀ CHÚNG TÔI</h3>
+                <nav class="tech-footer-nav">
+                    <a href="{{ url('/trang-chu') }}">Giới thiệu</a>
+                    <a href="#">Tin tức</a>
+                    <a href="#">Tuyển dụng</a>
+                    <a href="{{ url('/lien-he') }}">Liên hệ</a>
+                </nav>
             </div>
 
-            <div class="col-xs-6 col-md-2">
-                <h3>Hỗ trợ</h3>
-                <a href="#">Chính sách bảo hành</a>
-                <a href="#">Đổi trả hàng</a>
-                <a href="#">Hướng dẫn thanh toán</a>
+            <div class="col-xs-12 col-sm-4 col-md-3">
+                <h3>CHÍNH SÁCH</h3>
+                <nav class="tech-footer-nav">
+                    <a href="#">Chính sách bảo hành</a>
+                    <a href="#">Chính sách đổi trả</a>
+                    <a href="#">Chính sách thanh toán</a>
+                    <a href="#">Chính sách vận chuyển</a>
+                    <a href="#">Chính sách bảo mật</a>
+                </nav>
             </div>
 
-            <div class="col-xs-12 col-md-4">
-                <h3>Sản phẩm</h3>
-                <div class="tech-footer-products">
-                    <a href="{{ url('/tim-kiem?keywords_submit=laptop') }}">Laptop</a>
-                    <a href="{{ url('/tim-kiem?keywords_submit=điện thoại') }}">Điện thoại</a>
-                    <a href="{{ url('/tim-kiem?keywords_submit=phụ kiện') }}">Phụ kiện</a>
-                    <a href="{{ url('/tim-kiem?keywords_submit=gaming') }}">Gaming gear</a>
+            <div class="col-xs-12 col-sm-4 col-md-3">
+                <div class="shopw-footer-newsletter-card">
+                    <h3>HỖ TRỢ KHÁCH HÀNG</h3>
+                    <nav class="tech-footer-nav">
+                        <a href="#">Trung tâm hỗ trợ</a>
+                        <a href="#">Hướng dẫn mua hàng</a>
+                        <a href="#">Hướng dẫn thanh toán</a>
+                        <a href="#">Kiểm tra đơn hàng</a>
+                        <a href="#">Câu hỏi thường gặp</a>
+                    </nav>
+                </div>
+                <div class="tech-footer-contact">
+                    <span><i class="fa fa-phone"></i> Hotline: 1900 1234</span>
+                    <span><i class="fa fa-envelope"></i> Email: support@dangduc.vn</span>
+                    <span><i class="fa fa-map-marker"></i> Địa chỉ: 123 Nguyễn Trãi, Thanh Xuân, Hà Nội</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="tech-payment-strip">
-        <div class="container">
-            <span>Thanh toán an toàn</span>
-            <div class="tech-payment-list">
-                @foreach ($paymentItems as $payment)
-                    <strong>{{ $payment }}</strong>
-                @endforeach
+    <div class="tech-footer-bottom">
+        <div class="container tech-footer-inner shopw-footer-inner">
+            <div class="tech-footer-bottom-flex">
+                <p>&copy; {{ date('Y') }} DangDuc. All rights reserved.</p>
+                <div class="tech-payment-list">
+                    @foreach ($paymentItems ?? [] as $payment)
+                        <span class="sr-only">{{ $payment }}</span>
+                    @endforeach
+                    <img src="{{ asset('uploads/brand/dangduc-logo-icon-256.svg') }}" alt="Verified" class="tech-verified-badge">
+                    <i class="fa fa-cc-visa"></i>
+                    <i class="fa fa-cc-mastercard"></i>
+                    <i class="fa fa-credit-card"></i>
+                    <i class="fa fa-money"></i>
+                </div>
             </div>
         </div>
     </div>

@@ -23,8 +23,7 @@ class OrderConfirmationMailData
         public readonly string $shopUrl,
         public readonly string $supportPhone,
         public readonly array $items
-    ) {
-    }
+    ) {}
 
     public static function fromLegacyPayload(
         array $shipping,
@@ -35,7 +34,7 @@ class OrderConfirmationMailData
         $shippingMethod = (string) ($shipping['shipping_method'] ?? '1');
 
         return new self(
-            brandName: (string) ($overrides['brandName'] ?? 'ShopW'),
+            brandName: (string) ($overrides['brandName'] ?? 'DangDuc'),
             orderCode: (string) ($code['order_code'] ?? 'N/A'),
             couponCode: (string) ($code['coupon_code'] ?? 'Không áp dụng'),
             feeShip: (int) ($overrides['feeShip'] ?? $shipping['fee_ship'] ?? $shipping['fee'] ?? 0),

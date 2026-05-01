@@ -1,11 +1,11 @@
-<section class="tech-section" id="tech-news">
+<section class="tech-section tech-news-section" id="tech-news">
     <div class="container">
         <div class="tech-section-head">
             <div>
-                <span class="tech-eyebrow">Tin tức nổi bật</span>
-                <h2>Cập nhật công nghệ mới nhất</h2>
+                <span class="tech-eyebrow"><i class="fa fa-newspaper-o"></i> TIN TỨC MỚI</span>
+                <h2>Tin tức & Hướng dẫn</h2>
             </div>
-            <a href="{{ url('/video-shop') }}" class="tech-section-link">Xem thêm</a>
+            <a href="{{ url('/video-shop') }}" class="tech-section-link">Xem tất cả bài viết <i class="fa fa-angle-right"></i></a>
         </div>
 
         <div class="row tech-news-grid">

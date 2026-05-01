@@ -154,6 +154,16 @@
                     @endif
                 </div>
 
+                @if (!empty($price_buckets))
+                    <div class="shopw-category-price-buckets">
+                        @foreach ($price_buckets as $bucket)
+                            <a href="{{ $bucket['url'] }}" class="shopw-category-price-bucket">
+                                {{ $bucket['label'] }}
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
+
                 <form method="GET" action="{{ $url_canonical }}" class="shopw-category-filter-form">
                     @if ($selected_sort !== 'none')
                         <input type="hidden" name="sort_by" value="{{ $selected_sort }}">

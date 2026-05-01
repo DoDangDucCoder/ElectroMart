@@ -1,168 +1,162 @@
-# Laravel Shop – Định Hướng Kiến Trúc Mới
+# Architecture
 
-## 1. Tầm nhìn
+Tài liệu này mô tả kiến trúc hiện tại của repo để developer mới biết nên đọc và sửa code ở đâu. Đây không phải định hướng lý tưởng hóa; nội dung bám vào code đang có.
 
-Mục tiêu là tái cấu trúc dự án cũ (Laravel 11) thành kiến trúc rõ ràng, dễ bảo trì, dễ mở rộng. Hệ thống được chia thành các lớp:
+## Tổng Quan
 
-- **Presentation**: routes, controller, request/response.
-- **Application**: service, job, event, sử dụng domain để xử lý use case.
-- **Domain**: entity, data transfer object, rule nghiệp vụ thuần PHP.
-- **Infrastructure**: repository, gateway, tích hợp dịch vụ (payment, mail, cache).
+Project là Laravel 11 với 3 bề mặt chính:
 
-Các thành phần phụ trợ (config, helper, policy, exception) được gom vào Shared layer.
+- Storefront Blade cho khách hàng.
+- Admin Blade và một số JSON endpoint cho quản trị.
+- API `/api/v1` dùng Sanctum cho client/API admin.
 
-## 2. Sơ đồ module logic
+Codebase đang ở trạng thái chuyển tiếp:
 
-```
-┌─────────────────────────────────────────────┐
-│                 Presentation                 │
-│  (Controllers, Requests, Resources, Routes)  │
-└───────────────▲───────────────┬─────────────┘
-                │               │
-                │   Delegates   │
-                │               │
-┌───────────────┴───────────────▼─────────────┐
-│                 Application                 │
-│  Services, UseCases, Jobs, Events, Policies │
-└───────────────▲───────────────┬─────────────┘
-                │   Depends on   │
-┌───────────────┴───────────────▼─────────────┐
-│                   Domain                    │
-│    Entities, ValueObjects, Business Rules   │
-└────────────────▲───────────────┬────────────┘
-                 │    Contract    │
-┌────────────────┴───────────────▼────────────┐
-│                Infrastructure                │
-│ Repositories, Eloquent Models, Gateways,…   │
-└──────────────────────────────────────────────┘
-```
+- Nhiều màn legacy vẫn dùng controller trong `app/Http/Controllers` và model trong `app/Models`.
+- Các module mới hơn dùng service trong `app/Application`, contract trong `app/Domain`, Eloquent model/repository trong `app/Infrastructure`.
+- Một số model mới thêm accessor tương thích key legacy, ví dụ `Infrastructure\Persistence\Eloquent\Catalog\Product` append `product_id`, `product_name`, `product_price`.
 
-## 3. Cấu trúc thư mục đề xuất
+## Sơ Đồ Tổng Quan
 
-```
-app/
-├── Domain/
-│   ├── Catalog/           # Product, Category, Brand entity & rule
-│   ├── Customer/
-│   ├── Order/
-│   ├── Marketing/
-│   ├── CMS/
-│   └── Shared/            # ValueObject, Enum, Contract chung
-├── Application/
-│   ├── Catalog/
-│   │   ├── Services/
-│   │   ├── UseCases/
-│   │   └── DTO/
-│   ├── Checkout/
-│   ├── Marketing/
-│   ├── Reporting/
-│   └── Shared/
-├── Infrastructure/
-│   ├── Persistence/
-│   │   ├── Eloquent/      # Model Eloquent mới (không tbl_*)
-│   │   └── Repositories/
-│   ├── Payment/
-│   ├── Notification/
-│   ├── Filesystem/
-│   └── Auth/
-├── Http/
-│   ├── Controllers/
-│   │   ├── Frontend/
-│   │   ├── Admin/
-│   │   └── Api/
-│   ├── Requests/
-│   ├── Resources/
-│   └── Middleware/
-├── Policies/
-├── Providers/
-└── Support/               # helper, formatting, enumerations
+```mermaid
+flowchart TB
+    Browser["Browser"]
+    ApiClient["API client"]
 
-bootstrap/
-config/
-database/
-├── migrations/
-├── seeders/
-└── factories/
-routes/
-├── web.php                # Load file con
-├── web/frontend.php
-├── web/admin.php
-└── api.php
-resources/
-├── views/
-│   ├── frontend/
-│   ├── admin/
-│   └── components/
-└── js/
-    ├── pages/
-    ├── components/
-    └── stores/
-tests/
-├── Feature/
-│   ├── Frontend/
-│   ├── Admin/
-│   └── Api/
-└── Unit/
+    WebRoutes["routes/web.php<br/>frontend.php + admin.php"]
+    ApiRoutes["routes/api.php<br/>/api/v1"]
+    Middleware["Middleware<br/>web, auth:web, admin.access,<br/>admin.permission, auth:sanctum"]
+
+    Controllers["Controllers<br/>app/Http/Controllers"]
+    Requests["Form Requests<br/>app/Http/Requests"]
+    Resources["API Resources<br/>app/Http/Resources"]
+    Views["Blade views<br/>resources/views"]
+
+    AppServices["Application Services<br/>app/Application"]
+    Domain["Domain Contracts/Entities<br/>app/Domain"]
+    Repositories["Repositories<br/>app/Infrastructure/Persistence/Repositories"]
+    NewModels["Eloquent models mới<br/>app/Infrastructure/Persistence/Eloquent"]
+    LegacyModels["Legacy models<br/>app/Models"]
+    DB["MySQL/MariaDB<br/>migrations + shopbanhang.sql"]
+
+    Browser --> WebRoutes --> Middleware --> Controllers
+    ApiClient --> ApiRoutes --> Middleware --> Controllers
+    Controllers --> Requests
+    Controllers --> Views --> Browser
+    Controllers --> Resources --> ApiClient
+    Controllers --> AppServices
+    Controllers --> LegacyModels
+    AppServices --> Domain
+    Domain --> Repositories
+    AppServices --> Repositories
+    Repositories --> NewModels
+    AppServices --> NewModels
+    LegacyModels --> DB
+    NewModels --> DB
 ```
 
-### Lưu ý đặt tên
-- Bảng DB: snake_case không prefix `tbl_`, ví dụ `products`, `product_categories`.
-- Model Eloquent đặt trong `Infrastructure/Persistence/Eloquent`.
-- Interface repository khai báo trong `Domain\*\Contracts`.
-- DTO và Request sử dụng PascalCase, property camelCase.
+## Module Chính
 
-## 4. Phân rã module chính
+| Module | Route chính | Controller | Service/model chính | View/API |
+| --- | --- | --- | --- | --- |
+| Home/search | `/`, `/trang-chu`, `/tim-kiem`, `/san-pham` | `HomeController` | `ProductService`, `ProductSearchService`, `CategoryService`, `BrandService` | `home`, `pages/sanpham/catalog`, `pages/sanpham/search` |
+| Product detail | `/chi-tiet/{product_slug}` | `ProductController@details_product` | `ProductService`, `ProductReviewService`, `Product`, `ProductCategory`, `Brand` | `pages/sanpham/show_details` |
+| Category/brand listing | `/danh-muc/{slug}`, `/thuong-hieu/{slug}` | `CategoryProduct`, `BrandProduct` | `CategoryService`, `BrandService`, `ProductService` | `pages/category/show_category`, `pages/brand/show_brand` |
+| Cart | `/gio-hang`, `/add-cart-ajax`, `/update-cart`, `/remove-item` | `CartController` | `CartService`, `CouponService`, `ShippingService` | `pages/cart/cart_ajax`, cart partials |
+| Checkout | `/dang-nhap`, `/checkout`, `/payment`, `/confirm-order` | `CheckoutController` | `CheckoutService`, `CartService`, `ShippingService`, `CouponService`, `Customer`, `Order` | `pages/checkout/*` |
+| Customer account/order history | `/account`, `/history`, `/view-history-order/{code}` | `CustomerAccountController`, `OrderController` | `StorefrontCustomerAuth`, `StorefrontOrder`, legacy `Order` | `pages/account/manager`, `pages/history/*` |
+| Admin auth/dashboard | `/admin`, `/auth-login`, `/dashboard` | `AuthController`, `AdminController` | `AdminAuthenticator`, `AdminAccess`, `AdminPermissions`, Spatie Permission | `admin/custom_auth/*`, `admin/dashboard` |
+| Admin product | `/all-product`, `/add-product`, `/edit-product/{id}` | `ProductController` | `ProductService`, category/brand repositories | `admin.add_product`, `admin.all_product`, `admin.edit_product` |
+| Admin category/brand JSON | `/catalog/categories`, `/catalog/brands` | `Admin\Catalog\CategoryController`, `Admin\Catalog\BrandController` | `CategoryService`, `BrandService` | JSON |
+| Admin order | `/manage-order`, `/view-order/{code}`, `/update-order-qty` | `OrderController` | `LegacyOrderWorkflowService`, legacy `Order` | `admin.manage_order`, `admin.view_order` |
+| CMS/content | `/bai-viet/{slug}`, `/add-post`, `/manage-slider`, `/video-shop` | `PostController`, `CategoryPost`, `SliderController`, `VideoController` | `BlogPostService`, legacy CMS models | `pages/baiviet/*`, `admin/post/*` |
+| Chatbot | `/chatbot/*`, `/chat-inbox/*`, `/api/v1/chatbot/*` | `ChatController`, `Api\ChatController`, `Admin\ChatInboxController` | `Application/AI`, `ChatConversation`, `ChatMessage` | widget/admin/API |
 
-| Module      | Phạm vi chính                                                                 | Tích hợp |
-|-------------|-------------------------------------------------------------------------------|----------|
-| **Catalog** | Sản phẩm, danh mục, thương hiệu, thuộc tính, gallery                          | Storage |
-| **Checkout**| Giỏ hàng, phí vận chuyển, thanh toán, đơn hàng                                | Payment, Shipping |
-| **Customer**| Tài khoản khách, địa chỉ, loyalty, lịch sử điểm                               | Auth, Notification |
-| **Marketing**| Segment, campaign, template, coupon, automation                              | Mail/SMS/Push |
-| **CMS**     | Bài viết, slider, đối tác, trang tĩnh                                         | Media |
-| **Reporting**| KPI dashboard, thống kê đơn hàng, marketing, loyalty                         | Cache |
+## Route Structure
 
-Shared module cung cấp enum (OrderStatus, PaymentChannel), helper format tiền, thời gian.
+```mermaid
+flowchart LR
+    Web["routes/web.php"] --> Frontend["routes/web/frontend.php"]
+    Web --> Admin["routes/web/admin.php"]
+    API["routes/api.php"] --> Public["/api/v1 public"]
+    API --> Protected["/api/v1 auth:sanctum"]
+    API --> AdminApi["/api/v1/admin auth:sanctum + admin.access:sanctum"]
+```
 
-## 5. Quy tắc route & guard
+`routes/web.php` chỉ include hai file con. Khi thêm route web, thêm vào đúng file:
 
-- `routes/web/frontend.php`: user-facing, middleware `web`, `setLocale`.
-- `routes/web/admin.php`: admin dashboard, middleware `web`, `auth:admin`, `role:...`.
-- `routes/api.php`: REST/JSON, middleware `api`, rate limit, JWT/Passport nếu mở rộng.
-- Web route chính chỉ include các file con để dễ bảo trì.
+- Storefront: `routes/web/frontend.php`
+- Admin: `routes/web/admin.php`
+- API: `routes/api.php`
 
-## 6. Controller & Request
+## Quyền Admin
 
-- Mỗi controller nên mỏng: inject service, trả Resource/Response.
-- Validation nằm tại `app/Http/Requests/<Module>/<Action>Request.php`.
-- Response JSON dùng Resource/Collection; view trả blade component/UI.
-- Áp dụng policy/gate ngay trong controller hoặc middleware.
+Admin web dùng guard `web`, không dùng guard admin riêng:
 
-## 7. Service & Repository
+- Login: `guest:web`
+- Khu admin: `auth:web`, `admin.access`
+- Từng module: `admin.permission:<permission>`
 
-- Service xử lý use-case (đặt hàng, cập nhật tồn kho, tạo campaign).
-- Repository interface trong Domain, implement Eloquent ở Infrastructure để dễ test/mock.
-- Payment/Notification gateway theo pattern Strategy (adapter).
-- Queue job đặt trong `app/Application/*/Jobs`.
+Permission canonical nằm trong `app/Support/AdminPermissions.php`:
 
-## 8. Event & Job
+- `manage users`
+- `manage roles`
+- `manage documents`
+- `manage products`
+- `manage content`
+- `manage orders`
+- `manage coupons`
+- `manage system`
 
-- Đặt event trong `app/Application/<Module>/Events`.
-- Listener/Job trong cùng module, đăng ký tại `EventServiceProvider`.
-- Sử dụng queue cho công việc dài (gửi mail, tính KPI).
+Vai trò mặc định: `Super Admin` và `Admin` có toàn quyền; `Editor` có sản phẩm/nội dung; `Manager` có sản phẩm/đơn hàng/coupon/tài liệu; `Staff` rỗng.
 
-## 9. Coding guideline
+## Model Và Repository
 
-- Bắt buộc Laravel Pint & PHPStan ở mức baseline.
-- DocBlock rõ ràng cho service/repository.
-- Đặt test tương ứng mỗi use-case.
-- Comment ngắn gọn khi logic phức tạp; ưu tiên code tự giải thích.
+### Model mới
 
-## 10. Bước tiếp theo
+Nằm trong `app/Infrastructure/Persistence/Eloquent`, ví dụ:
 
-1. Chuẩn hóa schema (migration + model Eloquent mới).
-2. Migrating dữ liệu cũ sang schema mới.
-3. Refactor module Catalog làm mẫu (controller → service → repository).
-4. Áp dụng tương tự cho Checkout, Customer…
+- `Catalog\Product`, `Brand`, `ProductCategory`, `ProductMedia`, `ProductVariant`
+- `Customer\Customer`, `Customer\Address`
+- `Order\Order`, `OrderItem`, `OrderShipping`, `Payment`
+- `Marketing\Coupon`, `CouponRedemption`
+- `Cms\BlogPost`, `BlogCategory`
 
-Tài liệu này là nền để triển khai các task refactor tiếp theo.
+### Model legacy
+
+Nằm trong `app/Models`, ví dụ:
+
+- `Product` dùng bảng `tbl_product`, primary key `product_id`
+- `CategoryProductModel` dùng danh mục legacy
+- `Order`, `OrderDetails` dùng order legacy/admin
+- `Coupon`, `Customer`, `Post`, `Slider`, `Video`, `Gallery`
+
+Không đổi tên bảng/cột nếu chưa biết controller đang dùng model mới hay legacy.
+
+## View Structure
+
+| Khu vực | Vị trí |
+| --- | --- |
+| Storefront layout | `resources/views/layout.blade.php`, `resources/views/layouts/home-tech.blade.php` |
+| Storefront partial | `resources/views/partials/storefront` |
+| Home partial | `resources/views/pages/home/partials` |
+| Catalog/product | `resources/views/pages/sanpham`, `pages/category`, `pages/brand` |
+| Cart | `resources/views/pages/cart` |
+| Checkout | `resources/views/pages/checkout` |
+| History/account | `resources/views/pages/history`, `pages/account` |
+| Admin layout | `resources/views/admin_layout.blade.php` |
+| Admin partial | `resources/views/partials/admin` |
+| Admin modules | `resources/views/admin` |
+
+## Quy Ước Code Trong Repo
+
+- Bắt đầu từ route, không đoán service.
+- Nếu controller đã inject service, giữ logic nghiệp vụ trong service.
+- Nếu màn legacy đang dùng `app/Models`, sửa nhỏ theo pattern hiện tại trước khi refactor lớn.
+- Dùng Form Request nếu module đã có request tương ứng trong `app/Http/Requests`.
+- Với thay đổi DB, tạo migration mới; không sửa migration cũ nếu không được yêu cầu.
+- Với admin route, đặt đúng permission group.
+- Với API, trả response qua Resource nếu endpoint cùng nhóm đang dùng Resource.
+- Với UI storefront, không đổi header/search/cart/auth behavior nếu task không yêu cầu.
+- Với sản phẩm, chú ý `ProductService` ghi file vào `public/uploads/product`, document vào `public/uploads/document`, đồng thời copy ảnh sang `public/uploads/gallery` để tương thích legacy.
+- Với cart/checkout, nhớ web cart nằm trong session key `cart`, không phải bảng `carts`.

@@ -65,7 +65,7 @@ class HealthAndDocsApiTest extends TestCase
     {
         $response = $this->getJson('/api/v1/docs')
             ->assertOk()
-            ->assertJsonPath('title', 'ShopW API');
+            ->assertJsonPath('title', 'DangDuc API');
 
         $documentation = $response->json();
         $products = array_keys($documentation['endpoints']['products']);
@@ -91,7 +91,7 @@ class HealthAndDocsApiTest extends TestCase
 
         $this->getJson('/docs')
             ->assertOk()
-            ->assertJsonPath('info.title', 'ShopW API')
+            ->assertJsonPath('info.title', 'DangDuc API')
             ->assertJsonPath('paths./api/v1/health.get.summary', 'Application health check');
 
         $this->get('/api/documentation')

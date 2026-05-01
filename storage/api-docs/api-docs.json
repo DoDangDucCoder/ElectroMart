@@ -1,8 +1,8 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "ShopW API",
-        "description": "Tài liệu API công khai và quản trị cho nền tảng thương mại điện tử ShopW.",
+        "title": "DangDuc API",
+        "description": "Tài liệu API công khai và quản trị cho nền tảng thương mại điện tử DangDuc.",
         "version": "1.0.0"
     },
     "servers": [

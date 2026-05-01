@@ -8,6 +8,16 @@
 
     @include('partials.storefront.support-dock')
 
+    @if ($errors->any())
+        <section class="container" style="margin-top: 16px;">
+            <div class="alert alert-danger">
+                @foreach ($errors->all() as $error)
+                    <div>{{ $error }}</div>
+                @endforeach
+            </div>
+        </section>
+    @endif
+
     @yield('content')
 
     @include('partials.storefront.compare-modal')
@@ -120,6 +130,12 @@
                         return;
                     }
 
+                    let isDown = false;
+                    let startX = 0;
+                    let scrollStart = 0;
+                    let moved = false;
+                    const dragThreshold = 5;
+
                     const updateState = () => {
                         const hasOverflow = track.scrollWidth > track.clientWidth + 4;
                         const hasMoreLeft = track.scrollLeft > 4;
@@ -128,6 +144,48 @@
                         prev.disabled = !hasOverflow || !hasMoreLeft;
                         next.disabled = !hasOverflow || !hasMoreRight;
                     };
+
+                    track.addEventListener('mousedown', (event) => {
+                        if (event.button !== 0) return;
+                        isDown = true;
+                        moved = false;
+                        startX = event.pageX - track.offsetLeft;
+                        scrollStart = track.scrollLeft;
+                        track.classList.add('is-dragging');
+                    });
+
+                    window.addEventListener('mousemove', (event) => {
+                        if (!isDown) return;
+
+                        const x = event.pageX - track.offsetLeft;
+                        const walk = x - startX;
+
+                        if (Math.abs(walk) > dragThreshold) {
+                            moved = true;
+                        }
+
+                        if (moved) {
+                            event.preventDefault();
+                            track.scrollLeft = scrollStart - walk;
+                        }
+                    });
+
+                    const endDrag = () => {
+                        if (!isDown) return;
+                        isDown = false;
+                        track.classList.remove('is-dragging');
+                    };
+
+                    window.addEventListener('mouseup', endDrag);
+                    track.addEventListener('mouseleave', endDrag);
+
+                    track.addEventListener('click', (event) => {
+                        if (moved) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            moved = false;
+                        }
+                    }, true);
 
                     prev.addEventListener('click', () => {
                         track.scrollBy({

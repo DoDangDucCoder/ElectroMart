@@ -70,7 +70,7 @@ class HomeController extends Controller
             'category_post' => $this->legacyCategoryPosts(),
             'meta_desc' => 'Cửa hàng công nghệ chuyên laptop, điện thoại và phụ kiện chính hãng.',
             'meta_keywords' => 'laptop, dien thoai, iphone, samsung, macbook, flash sale cong nghe',
-            'meta_title' => 'Shop công nghệ - Laptop, điện thoại, phụ kiện',
+            'meta_title' => 'DangDuc - Laptop, điện thoại, phụ kiện',
             'url_canonical' => $request->url(),
             'slider' => $this->legacyActiveSliders(5),
             'featuredProducts' => $this->resolveTechHomeProducts(8, preferHot: true),
@@ -169,7 +169,7 @@ class HomeController extends Controller
         $discountPercent = $originalPrice > 0 && $finalPrice < $originalPrice
             ? (int) round((($originalPrice - $finalPrice) / $originalPrice) * 100)
             : 0;
-        $brandName = StorefrontLabel::neutralizeSource($product->brand?->brand_name ?? $product->brand?->name ?? 'ShopW');
+        $brandName = StorefrontLabel::neutralizeSource($product->brand?->brand_name ?? $product->brand?->name ?? 'DangDuc');
 
         return [
             'id' => $product->id,
@@ -800,89 +800,6 @@ class HomeController extends Controller
             'slider' => $slider,
             'category_post' => $category_post,
         ]);
-    }
-
-    private function buildPriceBuckets(float $min, float $max, string $slug): array
-    {
-        if ($min <= 0 || $max <= 0) {
-            return [];
-        }
-
-        if ($min > $max) {
-            [$min, $max] = [$max, $min];
-        }
-
-        if (abs($max - $min) < 1) {
-            return [[
-                'label' => $this->formatPriceMillions($min),
-                'url' => url('/danh-muc/'.$slug),
-            ]];
-        }
-
-        $roundTo = 1000000;
-        $start = floor($min / $roundTo) * $roundTo;
-        $end = ceil($max / $roundTo) * $roundTo;
-        if ($end <= $start) {
-            $end = $start + $roundTo;
-        }
-
-        $segments = 4;
-        $step = (int) ceil(($end - $start) / $segments / $roundTo) * $roundTo;
-        if ($step <= 0) {
-            $step = $roundTo;
-        }
-
-        $buckets = [];
-        $current = $start;
-
-        for ($i = 0; $i < $segments; $i++) {
-            $next = $i === $segments - 1 ? $end : min($end, $current + $step);
-
-            if ($i === 0) {
-                $label = 'Duoi '.$this->formatPriceMillions($next);
-                $minVal = null;
-                $maxVal = $next;
-            } elseif ($i === $segments - 1) {
-                $label = 'Tren '.$this->formatPriceMillions($current);
-                $minVal = $current;
-                $maxVal = null;
-            } else {
-                $label = 'Tu '.$this->formatPriceMillions($current).' den '.$this->formatPriceMillions($next);
-                $minVal = $current;
-                $maxVal = $next;
-            }
-
-            $query = [];
-            if ($minVal !== null) {
-                $query['start_price'] = (int) $minVal;
-            }
-            if ($maxVal !== null) {
-                $query['end_price'] = (int) $maxVal;
-            }
-
-            $buckets[] = [
-                'label' => $label,
-                'url' => url('/danh-muc/'.$slug).($query ? ('?'.http_build_query($query)) : ''),
-            ];
-
-            $current = $next;
-            if ($current >= $end) {
-                break;
-            }
-        }
-
-        return $buckets;
-    }
-
-    private function formatPriceMillions(float $price): string
-    {
-        if ($price <= 0) {
-            return '0 trieu';
-        }
-
-        $millions = (int) round($price / 1000000);
-
-        return $millions.' trieu';
     }
 
     private function calculateHeroRatio($slider): ?float

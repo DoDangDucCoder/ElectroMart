@@ -15,7 +15,7 @@
         <aside class="shopw-search-suggest-side">
             @if ($trendingKeywords->isNotEmpty())
                 <section class="shopw-search-suggest-group">
-                    <span class="shopw-search-suggest-group-title">Từ khóa nổi bật</span>
+                    <span class="shopw-search-suggest-group-title">Tìm kiếm phổ biến</span>
                     <div class="shopw-search-suggest-chips">
                         @foreach ($trendingKeywords as $keyword)
                             <button type="button" class="shopw-search-suggest-chip li_search_ajax"

@@ -143,12 +143,8 @@ class CheckoutController extends Controller
         $currentCustomer = $this->sessionCustomer();
         if (! $currentCustomer) {
             $this->clearCustomerSession();
-            StorefrontCustomerAuth::rememberIntendedRedirect('checkout', 'checkout');
-
-            return Redirect::to(StorefrontCustomerAuth::destinationUrl('login').'?redirect=checkout')
-                ->with('error', 'Vui lòng đăng nhập để tiếp tục thanh toán.');
         }
-
+        // Allow guests to proceed
         $cities = Location::where('type', 'city')->orderBy('name')->get();
         if ($cities->isEmpty()) {
             $cities = collect([
@@ -177,11 +173,8 @@ class CheckoutController extends Controller
         $currentCustomer = $this->sessionCustomer();
         if (! $currentCustomer) {
             $this->clearCustomerSession();
-            StorefrontCustomerAuth::rememberIntendedRedirect('payment', 'payment');
-
-            return Redirect::to(StorefrontCustomerAuth::destinationUrl('login').'?redirect=payment')
-                ->with('error', 'Vui lòng đăng nhập để tiếp tục thanh toán.');
         }
+        // Allow guests to proceed
 
         return view('pages.checkout.payment', array_merge(
             $this->seoContext($request, 'Phương thức thanh toán', 'thanh toán'),
@@ -294,15 +287,20 @@ class CheckoutController extends Controller
 
         $customer = $this->sessionCustomer();
         if (! $customer) {
-            return response()->json(['message' => 'Vui lòng đăng nhập trước khi đặt hàng.'], 401);
+            $this->clearCustomerSession();
         }
+        $customerId = $customer?->id;
 
         try {
             $order = $this->checkoutService->confirmOrder(array_merge($validated, [
                 'payment_method' => $validated['payment_method'] ?? $validated['shipping_method'] ?? null,
-            ]), $customer->id);
+            ]), $customerId);
         } catch (\Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        if (! $customer) {
+            Session::put('guest_order_code', $order->code);
         }
 
         return response()->json([
@@ -330,7 +328,8 @@ class CheckoutController extends Controller
     {
         $currentCustomer = $this->sessionCustomer();
 
-        if (! $currentCustomer) {
+        // Allow guests if they just placed this order
+        if (! $currentCustomer && Session::get('guest_order_code') !== $orderCode) {
             $this->clearCustomerSession();
             StorefrontCustomerAuth::rememberIntendedRedirect('payment', 'payment');
 
@@ -346,8 +345,12 @@ class CheckoutController extends Controller
             return Redirect::to('/history')->with('error', 'Không tìm thấy đơn hàng.');
         }
 
-        if ($order->customer_id !== $currentCustomer->id) {
+        if ($order->customer_id && (! $currentCustomer || $order->customer_id !== $currentCustomer->id)) {
             return Redirect::to('/history')->with('error', 'Bạn không có quyền xem đơn hàng này.');
+        }
+
+        if (! $order->customer_id && Session::get('guest_order_code') !== $orderCode) {
+            return Redirect::to('/')->with('error', 'Bạn không có quyền xem đơn hàng này.');
         }
 
         $paymentMethod = $order->payments->first()?->provider ?? 'unknown';

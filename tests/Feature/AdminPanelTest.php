@@ -2,19 +2,17 @@
 
 namespace Tests\Feature;
 
-use App\Application\Order\Services\LegacyOrderPresentationService;
 use App\Application\Catalog\Services\ProductService;
+use App\Application\Order\Services\LegacyOrderPresentationService;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
-use App\Infrastructure\Persistence\Eloquent\Catalog\ProductMedia;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
+use App\Infrastructure\Persistence\Eloquent\Catalog\ProductMedia;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductReview;
 use App\Infrastructure\Persistence\Eloquent\Cms\BlogCategory;
 use App\Infrastructure\Persistence\Eloquent\Cms\BlogPost;
-use App\Models\User;
 use App\Models\Attribute;
-use App\Models\City;
-use App\Models\Coupon;
 use App\Models\Contact;
+use App\Models\Coupon;
 use App\Models\Customer;
 use App\Models\Feeship;
 use App\Models\Gallery;
@@ -23,12 +21,11 @@ use App\Models\Order;
 use App\Models\OrderDetails;
 use App\Models\Product;
 use App\Models\ProductAttribute;
-use App\Models\Province;
 use App\Models\Shipping;
 use App\Models\Slider;
 use App\Models\Statistic;
+use App\Models\User;
 use App\Models\Visitors;
-use App\Models\Wards;
 use App\Support\AdminAccess;
 use App\Support\AdminPermissions;
 use Illuminate\Database\Schema\Blueprint;
@@ -111,7 +108,7 @@ class AdminPanelTest extends TestCase
             ->assertSee('Xác nhận đơn hàng')
             ->assertSee('ORD-TEST-001', false)
             ->assertSee('Chuyển khoản ATM')
-            ->assertSee(config('services.storefront_brand.name', 'ShopW'));
+            ->assertSee(config('services.storefront_brand.name', 'DangDuc'));
 
         $this->actingAs($admin, 'web')
             ->get('/mail-preview/render?preview=missing-template')
@@ -183,7 +180,7 @@ class AdminPanelTest extends TestCase
             ->assertSee('Cài đặt');
 
         $this->actingAs($admin, 'web')
-            ->get('/edit-post/' . $post->post_id)
+            ->get('/edit-post/'.$post->post_id)
             ->assertOk()
             ->assertSee('g-admin-post-edit')
             ->assertSee($post->post_title)
@@ -221,8 +218,8 @@ class AdminPanelTest extends TestCase
         ]);
 
         $this->actingAs($admin, 'web')
-            ->from('/edit-post/' . $post->post_id)
-            ->post('/update-post/' . $post->post_id, [
+            ->from('/edit-post/'.$post->post_id)
+            ->post('/update-post/'.$post->post_id, [
                 'post_title' => $post->post_title,
                 'post_slug' => $post->post_slug,
                 'post_desc' => $post->post_desc,
@@ -328,7 +325,7 @@ class AdminPanelTest extends TestCase
         );
 
         $this->actingAs($admin, 'web')
-            ->get('/edit-product/' . $product->product_id)
+            ->get('/edit-product/'.$product->product_id)
             ->assertOk()
             ->assertSee('g-admin-product-edit')
             ->assertSee($product->product_name)
@@ -431,15 +428,15 @@ class AdminPanelTest extends TestCase
         $routes = [
             '/all-product',
             '/add-product',
-            '/edit-product/' . $product->product_id,
+            '/edit-product/'.$product->product_id,
             '/all-category-product',
             '/add-category-product',
-            '/edit-category-product/' . $category->id,
+            '/edit-category-product/'.$category->id,
             '/all-brand-product',
             '/add-brand-product',
-            '/edit-brand-product/' . $brand->id,
-            '/add-gallery/' . $product->product_id,
-            '/product-attribute/' . $product->product_id,
+            '/edit-brand-product/'.$brand->id,
+            '/add-gallery/'.$product->product_id,
+            '/product-attribute/'.$product->product_id,
         ];
 
         foreach ($routes as $route) {
@@ -482,7 +479,7 @@ class AdminPanelTest extends TestCase
             ->assertSee($brand->name);
 
         $this->actingAs($admin, 'web')
-            ->get('/edit-brand-product/' . $brand->id)
+            ->get('/edit-brand-product/'.$brand->id)
             ->assertOk()
             ->assertSee('g-admin-brand-edit')
             ->assertSee($brand->name);
@@ -563,7 +560,7 @@ class AdminPanelTest extends TestCase
         );
 
         $editResponse = $this->actingAs($admin, 'web')
-            ->get('/edit-category-product/' . $childCategory->id);
+            ->get('/edit-category-product/'.$childCategory->id);
 
         $editResponse
             ->assertOk()
@@ -578,7 +575,7 @@ class AdminPanelTest extends TestCase
             ->assertSee('Không tìm thấy danh mục cần cập nhật.');
 
         $this->assertMatchesRegularExpression(
-            '/<option[^>]*(?:selected[^>]*value="' . $rootCategory->id . '"|value="' . $rootCategory->id . '"[^>]*selected)[^>]*>Laptop<\/option>/',
+            '/<option[^>]*(?:selected[^>]*value="'.$rootCategory->id.'"|value="'.$rootCategory->id.'"[^>]*selected)[^>]*>Laptop<\/option>/',
             $editResponse->getContent()
         );
     }
@@ -653,7 +650,7 @@ class AdminPanelTest extends TestCase
 
         File::ensureDirectoryExists($directory);
 
-        $filePath = $directory . DIRECTORY_SEPARATOR . 'browser-test-image.jpg';
+        $filePath = $directory.DIRECTORY_SEPARATOR.'browser-test-image.jpg';
         File::put($filePath, 'fake-image-content');
 
         try {
@@ -709,7 +706,7 @@ class AdminPanelTest extends TestCase
             $this->assertCount(1, $newFiles);
 
             foreach ($newFiles as $fileName) {
-                File::delete($directory . DIRECTORY_SEPARATOR . $fileName);
+                File::delete($directory.DIRECTORY_SEPARATOR.$fileName);
             }
         } finally {
             @unlink($tempFile);
@@ -815,7 +812,7 @@ class AdminPanelTest extends TestCase
             ->assertSee($category->name);
 
         $this->actingAs($admin, 'web')
-            ->get('/edit-category-post/' . $category->id)
+            ->get('/edit-category-post/'.$category->id)
             ->assertOk()
             ->assertSee('g-admin-category-post-edit')
             ->assertSee($category->name);
@@ -882,7 +879,7 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($admin, 'web')
             ->from('/manage-slider')
-            ->patch('/active-slide/' . $slider->slider_id)
+            ->patch('/active-slide/'.$slider->slider_id)
             ->assertRedirect('manage-slider')
             ->assertSessionHas('message', 'Đã bật hiển thị trình chiếu thành công');
 
@@ -893,7 +890,7 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($admin, 'web')
             ->from('/manage-slider')
-            ->patch('/unactive-slide/' . $slider->slider_id)
+            ->patch('/unactive-slide/'.$slider->slider_id)
             ->assertRedirect('manage-slider')
             ->assertSessionHas('message', 'Đã ẩn trình chiếu thành công');
 
@@ -1014,7 +1011,7 @@ class AdminPanelTest extends TestCase
             ->assertSee('Thêm thuộc tính');
 
         $this->actingAs($admin, 'web')
-            ->get('/attribute/' . $attribute->id . '/edit')
+            ->get('/attribute/'.$attribute->id.'/edit')
             ->assertOk()
             ->assertSee('g-admin-attribute-edit')
             ->assertSee('Màu sắc');
@@ -1173,7 +1170,7 @@ class AdminPanelTest extends TestCase
             ->assertSee('Quản lý đơn hàng');
 
         $this->actingAs($admin, 'web')
-            ->get('/view-order/' . $legacyOrder->order_code)
+            ->get('/view-order/'.$legacyOrder->order_code)
             ->assertOk()
             ->assertSee('g-admin-order-view')
             ->assertSee($legacyOrder->order_code)
@@ -1186,7 +1183,7 @@ class AdminPanelTest extends TestCase
             ->assertDontSee("alert('Thay đổi tình trạng đơn hàng thành công')", false);
 
         $this->actingAs($admin, 'web')
-            ->get('/order-date?date=' . $legacyOrder->order_date)
+            ->get('/order-date?date='.$legacyOrder->order_date)
             ->assertOk()
             ->assertSee('g-admin-order-date-list')
             ->assertSee('Danh sách đơn hàng được lọc theo khoảng thời gian đã chọn từ trang tổng quan.')
@@ -1214,7 +1211,7 @@ class AdminPanelTest extends TestCase
         ]);
 
         $this->actingAs($admin, 'web')
-            ->get('/view-order/' . $order->order_code)
+            ->get('/view-order/'.$order->order_code)
             ->assertOk()
             ->assertSee('Đã hủy')
             ->assertSee('Đơn hàng đã bị hủy.')
@@ -1392,7 +1389,7 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($admin, 'web')
             ->from('/manage-order')
-            ->delete('/delete-order/' . $order->order_code)
+            ->delete('/delete-order/'.$order->order_code)
             ->assertRedirect('/manage-order')
             ->assertSessionHas('message', 'Xóa đơn hàng thành công');
 
@@ -1713,7 +1710,7 @@ class AdminPanelTest extends TestCase
         $html = app(LegacyOrderPresentationService::class)->renderPrintableHtml($order->order_code);
 
         $this->assertNotNull($html);
-        $this->assertStringContainsString('Phiếu đơn hàng #' . $order->order_code, $html);
+        $this->assertStringContainsString('Phiếu đơn hàng #'.$order->order_code, $html);
         $this->assertStringContainsString('Legacy Dashboard Product', $html);
         $this->assertStringContainsString('Legacy Printable Product Two', $html);
         $this->assertStringContainsString('VIP10', $html);
@@ -1799,14 +1796,14 @@ class AdminPanelTest extends TestCase
         $this->assertSame('still-here', Cache::get('admin-panel-role-page-smoke'));
 
         $this->actingAs($admin, 'web')
-            ->get('/create-spatie/' . $managedUser->id)
+            ->get('/create-spatie/'.$managedUser->id)
             ->assertOk()
             ->assertSee('g-admin-role-create')
             ->assertSee('value="Manager"', false)
             ->assertSee('Cấp vai trò cho Content Operator');
 
         $this->actingAs($admin, 'web')
-            ->get('/create-permission/' . $managedUser->id)
+            ->get('/create-permission/'.$managedUser->id)
             ->assertOk()
             ->assertSee('g-admin-permission-create')
             ->assertSee('value="manage orders"', false)
@@ -1814,7 +1811,7 @@ class AdminPanelTest extends TestCase
             ->assertSee('không gán quyền trực tiếp riêng lẻ lên người dùng');
 
         $this->actingAs($admin, 'web')
-            ->post('/assign-role/' . $managedUser->id, [
+            ->post('/assign-role/'.$managedUser->id, [
                 'role' => ['Staff'],
             ])
             ->assertRedirect()
@@ -1824,7 +1821,7 @@ class AdminPanelTest extends TestCase
         $this->assertTrue($managedUser->hasRole('Staff'));
 
         $this->actingAs($admin, 'web')
-            ->post('/assign-permission/' . $managedUser->id, [
+            ->post('/assign-permission/'.$managedUser->id, [
                 'permission' => ['manage products', 'manage content'],
             ])
             ->assertRedirect()
@@ -1867,17 +1864,17 @@ class AdminPanelTest extends TestCase
             ->assertSessionHasErrors(['roles']);
 
         $this->actingAs($admin, 'web')
-            ->get('/create-permission/' . $rolelessUser->id)
+            ->get('/create-permission/'.$rolelessUser->id)
             ->assertOk()
             ->assertSee('Tài khoản này chưa có vai trò')
             ->assertSee('disabled', false);
 
         $this->actingAs($admin, 'web')
-            ->from('/create-permission/' . $rolelessUser->id)
-            ->post('/assign-permission/' . $rolelessUser->id, [
+            ->from('/create-permission/'.$rolelessUser->id)
+            ->post('/assign-permission/'.$rolelessUser->id, [
                 'permission' => ['manage products'],
             ])
-            ->assertRedirect('/create-permission/' . $rolelessUser->id)
+            ->assertRedirect('/create-permission/'.$rolelessUser->id)
             ->assertSessionHas('message', 'Tài khoản này chưa có vai trò để cập nhật quyền');
     }
 
@@ -1895,19 +1892,19 @@ class AdminPanelTest extends TestCase
         $staffRole->syncPermissions(AdminPermissions::defaultsForRole('Staff'));
 
         $this->actingAs($admin, 'web')
-            ->from('/create-spatie/' . $admin->id)
-            ->post('/assign-role/' . $admin->id, [
+            ->from('/create-spatie/'.$admin->id)
+            ->post('/assign-role/'.$admin->id, [
                 'role' => ['Staff'],
             ])
-            ->assertRedirect('/create-spatie/' . $admin->id)
+            ->assertRedirect('/create-spatie/'.$admin->id)
             ->assertSessionHas('message', 'Bạn không được cập nhật vai trò của chính mình');
 
         $this->actingAs($admin, 'web')
-            ->from('/create-permission/' . $admin->id)
-            ->post('/assign-permission/' . $admin->id, [
+            ->from('/create-permission/'.$admin->id)
+            ->post('/assign-permission/'.$admin->id, [
                 'permission' => ['manage products'],
             ])
-            ->assertRedirect('/create-permission/' . $admin->id)
+            ->assertRedirect('/create-permission/'.$admin->id)
             ->assertSessionHas('message', 'Bạn không được cập nhật quyền của chính mình');
 
         $admin->refresh();
@@ -2067,7 +2064,7 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($admin, 'web')
             ->followingRedirects()
-            ->from('/order-date?date=' . $order->order_date)
+            ->from('/order-date?date='.$order->order_date)
             ->delete('/delete-order/UNKNOWN-ORDER-FROM-DATE')
             ->assertOk()
             ->assertSee('Đơn hàng theo ngày')
@@ -2286,11 +2283,11 @@ class AdminPanelTest extends TestCase
         $this->assertDatabaseMissing('users', ['email' => 'not-an-email']);
 
         $this->actingAs($admin, 'web')
-            ->from('/create-spatie/' . $managedUser->id)
-            ->post('/assign-role/' . $managedUser->id, [
+            ->from('/create-spatie/'.$managedUser->id)
+            ->post('/assign-role/'.$managedUser->id, [
                 'role' => ['Unknown Role'],
             ])
-            ->assertRedirect('/create-spatie/' . $managedUser->id)
+            ->assertRedirect('/create-spatie/'.$managedUser->id)
             ->assertSessionHasErrors(['role.0']);
 
         $this->actingAs($admin, 'web')
@@ -2391,7 +2388,7 @@ class AdminPanelTest extends TestCase
             ->assertSee('roleless-admin@example.com')
             ->assertSee('Chưa có vai trò')
             ->assertSee('Cập nhật vai trò')
-            ->assertSee('value="' . $rolelessUser->id . '"', false);
+            ->assertSee('value="'.$rolelessUser->id.'"', false);
     }
 
     public function test_users_page_surfaces_role_sync_failures_with_clear_feedback(): void
@@ -2414,14 +2411,14 @@ class AdminPanelTest extends TestCase
         ]);
 
         $this->actingAs($admin, 'web')
-            ->delete('/delete-user-roles/' . $targetUser->id)
+            ->delete('/delete-user-roles/'.$targetUser->id)
             ->assertRedirect()
             ->assertSessionHas('message', 'Xóa user thành công');
 
         $this->actingAs($admin, 'web')
             ->followingRedirects()
             ->from('/users')
-            ->delete('/delete-user-roles/' . $targetUser->id)
+            ->delete('/delete-user-roles/'.$targetUser->id)
             ->assertOk()
             ->assertSee('Không tìm thấy người dùng cần xóa');
     }
@@ -2647,7 +2644,7 @@ class AdminPanelTest extends TestCase
         ]);
 
         $this->actingAs($admin, 'web')
-            ->post('/insert-gallery/' . $product->product_id, [
+            ->post('/insert-gallery/'.$product->product_id, [
                 'file' => [$this->makeTinyPngUpload('gallery-original.png')],
             ])
             ->assertRedirect();
@@ -2659,7 +2656,7 @@ class AdminPanelTest extends TestCase
             'gallery_id' => $gallery->gallery_id,
             'product_id' => $product->product_id,
         ]);
-        $this->assertTrue(file_exists(public_path('uploads/gallery/' . $originalImage)));
+        $this->assertTrue(file_exists(public_path('uploads/gallery/'.$originalImage)));
 
         $this->actingAs($admin, 'web')
             ->post('/update-gallery-name', [
@@ -2682,7 +2679,7 @@ class AdminPanelTest extends TestCase
 
         $gallery->refresh();
         $this->assertNotSame($originalImage, $gallery->gallery_image);
-        $this->assertTrue(file_exists(public_path('uploads/gallery/' . $gallery->gallery_image)));
+        $this->assertTrue(file_exists(public_path('uploads/gallery/'.$gallery->gallery_image)));
 
         $updatedImage = $gallery->gallery_image;
 
@@ -2695,7 +2692,7 @@ class AdminPanelTest extends TestCase
         $this->assertDatabaseMissing('tbl_gallery', [
             'gallery_id' => $gallery->gallery_id,
         ]);
-        $this->assertFalse(file_exists(public_path('uploads/gallery/' . $updatedImage)));
+        $this->assertFalse(file_exists(public_path('uploads/gallery/'.$updatedImage)));
     }
 
     public function test_admin_gallery_ajax_falls_back_cleanly_when_gallery_table_is_missing(): void
@@ -2827,14 +2824,14 @@ class AdminPanelTest extends TestCase
             'price_cost' => 1500000,
         ]);
 
-        $hotlineButton = new Icons();
+        $hotlineButton = new Icons;
         $hotlineButton->name = 'Hotline Button';
         $hotlineButton->image = 'hotline.png';
         $hotlineButton->link = 'https://example.com/hotline';
         $hotlineButton->category = 'icons';
         $hotlineButton->save();
 
-        $partnerIcon = new Icons();
+        $partnerIcon = new Icons;
         $partnerIcon->name = 'Tech Partner';
         $partnerIcon->image = 'partner.png';
         $partnerIcon->link = 'https://example.com/partner';
@@ -2987,9 +2984,9 @@ class AdminPanelTest extends TestCase
 
         $iconDirectory = public_path('uploads/icons');
         File::ensureDirectoryExists($iconDirectory);
-        File::put($iconDirectory . '/legacy-delete-icon.png', 'icon');
+        File::put($iconDirectory.'/legacy-delete-icon.png', 'icon');
 
-        $icon = new Icons();
+        $icon = new Icons;
         $icon->name = 'Delete Me';
         $icon->image = 'legacy-delete-icon.png';
         $icon->link = 'https://example.com';
@@ -3003,7 +3000,7 @@ class AdminPanelTest extends TestCase
         $this->assertDatabaseMissing('tbl_icons', [
             'id_icons' => $icon->id_icons,
         ]);
-        $this->assertFileDoesNotExist($iconDirectory . '/legacy-delete-icon.png');
+        $this->assertFileDoesNotExist($iconDirectory.'/legacy-delete-icon.png');
     }
 
     public function test_admin_video_actions_return_clear_errors_for_missing_storage_and_missing_records(): void
@@ -3227,7 +3224,7 @@ class AdminPanelTest extends TestCase
 
     protected function makeTinyPngUpload(string $filename): UploadedFile
     {
-        $filePath = storage_path('framework/testing/' . Str::uuid() . '-' . $filename);
+        $filePath = storage_path('framework/testing/'.Str::uuid().'-'.$filename);
 
         if (! is_dir(dirname($filePath))) {
             mkdir(dirname($filePath), 0777, true);
@@ -3480,7 +3477,7 @@ class AdminPanelTest extends TestCase
         $this->ensureLegacyOrderManagementTablesExist();
 
         if (! Product::where('product_id', 11)->exists()) {
-            $product = new Product();
+            $product = new Product;
             $product->forceFill(array_merge([
                 'product_id' => 11,
                 'product_name' => 'Legacy Dashboard Product',
@@ -3530,7 +3527,7 @@ class AdminPanelTest extends TestCase
             'order_date' => now()->toDateString(),
         ], $orderOverrides));
 
-        $orderDetails = new OrderDetails();
+        $orderDetails = new OrderDetails;
         $orderDetails->forceFill(array_merge([
             'order_code' => $order->order_code,
             'product_id' => 11,
@@ -3551,11 +3548,11 @@ class AdminPanelTest extends TestCase
         $this->ensureLegacyAttributeProductTablesExist();
         $productId = (int) ($productOverrides['product_id'] ?? ((int) Product::max('product_id') + 1));
 
-        $product = new Product();
+        $product = new Product;
         $product->forceFill(array_merge([
             'product_id' => $productId,
-            'product_name' => 'Legacy Extra Product ' . $productId,
-            'product_slug' => 'legacy-extra-product-' . $productId,
+            'product_name' => 'Legacy Extra Product '.$productId,
+            'product_slug' => 'legacy-extra-product-'.$productId,
             'category_id' => null,
             'brand_id' => null,
             'product_desc' => 'Legacy extra product description',
@@ -3571,7 +3568,7 @@ class AdminPanelTest extends TestCase
         ], $productOverrides));
         $product->save();
 
-        $detail = new OrderDetails();
+        $detail = new OrderDetails;
         $detail->forceFill(array_merge([
             'order_code' => $order->order_code,
             'product_id' => $productId,
@@ -3637,7 +3634,7 @@ class AdminPanelTest extends TestCase
 
         return $this->app->make(ProductService::class)->createProduct([
             'name' => 'Modern Comment Product',
-            'slug' => 'modern-comment-product-' . Str::lower(Str::random(6)),
+            'slug' => 'modern-comment-product-'.Str::lower(Str::random(6)),
             'brand_id' => $brand->id,
             'primary_category_id' => $category->id,
             'price' => 2300000,

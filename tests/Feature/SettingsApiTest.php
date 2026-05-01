@@ -55,7 +55,7 @@ class SettingsApiTest extends TestCase
         DB::table('settings')->insert([
             [
                 'key' => 'site_name',
-                'value' => 'Legacy ShopW',
+                'value' => 'Legacy DangDuc',
                 'type' => 'string',
                 'group' => 'seo',
                 'meta' => null,
@@ -77,7 +77,7 @@ class SettingsApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('tables_ready', true)
-            ->assertJsonPath('data.site_name', 'Legacy ShopW')
+            ->assertJsonPath('data.site_name', 'Legacy DangDuc')
             ->assertJsonPath('data.contact_phone', '1900.0000');
 
         $this->getJson('/api/v1/settings/contact')
@@ -86,10 +86,10 @@ class SettingsApiTest extends TestCase
 
         $this->getJson('/api/v1/settings/site_name')
             ->assertOk()
-            ->assertJsonPath('data.value', 'Legacy ShopW');
+            ->assertJsonPath('data.value', 'Legacy DangDuc');
 
         $this->assertSame([
-            'site_name' => 'Legacy ShopW',
+            'site_name' => 'Legacy DangDuc',
             'contact_phone' => '1900.0000',
         ], app(CacheService::class)->getSettings());
     }
@@ -105,7 +105,7 @@ class SettingsApiTest extends TestCase
         DB::table('settings')->insert([
             [
                 'key' => 'site_name',
-                'value' => 'Public ShopW',
+                'value' => 'Public DangDuc',
                 'type' => 'string',
                 'group' => 'seo',
                 'meta' => null,
@@ -149,7 +149,7 @@ class SettingsApiTest extends TestCase
             ->assertOk()
             ->assertJsonPath('success', true)
             ->assertJsonPath('tables_ready', true)
-            ->assertJsonPath('data.site_name', 'Public ShopW')
+            ->assertJsonPath('data.site_name', 'Public DangDuc')
             ->assertJsonPath('data.contact_email', 'hello@shopw.test')
             ->assertJsonMissingPath('data.contact_phone')
             ->assertJsonMissingPath('data.logo_url');
@@ -161,7 +161,7 @@ class SettingsApiTest extends TestCase
 
         $this->getJson('/api/v1/settings/seo')
             ->assertOk()
-            ->assertJsonPath('data.site_name', 'Public ShopW')
+            ->assertJsonPath('data.site_name', 'Public DangDuc')
             ->assertJsonPath('data.logo_url', null);
 
         $this->getJson('/api/v1/settings/contact_phone')
@@ -170,7 +170,7 @@ class SettingsApiTest extends TestCase
             ->assertJsonPath('tables_ready', true);
 
         $this->assertSame([
-            'site_name' => 'Public ShopW',
+            'site_name' => 'Public DangDuc',
             'contact_email' => 'hello@shopw.test',
         ], app(CacheService::class)->getSettings());
     }

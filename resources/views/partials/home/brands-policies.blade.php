@@ -26,11 +26,19 @@
             @foreach ($policyItems as $policy)
                 <div class="col-xs-12 col-sm-6 col-md-3">
                     <article class="tech-policy-card">
-                        <span class="tech-policy-icon">
-                            <i class="fa {{ $policy['icon'] }}"></i>
-                        </span>
-                        <h3>{{ $policy['title'] }}</h3>
-                        <p>{{ $policy['description'] }}</p>
+                        @if (!empty($policy['image'] ?? null))
+                            <span class="tech-policy-icon tech-policy-icon--image">
+                                <img src="{{ $policy['image'] }}" alt="{{ $policy['title'] }}">
+                            </span>
+                        @else
+                            <span class="tech-policy-icon tech-policy-icon--symbol">
+                                <i class="fa {{ $policy['icon'] }}"></i>
+                            </span>
+                        @endif
+                        <div class="tech-policy-body">
+                            <h3>{{ $policy['title'] }}</h3>
+                            <p>{{ $policy['description'] }}</p>
+                        </div>
                     </article>
                 </div>
             @endforeach

@@ -9,8 +9,8 @@ use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use App\Infrastructure\Persistence\Eloquent\Marketing\Coupon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -19,7 +19,9 @@ class CartFlowTest extends TestCase
     use RefreshDatabase;
 
     protected ProductService $productService;
+
     protected CartService $cartService;
+
     protected int $productId;
 
     protected function setUp(): void
@@ -94,10 +96,9 @@ class CartFlowTest extends TestCase
             ->assertSee('Giỏ hàng')
             ->assertSee('2 sản phẩm')
             ->assertSee('Thông tin đơn hàng')
-            ->assertSee('Đăng nhập để thanh toán')
-            ->assertSee('redirect=checkout', false)
-            ->assertSee('redirect_to=', false)
-            ->assertDontSee('Thanh toán ngay')
+            ->assertSee('Thanh toán ngay')
+            ->assertSee('Đã có tài khoản?')
+            ->assertSee('Đăng nhập')
             ->assertSee('Test Product')
             ->assertSee('Áp dụng mã');
     }
@@ -120,7 +121,7 @@ class CartFlowTest extends TestCase
             ->assertOk()
             ->assertSee('Thanh toán ngay')
             ->assertSee('/checkout', false)
-            ->assertDontSee('Đăng nhập để thanh toán');
+            ->assertDontSee('Đã có tài khoản?');
     }
 
     public function test_user_can_update_cart_quantities(): void
@@ -252,7 +253,7 @@ class CartFlowTest extends TestCase
         $this->cartService->addItem($this->productId, 1);
         $item = $this->cartService->items()->first();
 
-        $this->getJson('/del-product/' . $item['session_id'])
+        $this->getJson('/del-product/'.$item['session_id'])
             ->assertOk()
             ->assertJson([
                 'message' => 'Đã xóa sản phẩm khỏi giỏ hàng.',
@@ -268,7 +269,7 @@ class CartFlowTest extends TestCase
 
         Session::forget(CartService::SESSION_KEY);
 
-        $this->getJson('/del-product/' . $item['session_id'])
+        $this->getJson('/del-product/'.$item['session_id'])
             ->assertOk()
             ->assertJson([
                 'message' => 'Đã xóa sản phẩm khỏi giỏ hàng.',
@@ -384,7 +385,7 @@ class CartFlowTest extends TestCase
 
         $product = $this->productService->createProduct([
             'name' => 'Test Product',
-            'slug' => 'test-product-' . Str::random(6),
+            'slug' => 'test-product-'.Str::random(6),
             'brand_id' => $brand->id,
             'primary_category_id' => $category->id,
             'price' => 150000,
@@ -400,4 +401,3 @@ class CartFlowTest extends TestCase
         return $product->product_id;
     }
 }
-
