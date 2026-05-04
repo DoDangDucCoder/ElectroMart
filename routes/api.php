@@ -51,7 +51,6 @@ Route::prefix('v1')->group(function () {
     // Authentication
     Route::post('/auth/login', [AuthController::class, 'login']);
     Route::post('/auth/register', [AuthController::class, 'register']);
-    Route::post('/auth/refresh', [AuthController::class, 'refresh']);
 
     // Health check
     Route::get('/health', [\App\Http\Controllers\Api\HealthController::class, 'check']);
@@ -85,19 +84,22 @@ Route::prefix('v1')->group(function () {
     Route::get('/settings/{key}', [SettingsController::class, 'show']);
 
     // Chatbot
-    Route::get('/chatbot/conversation', [ChatbotController::class, 'conversation']);
-    Route::post('/chatbot/messages', [ChatbotController::class, 'store']);
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::get('/chatbot/conversation', [ChatbotController::class, 'conversation']);
+        Route::post('/chatbot/messages', [ChatbotController::class, 'store']);
+    });
 
     // Admin authentication
     Route::post('/admin/auth/login', [AdminAuthController::class, 'login']);
 });
 
-// Protected API routes
-Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
+// Protected customer API routes
+Route::prefix('v1')->middleware(['auth:sanctum', 'customer.api'])->group(function () {
     
     // User profile
     Route::get('/user', [AuthController::class, 'user']);
     Route::put('/user', [AuthController::class, 'updateProfile']);
+    Route::post('/auth/refresh', [AuthController::class, 'refresh']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     // Cart

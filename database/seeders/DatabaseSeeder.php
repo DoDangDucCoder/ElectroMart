@@ -3,14 +3,11 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([
+        $seeders = [
             AdminSeeder::class,
             BrandSeeder::class,
             CategorySeeder::class,
@@ -20,6 +17,18 @@ class DatabaseSeeder extends Seeder
             BlogPostSeeder::class,
             CouponSeeder::class,
             SettingSeeder::class,
-        ]);
+        ];
+
+        if ($this->shouldSeedDemoAccountData()) {
+            $seeders[] = CustomerAccountDemoSeeder::class;
+        }
+
+        $this->call($seeders);
+    }
+
+    private function shouldSeedDemoAccountData(): bool
+    {
+        return app()->environment(['local', 'testing'])
+            || filter_var(env('SEED_CUSTOMER_ACCOUNT_DEMO', false), FILTER_VALIDATE_BOOLEAN);
     }
 }

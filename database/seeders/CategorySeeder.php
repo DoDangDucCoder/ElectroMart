@@ -9,6 +9,8 @@ class CategorySeeder extends Seeder
 {
     public function run(): void
     {
+        $now = now();
+
         $categories = [
             // Main categories
             [
@@ -159,6 +161,43 @@ class CategorySeeder extends Seeder
             ],
         ];
 
-        DB::table('product_categories')->insert($categories);
+        $parentSlugsBySeedId = [
+            1 => 'dien-thoai',
+            2 => 'laptop',
+            3 => 'phu-kien',
+        ];
+
+        foreach ($categories as $category) {
+            $parentReference = $category['parent_id'] ?? null;
+
+            unset($category['created_at'], $category['updated_at']);
+
+            $category['parent_id'] = null;
+
+            if ($parentReference !== null) {
+                $parentSlug = is_int($parentReference)
+                    ? ($parentSlugsBySeedId[$parentReference] ?? null)
+                    : $parentReference;
+
+                if ($parentSlug !== null) {
+                    $category['parent_id'] = DB::table('product_categories')
+                        ->where('slug', $parentSlug)
+                        ->value('id');
+                }
+            }
+
+            $exists = DB::table('product_categories')->where('slug', $category['slug'])->exists();
+            $category['updated_at'] = $now;
+            $category['deleted_at'] = null;
+
+            if (! $exists) {
+                $category['created_at'] = $now;
+            }
+
+            DB::table('product_categories')->updateOrInsert(
+                ['slug' => $category['slug']],
+                $category
+            );
+        }
     }
 }

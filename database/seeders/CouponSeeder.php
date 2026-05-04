@@ -9,73 +9,94 @@ class CouponSeeder extends Seeder
 {
     public function run(): void
     {
+        $now = now();
+
         $coupons = [
             [
                 'code' => 'WELCOME10',
                 'name' => 'Chào mừng khách hàng mới',
-                'description' => 'Giảm 10% cho đơn hàng đầu tiên',
-                'type' => 'percentage',
+                'type' => 'percent',
                 'value' => 10.0,
-                'minimum_amount' => 1000000,
-                'maximum_discount' => 500000,
+                'min_order_total' => 1000000,
+                'max_discount' => 500000,
                 'usage_limit' => 1000,
-                'usage_limit_per_customer' => 1,
+                'usage_per_customer' => 1,
                 'starts_at' => now(),
                 'expires_at' => now()->addMonths(3),
+                'is_stackable' => false,
                 'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'meta' => [
+                    'description' => 'Giảm 10% cho đơn hàng đầu tiên',
+                ],
             ],
             [
                 'code' => 'SAVE50K',
                 'name' => 'Tiết kiệm 50k',
-                'description' => 'Giảm 50,000 VND cho đơn hàng từ 2 triệu',
                 'type' => 'fixed',
                 'value' => 50000,
-                'minimum_amount' => 2000000,
-                'maximum_discount' => 50000,
+                'min_order_total' => 2000000,
+                'max_discount' => 50000,
                 'usage_limit' => 500,
-                'usage_limit_per_customer' => 2,
+                'usage_per_customer' => 2,
                 'starts_at' => now(),
                 'expires_at' => now()->addMonths(1),
+                'is_stackable' => false,
                 'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'meta' => [
+                    'description' => 'Giảm 50,000 VND cho đơn hàng từ 2 triệu',
+                ],
             ],
             [
                 'code' => 'VIP20',
                 'name' => 'Khách hàng VIP',
-                'description' => 'Giảm 20% cho khách hàng VIP',
-                'type' => 'percentage',
+                'type' => 'percent',
                 'value' => 20.0,
-                'minimum_amount' => 5000000,
-                'maximum_discount' => 2000000,
+                'min_order_total' => 5000000,
+                'max_discount' => 2000000,
                 'usage_limit' => 100,
-                'usage_limit_per_customer' => 5,
+                'usage_per_customer' => 5,
                 'starts_at' => now(),
                 'expires_at' => now()->addMonths(6),
+                'is_stackable' => false,
                 'is_active' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'meta' => [
+                    'description' => 'Giảm 20% cho khách hàng VIP',
+                ],
             ],
             [
                 'code' => 'BLACKFRIDAY',
                 'name' => 'Black Friday 2024',
-                'description' => 'Giảm 30% cho Black Friday',
-                'type' => 'percentage',
+                'type' => 'percent',
                 'value' => 30.0,
-                'minimum_amount' => 3000000,
-                'maximum_discount' => 3000000,
+                'min_order_total' => 3000000,
+                'max_discount' => 3000000,
                 'usage_limit' => 2000,
-                'usage_limit_per_customer' => 3,
+                'usage_per_customer' => 3,
                 'starts_at' => now()->subDays(1),
                 'expires_at' => now()->addDays(3),
+                'is_stackable' => false,
                 'is_active' => true,
-                'created_at' => now()->subDays(2),
-                'updated_at' => now(),
+                'meta' => [
+                    'description' => 'Giảm 30% cho Black Friday',
+                ],
             ],
         ];
 
-        DB::table('coupons')->insert($coupons);
+        foreach ($coupons as $coupon) {
+            $exists = DB::table('coupons')->where('code', $coupon['code'])->exists();
+            $coupon['meta'] = json_encode($coupon['meta'], JSON_UNESCAPED_UNICODE);
+            $coupon['applicable_segments'] = null;
+            $coupon['updated_at'] = $now;
+            $coupon['deleted_at'] = null;
+
+            if (! $exists) {
+                $coupon['created_at'] = $now;
+            }
+
+            DB::table('coupons')->updateOrInsert(
+                ['code' => $coupon['code']],
+                $coupon
+            );
+        }
     }
 }

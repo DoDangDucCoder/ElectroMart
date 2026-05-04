@@ -26,4 +26,9 @@ class Attribute extends BaseModel
     {
         return $this->hasMany(AttributeValue::class);
     }
+
+    public function getDescriptionAttribute(): ?string
+    {
+        return $this->config['description'] ?? null;
+    }
 }

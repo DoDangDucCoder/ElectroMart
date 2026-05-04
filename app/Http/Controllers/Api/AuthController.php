@@ -156,13 +156,21 @@ class AuthController extends Controller
     public function refresh(): JsonResponse
     {
         $user = request()->user();
-        $user?->currentAccessToken()?->delete();
-        $token = $user?->createToken('API Token')->plainTextToken;
+
+        if (! $user || ! $user->currentAccessToken()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthenticated.',
+            ], 401);
+        }
+
+        $user->currentAccessToken()->delete();
+        $token = $user->createToken('API Token')->plainTextToken;
 
         return response()->json([
             'success' => true,
             'data' => [
-                'token' => $token ?? '',
+                'token' => $token,
                 'token_type' => 'Bearer',
             ],
         ]);

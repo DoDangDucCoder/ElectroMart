@@ -9,6 +9,8 @@ class SettingSeeder extends Seeder
 {
     public function run(): void
     {
+        $now = now();
+
         $settings = [
             [
                 'key' => 'site_name',
@@ -147,6 +149,34 @@ class SettingSeeder extends Seeder
             ],
         ];
 
-        DB::table('settings')->insert($settings);
+        foreach ($settings as $setting) {
+            $exists = DB::table('settings')->where('key', $setting['key'])->exists();
+            $description = $setting['description'] ?? null;
+            $isPublic = (bool) ($setting['is_public'] ?? false);
+
+            unset($setting['description'], $setting['is_public'], $setting['created_at'], $setting['updated_at']);
+
+            $setting['group'] = match (true) {
+                str_starts_with($setting['key'], 'contact_') => 'contact',
+                str_starts_with($setting['key'], 'social_') => 'social',
+                str_contains($setting['key'], 'shipping') => 'shipping',
+                in_array($setting['key'], ['site_name', 'site_description', 'site_logo'], true) => 'site',
+                default => 'system',
+            };
+            $setting['meta'] = json_encode([
+                'description' => $description,
+                'is_public' => $isPublic,
+            ], JSON_UNESCAPED_UNICODE);
+            $setting['updated_at'] = $now;
+
+            if (! $exists) {
+                $setting['created_at'] = $now;
+            }
+
+            DB::table('settings')->updateOrInsert(
+                ['key' => $setting['key']],
+                $setting
+            );
+        }
     }
 }

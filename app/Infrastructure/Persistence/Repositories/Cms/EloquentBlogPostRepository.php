@@ -12,10 +12,10 @@ class EloquentBlogPostRepository implements BlogPostRepositoryInterface
 {
     public function paginate(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        return $this->applyFilters($this->baseQuery(), $filters)
-            ->orderByDesc('published_at')
-            ->orderByDesc('id')
-            ->paginate($perPage);
+        $query = $this->applyFilters($this->baseQuery(), $filters);
+        $this->applySort($query, $filters['sort'] ?? null);
+
+        return $query->paginate($perPage);
     }
 
     public function paginatePublishedByCategorySlug(string $slug, int $perPage = 10): LengthAwarePaginator
@@ -121,5 +121,15 @@ class EloquentBlogPostRepository implements BlogPostRepositoryInterface
         }
 
         return $query;
+    }
+
+    protected function applySort(Builder $query, ?string $sort): Builder
+    {
+        return match ($sort) {
+            'oldest' => $query->orderBy('published_at')->orderBy('id'),
+            'most_viewed' => $query->orderByDesc('views_count')->orderByDesc('id'),
+            'featured' => $query->orderByDesc('is_featured')->orderByDesc('published_at')->orderByDesc('id'),
+            default => $query->orderByDesc('published_at')->orderByDesc('id'),
+        };
     }
 }

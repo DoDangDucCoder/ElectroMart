@@ -35,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
             'admin.access' => \App\Http\Middleware\EnsureAdminAccess::class,
             'admin.permission' => \App\Http\Middleware\EnsureAdminPermission::class,
+            'customer.api' => \App\Http\Middleware\EnsureCustomerApiToken::class,
             'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middlewares\RoleOrPermissionMiddleware::class,

@@ -9,6 +9,8 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
+        $now = now();
+
         $products = [
             [
                 'name' => 'iPhone 15 Pro Max 256GB',
@@ -222,7 +224,67 @@ class ProductSeeder extends Seeder
             ],
         ];
 
-        DB::table('products')->insert($products);
+        $brandSlugsBySeedId = [
+            1 => 'apple',
+            2 => 'samsung',
+        ];
+
+        $categorySlugsBySeedId = [
+            1 => 'dien-thoai',
+            2 => 'laptop',
+            3 => 'phu-kien',
+            4 => 'iphone',
+            5 => 'samsung-galaxy',
+            8 => 'laptop-gaming',
+            10 => 'sac-cap',
+        ];
+
+        foreach ($products as $product) {
+            $brandReference = $product['brand_id'] ?? null;
+            $categoryReference = $product['primary_category_id'] ?? null;
+
+            unset($product['created_at'], $product['updated_at']);
+
+            $product['brand_id'] = null;
+            $product['primary_category_id'] = null;
+
+            if ($brandReference !== null) {
+                $brandSlug = is_int($brandReference)
+                    ? ($brandSlugsBySeedId[$brandReference] ?? null)
+                    : $brandReference;
+
+                if ($brandSlug !== null) {
+                    $product['brand_id'] = DB::table('brands')
+                        ->where('slug', $brandSlug)
+                        ->value('id');
+                }
+            }
+
+            if ($categoryReference !== null) {
+                $categorySlug = is_int($categoryReference)
+                    ? ($categorySlugsBySeedId[$categoryReference] ?? null)
+                    : $categoryReference;
+
+                if ($categorySlug !== null) {
+                    $product['primary_category_id'] = DB::table('product_categories')
+                        ->where('slug', $categorySlug)
+                        ->value('id');
+                }
+            }
+
+            $exists = DB::table('products')->where('slug', $product['slug'])->exists();
+            $product['updated_at'] = $now;
+            $product['deleted_at'] = null;
+
+            if (! $exists) {
+                $product['created_at'] = $now;
+            }
+
+            DB::table('products')->updateOrInsert(
+                ['slug' => $product['slug']],
+                $product
+            );
+        }
 
         // Insert product category relationships
         $productCategories = [
@@ -238,6 +300,51 @@ class ProductSeeder extends Seeder
             ['product_id' => 5, 'category_id' => 3],   // Galaxy Buds2 Pro -> Phụ kiện
         ];
 
-        DB::table('product_category_product')->insert($productCategories);
+        $productSlugsBySeedId = [
+            1 => 'iphone-15-pro-max-256gb',
+            2 => 'samsung-galaxy-s24-ultra-512gb',
+            3 => 'macbook-pro-14-inch-m3',
+            4 => 'airpods-pro-2nd-gen',
+            5 => 'samsung-galaxy-buds2-pro',
+        ];
+
+        foreach ($productCategories as $productCategory) {
+            $productSlug = $productSlugsBySeedId[$productCategory['product_id']] ?? null;
+            $categorySlug = $categorySlugsBySeedId[$productCategory['category_id']] ?? null;
+
+            if ($productSlug === null || $categorySlug === null) {
+                continue;
+            }
+
+            $productId = DB::table('products')->where('slug', $productSlug)->value('id');
+            $categoryId = DB::table('product_categories')->where('slug', $categorySlug)->value('id');
+
+            if (! $productId || ! $categoryId) {
+                continue;
+            }
+
+            $exists = DB::table('product_category_product')
+                ->where('product_id', $productId)
+                ->where('product_category_id', $categoryId)
+                ->exists();
+
+            $values = [
+                'product_id' => $productId,
+                'product_category_id' => $categoryId,
+                'updated_at' => $now,
+            ];
+
+            if (! $exists) {
+                $values['created_at'] = $now;
+            }
+
+            DB::table('product_category_product')->updateOrInsert(
+                [
+                    'product_id' => $productId,
+                    'product_category_id' => $categoryId,
+                ],
+                $values
+            );
+        }
     }
 }

@@ -5,8 +5,12 @@ namespace App\Infrastructure\Persistence\Eloquent\Customer;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductReview;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductView;
 use App\Infrastructure\Persistence\Eloquent\Customer\Address;
+use App\Infrastructure\Persistence\Eloquent\Customer\PaymentMethod;
+use App\Infrastructure\Persistence\Eloquent\Customer\VatInvoice;
 use App\Infrastructure\Persistence\Eloquent\Loyalty\LoyaltyTier;
+use App\Infrastructure\Persistence\Eloquent\Marketing\CouponRedemption;
 use App\Infrastructure\Persistence\Eloquent\Order\Order;
+use App\Infrastructure\Persistence\Eloquent\Order\OrderReturn;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -58,5 +62,25 @@ class Customer extends Authenticatable
     public function loyaltyTier(): BelongsTo
     {
         return $this->belongsTo(LoyaltyTier::class, 'loyalty_tier_id');
+    }
+
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class);
+    }
+
+    public function couponRedemptions(): HasMany
+    {
+        return $this->hasMany(CouponRedemption::class);
+    }
+
+    public function vatInvoices(): HasMany
+    {
+        return $this->hasMany(VatInvoice::class);
+    }
+
+    public function orderReturns(): HasMany
+    {
+        return $this->hasMany(OrderReturn::class);
     }
 }

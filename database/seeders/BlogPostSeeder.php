@@ -9,6 +9,8 @@ class BlogPostSeeder extends Seeder
 {
     public function run(): void
     {
+        $now = now();
+
         $posts = [
             [
                 'blog_category_id' => 1, // Tin tức công nghệ
@@ -138,6 +140,37 @@ class BlogPostSeeder extends Seeder
             ],
         ];
 
-        DB::table('blog_posts')->insert($posts);
+        $categorySlugsBySeedId = [
+            1 => 'tin-tuc-cong-nghe',
+            2 => 'danh-gia-san-pham',
+            3 => 'huong-dan-su-dung',
+            4 => 'khuyen-mai',
+        ];
+
+        foreach ($posts as $post) {
+            $categoryReference = $post['blog_category_id'] ?? null;
+            $categorySlug = is_int($categoryReference)
+                ? ($categorySlugsBySeedId[$categoryReference] ?? null)
+                : $categoryReference;
+
+            unset($post['created_at'], $post['updated_at']);
+
+            $post['blog_category_id'] = $categorySlug !== null
+                ? DB::table('blog_categories')->where('slug', $categorySlug)->value('id')
+                : null;
+
+            $exists = DB::table('blog_posts')->where('slug', $post['slug'])->exists();
+            $post['updated_at'] = $now;
+            $post['deleted_at'] = null;
+
+            if (! $exists) {
+                $post['created_at'] = $now;
+            }
+
+            DB::table('blog_posts')->updateOrInsert(
+                ['slug' => $post['slug']],
+                $post
+            );
+        }
     }
 }

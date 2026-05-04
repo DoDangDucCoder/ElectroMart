@@ -9,7 +9,8 @@ return [
         'cta_url' => env('STOREFRONT_FLASH_SALE_CTA_URL', '/tim-kiem'),
         'countdown_ends_at' => env('STOREFRONT_FLASH_SALE_ENDS_AT', '2026-12-31 23:59:59'),
         'target_count' => (int) env('STOREFRONT_FLASH_SALE_TARGET_COUNT', 6),
-        'use_demo_products' => filter_var(env('STOREFRONT_FLASH_SALE_DEMO_PRODUCTS', true), FILTER_VALIDATE_BOOL),
+        'use_demo_products' => in_array(env('APP_ENV', 'production'), ['local', 'testing'], true)
+            && filter_var(env('STOREFRONT_FLASH_SALE_DEMO_PRODUCTS', false), FILTER_VALIDATE_BOOL),
         'product_slugs' => array_values(array_filter(array_map(
             static fn ($slug) => trim((string) $slug),
             explode(',', (string) env('STOREFRONT_FLASH_SALE_PRODUCT_SLUGS', ''))
