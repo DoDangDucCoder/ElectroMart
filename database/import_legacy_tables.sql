@@ -1,5 +1,6 @@
--- Import essential legacy tables for immediate functionality
--- This file contains only the critical tables needed to run the application
+-- Legacy archive table sample import.
+-- Do not use this file for normal setup, current storefront runtime, or production bootstrap.
+-- Prefer Laravel migrations + seeders. Import this only for archive comparison/recovery after a DB backup.
 
 -- Table structure for table `tbl_icons`
 CREATE TABLE IF NOT EXISTS `tbl_icons` (

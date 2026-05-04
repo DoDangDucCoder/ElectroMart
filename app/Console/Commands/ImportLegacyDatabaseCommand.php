@@ -14,24 +14,46 @@ class ImportLegacyDatabaseCommand extends Command
      * @var string
      */
     protected $signature = 'import:legacy-database
-                            {--dump=shopbanhang.sql : Path to the legacy SQL dump}
-                            {--force : Drop and recreate existing legacy tbl_* tables}';
+                            {--dump= : Explicit path to an old legacy SQL dump}
+                            {--force : Drop and recreate existing legacy tbl_* tables}
+                            {--confirm-legacy-archive : Confirm this is old archive data and not current production data}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Import all legacy tables from shopbanhang.sql file';
+    protected $description = 'Import old legacy archive tables from an explicitly provided SQL dump file';
 
     /**
      * Execute the console command.
      */
     public function handle(LegacySqlImporter $importer): int
     {
-        $dumpPath = $this->resolveDumpPath((string) $this->option('dump'));
+        if (app()->environment('production')) {
+            $this->error('This legacy archive import command is disabled in production.');
 
-        $this->info('Importing legacy database from '.$dumpPath.'...');
+            return self::FAILURE;
+        }
+
+        if (! $this->option('confirm-legacy-archive')) {
+            $this->warn('This command imports old legacy archive tables, not current production data.');
+            $this->line('Use --confirm-legacy-archive only after backing up the database and confirming the archive is intentionally needed.');
+
+            return self::FAILURE;
+        }
+
+        $dumpOption = trim((string) $this->option('dump'));
+
+        if ($dumpOption === '') {
+            $this->error('A legacy archive dump path is required. Pass --dump=/path/to/archive.sql explicitly.');
+
+            return self::FAILURE;
+        }
+
+        $dumpPath = $this->resolveDumpPath($dumpOption);
+
+        $this->info('Importing old legacy archive database from '.$dumpPath.'...');
 
         if (! File::exists($dumpPath)) {
             $this->error('SQL dump file not found.');
@@ -42,7 +64,8 @@ class ImportLegacyDatabaseCommand extends Command
         $stats = $importer->import(
             $dumpPath,
             (bool) $this->option('force'),
-            fn (string $level, string $message) => $this->{$level}($message)
+            fn (string $level, string $message) => $this->{$level}($message),
+            confirmed: true
         );
 
         $this->info('Import completed.');
@@ -56,7 +79,7 @@ class ImportLegacyDatabaseCommand extends Command
 
     private function resolveDumpPath(string $dump): string
     {
-        $dump = trim($dump) ?: 'shopbanhang.sql';
+        $dump = trim($dump);
 
         if (str_starts_with($dump, DIRECTORY_SEPARATOR) || preg_match('/^[A-Za-z]:[\\\\\\/]/', $dump) === 1) {
             return $dump;

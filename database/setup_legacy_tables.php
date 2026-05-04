@@ -2,7 +2,13 @@
 
 use Illuminate\Support\Facades\DB;
 
-// Create missing legacy tables
+if ((string) env('CONFIRM_LEGACY_TABLE_SETUP', '') !== 'true') {
+    throw new RuntimeException(
+        'Legacy table setup is disabled. Set CONFIRM_LEGACY_TABLE_SETUP=true only after backing up the database and confirming this archive setup is intentionally needed.'
+    );
+}
+
+// Create missing legacy archive tables.
 $tables = [
     'tbl_slider' => "
         CREATE TABLE IF NOT EXISTS `tbl_slider` (

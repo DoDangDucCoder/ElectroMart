@@ -18,8 +18,12 @@ class LegacySqlImporter
      * @param  callable(string, string): void|null  $logger
      * @return array<string, int>
      */
-    public function import(string $dumpPath, bool $force = false, ?callable $logger = null): array
+    public function import(string $dumpPath, bool $force = false, ?callable $logger = null, bool $confirmed = false): array
     {
+        if (! $confirmed) {
+            throw new RuntimeException('Legacy SQL import requires explicit confirmation.');
+        }
+
         if (! File::exists($dumpPath)) {
             throw new RuntimeException("SQL dump not found: {$dumpPath}");
         }

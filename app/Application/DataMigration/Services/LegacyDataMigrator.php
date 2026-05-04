@@ -54,8 +54,12 @@ class LegacyDataMigrator
     protected array $provinceMap = [];
     protected array $wardMap = [];
 
-    public function migrate(): void
+    public function migrate(bool $confirmed = false): void
     {
+        if (! $confirmed) {
+            throw new \LogicException('Legacy data migration requires explicit confirmation.');
+        }
+
         DB::transaction(function () {
             $this->migrateTaxonomies();
             $this->migrateAttributes();

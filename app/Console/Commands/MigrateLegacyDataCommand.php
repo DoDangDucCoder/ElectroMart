@@ -10,17 +10,31 @@ class MigrateLegacyDataCommand extends Command
     protected $signature = 'migrate:legacy-data 
                             {--table= : Migrate specific table only}
                             {--dry-run : Show what would be migrated without actually migrating}
-                            {--force : Force migration even if target tables have data}';
+                            {--force : Force migration even if target tables have data}
+                            {--confirm-legacy-migration : Confirm this legacy table migration is intentionally needed}';
 
     protected $description = 'Migrate data from legacy tables to new schema';
 
     public function handle(DataMigrationService $migrationService): int
     {
+        if (app()->environment('production')) {
+            $this->error('This legacy data migration command is disabled in production.');
+
+            return self::FAILURE;
+        }
+
         $this->info('Starting legacy data migration...');
 
         if ($this->option('dry-run')) {
             $this->info('DRY RUN MODE - No data will be migrated');
             return $this->showMigrationPlan($migrationService);
+        }
+
+        if (! $this->option('confirm-legacy-migration')) {
+            $this->warn('This command migrates configured legacy source tables into current target tables.');
+            $this->line('Use --confirm-legacy-migration only after backing up the database and confirming this one-time migration is intentionally needed.');
+
+            return self::FAILURE;
         }
 
         if (!$this->option('force')) {
@@ -33,7 +47,7 @@ class MigrateLegacyDataCommand extends Command
         }
 
         try {
-            $results = $migrationService->migrateAll();
+            $results = $migrationService->migrateAll(confirmed: true);
             
             $this->displayResults($results);
             

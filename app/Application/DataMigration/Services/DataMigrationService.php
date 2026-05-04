@@ -8,8 +8,10 @@ use Illuminate\Support\Facades\Log;
 
 class DataMigrationService
 {
-    public function migrateAll(): array
+    public function migrateAll(bool $confirmed = false): array
     {
+        $this->ensureConfirmed($confirmed);
+
         $results = [];
         
         $mappings = DB::table('migration_mappings')
@@ -19,7 +21,7 @@ class DataMigrationService
 
         foreach ($mappings as $mapping) {
             try {
-                $result = $this->migrateTable($mapping);
+                $result = $this->migrateTable($mapping, confirmed: true);
                 $results[$mapping->source_table] = $result;
             } catch (\Exception $e) {
                 Log::error("Migration failed for {$mapping->source_table}: " . $e->getMessage());
@@ -34,8 +36,10 @@ class DataMigrationService
         return $results;
     }
 
-    public function migrateTable($mapping): array
+    public function migrateTable($mapping, bool $confirmed = false): array
     {
+        $this->ensureConfirmed($confirmed);
+
         $migrationId = $this->createMigrationRecord($mapping);
         
         try {
@@ -78,7 +82,7 @@ class DataMigrationService
                 }
             }
 
-            $this->updateMigrationStatus($mappingId, 'completed', $recordsMigrated);
+            $this->updateMigrationStatus($migrationId, 'completed', $recordsMigrated);
             
             return [
                 'success' => true,
@@ -87,8 +91,15 @@ class DataMigrationService
             ];
 
         } catch (\Exception $e) {
-            $this->updateMigrationStatus($mappingId, 'failed', 0, $e->getMessage());
+            $this->updateMigrationStatus($migrationId, 'failed', 0, $e->getMessage());
             throw $e;
+        }
+    }
+
+    private function ensureConfirmed(bool $confirmed): void
+    {
+        if (! $confirmed) {
+            throw new \LogicException('Legacy table migration requires explicit confirmation.');
         }
     }
 
@@ -207,8 +218,10 @@ class DataMigrationService
             ->toArray();
     }
 
-    public function rollbackMigration(int $migrationId): bool
+    public function rollbackMigration(int $migrationId, bool $confirmed = false): bool
     {
+        $this->ensureConfirmed($confirmed);
+
         $migration = DB::table('data_migrations')->find($migrationId);
         
         if (!$migration || $migration->status !== 'completed') {

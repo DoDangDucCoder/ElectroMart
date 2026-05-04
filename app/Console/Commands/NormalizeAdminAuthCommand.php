@@ -17,7 +17,9 @@ use Spatie\Permission\Models\Role;
 
 class NormalizeAdminAuthCommand extends Command
 {
-    protected $signature = 'admin:normalize-auth {--dry-run : Show the changes without saving them}';
+    protected $signature = 'admin:normalize-auth
+                            {--dry-run : Show the changes without saving them}
+                            {--confirm-legacy-admin-backfill : Confirm importing legacy admin users from tbl_admin or legacy_admins is intentionally needed}';
 
     protected $description = 'Normalize admin roles to the web guard and backfill legacy admin users into users';
 
@@ -186,6 +188,19 @@ class NormalizeAdminAuthCommand extends Command
         [$sourceTable, $admins] = $this->legacyAdmins();
 
         if (! $sourceTable || $admins->isEmpty()) {
+            return;
+        }
+
+        if (app()->environment('production')) {
+            $this->error("Legacy admin backfill from {$sourceTable} is disabled in production.");
+
+            return;
+        }
+
+        if (! $dryRun && ! $this->option('confirm-legacy-admin-backfill')) {
+            $this->warn("Legacy admin users were found in {$sourceTable}.");
+            $this->line('Use --confirm-legacy-admin-backfill only after backing up the database and confirming this one-time admin import is intentionally needed.');
+
             return;
         }
 

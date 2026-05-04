@@ -13,7 +13,9 @@ class MigrateLegacyData extends Command
      *
      * @var string
      */
-    protected $signature = 'data:migrate-legacy {--dry-run : Chạy thử không ghi dữ liệu mới}';
+    protected $signature = 'data:migrate-legacy
+                            {--dry-run : Chạy thử không ghi dữ liệu mới}
+                            {--confirm-legacy-migration : Confirm this legacy tbl_* migration is intentionally needed}';
 
     /**
      * The console command description.
@@ -29,6 +31,12 @@ class MigrateLegacyData extends Command
 
     public function handle(): int
     {
+        if (app()->environment('production')) {
+            $this->error('This legacy data migration command is disabled in production.');
+
+            return self::FAILURE;
+        }
+
         $dryRun = (bool) $this->option('dry-run');
 
         $this->info('=== Legacy data migration started ===');
@@ -40,7 +48,14 @@ class MigrateLegacyData extends Command
                 return self::SUCCESS;
             }
 
-            $this->migrator->migrate();
+            if (! $this->option('confirm-legacy-migration')) {
+                $this->warn('This command migrates legacy tbl_* data into the current schema.');
+                $this->line('Use --confirm-legacy-migration only after backing up the database and confirming this one-time migration is intentionally needed.');
+
+                return self::FAILURE;
+            }
+
+            $this->migrator->migrate(confirmed: true);
 
             $this->info('Legacy data migration completed successfully.');
 

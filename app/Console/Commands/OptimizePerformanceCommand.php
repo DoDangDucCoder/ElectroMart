@@ -10,7 +10,6 @@ use App\Application\Shared\Services\QueryMonitoringService;
 use App\Application\Shared\Services\DatabaseOptimizationService;
 use App\Application\Shared\Services\EagerLoadingService;
 use App\Application\Shared\Services\CacheWarmingService;
-use App\Application\Shared\Services\PerformanceTestingService;
 
 class OptimizePerformanceCommand extends Command
 {
@@ -21,9 +20,8 @@ class OptimizePerformanceCommand extends Command
                             {--query-analyze : Analyze query performance}
                             {--cache-stats : Show cache statistics}
                             {--db-optimize : Optimize database}
-                            {--eager-loading : Test eager loading}
-                            {--performance-test : Run performance tests}
-                            {--cache-warming-strategy : Test cache warming strategies}
+                            {--eager-loading : Inspect eager loading}
+                            {--cache-warming-strategy : Check cache warming strategies}
                             {--full : Run full optimization}';
 
     protected $description = 'Optimize application performance with caching, query optimization, and monitoring';
@@ -34,8 +32,7 @@ class OptimizePerformanceCommand extends Command
         QueryMonitoringService $monitoringService,
         DatabaseOptimizationService $dbService,
         EagerLoadingService $eagerLoadingService,
-        CacheWarmingService $cacheWarmingService,
-        PerformanceTestingService $performanceTestingService
+        CacheWarmingService $cacheWarmingService
     ): int {
         $this->info('Starting performance optimization...');
 
@@ -51,13 +48,11 @@ class OptimizePerformanceCommand extends Command
             } elseif ($this->option('db-optimize')) {
                 $this->optimizeDatabase($dbService);
             } elseif ($this->option('eager-loading')) {
-                $this->testEagerLoading($eagerLoadingService);
-            } elseif ($this->option('performance-test')) {
-                $this->runPerformanceTests($performanceTestingService);
+                $this->inspectEagerLoading($eagerLoadingService);
             } elseif ($this->option('cache-warming-strategy')) {
-                $this->testCacheWarmingStrategies($cacheWarmingService);
+                $this->checkCacheWarmingStrategies($cacheWarmingService);
             } elseif ($this->option('full')) {
-                $this->runFullOptimization($queryService, $cacheService, $monitoringService, $dbService, $eagerLoadingService, $cacheWarmingService, $performanceTestingService);
+                $this->runFullOptimization($queryService, $cacheService, $monitoringService, $dbService, $eagerLoadingService, $cacheWarmingService);
             } else {
                 $this->showHelp();
             }
@@ -248,9 +243,9 @@ class OptimizePerformanceCommand extends Command
         }
     }
 
-    private function testEagerLoading(EagerLoadingService $eagerLoadingService): void
+    private function inspectEagerLoading(EagerLoadingService $eagerLoadingService): void
     {
-        $this->info('Testing eager loading optimization...');
+        $this->info('Inspecting eager loading optimization...');
         
         // Test relationship statistics
         $stats = $eagerLoadingService->getRelationshipStatistics();
@@ -267,63 +262,18 @@ class OptimizePerformanceCommand extends Command
             })->toArray()
         );
         
-        $this->info('Eager loading test completed!');
+        $this->info('Eager loading inspection completed!');
     }
 
-    private function runPerformanceTests(PerformanceTestingService $performanceTestingService): void
+    private function checkCacheWarmingStrategies(CacheWarmingService $cacheWarmingService): void
     {
-        $this->info('Running comprehensive performance tests...');
-        
-        $results = $performanceTestingService->runComprehensiveTests();
-        $metrics = $performanceTestingService->getPerformanceMetrics();
-        
-        // Show overall score
-        $this->info('Performance Test Results:');
-        $this->line('');
-        $this->line("Overall Score: {$metrics['overall_score']}/100");
-        
-        // Show test results
-        foreach ($results as $test => $result) {
-            if (($result['status'] ?? null) === 'success') {
-                $this->line("✓ {$test}: {$result['total_time']}s");
-            } elseif (($result['status'] ?? null) === 'skipped') {
-                $reason = $result['reason'] ?? 'Skipped';
-                $this->line("- {$test}: Skipped ({$reason})");
-            } else {
-                $this->line("❌ {$test}: Failed");
-            }
-        }
-        
-        // Show recommendations
-        if (!empty($metrics['recommendations'])) {
-            $this->line('');
-            $this->info('Recommendations:');
-            foreach ($metrics['recommendations'] as $recommendation) {
-                $this->line("• {$recommendation}");
-            }
-        }
-        
-        // Show bottlenecks
-        if (!empty($metrics['bottlenecks'])) {
-            $this->line('');
-            $this->warn('Bottlenecks detected:');
-            foreach ($metrics['bottlenecks'] as $bottleneck) {
-                $this->line("⚠ {$bottleneck}");
-            }
-        }
-        
-        $this->info('Performance tests completed!');
-    }
-
-    private function testCacheWarmingStrategies(CacheWarmingService $cacheWarmingService): void
-    {
-        $this->info('Testing cache warming strategies...');
+        $this->info('Checking cache warming strategies...');
         
         // Test individual strategies
         $strategies = ['critical', 'frequent', 'popular', 'statistics', 'background'];
         
         foreach ($strategies as $strategy) {
-            $this->info("Testing strategy: {$strategy}");
+            $this->info("Checking strategy: {$strategy}");
             $cacheWarmingService->warmUpStrategy($strategy);
         }
         
@@ -337,7 +287,7 @@ class OptimizePerformanceCommand extends Command
             })->toArray()
         );
         
-        $this->info('Cache warming strategy test completed!');
+        $this->info('Cache warming strategy check completed!');
     }
 
     private function runFullOptimization(
@@ -346,8 +296,7 @@ class OptimizePerformanceCommand extends Command
         QueryMonitoringService $monitoringService,
         DatabaseOptimizationService $dbService,
         EagerLoadingService $eagerLoadingService,
-        CacheWarmingService $cacheWarmingService,
-        PerformanceTestingService $performanceTestingService
+        CacheWarmingService $cacheWarmingService
     ): void {
         $this->info('Running full performance optimization...');
         
@@ -372,20 +321,16 @@ class OptimizePerformanceCommand extends Command
         
         $monitoringService->stopMonitoring();
         
-        // Step 5: Test eager loading
-        $this->info('Step 5: Testing eager loading...');
-        $this->testEagerLoading($eagerLoadingService);
+        // Step 5: Inspect eager loading
+        $this->info('Step 5: Inspecting eager loading...');
+        $this->inspectEagerLoading($eagerLoadingService);
         
         // Step 6: Cache warming strategies
-        $this->info('Step 6: Testing cache warming strategies...');
-        $this->testCacheWarmingStrategies($cacheWarmingService);
+        $this->info('Step 6: Checking cache warming strategies...');
+        $this->checkCacheWarmingStrategies($cacheWarmingService);
         
-        // Step 7: Performance tests
-        $this->info('Step 7: Running performance tests...');
-        $this->runPerformanceTests($performanceTestingService);
-        
-        // Step 8: Show results
-        $this->info('Step 8: Performance analysis...');
+        // Step 7: Show results
+        $this->info('Step 7: Performance analysis...');
         $this->showQueryAnalysis($monitoringService);
         $this->showCacheStatistics($cacheService);
         
@@ -403,9 +348,8 @@ class OptimizePerformanceCommand extends Command
         $this->line('  --query-analyze  Analyze query performance');
         $this->line('  --cache-stats    Show cache statistics');
         $this->line('  --db-optimize    Optimize database');
-        $this->line('  --eager-loading  Test eager loading');
-        $this->line('  --performance-test Run performance tests');
-        $this->line('  --cache-warming-strategy Test cache warming strategies');
+        $this->line('  --eager-loading  Inspect eager loading');
+        $this->line('  --cache-warming-strategy Check cache warming strategies');
         $this->line('  --full           Run full optimization');
         $this->line('');
         $this->line('Examples:');

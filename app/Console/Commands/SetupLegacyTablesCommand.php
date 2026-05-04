@@ -12,20 +12,34 @@ class SetupLegacyTablesCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'setup:legacy-tables';
+    protected $signature = 'setup:legacy-tables
+                            {--confirm-legacy-archive : Confirm legacy table setup is intentionally needed}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Setup essential legacy tables for immediate functionality';
+    protected $description = 'Setup old legacy archive tables for comparison or recovery only';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
+        if (app()->environment('production')) {
+            $this->error('This legacy table setup command is disabled in production.');
+
+            return self::FAILURE;
+        }
+
+        if (! $this->option('confirm-legacy-archive')) {
+            $this->warn('This command creates old legacy tbl_* tables and sample data.');
+            $this->line('Use --confirm-legacy-archive only after backing up the database and confirming the legacy tables are intentionally needed.');
+
+            return self::FAILURE;
+        }
+
         $this->info('Setting up legacy tables...');
 
         $tables = [
