@@ -5,6 +5,7 @@ namespace App\Http\Requests\Admin\Legacy\Products;
 use App\Http\Requests\BaseFormRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 
 class StoreProductAttributeRequest extends BaseFormRequest
 {
@@ -20,12 +21,13 @@ class StoreProductAttributeRequest extends BaseFormRequest
             }
         };
 
-        if (Schema::hasTable('tbl_attribute')) {
-            $attributeRules[] = 'exists:tbl_attribute,id';
+        if (Schema::hasTable('attributes')) {
+            $attributeRules[] = 'exists:attributes,id';
         }
 
-        if (Schema::hasTable('tbl_product_attribute')) {
-            $nameRules[] = 'unique:tbl_product_attribute,name';
+        if (Schema::hasTable('product_variants')) {
+            $nameRules[] = Rule::unique('product_variants', 'name')
+                ->where('product_id', (int) $this->input('product_id'));
         }
 
         return [
@@ -65,14 +67,6 @@ class StoreProductAttributeRequest extends BaseFormRequest
     protected function productExists(int $productId): bool
     {
         $checkedTable = false;
-
-        if (Schema::hasTable('tbl_product')) {
-            $checkedTable = true;
-
-            if (DB::table('tbl_product')->where('product_id', $productId)->exists()) {
-                return true;
-            }
-        }
 
         if (Schema::hasTable('products')) {
             $checkedTable = true;

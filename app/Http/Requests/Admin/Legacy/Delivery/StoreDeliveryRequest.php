@@ -5,6 +5,7 @@ namespace App\Http\Requests\Admin\Legacy\Delivery;
 use App\Application\Shared\Services\NumericInputNormalizer;
 use App\Http\Requests\BaseFormRequest;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 
 class StoreDeliveryRequest extends BaseFormRequest
 {
@@ -14,16 +15,19 @@ class StoreDeliveryRequest extends BaseFormRequest
         $provinceRules = ['required', 'integer'];
         $wardRules = ['required', 'integer'];
 
-        if (Schema::hasTable('tbl_tinhthanhpho')) {
-            $cityRules[] = 'exists:tbl_tinhthanhpho,matp';
+        if (Schema::hasTable('locations')) {
+            $cityRules[] = Rule::exists('locations', 'id')
+                ->where(fn ($query) => $query->where('type', 'city'));
         }
 
-        if (Schema::hasTable('tbl_quanhuyen')) {
-            $provinceRules[] = 'exists:tbl_quanhuyen,maqh';
+        if (Schema::hasTable('locations')) {
+            $provinceRules[] = Rule::exists('locations', 'id')
+                ->where(fn ($query) => $query->where('type', 'province'));
         }
 
-        if (Schema::hasTable('tbl_xaphuongthitran')) {
-            $wardRules[] = 'exists:tbl_xaphuongthitran,xaid';
+        if (Schema::hasTable('locations')) {
+            $wardRules[] = Rule::exists('locations', 'id')
+                ->where(fn ($query) => $query->where('type', 'ward'));
         }
 
         return [

@@ -12,7 +12,7 @@
             <div class="g-admin-page-stats">
                 <article>
                     <strong>{{ number_format($contents->count()) }}</strong>
-                    <span>Tệp đang hiển thị</span>
+                    <span>Tệp trong bảng documents</span>
                 </article>
                 <article>
                     <strong>{{ $documentDiskLabel }}</strong>
@@ -24,8 +24,44 @@
         <section class="g-admin-panel-card">
             <div class="g-admin-panel-head">
                 <div>
+                    <div>Tải tài liệu lên</div>
+                    <p>Tài liệu được lưu trong disk hiện tại và ghi metadata vào bảng documents.</p>
+                </div>
+            </div>
+            <div class="g-admin-panel-body">
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <form action="{{ route('admin.documents.store') }}" method="post" enctype="multipart/form-data" class="g-admin-form-grid">
+                    @csrf
+                    <div class="form-group">
+                        <label for="document">Tệp tài liệu</label>
+                        <input type="file" name="document" id="document" class="form-control">
+                        <span class="g-admin-cell-note">Hỗ trợ pdf, doc, docx, txt, csv, xls, xlsx, jpg, jpeg, png, webp. Tối đa 5MB.</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Nhóm tài liệu</label>
+                        <input type="text" name="category" id="category" class="form-control" value="{{ old('category') }}" placeholder="Ví dụ: hướng dẫn, nội bộ">
+                    </div>
+                    <div class="g-admin-inline-actions g-admin-form-span-2">
+                        <button type="submit" class="btn btn-info">Tải lên</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section class="g-admin-panel-card" style="margin-top:18px;">
+            <div class="g-admin-panel-head">
+                <div>
                     <div>Danh sách tài liệu</div>
-                    <p>Tải xuống, xem nhanh và xóa các tệp đang có trong kho tài liệu.</p>
+                    <p>Tải xuống, xem nhanh và xóa các tệp được quản lý trong bảng documents.</p>
                 </div>
             </div>
             <div class="g-admin-panel-body">
@@ -61,6 +97,9 @@
                                         <li>Đường dẫn: {{ $document['path'] }}</li>
                                         <li>Định dạng: {{ $document['mimetype'] }}</li>
                                         <li>Kích thước: {{ $document['size_label'] }}</li>
+                                        @if (! empty($document['category']))
+                                            <li>Nhóm: {{ $document['category'] }}</li>
+                                        @endif
                                         <li>Cập nhật: {{ $document['last_modified_label'] }}</li>
                                     </ul>
                                 </div>
@@ -76,7 +115,7 @@
                                         </a>
                                     @endif
 
-                                    <form action="{{ url('delete_document/' . $document['path']) }}" method="POST"
+                                    <form action="{{ $document['delete_url'] }}" method="POST"
                                         onsubmit="return confirm('Bạn có chắc là muốn xóa tài liệu này không?')">
                                         @csrf
                                         @method('DELETE')

@@ -14,6 +14,8 @@ class StoreSliderRequest extends BaseFormRequest
             'slider_status' => ['required', 'in:0,1'],
             'slider_desc' => ['nullable', 'string'],
             'slider_tone' => ['nullable', 'in:auto,mobile,gaming,lifestyle,accessory'],
+            'slider_link_url' => ['nullable', 'url', 'max:2048'],
+            'slider_display_order' => ['nullable', 'integer', 'min:0'],
             'slider_image' => ['required', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
         ];
     }

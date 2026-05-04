@@ -4,8 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Admin\Legacy\Products\StoreAttributeRequest;
 use App\Http\Requests\Admin\Legacy\Products\UpdateAttributeRequest;
-use App\Models\Attribute;
+use App\Infrastructure\Persistence\Eloquent\Catalog\Attribute;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class AttributeController extends Controller
 {
@@ -36,7 +37,12 @@ class AttributeController extends Controller
 
         $attribute = new Attribute();
         $attribute->name = $validated['name'];
-        $attribute->description = $validated['description'];
+        $attribute->slug = $this->uniqueAttributeSlug($validated['name']);
+        $attribute->type = 'select';
+        $attribute->is_active = true;
+        $attribute->config = [
+            'description' => $validated['description'],
+        ];
         $attribute->save();
 
         return redirect()->route('attribute.index')->with('message', 'Thêm thuộc tính thành công.');
@@ -76,7 +82,10 @@ class AttributeController extends Controller
         }
 
         $attribute->name = $validated['name'];
-        $attribute->description = $validated['description'];
+        $attribute->slug = $this->uniqueAttributeSlug($validated['name'], (int) $attribute->id);
+        $attribute->config = array_filter(array_merge($attribute->config ?? [], [
+            'description' => $validated['description'],
+        ]), static fn ($value) => $value !== null && $value !== '');
 
         $attribute->save();
 
@@ -102,5 +111,23 @@ class AttributeController extends Controller
     protected function attributeTableReady(): bool
     {
         return Schema::hasTable((new Attribute())->getTable());
+    }
+
+    protected function uniqueAttributeSlug(string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($name) ?: Str::random(8);
+        $slug = $base;
+        $counter = 2;
+
+        while (Attribute::query()
+            ->where('slug', $slug)
+            ->when($ignoreId, fn ($query) => $query->whereKeyNot($ignoreId))
+            ->exists()
+        ) {
+            $slug = $base.'-'.$counter;
+            $counter++;
+        }
+
+        return $slug;
     }
 }

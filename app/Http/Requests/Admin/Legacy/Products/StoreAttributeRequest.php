@@ -11,8 +11,8 @@ class StoreAttributeRequest extends BaseFormRequest
     {
         $nameRules = ['required', 'string', 'max:255'];
 
-        if (Schema::hasTable('tbl_attribute')) {
-            $nameRules[] = 'unique:tbl_attribute,name';
+        if (Schema::hasTable('attributes')) {
+            $nameRules[] = 'unique:attributes,name';
         }
 
         return [

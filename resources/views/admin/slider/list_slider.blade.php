@@ -82,6 +82,9 @@
                                         <span class="g-admin-cell-note">
                                             {{ \Illuminate\Support\Str::limit((string) $slide->slider_desc, 120) ?: 'Giao diện cửa hàng sẽ dùng lời dẫn mặc định cho mục trình chiếu này.' }}
                                         </span>
+                                        @if (! empty($slide->slider_link_url))
+                                            <span class="g-admin-cell-note">Link: {{ $slide->slider_link_url }}</span>
+                                        @endif
                                     </td>
                                     <td>
                                         <span class="g-admin-status-chip is-info">
@@ -116,6 +119,10 @@
                                         @endif
                                     </td>
                                     <td>
+                                        <a href="{{ url('/edit-slider/' . $slide->slider_id) }}" class="active styling-edit"
+                                            style="display:inline-block;margin-right:8px;">
+                                            <i class="fa fa-pencil text-info text"></i>
+                                        </a>
                                         <form action="{{ url('/delete-slide/' . $slide->slider_id) }}" method="POST"
                                             style="display:inline-block;"
                                             onsubmit="return confirm('Bạn có chắc muốn xóa mục trình chiếu này không?')">

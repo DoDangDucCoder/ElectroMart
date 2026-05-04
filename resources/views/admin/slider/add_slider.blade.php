@@ -64,6 +64,16 @@
                         <input type="file" name="slider_image" class="form-control" id="slider_image">
                     </div>
                     <div class="form-group">
+                        <label for="slider_link_url">Liên kết khi bấm banner</label>
+                        <input type="url" name="slider_link_url" class="form-control" id="slider_link_url"
+                            value="{{ old('slider_link_url') }}" placeholder="https://example.com hoặc bỏ trống">
+                    </div>
+                    <div class="form-group">
+                        <label for="slider_display_order">Thứ tự hiển thị</label>
+                        <input type="number" name="slider_display_order" class="form-control" id="slider_display_order"
+                            value="{{ old('slider_display_order') }}" min="0" placeholder="Tự động nếu bỏ trống">
+                    </div>
+                    <div class="form-group">
                         <label for="slider_desc">Mô tả chiến dịch</label>
                         <textarea style="resize:none" rows="8" class="form-control" name="slider_desc" id="slider_desc"
                             placeholder="Mô tả ngắn sẽ hiển thị dưới tiêu đề nổi bật">{{ old('slider_desc') }}</textarea>

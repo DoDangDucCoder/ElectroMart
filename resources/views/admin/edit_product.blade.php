@@ -179,7 +179,7 @@
 
                         <div class="g-admin-inline-actions">
                             <button type="submit" name="add_product" class="btn btn-info">Cập nhật sản phẩm</button>
-                            <a href="{{ url('/all-product') }}" class="btn btn-default">Quay lại danh sách</a>
+                            <a href="{{ url('/admin/products-management') }}" class="btn btn-default">Quay lại danh sách</a>
                         </div>
                     </form>
                 @else

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Application\Order\Services\LegacyOrderHistoryService;
 use App\Application\Order\Services\LegacyOrderPresentationService;
 use App\Application\Order\Services\LegacyOrderWorkflowService;
 use App\Http\Controllers\Concerns\LegacyStorefrontContext;
@@ -10,11 +9,8 @@ use App\Infrastructure\Persistence\Eloquent\Catalog\Brand as StorefrontBrand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory as StorefrontCategory;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer as StorefrontCustomer;
 use App\Infrastructure\Persistence\Eloquent\Order\Order as StorefrontOrder;
-use App\Models\Order;
 use App\Support\StorefrontCustomerAuth;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 
@@ -45,61 +41,38 @@ class OrderController extends Controller
             return response()->json(['message' => 'Phiên đăng nhập không còn hợp lệ.'], 401);
         }
 
-        if ($modernCustomer) {
-            $order = StorefrontOrder::where('customer_id', $modernCustomer->id)
-                ->where('code', $data['order_code'])
-                ->first();
-
-            if (! $order) {
-                return response()->json(['message' => 'Không tìm thấy đơn hàng cần hủy.'], 404);
-            }
-
-            if (! $this->canCancelModernOrder($order)) {
-                return response()->json(['message' => 'Đơn hàng này không thể hủy ở trạng thái hiện tại.'], 422);
-            }
-
-            $meta = $order->meta ?? [];
-            $meta['cancel_reason'] = $data['lydo'];
-            $meta['cancelled_from'] = 'storefront_history';
-
-            $order->status = 'cancelled';
-            $order->cancelled_at = now();
-            $order->meta = $meta;
-            $order->note = trim(implode("\n", array_filter([
-                $order->note,
-                'Khách hủy đơn: '.$data['lydo'],
-            ])));
-            $order->save();
-
-            return response()->json([
-                'message' => 'Hủy đơn hàng thành công.',
-                'order_code' => $order->code,
-            ]);
+        if (! $modernCustomer) {
+            return response()->json(['message' => 'Phiên đăng nhập không còn hợp lệ.'], 401);
         }
 
-        if (! Schema::hasTable((new Order)->getTable())) {
-            return response()->json(['message' => 'Dữ liệu đơn hàng legacy hiện chưa sẵn sàng trên môi trường này.'], 404);
-        }
-
-        $order = Order::where('order_code', $data['order_code'])
-            ->where('customer_id', $sessionCustomerId)
+        $order = StorefrontOrder::where('customer_id', $modernCustomer->id)
+            ->where('code', $data['order_code'])
             ->first();
 
         if (! $order) {
             return response()->json(['message' => 'Không tìm thấy đơn hàng cần hủy.'], 404);
         }
 
-        if (! $this->canCancelLegacyOrder($order)) {
+        if (! $this->canCancelModernOrder($order)) {
             return response()->json(['message' => 'Đơn hàng này không thể hủy ở trạng thái hiện tại.'], 422);
         }
 
-        $order->order_destroy = $data['lydo'];
-        $order->order_status = 3;
+        $meta = $order->meta ?? [];
+        $meta['cancel_reason'] = $data['lydo'];
+        $meta['cancelled_from'] = 'storefront_history';
+
+        $order->status = 'cancelled';
+        $order->cancelled_at = now();
+        $order->meta = $meta;
+        $order->note = trim(implode("\n", array_filter([
+            $order->note,
+            'Khách hủy đơn: '.$data['lydo'],
+        ])));
         $order->save();
 
         return response()->json([
             'message' => 'Hủy đơn hàng thành công.',
-            'order_code' => $order->order_code,
+            'order_code' => $order->code,
         ]);
     }
 
@@ -166,23 +139,147 @@ class OrderController extends Controller
         $result = app(LegacyOrderWorkflowService::class)->buildAdminOrderViewData($order_code);
 
         if (! $result['ok']) {
-            return redirect('/manage-order')->with('message', $result['message']);
+            return redirect('/admin/orders-management')->with('message', $result['message']);
         }
 
         return view('admin.view_order')->with($result['data']);
     }
 
-    public function manage_order()
+    public function track_order($order_code)
     {
-        if (! Schema::hasTable((new Order)->getTable())) {
-            $getorder = new LengthAwarePaginator([], 0, 5, 1, [
-                'path' => request()->url(),
-            ]);
+        $result = app(LegacyOrderWorkflowService::class)->buildAdminOrderViewData($order_code);
 
-            return view('admin.manage_order')->with(compact('getorder'));
+        if (! $result['ok']) {
+            return redirect('/admin/orders-management')->with('message', $result['message']);
         }
 
-        $getorder = Order::orderby('order_id', 'DESC')->paginate(5);
+        $data = $result['data'];
+        $order = $data['getorder']->first();
+        $details = $data['order_details'];
+        $shipping = $data['shipping'];
+
+        $tracking = $this->buildOrderTrackingTimeline($order, $details);
+
+        return view('admin.order.track', array_merge($data, [
+            'order' => $order,
+            'tracking' => $tracking,
+            'route_points' => $this->buildShippingRoutePoints($shipping),
+        ]));
+    }
+
+    protected function buildOrderTrackingTimeline($order, $details): array
+    {
+        $createdAt = $order->created_at ? \Carbon\Carbon::parse($order->created_at) : now();
+        $orderDate = $order->order_date ? \Carbon\Carbon::parse($order->order_date) : null;
+        $status = (int) $order->order_status;
+
+        // Distribute synthetic timestamps across 6 steps when partial.
+        $estimateBetween = function (int $stepIndex, int $totalSteps) use ($createdAt, $orderDate) {
+            $end = $orderDate?->copy() ?: $createdAt->copy()->addDays(2);
+            $totalMinutes = max(60, $createdAt->diffInMinutes($end));
+            $step = (int) round(($totalMinutes / max(1, $totalSteps - 1)) * ($stepIndex - 1));
+            return $createdAt->copy()->addMinutes($step);
+        };
+
+        $stepLabels = [
+            'Chờ xác nhận',
+            'Đã xác nhận',
+            'Đang chuẩn bị hàng',
+            'Đã bàn giao cho đơn vị vận chuyển',
+            'Đang giao hàng',
+            'Dự kiến giao',
+        ];
+
+        // 1=new (in flight, pending stages), 2=delivered (all done), 3=cancelled
+        $currentStep = match ($status) {
+            1 => 1,
+            2 => 6,
+            3 => 0,
+            default => 1,
+        };
+
+        $now = now();
+        $steps = [];
+        foreach ($stepLabels as $i => $label) {
+            $idx = $i + 1;
+            $isDone = $status !== 3 && $idx < $currentStep;
+            $isActive = $status !== 3 && $idx === $currentStep;
+            $isFuture = $idx > $currentStep;
+
+            if ($idx === 1) {
+                $when = $createdAt;
+            } elseif ($idx === 6 && $status === 2) {
+                $when = $orderDate ?: $createdAt->copy()->addDays(2);
+            } elseif ($idx === 6) {
+                $when = $createdAt->copy()->addDays(2);
+            } else {
+                $when = $estimateBetween($idx, 6);
+            }
+
+            $steps[] = [
+                'index' => $idx,
+                'label' => $label,
+                'datetime' => $when,
+                'datetime_label' => $when->format($idx === 6 && $isFuture ? 'd/m/Y' : 'd/m/Y H:i'),
+                'is_done' => $isDone,
+                'is_active' => $isActive,
+                'is_future' => $isFuture,
+            ];
+        }
+
+        return [
+            'status_code' => $status,
+            'status_label' => match ($status) {
+                1 => 'Đang giao hàng',
+                2 => 'Đã giao thành công',
+                3 => 'Đã hủy',
+                default => 'Đang xử lý',
+            },
+            'status_chip_tone' => match ($status) {
+                1 => 'in-progress',
+                2 => 'success',
+                3 => 'danger',
+                default => 'in-progress',
+            },
+            'current_step' => $currentStep,
+            'steps' => $steps,
+            'eta_label' => match ($status) {
+                2 => 'Đã giao thành công',
+                3 => 'Đã hủy',
+                default => $orderDate?->translatedFormat('l, d/m/Y') ?: $createdAt->copy()->addDays(2)->translatedFormat('l, d/m/Y'),
+            },
+            'eta_window' => '08:00 - 17:00',
+            'sub_steps' => [
+                ['label' => 'Kho lấy hàng', 'sub' => 'Hà Nội', 'is_done' => $currentStep > 1],
+                ['label' => 'Trung tâm trung chuyển', 'sub' => 'Hà Nội', 'is_done' => $currentStep > 3],
+                ['label' => 'Trung tâm trung chuyển', 'sub' => 'Đà Nẵng', 'is_done' => $currentStep > 4],
+                ['label' => 'Đang giao hàng', 'sub' => 'TP. Hồ Chí Minh', 'is_done' => $currentStep >= 5, 'is_active' => $currentStep === 5],
+                ['label' => 'Giao thành công', 'sub' => 'TP. Hồ Chí Minh', 'is_done' => $currentStep >= 6 && $status === 2],
+            ],
+            'carrier' => [
+                'name' => 'Giao Hàng Nhanh (GHN)',
+                'short' => 'GHN',
+                'tracking_number' => 'GHN' . str_pad((string) $order->order_id, 10, '0', STR_PAD_LEFT),
+                'driver_name' => 'Nguyễn Văn A',
+                'driver_phone' => '0901 234 567',
+            ],
+        ];
+    }
+
+    protected function buildShippingRoutePoints($shipping): array
+    {
+        // Default Vietnam transit waypoints. Front-end Leaflet draws a polyline through them.
+        return [
+            ['lat' => 21.0285, 'lng' => 105.8542, 'label' => 'Kho Hà Nội', 'kind' => 'origin'],
+            ['lat' => 16.0544, 'lng' => 108.2022, 'label' => 'Trung chuyển Đà Nẵng', 'kind' => 'transit'],
+            ['lat' => 10.8231, 'lng' => 106.6297, 'label' => 'TP. Hồ Chí Minh', 'kind' => 'current'],
+            ['lat' => 10.7769, 'lng' => 106.7009, 'label' => 'Điểm giao', 'kind' => 'destination'],
+        ];
+    }
+
+    public function manage_order()
+    {
+        $getorder = app(LegacyOrderWorkflowService::class)->paginateAdminOrders(5);
 
         return view('admin.manage_order')->with(compact('getorder'));
     }
@@ -199,9 +296,13 @@ class OrderController extends Controller
 
             return redirect('dang-nhap')->with('error', 'Phiên đăng nhập không còn hợp lệ.');
         }
-        $orders = $modernCustomer
-            ? $this->modernHistoryOrders($modernCustomer->id)
-            : $this->legacyHistoryOrders((int) Session::get('customer_id'));
+        if (! $modernCustomer) {
+            $this->clearCustomerSession();
+
+            return redirect('dang-nhap')->with('error', 'Phiên đăng nhập không còn hợp lệ.');
+        }
+
+        $orders = $this->modernHistoryOrders($modernCustomer->id);
 
         return view('pages.history.history', array_merge(
             $this->storefrontPageContext($request, 'Lịch sử đơn hàng'),
@@ -257,24 +358,7 @@ class OrderController extends Controller
             ));
         }
 
-        if (! Schema::hasTable((new Order)->getTable())) {
-            return redirect('/history')->with('error', 'Dữ liệu đơn hàng legacy hiện chưa sẵn sàng trên môi trường này.');
-        }
-
-        $order = Order::where('customer_id', Session::get('customer_id'))
-            ->where('order_code', $order_code)
-            ->first();
-
-        if (! $order) {
-            return redirect('/history')->with('error', 'Không tìm thấy đơn hàng bạn cần xem.');
-        }
-
-        return view('pages.history.view_history_order', array_merge(
-            $this->storefrontPageContext($request, 'Chi tiết đơn hàng'),
-            [
-                'orderView' => $this->buildLegacyOrderDetailView($order),
-            ]
-        ));
+        return redirect('/history')->with('error', 'Không tìm thấy đơn hàng bạn cần xem.');
     }
 
     protected function storefrontPageContext(Request $request, string $title): array
@@ -293,40 +377,25 @@ class OrderController extends Controller
 
     protected function storefrontCategories()
     {
-        if (Schema::hasTable('product_categories')) {
-            return StorefrontCategory::where('is_active', true)
-                ->orderBy('parent_id')
-                ->orderBy('display_order')
-                ->get();
+        if (! Schema::hasTable('product_categories')) {
+            return collect();
         }
 
-        if (Schema::hasTable('tbl_category_product')) {
-            return DB::table('tbl_category_product')
-                ->where('category_status', '0')
-                ->orderby('category_parent', 'desc')
-                ->orderby('category_order', 'ASC')
-                ->get();
-        }
-
-        return collect();
+        return StorefrontCategory::where('is_active', true)
+            ->orderBy('parent_id')
+            ->orderBy('display_order')
+            ->get();
     }
 
     protected function storefrontBrands()
     {
-        if (Schema::hasTable('brands')) {
-            return StorefrontBrand::where('is_active', true)
-                ->orderByDesc('id')
-                ->get();
+        if (! Schema::hasTable('brands')) {
+            return collect();
         }
 
-        if (Schema::hasTable('tbl_brand')) {
-            return DB::table('tbl_brand')
-                ->where('brand_status', '0')
-                ->orderby('brand_id', 'desc')
-                ->get();
-        }
-
-        return collect();
+        return StorefrontBrand::where('is_active', true)
+            ->orderByDesc('id')
+            ->get();
     }
 
     protected function resolveStorefrontCustomer(): ?StorefrontCustomer
@@ -334,10 +403,6 @@ class OrderController extends Controller
         $customerId = (int) Session::get('customer_id');
 
         if ($customerId <= 0 || ! $this->supportsModernStorefrontOrders()) {
-            return null;
-        }
-
-        if (Session::has('customer_name') || Session::has('customer_picture')) {
             return null;
         }
 
@@ -349,9 +414,7 @@ class OrderController extends Controller
         $customerId = (int) Session::get('customer_id');
 
         return $customerId > 0
-            && $this->supportsModernStorefrontOrders()
-            && ! Session::has('customer_name')
-            && ! Session::has('customer_picture');
+            && $this->supportsModernStorefrontOrders();
     }
 
     protected function supportsModernStorefrontOrders(): bool
@@ -387,11 +450,6 @@ class OrderController extends Controller
         );
 
         return $orders;
-    }
-
-    protected function legacyHistoryOrders(int $customerId)
-    {
-        return app(LegacyOrderHistoryService::class)->paginateCustomerOrders($customerId);
     }
 
     protected function buildHistoryStats($orders): array
@@ -482,11 +540,6 @@ class OrderController extends Controller
         ];
     }
 
-    protected function buildLegacyOrderDetailView(Order $order): array
-    {
-        return app(LegacyOrderHistoryService::class)->buildDetailView($order);
-    }
-
     protected function calculateLegacyTotals(string $orderCode, $details = null): array
     {
         return app(LegacyOrderPresentationService::class)->calculateTotals($orderCode, $details);
@@ -541,11 +594,6 @@ class OrderController extends Controller
     protected function canCancelModernOrder(StorefrontOrder $order): bool
     {
         return ! in_array($order->status, ['cancelled', 'completed', 'refunded'], true);
-    }
-
-    protected function canCancelLegacyOrder(Order $order): bool
-    {
-        return app(LegacyOrderHistoryService::class)->canCancel($order);
     }
 
     protected function orderActionResponse(Request $request, string $message, int $status = 200)

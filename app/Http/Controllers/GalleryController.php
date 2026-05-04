@@ -10,9 +10,7 @@ use App\Http\Requests\Admin\Legacy\Products\UpdateGalleryImageRequest;
 use App\Http\Requests\Admin\Legacy\Products\UpdateGalleryNameRequest;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductMedia;
-use App\Models\Gallery;
 use App\Support\AssetUrl;
-use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Schema;
 
 class GalleryController extends Controller
@@ -39,21 +37,7 @@ class GalleryController extends Controller
 			return response()->noContent();
 		}
 
-		if (! Schema::hasTable((new Gallery())->getTable())) {
-			return response()->json([
-				'message' => 'Bảng thư viện ảnh chưa sẵn sàng trên môi trường này.',
-			], 422);
-		}
-
-		$gallery = Gallery::find($data['gal_id']);
-		if (! $gallery) {
-			return $this->galleryValidationError('gal_id', 'Không tìm thấy ảnh trong thư viện cần cập nhật.');
-		}
-
-		$gallery->gallery_name = $data['gal_text'];
-		$gallery->save();
-
-		return response()->noContent();
+		return $this->galleryValidationError('gal_id', 'Không tìm thấy ảnh trong thư viện cần cập nhật.');
 	}
 	public function insert_gallery(StoreGalleryRequest $request, $pro_id)
 	{
@@ -86,23 +70,10 @@ class GalleryController extends Controller
 			return redirect()->back()->with('message', 'Thêm thư viện ảnh thành công');
 		}
 
-		if (! Schema::hasTable((new Gallery())->getTable())) {
-			return redirect()
-				->back()
-				->withInput()
-				->with('error', 'Bảng thư viện ảnh chưa sẵn sàng trên môi trường này.');
-		}
-
-		foreach ($images as $image) {
-				$new_image = $this->publicUploadService->storeLegacyImage($image, 'uploads/gallery');
-				$gallery = new Gallery();
-				$gallery->gallery_name = $new_image;
-				$gallery->gallery_image = $new_image;
-				$gallery->product_id = $data['pro_id'];
-				$gallery->save();
-		}
-		Session::put('message', 'Thêm thư viện ảnh thành công');
-		return redirect()->back();
+		return redirect()
+			->back()
+			->withInput()
+			->with('error', 'Không tìm thấy sản phẩm để thêm thư viện ảnh.');
 	}
 	public function delete_gallery(DeleteGalleryRequest $request)
 	{
@@ -117,21 +88,7 @@ class GalleryController extends Controller
 			return response()->noContent();
 		}
 
-		if (! Schema::hasTable((new Gallery())->getTable())) {
-			return response()->json([
-				'message' => 'Bảng thư viện ảnh chưa sẵn sàng trên môi trường này.',
-			], 422);
-		}
-
-		$gallery = Gallery::find($data['gal_id']);
-		if (! $gallery) {
-			return $this->galleryValidationError('gal_id', 'Không tìm thấy ảnh trong thư viện cần xóa.');
-		}
-
-		$this->publicUploadService->deletePublicFile('uploads/gallery/' . $gallery->gallery_image);
-		$gallery->delete();
-
-		return response()->noContent();
+		return $this->galleryValidationError('gal_id', 'Không tìm thấy ảnh trong thư viện cần xóa.');
 	}
 	public function update_gallery(UpdateGalleryImageRequest $request)
 	{
@@ -151,22 +108,7 @@ class GalleryController extends Controller
 			return response()->noContent();
 		}
 
-		if (! Schema::hasTable((new Gallery())->getTable())) {
-			return response()->json([
-				'message' => 'Bảng thư viện ảnh chưa sẵn sàng trên môi trường này.',
-			], 422);
-		}
-
-		$gallery = Gallery::find($data['gal_id']);
-		if (! $gallery) {
-			return $this->galleryValidationError('gal_id', 'Không tìm thấy ảnh trong thư viện cần cập nhật.');
-		}
-
-		$this->publicUploadService->deletePublicFile('uploads/gallery/' . $gallery->gallery_image);
-		$gallery->gallery_image = $this->publicUploadService->storeLegacyImage($request->file('file'), 'uploads/gallery');
-		$gallery->save();
-
-		return response()->noContent();
+		return $this->galleryValidationError('gal_id', 'Không tìm thấy ảnh trong thư viện cần cập nhật.');
 	}
 	public function select_gallery(SelectGalleryRequest $request)
 	{
@@ -184,15 +126,7 @@ class GalleryController extends Controller
 			return response()->view('admin.gallery.partials.select_gallery_table', compact('gallery'));
 		}
 
-		if (! Schema::hasTable((new Gallery())->getTable())) {
-			return response('<div class="g-admin-empty-state">Chưa có bảng thư viện ảnh trên môi trường này.</div>');
-		}
-
-		$gallery = Gallery::where('product_id', $productId)
-			->get()
-			->map(fn (Gallery $gallery): object => $this->legacyGalleryRecord($gallery));
-
-		return response()->view('admin.gallery.partials.select_gallery_table', compact('gallery'));
+		return response('<div class="g-admin-empty-state">Không tìm thấy sản phẩm để tải thư viện ảnh.</div>');
 	}
 
 	private function findModernMedia(int $id): ?ProductMedia
@@ -220,18 +154,6 @@ class GalleryController extends Controller
 			'gallery_id' => $media->id,
 			'gallery_name' => $name,
 			'gallery_image_url' => AssetUrl::product($media->file_path),
-		];
-	}
-
-	private function legacyGalleryRecord(Gallery $gallery): object
-	{
-		return (object) [
-			'gallery_id' => $gallery->gallery_id,
-			'gallery_name' => $gallery->gallery_name,
-			'gallery_image_url' => AssetUrl::resolve(
-				$gallery->gallery_image ? 'uploads/gallery/' . $gallery->gallery_image : null,
-				AssetUrl::PRODUCT_FALLBACK
-			),
 		];
 	}
 }

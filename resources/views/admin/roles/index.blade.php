@@ -13,8 +13,8 @@
 
             <div class="g-admin-page-stats">
                 <article>
-                    <strong>{{ number_format($user->count()) }}</strong>
-                    <span>Tài khoản đang hiển thị</span>
+                    <strong>{{ number_format($user->total()) }}</strong>
+                    <span>Tổng tài khoản</span>
                 </article>
             </div>
         </section>
@@ -88,6 +88,20 @@
                     </div>
                 @endif
             </div>
+            @if ($user->hasPages())
+                <div class="panel-footer">
+                    <div class="row">
+                        <div class="col-sm-5 text-center">
+                            <small class="text-muted inline m-t-sm m-b-sm">
+                                Hiển thị {{ $user->count() }} / {{ $user->total() }} người dùng
+                            </small>
+                        </div>
+                        <div class="col-sm-7 text-right text-center-xs">
+                            {{ $user->links() }}
+                        </div>
+                    </div>
+                </div>
+            @endif
         </section>
     </div>
 @endsection

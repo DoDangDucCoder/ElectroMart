@@ -53,12 +53,17 @@
 
     $dashboardActive = $matchesSidebarRoute(['dashboard']);
     $informationActive = $matchesSidebarRoute(['information']);
+    $contactMessagesActive = $matchesSidebarRoute(['admin/contact-messages', 'admin/contact-messages/*']);
     $mailPreviewActive = $matchesSidebarRoute(['mail-preview', 'mail-preview/*']);
     $discoveryActive = $matchesSidebarRoute(['product-discovery-report']);
     $chatInboxActive = $matchesSidebarRoute(['chat-inbox', 'chat-inbox/*']);
+    $customersActive = $matchesSidebarRoute(['admin/customers', 'admin/customers/*']);
+    $inventoryActive = $matchesSidebarRoute(['admin/inventory']);
 
     $couponActive = $matchesSidebarRoute([
         'insert-coupon',
+        'edit-coupon/*',
+        'update-coupon/*',
         'list-coupon',
         'delete-coupon/*',
         'insert-coupon-code',
@@ -75,6 +80,7 @@
     ]);
 
     $productCategoryActive = $matchesSidebarRoute([
+        'admin/categories-management',
         'add-category-product',
         'all-category-product',
         'edit-category-product/*',
@@ -105,6 +111,11 @@
     ]);
 
     $orderActive = $matchesSidebarRoute([
+        'admin/orders-management',
+        'admin/returns',
+        'admin/returns/*',
+        'admin/transactions',
+        'admin/transactions/*',
         'manage-order',
         'view-order/*',
         'print-order/*',
@@ -115,12 +126,15 @@
     ]);
 
     $commentActive = $matchesSidebarRoute([
+        'admin/reviews',
+        'admin/reviews/*',
         'comment',
         'allow-comment',
         'reply-comment',
     ]);
 
     $productActive = $matchesSidebarRoute([
+        'admin/products-management',
         'add-product',
         'all-product',
         'edit-product/*',
@@ -198,6 +212,16 @@
                         </a>
                     </li>
 
+                    <li class="{{ $sidebarItemClass($contactMessagesActive) }}">
+                        <a class="{{ $sidebarLinkClass($contactMessagesActive) }}"
+                            href="{{ route('admin.contact-messages.index') }}"
+                            data-admin-sidebar-key="admin-contact-messages"
+                            @if ($contactMessagesActive) aria-current="page" @endif>
+                            <i class="fa fa-inbox"></i>
+                            <span>Liên hệ khách hàng</span>
+                        </a>
+                    </li>
+
                     <li class="{{ $sidebarItemClass($mailPreviewActive) }}">
                         <a class="{{ $sidebarLinkClass($mailPreviewActive) }}"
                             href="{{ URL::to('/mail-preview') }}"
@@ -234,6 +258,18 @@
                     </li>
                 @endif
 
+                @if ($canManageOrders)
+                    <li class="{{ $sidebarItemClass($customersActive) }}">
+                        <a class="{{ $sidebarLinkClass($customersActive) }}"
+                            href="{{ route('admin.customers') }}"
+                            data-admin-sidebar-key="admin-customers"
+                            @if ($customersActive) aria-current="page" @endif>
+                            <i class="fa fa-address-book-o"></i>
+                            <span>Khách hàng</span>
+                        </a>
+                    </li>
+                @endif
+
                 @if ($canManageCoupons)
                     <li class="{{ $sidebarItemClass($couponActive, true) }}" data-admin-sidebar-group="coupons">
                     <button type="button"
@@ -252,10 +288,10 @@
                                 Thêm mã giảm giá
                             </a>
                         </li>
-                        <li class="{{ $sidebarItemClass($matchesSidebarRoute(['list-coupon'])) }}">
+                        <li class="{{ $sidebarItemClass($matchesSidebarRoute(['list-coupon', 'edit-coupon/*'])) }}">
                             <a href="{{ URL::to('/list-coupon') }}"
                                 data-admin-sidebar-key="list-coupon"
-                                @if ($matchesSidebarRoute(['list-coupon'])) aria-current="page" @endif>
+                                @if ($matchesSidebarRoute(['list-coupon', 'edit-coupon/*'])) aria-current="page" @endif>
                                 Liệt kê mã giảm giá
                             </a>
                         </li>
@@ -286,6 +322,16 @@
                 @endif
 
                 @if ($canManageProducts)
+                    <li class="{{ $sidebarItemClass($inventoryActive) }}">
+                        <a class="{{ $sidebarLinkClass($inventoryActive) }}"
+                            href="{{ route('admin.inventory') }}"
+                            data-admin-sidebar-key="admin-inventory"
+                            @if ($inventoryActive) aria-current="page" @endif>
+                            <i class="fa fa-archive"></i>
+                            <span>Tồn kho</span>
+                        </a>
+                    </li>
+
                     <li class="{{ $sidebarItemClass($productCategoryActive, true) }}" data-admin-sidebar-group="product-categories">
                     <button type="button"
                         class="{{ $sidebarLinkClass($productCategoryActive, true) }}"
@@ -303,10 +349,10 @@
                                 Thêm danh mục sản phẩm
                             </a>
                         </li>
-                        <li class="{{ $sidebarItemClass($matchesSidebarRoute(['all-category-product', 'edit-category-product/*'])) }}">
-                            <a href="{{ URL::to('/all-category-product') }}"
-                                data-admin-sidebar-key="all-category-product"
-                                @if ($matchesSidebarRoute(['all-category-product', 'edit-category-product/*'])) aria-current="page" @endif>
+                        <li class="{{ $sidebarItemClass($matchesSidebarRoute(['admin/categories-management', 'all-category-product', 'edit-category-product/*'])) }}">
+                            <a href="{{ URL::to('/admin/categories-management') }}"
+                                data-admin-sidebar-key="admin-categories-management"
+                                @if ($matchesSidebarRoute(['admin/categories-management', 'all-category-product', 'edit-category-product/*'])) aria-current="page" @endif>
                                 Liệt kê danh mục sản phẩm
                             </a>
                         </li>
@@ -435,10 +481,10 @@
                         <span>Đơn hàng</span>
                     </button>
                     <ul class="sub" id="admin-sidebar-group-orders">
-                        <li class="{{ $sidebarItemClass($matchesSidebarRoute(['manage-order', 'view-order/*', 'print-order/*'])) }}">
-                            <a href="{{ URL::to('/manage-order') }}"
-                                data-admin-sidebar-key="manage-order"
-                                @if ($matchesSidebarRoute(['manage-order', 'view-order/*', 'print-order/*'])) aria-current="page" @endif>
+                        <li class="{{ $sidebarItemClass($matchesSidebarRoute(['admin/orders-management', 'manage-order', 'view-order/*', 'print-order/*'])) }}">
+                            <a href="{{ URL::to('/admin/orders-management') }}"
+                                data-admin-sidebar-key="admin-orders-management"
+                                @if ($matchesSidebarRoute(['admin/orders-management', 'manage-order', 'view-order/*', 'print-order/*'])) aria-current="page" @endif>
                                 Quản lý đơn hàng
                             </a>
                         </li>
@@ -447,6 +493,20 @@
                                 data-admin-sidebar-key="product-profit"
                                 @if ($matchesSidebarRoute(['product-profit'])) aria-current="page" @endif>
                                 Lợi nhuận sản phẩm
+                            </a>
+                        </li>
+                        <li class="{{ $sidebarItemClass($matchesSidebarRoute(['admin/returns', 'admin/returns/*'])) }}">
+                            <a href="{{ route('admin.returns') }}"
+                                data-admin-sidebar-key="admin-returns"
+                                @if ($matchesSidebarRoute(['admin/returns', 'admin/returns/*'])) aria-current="page" @endif>
+                                Trả hàng / hoàn tiền
+                            </a>
+                        </li>
+                        <li class="{{ $sidebarItemClass($matchesSidebarRoute(['admin/transactions', 'admin/transactions/*'])) }}">
+                            <a href="{{ route('admin.transactions') }}"
+                                data-admin-sidebar-key="admin-transactions"
+                                @if ($matchesSidebarRoute(['admin/transactions', 'admin/transactions/*'])) aria-current="page" @endif>
+                                Thanh toán / giao dịch
                             </a>
                         </li>
                     </ul>
@@ -471,6 +531,13 @@
                                 Liệt kê bình luận
                             </a>
                         </li>
+                        <li class="{{ $sidebarItemClass($matchesSidebarRoute(['admin/reviews', 'admin/reviews/*'])) }}">
+                            <a href="{{ route('admin.reviews') }}"
+                                data-admin-sidebar-key="admin-reviews"
+                                @if ($matchesSidebarRoute(['admin/reviews', 'admin/reviews/*'])) aria-current="page" @endif>
+                                Duyệt đánh giá
+                            </a>
+                        </li>
                     </ul>
                     </li>
 
@@ -491,10 +558,10 @@
                                 Thêm sản phẩm
                             </a>
                         </li>
-                        <li class="{{ $sidebarItemClass($matchesSidebarRoute(['all-product', 'edit-product/*'])) }}">
-                            <a href="{{ URL::to('/all-product') }}"
-                                data-admin-sidebar-key="all-product"
-                                @if ($matchesSidebarRoute(['all-product', 'edit-product/*'])) aria-current="page" @endif>
+                        <li class="{{ $sidebarItemClass($matchesSidebarRoute(['admin/products-management', 'all-product', 'edit-product/*'])) }}">
+                            <a href="{{ URL::to('/admin/products-management') }}"
+                                data-admin-sidebar-key="admin-products-management"
+                                @if ($matchesSidebarRoute(['admin/products-management', 'all-product', 'edit-product/*'])) aria-current="page" @endif>
                                 Liệt kê sản phẩm
                             </a>
                         </li>

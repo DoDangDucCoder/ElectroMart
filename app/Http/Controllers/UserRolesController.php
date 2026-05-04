@@ -82,8 +82,8 @@ class UserRolesController extends Controller
 	}
 	public function index()
 	{
-		$user = User::with('roles', 'permissions')->orderby('id', 'desc')->get();
-		// dd($user);
+		$user = User::with('roles', 'permissions')->orderBy('id', 'desc')->paginate(10);
+
 		return view('admin.roles.index', compact('user'));
 	}
 

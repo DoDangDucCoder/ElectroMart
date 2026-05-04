@@ -155,14 +155,19 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <form action="{{ url('/delete-coupon/' . $cou->coupon_id) }}" method="POST"
-                                                onsubmit="return confirm('Bạn có chắc muốn xóa mã này không?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-xs btn-danger">
-                                                    <i class="fa fa-times"></i> Xóa
-                                                </button>
-                                            </form>
+                                            <div class="g-admin-action-stack">
+                                                <a href="{{ url('/edit-coupon/' . $cou->coupon_id) }}" class="btn btn-xs btn-info">
+                                                    <i class="fa fa-pencil"></i> Sửa
+                                                </a>
+                                                <form action="{{ url('/delete-coupon/' . $cou->coupon_id) }}" method="POST"
+                                                    onsubmit="return confirm('Bạn có chắc muốn xóa mã này không?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-xs btn-danger">
+                                                        <i class="fa fa-times"></i> Xóa
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                         <td>
                                             <div class="g-admin-action-stack">

@@ -5,27 +5,22 @@ namespace App\Http\Controllers;
 use App\Support\StorefrontCustomerAuth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Laravel\Socialite\Two\InvalidStateException;
-use App\Models\SocialCustomers;
 use Socialite;
-use App\Models\Product;
-use App\Models\Video;
-use App\Models\Customer;
 use App\Models\Post;
-use App\Models\Statistic;
-use App\Models\Visitors;
+use App\Infrastructure\Persistence\Eloquent\Analytics\AnalyticsDaily;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product as StorefrontProduct;
+use App\Infrastructure\Persistence\Eloquent\Cms\Video as StorefrontVideo;
 use App\Infrastructure\Persistence\Eloquent\Order\Order as StorefrontOrder;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer as StorefrontCustomer;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
-use App\Models\Order;
 use App\Http\Requests;
 use App\Application\AI\Services\ChatInboxService;
+use App\Application\Order\Services\LegacyOrderWorkflowService;
 use App\Support\AdminPermissions;
 
 class AdminController extends Controller
@@ -132,8 +127,6 @@ class AdminController extends Controller
 
     public function show_dashboard(Request $request)
     {
-        $user_ip_address = $request->ip();
-
         $early_last_month = Carbon::now('Asia/Ho_Chi_Minh')->subMonth()->startOfMonth()->toDateString();
 
         $end_of_last_month = Carbon::now('Asia/Ho_Chi_Minh')->subMonth()->endOfMonth()->toDateString();
@@ -150,24 +143,20 @@ class AdminController extends Controller
         $visitor_year_count = 0;
         $visitors_total = 0;
 
-        if (Schema::hasTable((new Visitors())->getTable())) {
-            $visitorRecordedToday = Visitors::query()
-                ->where('ip_address', $user_ip_address)
-                ->where('date_visitor', $now)
-                ->exists();
-
-            if (! $visitorRecordedToday) {
-                $visitor = new Visitors();
-                $visitor->ip_address = $user_ip_address;
-                $visitor->date_visitor = $now;
-                $visitor->save();
-            }
-
-            $visitor_last_month_count = Visitors::whereBetween('date_visitor', [$early_last_month, $end_of_last_month])->count();
-            $visitor_this_month_count = Visitors::whereBetween('date_visitor', [$early_this_month, $now])->count();
-            $visitor_year_count = Visitors::whereBetween('date_visitor', [$oneyears, $now])->count();
-            $visitors_total = Visitors::count();
-            $visitor_count = 1;
+        if ($this->analyticsDailyTableReady()) {
+            $visitor_count = (int) AnalyticsDaily::query()
+                ->whereDate('date', $now)
+                ->sum('visits');
+            $visitor_last_month_count = (int) AnalyticsDaily::query()
+                ->whereBetween('date', [$early_last_month, $end_of_last_month])
+                ->sum('visits');
+            $visitor_this_month_count = (int) AnalyticsDaily::query()
+                ->whereBetween('date', [$early_this_month, $now])
+                ->sum('visits');
+            $visitor_year_count = (int) AnalyticsDaily::query()
+                ->whereBetween('date', [$oneyears, $now])
+                ->sum('visits');
+            $visitors_total = (int) AnalyticsDaily::query()->sum('visits');
         }
 
         $product = $this->dashboardProductCount();
@@ -215,7 +204,7 @@ class AdminController extends Controller
 
     public function days_order()
     {
-        if (! Schema::hasTable((new Statistic())->getTable())) {
+        if (! $this->analyticsDailyTableReady()) {
             return response()->json([]);
         }
 
@@ -223,27 +212,12 @@ class AdminController extends Controller
 
         $now = Carbon::now('Asia/Ho_Chi_Minh')->toDateString();
 
-        $get = Statistic::whereBetween('order_date', [$sub60days, $now])->orderBy('order_date', 'ASC')->get();
-
-
-        $chart_data = [];
-
-        foreach ($get as $key => $val) {
-            $chart_data[] = array(
-                'period' => $val->order_date,
-                'order' => $val->total_order,
-                'sales' => $val->sales,
-                'profit' => $val->profit,
-                'quantity' => $val->quantity
-            );
-        }
-
-        return response()->json($chart_data);
+        return response()->json($this->dashboardChartData($sub60days, $now));
     }
 
     public function dashboard_filter(Request $request)
     {
-        if (! Schema::hasTable((new Statistic())->getTable())) {
+        if (! $this->analyticsDailyTableReady()) {
             return response()->json([]);
         }
 
@@ -271,38 +245,25 @@ class AdminController extends Controller
 
         if ($dashboardValue == '7ngay') {
 
-            $get = Statistic::whereBetween('order_date', [$sub7days, $now])->orderBy('order_date', 'ASC')->get();
+            [$fromDate, $toDate] = [$sub7days, $now];
         } elseif ($dashboardValue == 'thangtruoc') {
 
-            $get = Statistic::whereBetween('order_date', [$dau_thangtruoc, $cuoi_thangtruoc])->orderBy('order_date', 'ASC')->get();
+            [$fromDate, $toDate] = [$dau_thangtruoc, $cuoi_thangtruoc];
         } elseif ($dashboardValue == 'thangnay') {
 
-            $get = Statistic::whereBetween('order_date', [$dauthangnay, $now])->orderBy('order_date', 'ASC')->get();
+            [$fromDate, $toDate] = [$dauthangnay, $now];
         } elseif ($dashboardValue == 'thang9') {
 
-            $get = Statistic::whereBetween('order_date', [$dauthang9, $cuoithang9])->orderBy('order_date', 'ASC')->get();
+            [$fromDate, $toDate] = [$dauthang9, $cuoithang9];
         } else {
-            $get = Statistic::whereBetween('order_date', [$sub365days, $now])->orderBy('order_date', 'ASC')->get();
+            [$fromDate, $toDate] = [$sub365days, $now];
         }
 
-
-        $chart_data = [];
-
-        foreach ($get as $key => $val) {
-            $chart_data[] = array(
-                'period' => $val->order_date,
-                'order' => $val->total_order,
-                'sales' => $val->sales,
-                'profit' => $val->profit,
-                'quantity' => $val->quantity
-            );
-        }
-
-        return response()->json($chart_data);
+        return response()->json($this->dashboardChartData($fromDate, $toDate));
     }
     public function filter_by_date(Request $request)
     {
-        if (! Schema::hasTable((new Statistic())->getTable())) {
+        if (! $this->analyticsDailyTableReady()) {
             return response()->json([]);
         }
 
@@ -317,23 +278,7 @@ class AdminController extends Controller
             [$from_date, $to_date] = [$to_date, $from_date];
         }
 
-        $get = Statistic::whereBetween('order_date', [$from_date, $to_date])->orderBy('order_date', 'ASC')->get();
-
-
-        $chart_data = [];
-
-        foreach ($get as $key => $val) {
-            $chart_data[] = array(
-
-                'period' => $val->order_date,
-                'order' => $val->total_order,
-                'sales' => $val->sales,
-                'profit' => $val->profit,
-                'quantity' => $val->quantity
-            );
-        }
-
-        return response()->json($chart_data);
+        return response()->json($this->dashboardChartData($from_date, $to_date));
     }
     public function order_date(Request $request)
     {
@@ -343,12 +288,8 @@ class AdminController extends Controller
             return view('admin.order_date')->with(['order' => collect()]);
         }
 
-        if (! Schema::hasTable((new Order())->getTable())) {
-            $order = collect();
-            return view('admin.order_date')->with(compact('order'));
-        }
+        $order = app(LegacyOrderWorkflowService::class)->ordersForDate($order_date);
 
-        $order = Order::where('order_date', $order_date)->orderby('created_at', 'DESC')->get();
         return view('admin.order_date')->with(compact('order'));
     }
 
@@ -374,12 +315,29 @@ class AdminController extends Controller
         }
     }
 
+    protected function analyticsDailyTableReady(): bool
+    {
+        return Schema::hasTable((new AnalyticsDaily())->getTable());
+    }
+
+    protected function dashboardChartData(string $fromDate, string $toDate): array
+    {
+        return AnalyticsDaily::query()
+            ->whereBetween('date', [$fromDate, $toDate])
+            ->orderBy('date', 'ASC')
+            ->get()
+            ->map(fn (AnalyticsDaily $daily): array => [
+                'period' => $daily->date?->toDateString(),
+                'order' => (int) $daily->orders_count,
+                'sales' => (float) $daily->sales,
+                'profit' => (float) $daily->profit,
+                'quantity' => (int) $daily->items_sold,
+            ])
+            ->all();
+    }
+
     protected function dashboardProductCount(): int
     {
-        if (Schema::hasTable((new Product())->getTable())) {
-            return Product::count();
-        }
-
         if (Schema::hasTable((new StorefrontProduct())->getTable())) {
             return StorefrontProduct::count();
         }
@@ -398,10 +356,6 @@ class AdminController extends Controller
 
     protected function dashboardOrderCount(): int
     {
-        if (Schema::hasTable((new Order())->getTable())) {
-            return Order::count();
-        }
-
         if (Schema::hasTable((new StorefrontOrder())->getTable())) {
             return StorefrontOrder::count();
         }
@@ -411,12 +365,8 @@ class AdminController extends Controller
 
     protected function dashboardVideoCount(): int
     {
-        if (Schema::hasTable((new Video())->getTable())) {
-            return Video::count();
-        }
-
-        if (Schema::hasTable('videos')) {
-            return (int) DB::table('videos')->count();
+        if (Schema::hasTable((new StorefrontVideo())->getTable())) {
+            return StorefrontVideo::count();
         }
 
         return 0;
@@ -424,10 +374,6 @@ class AdminController extends Controller
 
     protected function dashboardCustomerCount(): int
     {
-        if (Schema::hasTable((new Customer())->getTable())) {
-            return Customer::count();
-        }
-
         if (Schema::hasTable((new StorefrontCustomer())->getTable())) {
             return StorefrontCustomer::count();
         }
@@ -437,10 +383,6 @@ class AdminController extends Controller
 
     protected function dashboardProductViews()
     {
-        if (Schema::hasTable((new Product())->getTable())) {
-            return Product::orderByDesc('product_views')->take(20)->get();
-        }
-
         if (Schema::hasTable((new StorefrontProduct())->getTable())) {
             return StorefrontProduct::orderByDesc('views_count')->take(20)->get();
         }
@@ -465,19 +407,16 @@ class AdminController extends Controller
         ?string $avatar
     ): StorefrontCustomer {
         $provider = strtolower($provider);
-        $socialAccount = SocialCustomers::query()
-            ->whereRaw('LOWER(provider) = ?', [$provider])
-            ->where('provider_user_id', $providerUserId)
-            ->first();
 
         $email = trim((string) $email);
         if ($email === '') {
             $email = $provider . '-' . $providerUserId . '@social.shopw.local';
         }
 
-        $customer = $socialAccount
-            ? StorefrontCustomer::query()->find($socialAccount->user)
-            : null;
+        $customer = StorefrontCustomer::query()
+            ->where('meta->social_auth->provider', $provider)
+            ->where('meta->social_auth->provider_user_id', $providerUserId)
+            ->first();
 
         if (! $customer) {
             $customer = StorefrontCustomer::query()->firstOrCreate(
@@ -511,13 +450,6 @@ class AdminController extends Controller
             'is_active' => true,
             'meta' => $meta,
         ])->save();
-
-        $socialAccount = $socialAccount ?: new SocialCustomers();
-        $socialAccount->provider_user_id = $providerUserId;
-        $socialAccount->provider_user_email = $email;
-        $socialAccount->provider = $provider;
-        $socialAccount->user = $customer->id;
-        $socialAccount->save();
 
         return $customer;
     }

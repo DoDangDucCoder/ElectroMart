@@ -12,8 +12,8 @@ class UpdateDeliveryRequest extends BaseFormRequest
     {
         $feeIdRules = ['required', 'integer'];
 
-        if (Schema::hasTable('tbl_feeship')) {
-            $feeIdRules[] = 'exists:tbl_feeship,fee_id';
+        if (Schema::hasTable('shipping_fees')) {
+            $feeIdRules[] = 'exists:shipping_fees,id';
         }
 
         return [

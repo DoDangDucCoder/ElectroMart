@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Admin\Legacy\Products;
 
 use App\Http\Requests\BaseFormRequest;
-use Illuminate\Support\Facades\Schema;
 
 class UpdateGalleryNameRequest extends BaseFormRequest
 {

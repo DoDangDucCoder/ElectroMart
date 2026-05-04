@@ -12,8 +12,8 @@ class UpdateAttributeRequest extends BaseFormRequest
     {
         $nameRules = ['required', 'string', 'max:255'];
 
-        if (Schema::hasTable('tbl_attribute')) {
-            $nameRules[] = Rule::unique('tbl_attribute', 'name')->ignore((int) $this->route('id'));
+        if (Schema::hasTable('attributes')) {
+            $nameRules[] = Rule::unique('attributes', 'name')->ignore((int) $this->route('id'));
         }
 
         return [

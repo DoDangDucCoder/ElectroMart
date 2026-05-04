@@ -10,8 +10,14 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Admin\Catalog\BrandController as AdminBrandController;
 use App\Http\Controllers\Admin\Catalog\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\ChatInboxController;
+use App\Http\Controllers\Admin\ContactMessageController;
+use App\Http\Controllers\Admin\CustomerController as AdminCustomerController;
+use App\Http\Controllers\Admin\InventoryController as AdminInventoryController;
+use App\Http\Controllers\Admin\OrderReturnController as AdminOrderReturnController;
+use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
 use App\Http\Controllers\Admin\ProductDiscoveryReportController;
 use App\Http\Controllers\Admin\ProductProfitController;
+use App\Http\Controllers\Admin\ProductReviewController as AdminProductReviewController;
 use App\Http\Controllers\BrandProduct;
 use App\Http\Controllers\CategoryPost;
 use App\Http\Controllers\ContactController;
@@ -55,9 +61,64 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
     Route::post('/days-order', [AdminController::class, 'days_order']);
     Route::get('/order-date', [AdminController::class, 'order_date']);
 
+    $adminPreviewPagesEnabled = app()->environment(['local', 'testing']);
+    $adminPreviewView = static function (string $view, array|\Closure $data = []) use ($adminPreviewPagesEnabled): \Closure {
+        return static function (...$parameters) use ($adminPreviewPagesEnabled, $view, $data) {
+            abort_unless($adminPreviewPagesEnabled, 404);
+
+            $viewData = $data instanceof \Closure ? $data(...$parameters) : $data;
+
+            return view($view, $viewData);
+        };
+    };
+
+    // Local/testing admin preview pages only. Production admin pages must use real controllers.
+    Route::get('/admin/customers', [AdminCustomerController::class, 'index'])
+        ->middleware('admin.permission:' . AdminPermissions::MANAGE_ORDERS)
+        ->name('admin.customers');
+    Route::get('/admin/customers/{customer}', [AdminCustomerController::class, 'show'])
+        ->middleware('admin.permission:' . AdminPermissions::MANAGE_ORDERS)
+        ->name('admin.customers.show');
+    Route::get('/admin/inventory', [AdminInventoryController::class, 'index'])
+        ->middleware('admin.permission:' . AdminPermissions::MANAGE_PRODUCTS)
+        ->name('admin.inventory');
+    Route::get('/admin/warehouse', static fn () => abort(404))->name('admin.warehouse');
+    Route::get('/admin/vouchers', static fn () => abort(404))->name('admin.vouchers');
+    Route::get('/admin/brands-management', static fn () => abort(404))->name('admin.brands.management');
+    Route::redirect('/admin/attributes-management', '/attribute')->name('admin.attributes.management');
+    Route::get('/admin/banners-management', static fn () => abort(404))->name('admin.banners.management');
+    Route::get('/admin/posts-management', static fn () => abort(404))->name('admin.posts.management');
+    Route::get('/admin/posts/create', static fn () => abort(404))->name('admin.posts.create');
+    Route::get('/admin/reviews', [AdminProductReviewController::class, 'index'])
+        ->middleware('admin.permission:' . AdminPermissions::MANAGE_PRODUCTS)
+        ->name('admin.reviews');
+    Route::patch('/admin/reviews/{review}/status', [AdminProductReviewController::class, 'updateStatus'])
+        ->middleware('admin.permission:' . AdminPermissions::MANAGE_PRODUCTS)
+        ->name('admin.reviews.status');
+    Route::get('/admin/warranties', static fn () => abort(404))->name('admin.warranties');
+    Route::get('/admin/customer-contacts', static fn () => abort(404))->name('admin.customer-contacts');
+    Route::get('/admin/support-requests', static fn () => abort(404))->name('admin.support-requests');
+    Route::get('/admin/returns', [AdminOrderReturnController::class, 'index'])
+        ->middleware('admin.permission:' . AdminPermissions::MANAGE_ORDERS)
+        ->name('admin.returns');
+    Route::patch('/admin/returns/{orderReturn}/status', [AdminOrderReturnController::class, 'updateStatus'])
+        ->middleware('admin.permission:' . AdminPermissions::MANAGE_ORDERS)
+        ->name('admin.returns.status');
+    Route::get('/admin/transactions', [AdminPaymentController::class, 'index'])
+        ->middleware('admin.permission:' . AdminPermissions::MANAGE_ORDERS)
+        ->name('admin.transactions');
+    Route::redirect('/admin/shipping', '/delivery')->name('admin.shipping');
+    Route::redirect('/admin/site-settings', '/admin/settings')->name('admin.site-settings');
+    Route::get('/admin/activity-log', static fn () => abort(404))->name('admin.activity-log');
+    Route::get('/admin/user-management', static fn () => abort(404))->name('admin.user-management');
+    Route::get('/admin/overview', static fn () => abort(404))->name('admin.overview');
+
     Route::middleware('admin.permission:' . AdminPermissions::MANAGE_SYSTEM)->group(function () {
         // Contact & site information management
         Route::get('/information', [ContactController::class, 'information']);
+        Route::get('/admin/contact-messages', [ContactMessageController::class, 'index'])->name('admin.contact-messages.index');
+        Route::patch('/admin/contact-messages/{contactMessage}/status', [ContactMessageController::class, 'updateStatus'])
+            ->name('admin.contact-messages.status');
         Route::get('/mail-preview', [MailController::class, 'preview'])->name('admin.mail.preview');
         Route::get('/mail-preview/render', [MailController::class, 'preview_render'])->name('admin.mail.preview.render');
         Route::get('/product-discovery-report', [ProductDiscoveryReportController::class, 'index'])->name('admin.product-discovery-report');
@@ -100,9 +161,12 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
             Route::patch('{brand}/status', [AdminBrandController::class, 'updateStatus'])->name('status');
         });
 
+        // Product category management
+        Route::get('/admin/categories-management', [AdminWorkspaceController::class, 'categoriesManagement'])->name('admin.categories.management');
+
         // Product category management (legacy blade interface, read-only safe routes)
         Route::get('/add-category-product', [CategoryProductAdminController::class, 'add_category_product']);
-        Route::get('/all-category-product', [CategoryProductAdminController::class, 'all_category_product']);
+        Route::get('/all-category-product', fn () => redirect('/admin/categories-management'));
         Route::get('/edit-category-product/{category_id}', [CategoryProductAdminController::class, 'edit_category_product']);
 
         // Brand management (legacy blade interface)
@@ -136,8 +200,10 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
         // Slider management
         Route::get('/manage-slider', [SliderController::class, 'manage_slider']);
         Route::get('/add-slider', [SliderController::class, 'add_slider']);
+        Route::get('/edit-slider/{slide_id}', [SliderController::class, 'edit_slider']);
         Route::delete('/delete-slide/{slide_id}', [SliderController::class, 'delete_slide']);
         Route::post('/insert-slider', [SliderController::class, 'insert_slider']);
+        Route::put('/update-slider/{slide_id}', [SliderController::class, 'update_slider']);
         Route::patch('/unactive-slide/{slide_id}', [SliderController::class, 'unactive_slide']);
         Route::patch('/active-slide/{slide_id}', [SliderController::class, 'active_slide']);
 
@@ -152,10 +218,11 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
 
     Route::middleware('admin.permission:' . AdminPermissions::MANAGE_PRODUCTS)->group(function () {
         // Product management
+        Route::get('/admin/products-management', [AdminWorkspaceController::class, 'productsManagement'])->name('admin.products.management');
         Route::get('/add-product', [ProductController::class, 'add_product']);
         Route::get('/edit-product/{product_id}', [ProductController::class, 'edit_product']);
         Route::delete('/delete-product/{product_id}', [ProductController::class, 'delete_product']);
-        Route::get('/all-product', [ProductController::class, 'all_product']);
+        Route::get('/all-product', fn () => redirect('/admin/products-management'));
         Route::patch('/unactive-product/{product_id}', [ProductController::class, 'unactive_product']);
         Route::patch('/active-product/{product_id}', [ProductController::class, 'active_product']);
         Route::post('/save-product', [ProductController::class, 'save_product']);
@@ -194,6 +261,8 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
     Route::middleware('admin.permission:' . AdminPermissions::MANAGE_COUPONS)->group(function () {
         // Coupon management
         Route::get('/insert-coupon', [CouponController::class, 'insert_coupon']);
+        Route::get('/edit-coupon/{coupon_id}', [CouponController::class, 'edit_coupon']);
+        Route::put('/update-coupon/{coupon_id}', [CouponController::class, 'update_coupon']);
         Route::delete('/delete-coupon/{coupon_id}', [CouponController::class, 'delete_coupon']);
         Route::get('/list-coupon', [CouponController::class, 'list_coupon']);
         Route::post('/insert-coupon-code', [CouponController::class, 'insert_coupon_code']);
@@ -210,11 +279,13 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
 
     Route::middleware('admin.permission:' . AdminPermissions::MANAGE_ORDERS)->group(function () {
         // Order administration
+        Route::get('/admin/orders-management', [AdminWorkspaceController::class, 'ordersManagement'])->name('admin.orders.management');
         Route::delete('/delete-order/{order_code}', [OrderController::class, 'order_code']);
         Route::get('/print-order/{checkout_code}', [OrderController::class, 'print_order']);
-        Route::get('/manage-order', [OrderController::class, 'manage_order']);
+        Route::get('/manage-order', fn () => redirect('/admin/orders-management'));
         Route::get('/product-profit', [ProductProfitController::class, 'index'])->name('admin.product-profit');
         Route::get('/view-order/{order_code}', [OrderController::class, 'view_order']);
+        Route::get('/track-order/{order_code}', [OrderController::class, 'track_order'])->name('admin.order.track');
         Route::post('/update-order-qty', [OrderController::class, 'update_order_qty']);
         Route::post('/update-qty', [OrderController::class, 'update_qty']);
 
@@ -228,6 +299,8 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
 
     Route::middleware('admin.permission:' . AdminPermissions::MANAGE_DOCUMENTS)->group(function () {
         // Document management
+        Route::post('upload-document', [DocumentController::class, 'store_document'])->name('admin.documents.store');
+        Route::delete('documents/{document}', [DocumentController::class, 'destroy_document'])->name('admin.documents.destroy');
         Route::get('download_document/{path}/{name}', [DocumentController::class, 'download_document'])
             ->where('path', '.*');
         Route::delete('delete_document/{path}', [DocumentController::class, 'delete_document'])

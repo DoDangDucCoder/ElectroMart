@@ -6,12 +6,12 @@ use App\Application\Catalog\Services\BrandService;
 use App\Application\Catalog\Services\CategoryService;
 use App\Application\Cms\Services\BlogCategoryService;
 use App\Application\Shared\Services\PublicUploadService;
+use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use App\Http\Requests\Admin\Legacy\Media\DeleteVideoRequest;
 use App\Http\Requests\Admin\Legacy\Media\StoreVideoRequest;
 use App\Http\Requests\Admin\Legacy\Media\UpdateVideoImageRequest;
 use App\Http\Requests\Admin\Legacy\Media\UpdateVideoRequest;
 use App\Infrastructure\Persistence\Eloquent\Cms\Video as ModernVideo;
-use App\Models\Video as LegacyVideo;
 use App\Support\AssetUrl;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -21,6 +21,8 @@ use Illuminate\Support\Str;
 
 class VideoController extends Controller
 {
+    use LegacyStorefrontContext;
+
     public function __construct(
         private readonly CategoryService $categoryService,
         private readonly BrandService $brandService,
@@ -56,24 +58,9 @@ class VideoController extends Controller
             return response()->noContent();
         }
 
-        if (! $this->usesLegacyVideoTable()) {
-            return response()->json(['message' => 'Chưa có nơi lưu video trên môi trường này.'], 422);
-        }
+        $this->publicUploadService->deletePublicFile($imagePath);
 
-        $video = new LegacyVideo();
-        $video->video_title = $data['video_title'] ?? '';
-        $video->video_desc = $data['video_desc'] ?? null;
-        $video->video_link = $this->extractYoutubeId($data['video_link'] ?? '');
-        $video->video_slug = $data['video_slug'] ?? Str::slug($data['video_title'] ?? Str::random(8));
-        $video->video_image = $imagePath ? basename($imagePath) : null;
-
-        if ($this->legacyVideoStatusColumnExists()) {
-            $video->setAttribute('video_status', 1);
-        }
-
-        $video->save();
-
-        return response()->noContent();
+        return response()->json(['message' => 'Chưa có bảng video trên schema mới.'], 422);
     }
 
     public function delete_video(DeleteVideoRequest $request)
@@ -94,19 +81,7 @@ class VideoController extends Controller
             return response()->noContent();
         }
 
-        if (! $this->usesLegacyVideoTable()) {
-            return response()->json(['message' => 'Chưa có nơi lưu video trên môi trường này.'], 422);
-        }
-
-        $video = LegacyVideo::find($videoId);
-        if (! $video) {
-            return response()->json(['message' => 'Không tìm thấy video cần xóa.'], 404);
-        }
-
-        $this->publicUploadService->deletePublicFile($video->video_image ? 'uploads/videos/' . $video->video_image : null);
-        $video->delete();
-
-        return response()->noContent();
+        return response()->json(['message' => 'Chưa có bảng video trên schema mới.'], 422);
     }
 
     public function update_video(UpdateVideoRequest $request)
@@ -139,29 +114,7 @@ class VideoController extends Controller
             return response()->noContent();
         }
 
-        if (! $this->usesLegacyVideoTable()) {
-            return response()->json(['message' => 'Chưa có nơi lưu video trên môi trường này.'], 422);
-        }
-
-        $video = LegacyVideo::find($videoId);
-
-        if (! $video) {
-            return response()->json(['message' => 'Không tìm thấy video cần cập nhật.'], 404);
-        }
-
-        if ($videoCheck === 'video_title') {
-            $video->video_title = $videoEdit;
-        } elseif ($videoCheck === 'video_desc') {
-            $video->video_desc = $videoEdit;
-        } elseif ($videoCheck === 'video_link') {
-            $video->video_link = $this->extractYoutubeId($videoEdit);
-        } else {
-            $video->video_slug = Str::slug($videoEdit) ?: $video->video_slug;
-        }
-
-        $video->save();
-
-        return response()->noContent();
+        return response()->json(['message' => 'Chưa có bảng video trên schema mới.'], 422);
     }
 
     public function update_video_image(UpdateVideoImageRequest $request)
@@ -191,25 +144,9 @@ class VideoController extends Controller
             return response()->noContent();
         }
 
-        if (! $this->usesLegacyVideoTable()) {
-            $this->publicUploadService->deletePublicFile($imagePath);
+        $this->publicUploadService->deletePublicFile($imagePath);
 
-            return response()->json(['message' => 'Chưa có nơi lưu video trên môi trường này.'], 422);
-        }
-
-        $video = LegacyVideo::find($videoId);
-
-        if (! $video) {
-            $this->publicUploadService->deletePublicFile($imagePath);
-
-            return response()->json(['message' => 'Không tìm thấy video cần cập nhật hình ảnh.'], 404);
-        }
-
-        $this->publicUploadService->deletePublicFile($video->video_image ? 'uploads/videos/' . $video->video_image : null);
-        $video->video_image = basename($imagePath);
-        $video->save();
-
-        return response()->noContent();
+        return response()->json(['message' => 'Chưa có bảng video trên schema mới.'], 422);
     }
 
     public function select_video(Request $request)
@@ -274,12 +211,6 @@ class VideoController extends Controller
                 ->paginate($perPage);
         }
 
-        if ($this->usesLegacyVideoTable()) {
-            return $this->legacyVideoQuery(onlyActive: true)
-                ->orderBy('video_id', 'DESC')
-                ->paginate($perPage);
-        }
-
         return new LengthAwarePaginator([], 0, $perPage, 1, [
             'path' => request()->url(),
             'pageName' => 'page',
@@ -295,26 +226,14 @@ class VideoController extends Controller
                 ->get();
         }
 
-        if ($this->usesLegacyVideoTable()) {
-            return $this->legacyVideoQuery()
-                ->orderBy('video_id', 'DESC')
-                ->get();
-        }
-
         return collect();
     }
 
-    protected function findStorefrontVideoById(int $id): LegacyVideo|ModernVideo|null
+    protected function findStorefrontVideoById(int $id): ?ModernVideo
     {
         if ($this->usesModernVideoTable()) {
             return ModernVideo::query()
                 ->where('is_active', true)
-                ->whereKey($id)
-                ->first();
-        }
-
-        if ($this->usesLegacyVideoTable()) {
-            return $this->legacyVideoQuery(onlyActive: true)
                 ->whereKey($id)
                 ->first();
         }
@@ -325,38 +244,6 @@ class VideoController extends Controller
     protected function usesModernVideoTable(): bool
     {
         return Schema::hasTable('videos');
-    }
-
-    protected function usesLegacyVideoTable(): bool
-    {
-        return Schema::hasTable((new LegacyVideo())->getTable());
-    }
-
-    protected function legacyVideoStatusColumnExists(): bool
-    {
-        $table = (new LegacyVideo())->getTable();
-
-        return Schema::hasTable($table) && Schema::hasColumn($table, 'video_status');
-    }
-
-    protected function legacyVideoQuery(bool $onlyActive = false)
-    {
-        $query = LegacyVideo::query();
-
-        if ($onlyActive && $this->legacyVideoStatusColumnExists()) {
-            $query->where('video_status', 1);
-        }
-
-        return $query;
-    }
-
-    protected function legacyActiveSliders()
-    {
-        if (! Schema::hasTable('tbl_slider')) {
-            return collect();
-        }
-
-        return \App\Models\Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
     }
 
     protected function extractYoutubeId(string $value): string
