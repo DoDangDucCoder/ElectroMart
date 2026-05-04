@@ -1,4 +1,4 @@
-@extends('layout')
+@extends('layouts.home-tech')
 
 @section('body_class', 'g-search')
 

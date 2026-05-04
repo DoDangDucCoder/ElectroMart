@@ -41,11 +41,11 @@
                 <div class="shopw-footer-newsletter-card">
                     <h3>HỖ TRỢ KHÁCH HÀNG</h3>
                     <nav class="tech-footer-nav">
-                        <a href="#">Trung tâm hỗ trợ</a>
-                        <a href="#">Hướng dẫn mua hàng</a>
-                        <a href="#">Hướng dẫn thanh toán</a>
-                        <a href="#">Kiểm tra đơn hàng</a>
-                        <a href="#">Câu hỏi thường gặp</a>
+                        <a href="{{ url('/cham-soc-khach-hang') }}">Trung tâm hỗ trợ</a>
+                        <a href="{{ url('/cham-soc-khach-hang') }}">Hướng dẫn mua hàng</a>
+                        <a href="{{ url('/cham-soc-khach-hang') }}">Hướng dẫn thanh toán</a>
+                        <a href="{{ url('/cham-soc-khach-hang') }}">Kiểm tra đơn hàng</a>
+                        <a href="{{ url('/cham-soc-khach-hang#topics') }}">Câu hỏi thường gặp</a>
                     </nav>
                 </div>
                 <div class="tech-footer-contact">

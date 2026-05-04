@@ -3,10 +3,16 @@
 
 @include('partials.storefront.head')
 
-<body class="g-home tech-home">
-    @include('partials.storefront.header')
+@php
+    $bodyClass = trim($__env->yieldContent('body_class', 'g-home tech-home'));
+    $isMinimal = str_contains($bodyClass, 'minimal-layout');
+@endphp
 
-    @include('partials.storefront.support-dock')
+<body class="{{ $bodyClass }}">
+    @if (!$isMinimal)
+        @include('partials.storefront.header')
+        @include('partials.storefront.support-dock')
+    @endif
 
     @if ($errors->any())
         <section class="container" style="margin-top: 16px;">
@@ -20,8 +26,11 @@
 
     @yield('content')
 
-    @include('partials.storefront.compare-modal')
-    @include('partials.storefront.chatbot-widget')
+    @if (!$isMinimal)
+        @include('partials.home.footer', ['paymentItems' => $paymentItems ?? []])
+        @include('partials.storefront.compare-modal')
+        @include('partials.storefront.chatbot-widget')
+    @endif
 
     @include('partials.storefront.scripts-stack')
 
@@ -30,15 +39,16 @@
             const counters = document.querySelectorAll('[data-tech-countdown]');
 
             counters.forEach((counter) => {
-                const end = new Date(Date.now() + 6 * 60 * 60 * 1000 + 24 * 60 * 1000 + 12 * 1000);
+                const end = new Date(Date.now() + 6 * 24 * 60 * 60 * 1000 + 23 * 60 * 60 * 1000 + 41 * 60 * 1000 + 58 * 1000);
                 const boxes = counter.querySelectorAll('[data-countdown-unit]');
 
                 const render = () => {
                     const distance = Math.max(0, end.getTime() - Date.now());
-                    const hours = Math.floor(distance / (1000 * 60 * 60));
+                    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
                     const minutes = Math.floor((distance / (1000 * 60)) % 60);
                     const seconds = Math.floor((distance / 1000) % 60);
-                    const values = { hours, minutes, seconds };
+                    const values = { days, hours, minutes, seconds };
 
                     boxes.forEach((box) => {
                         const unit = box.getAttribute('data-countdown-unit');
@@ -125,6 +135,9 @@
                     const track = viewport.querySelector('[data-tech-sale-track]');
                     const prev = viewport.querySelector('[data-tech-sale-prev]');
                     const next = viewport.querySelector('[data-tech-sale-next]');
+                    const shell = viewport.parentElement;
+                    const dotsContainer = shell ? shell.querySelector('[data-tech-sale-dots]') : null;
+                    const dots = dotsContainer ? dotsContainer.querySelectorAll('.tech-sale-dot') : [];
 
                     if (!track || !prev || !next) {
                         return;
@@ -143,6 +156,17 @@
 
                         prev.disabled = !hasOverflow || !hasMoreLeft;
                         next.disabled = !hasOverflow || !hasMoreRight;
+
+                        if (dots.length) {
+                            const maxScroll = Math.max(track.scrollWidth - track.clientWidth, 1);
+                            const ratio = Math.min(Math.max(track.scrollLeft / maxScroll, 0), 1);
+                            const activeIndex = hasOverflow
+                                ? Math.min(dots.length - 1, Math.round(ratio * (dots.length - 1)))
+                                : 0;
+                            dots.forEach((dot, idx) => {
+                                dot.classList.toggle('is-active', idx === activeIndex);
+                            });
+                        }
                     };
 
                     track.addEventListener('mousedown', (event) => {

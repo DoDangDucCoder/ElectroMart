@@ -1,4 +1,4 @@
-@extends('layout')
+@extends('layouts.home-tech')
 
 @php
     $isSuccess = request()->has('just_placed');

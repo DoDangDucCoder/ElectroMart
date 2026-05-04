@@ -7,14 +7,28 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class OrderConfirmationNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    public int $tries = 3;
+
+    public int $timeout = 60;
+
     public function __construct(
         private readonly Order $order
     ) {
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [30, 120, 300];
     }
 
     public function via(object $notifiable): array
@@ -41,5 +55,14 @@ class OrderConfirmationNotification extends Notification implements ShouldQueue
             'total_amount' => $this->order->total_amount,
             'status' => $this->order->status,
         ];
+    }
+
+    public function failed(Throwable $exception): void
+    {
+        Log::error('Order confirmation notification failed permanently.', [
+            'order_id' => $this->order->id ?? null,
+            'customer_id' => $this->order->customer->id ?? null,
+            'exception' => $exception->getMessage(),
+        ]);
     }
 }

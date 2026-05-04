@@ -5,7 +5,7 @@ namespace App\Application\Checkout\Services;
 use App\Application\Catalog\Services\ProductPricingService;
 use App\Application\Catalog\Services\ProductService;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
-use App\Models\ProductAttribute;
+use App\Infrastructure\Persistence\Eloquent\Catalog\ProductVariant;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
@@ -264,13 +264,14 @@ class CartService
             return [];
         }
 
-        if (! Schema::hasTable((new ProductAttribute())->getTable())) {
+        if (! Schema::hasTable((new ProductVariant())->getTable())) {
             throw new RuntimeException('Tùy chọn sản phẩm hiện không khả dụng.');
         }
 
-        /** @var ProductAttribute|null $attribute */
-        $attribute = ProductAttribute::with('attribute')
+        /** @var ProductVariant|null $attribute */
+        $attribute = ProductVariant::query()
             ->where('product_id', $productId)
+            ->where('is_active', true)
             ->where('id', $attributeId)
             ->first();
 
@@ -279,10 +280,10 @@ class CartService
         }
 
         return [
-            'price' => (float) $attribute->price,
-            'stock' => (int) $attribute->quantity,
-            'image' => $attribute->image ?: null,
-            'label' => $attribute->name ?: optional($attribute->attribute)->attribute_name,
+            'price' => (float) ($attribute->sale_price ?: $attribute->price),
+            'stock' => (int) $attribute->stock_quantity,
+            'image' => $attribute->image_path ?: null,
+            'label' => $attribute->name,
         ];
     }
 

@@ -13,7 +13,7 @@ use App\Http\Requests\Storefront\Home\SearchProductsRequest;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Cms\BlogPost;
-use App\Models\Icons;
+use App\Infrastructure\Persistence\Eloquent\Cms\SiteLink;
 use App\Models\News;
 use App\Support\AssetUrl;
 use App\Support\ProductPriceSql;
@@ -39,6 +39,11 @@ class HomeController extends Controller
     public function error_page()
     {
         return view('errors.404');
+    }
+
+    private function allowsDemoFallbacks(): bool
+    {
+        return app()->environment(['local', 'testing']);
     }
 
     public function load_more_product(LoadMoreProductsRequest $request)
@@ -79,6 +84,67 @@ class HomeController extends Controller
             'brandItems' => $this->resolveTechHomeBrands(8),
             'policyItems' => $this->resolveTechHomePolicyItems(),
             'paymentItems' => $this->resolveTechHomePaymentItems(),
+        ]);
+    }
+
+    public function khuyenMai(Request $request)
+    {
+        return view('pages.khuyenmai.index', [
+            'category' => $this->categoryService->listActive(),
+            'brand' => $this->brandService->listAll(['is_active' => true]),
+            'category_post' => $this->legacyCategoryPosts(),
+            'meta_desc' => 'Bộ sưu tập & Khuyến mãi HOT - Laptop, PC & Phụ kiện chính hãng giá tốt, ưu đãi mỗi ngày.',
+            'meta_keywords' => 'khuyen mai, bo suu tap, flash sale, giam gia, laptop, phu kien, coupon',
+            'meta_title' => 'Bộ sưu tập & Khuyến mãi HOT - DangDuc',
+            'url_canonical' => $request->url(),
+            'flashSaleProducts' => $this->resolveTechHomeProducts(10, preferHot: true, onlyDiscounted: true),
+            'promoProducts' => $this->resolveTechHomeProducts(7, preferHot: true, onlyDiscounted: true),
+            'policyItems' => $this->resolveTechHomePolicyItems(),
+            'paymentItems' => $this->resolveTechHomePaymentItems(),
+        ]);
+    }
+
+    public function orderTracking(Request $request)
+    {
+        $trackingResult = null;
+        $code = $request->query('code');
+
+        if ($code && $this->allowsDemoFallbacks()) {
+            $trackingResult = [
+                'code' => $code,
+                'status_label' => 'Đang giao hàng',
+                'date' => '20/05/2025 10:30',
+                'payment_method' => 'Thanh toán khi nhận hàng',
+                'total' => 23457000,
+                'estimated_delivery' => '22/05/2025',
+                'timeline' => [
+                    ['label' => 'Đã đặt hàng', 'icon' => 'fa-check', 'done' => true, 'date' => '20/05/2025 10:30'],
+                    ['label' => 'Đã xác nhận', 'icon' => 'fa-check', 'done' => true, 'date' => '20/05/2025 10:45'],
+                    ['label' => 'Đang chuẩn bị', 'icon' => 'fa-check', 'done' => true, 'date' => '20/05/2025 11:20'],
+                    ['label' => 'Đang giao', 'icon' => 'fa-truck', 'done' => true, 'active' => true, 'date' => '21/05/2025 09:15'],
+                    ['label' => 'Hoàn tất', 'icon' => 'fa-flag-checkered', 'done' => false, 'date' => ''],
+                ],
+                'shipping' => ['name' => 'Nguyễn Văn An', 'phone' => '0901 234 567', 'address' => '123 Đường Cầu Giấy, Phường Quan Hoa, Quận Cầu Giấy, Hà Nội'],
+                'carrier' => ['name' => 'GHN - Giao Hàng Nhanh', 'tracking_code' => 'GHN1234567890', 'last_update' => '21/05/2025 09:15'],
+                'totals' => ['subtotal' => 22670000, 'shipping' => 30000, 'discount' => 1243000, 'total' => 23457000],
+                'items' => [
+                    ['name' => 'Laptop ASUS TUF Gaming A15 FA506NC-HN005W', 'image' => 'uploads/product/no-image.svg', 'quantity' => 1, 'price' => 19990000, 'subtotal' => 19990000],
+                    ['name' => 'Chuột không dây Logitech G304 Lightspeed', 'image' => 'uploads/product/no-image.svg', 'quantity' => 1, 'price' => 890000, 'subtotal' => 890000],
+                    ['name' => 'Bàn phím cơ AKKO 5075B Plus Black Silver', 'image' => 'uploads/product/no-image.svg', 'quantity' => 1, 'price' => 1790000, 'subtotal' => 1790000],
+                ],
+            ];
+        }
+
+        return view('pages.support.order_tracking', [
+            'trackingResult' => $trackingResult,
+            'meta_title' => 'Kiểm tra đơn hàng - DangDuc',
+            'meta_desc' => 'Nhập mã đơn hàng để kiểm tra trạng thái đơn hàng tại DangDuc.',
+            'meta_keywords' => 'kiem tra don hang, theo doi don hang, order tracking',
+            'url_canonical' => $request->url(),
+            'category' => $this->categoryService->listActive(),
+            'brand' => $this->brandService->listAll(['is_active' => true]),
+            'category_post' => $this->legacyCategoryPosts(),
+            'slider' => $this->legacyActiveSliders(),
         ]);
     }
 
@@ -146,8 +212,12 @@ class HomeController extends Controller
                     return $products->take($limit)->values();
                 }
             } catch (\Throwable) {
-                // Keep the homepage available even before optional catalog data is ready.
+                // Keep non-production previews available while optional catalog data is incomplete.
             }
+        }
+
+        if (! $this->allowsDemoFallbacks()) {
+            return collect();
         }
 
         return $this->fallbackTechHomeProducts($limit, $onlyDiscounted);
@@ -290,8 +360,12 @@ class HomeController extends Controller
                     return $newsItems;
                 }
             } catch (\Throwable) {
-                // Fall through to demo news.
+                // Fall through to local preview news only.
             }
+        }
+
+        if (! $this->allowsDemoFallbacks()) {
+            return collect();
         }
 
         return collect([
@@ -340,8 +414,12 @@ class HomeController extends Controller
                     return $brands;
                 }
             } catch (\Throwable) {
-                // Fall through to demo brands.
+                // Fall through to local preview brands only.
             }
+        }
+
+        if (! $this->allowsDemoFallbacks()) {
+            return collect();
         }
 
         return collect(['Apple', 'Samsung', 'ASUS', 'Dell', 'Lenovo', 'Xiaomi', 'OPPO', 'Acer'])
@@ -848,7 +926,7 @@ class HomeController extends Controller
         }
 
         $targetCount = max(1, (int) ($config['target_count'] ?? 6));
-        $useDemoProducts = (bool) ($config['use_demo_products'] ?? true);
+        $useDemoProducts = $this->allowsDemoFallbacks() && (bool) ($config['use_demo_products'] ?? false);
         $productSlugs = collect($config['product_slugs'] ?? [])
             ->map(static fn ($slug) => trim((string) $slug))
             ->filter()
@@ -1364,10 +1442,27 @@ class HomeController extends Controller
 
     private function legacyIcons()
     {
-        if (! Schema::hasTable('tbl_icons')) {
+        $table = (new SiteLink())->getTable();
+
+        if (! Schema::hasTable($table)) {
             return collect();
         }
 
-        return Icons::orderBy('id_icons', 'DESC')->get();
+        return SiteLink::query()
+            ->where('is_active', true)
+            ->orderBy('display_order')
+            ->orderByDesc('id')
+            ->get()
+            ->map(function (SiteLink $link) {
+                $iconPath = trim((string) $link->icon_path);
+
+                return (object) [
+                    'id_icons' => $link->id,
+                    'name' => $link->name,
+                    'link' => $link->url,
+                    'category' => $link->category,
+                    'image' => $iconPath !== '' ? basename($iconPath) : null,
+                ];
+            });
     }
 }

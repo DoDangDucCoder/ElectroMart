@@ -46,8 +46,4 @@
             'brandItems' => $brandItems,
         ])
     </main>
-
-    @include('partials.home.footer', [
-        'paymentItems' => $paymentItems,
-    ])
 @endsection

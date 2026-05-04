@@ -2,45 +2,86 @@
 
 namespace App\Http\Controllers\Concerns;
 
-use App\Models\CatePost;
-use App\Models\Slider;
+use App\Infrastructure\Persistence\Eloquent\Cms\Banner;
+use App\Infrastructure\Persistence\Eloquent\Cms\BlogCategory;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * Cung cấp các phương thức truy xuất dữ liệu legacy (tbl_slider, tbl_category_post)
- * dùng chung cho nhiều storefront controller.
+ * Cung cấp context dùng chung cho nhiều storefront controller.
+ *
+ * Tên method cũ được giữ lại để tránh phải thay đổi đồng loạt các controller/view.
  */
 trait LegacyStorefrontContext
 {
     /**
-     * Lấy danh sách danh mục bài viết từ bảng legacy tbl_category_post.
-     * Trả về collection rỗng nếu bảng chưa tồn tại.
+     * Lấy danh sách danh mục bài viết từ schema hiện tại.
      */
     protected function legacyCategoryPosts()
     {
-        if (! Schema::hasTable('tbl_category_post')) {
+        $table = (new BlogCategory())->getTable();
+
+        if (! Schema::hasTable($table)) {
             return collect();
         }
 
-        return CatePost::orderBy('cate_post_id', 'DESC')->get();
+        return BlogCategory::query()
+            ->where('is_active', true)
+            ->orderBy('display_order')
+            ->orderByDesc('id')
+            ->get();
     }
 
     /**
-     * Lấy các slider đang hoạt động từ bảng legacy tbl_slider.
-     * Trả về collection rỗng nếu bảng chưa tồn tại.
+     * Lấy các banner đang hoạt động từ schema hiện tại.
      *
      * @param  int  $limit  Số lượng slider tối đa cần lấy
      */
     protected function legacyActiveSliders(int $limit = 4)
     {
-        if (! Schema::hasTable('tbl_slider')) {
+        $table = (new Banner())->getTable();
+
+        if (! Schema::hasTable($table)) {
             return collect();
         }
 
-        return Slider::orderBy('slider_id', 'DESC')
-            ->where('slider_status', '1')
+        return Banner::query()
+            ->where('is_active', true)
+            ->where('placement', 'homepage')
+            ->where(function ($query) {
+                $query->whereNull('starts_at')
+                    ->orWhere('starts_at', '<=', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('ends_at')
+                    ->orWhere('ends_at', '>=', now());
+            })
+            ->orderBy('display_order')
+            ->orderByDesc('id')
             ->take(max(1, $limit))
-            ->get();
+            ->get()
+            ->map(fn (Banner $banner) => $this->mapBannerToSliderShape($banner));
+    }
+
+    /**
+     * Map Banner sang shape cũ để các Blade hiện tại chưa phải đổi cùng lúc.
+     */
+    protected function mapBannerToSliderShape(Banner $banner): object
+    {
+        $meta = is_array($banner->meta) ? $banner->meta : [];
+        $imagePath = trim((string) $banner->image_path);
+
+        return (object) [
+            'slider_id' => $banner->id,
+            'slider_name' => $banner->title,
+            'slider_alt' => $meta['slider_alt'] ?? $banner->title,
+            'slider_image' => basename($imagePath),
+            'slider_status' => $banner->is_active ? '1' : '0',
+            'slider_desc' => $meta['legacy_description']
+                ?? $meta['slider_desc']
+                ?? $meta['description']
+                ?? null,
+            'slider_tone' => $meta['slider_tone'] ?? null,
+        ];
     }
 
     /**

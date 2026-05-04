@@ -1,0 +1,1056 @@
+/* ================================================================
+   PROMO PAGE — Bộ sưu tập & Khuyến mãi
+   Matches design reference: trang khuyen mai
+   ================================================================ */
+
+/* ---- Variables ---- */
+:root {
+  --promo-teal: #0d9488;
+  --promo-teal-dark: #0f766e;
+  --promo-navy: #0c1e35;
+  --promo-dark: #111827;
+  --promo-blue: #1e40af;
+  --promo-blue-light: #3b82f6;
+  --promo-purple: #7c3aed;
+  --promo-orange: #ea580c;
+  --promo-border: #e5e7eb;
+  --promo-bg: #f3f4f6;
+  --promo-card-bg: #ffffff;
+  --promo-text: #1f2937;
+  --promo-text-muted: #6b7280;
+  --promo-radius: 12px;
+  --promo-radius-sm: 8px;
+  --promo-radius-xs: 6px;
+  --promo-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+  --promo-shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.05);
+  --promo-shadow-lg: 0 10px 25px rgba(0,0,0,.1);
+  --promo-font: 'Be Vietnam Pro', 'Inter', system-ui, -apple-system, sans-serif;
+  --promo-container: 1240px;
+}
+
+.promo-page .tech-home-main {
+  display: none;
+}
+
+/* ---- Global Reset for Promo Page ---- */
+.promo-main {
+  font-family: var(--promo-font);
+  background: var(--promo-bg);
+  color: var(--promo-text);
+  line-height: 1.5;
+}
+
+.promo-main .container {
+  max-width: var(--promo-container);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ----------------------------------------------------------------
+   BREADCRUMB
+   ---------------------------------------------------------------- */
+.promo-breadcrumb {
+  background: #fff;
+  border-bottom: 1px solid var(--promo-border);
+  padding: 12px 0;
+}
+
+.promo-breadcrumb ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--promo-text-muted);
+}
+
+.promo-breadcrumb ol li::before {
+  content: '';
+}
+
+.promo-breadcrumb ol li + li::before {
+  content: '›';
+  margin-right: 8px;
+  color: #9ca3af;
+}
+
+.promo-breadcrumb ol li a {
+  color: var(--promo-text-muted);
+  text-decoration: none;
+  transition: color .2s;
+}
+
+.promo-breadcrumb ol li a:hover {
+  color: var(--promo-teal);
+}
+
+.promo-breadcrumb ol li.active {
+  color: var(--promo-teal);
+  font-weight: 600;
+}
+
+/* ----------------------------------------------------------------
+   HERO BANNER
+   ---------------------------------------------------------------- */
+.promo-hero {
+  position: relative;
+  background: linear-gradient(135deg, #0c1e35 0%, #0f2e4d 40%, #134e6f 70%, #0d9488 100%);
+  overflow: hidden;
+  padding: 48px 0 56px;
+}
+
+.promo-hero-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(13,148,136,.25) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 30%, rgba(30,64,175,.2) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Particle dots decoration */
+.promo-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.15) 1px, transparent 0),
+    radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,.1) 1px, transparent 0),
+    radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,.12) 1px, transparent 0),
+    radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,.08) 1px, transparent 0),
+    radial-gradient(1px 1px at 90% 70%, rgba(255,255,255,.1) 1px, transparent 0);
+  pointer-events: none;
+}
+
+.promo-hero .container {
+  position: relative;
+  z-index: 2;
+}
+
+.promo-hero-inner {
+  display: flex;
+  align-items: center;
+  gap: 48px;
+}
+
+.promo-hero-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.promo-hero-title {
+  font-family: 'Bebas Neue', 'Be Vietnam Pro', sans-serif;
+  font-size: 42px;
+  line-height: 1.15;
+  color: #fff;
+  margin: 0 0 12px;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.promo-hero-title span {
+  display: block;
+}
+
+.promo-hero-desc {
+  color: rgba(255,255,255,.85);
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 24px;
+}
+
+/* Countdown */
+.promo-hero-countdown {
+  margin-bottom: 28px;
+}
+
+.promo-hero-countdown-label {
+  display: block;
+  color: rgba(255,255,255,.6);
+  font-size: 12px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.promo-hero-countdown-boxes {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.promo-countdown-box {
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 8px;
+  padding: 10px 14px;
+  text-align: center;
+  min-width: 58px;
+  backdrop-filter: blur(4px);
+}
+
+.promo-countdown-box strong {
+  display: block;
+  font-size: 26px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  font-family: 'Bebas Neue', monospace;
+  letter-spacing: 1px;
+}
+
+.promo-countdown-box small {
+  display: block;
+  font-size: 10px;
+  color: rgba(255,255,255,.6);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  margin-top: 2px;
+}
+
+.promo-countdown-sep {
+  font-size: 24px;
+  font-weight: 700;
+  color: rgba(255,255,255,.5);
+  line-height: 1;
+}
+
+/* Hero CTA buttons */
+.promo-hero-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.promo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all .25s ease;
+  cursor: pointer;
+  border: none;
+  letter-spacing: .3px;
+}
+
+.promo-btn--primary {
+  background: var(--promo-teal);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(13,148,136,.35);
+}
+
+.promo-btn--primary:hover {
+  background: var(--promo-teal-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(13,148,136,.45);
+  color: #fff;
+  text-decoration: none;
+}
+
+.promo-btn--outline {
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  border: 1.5px solid rgba(255,255,255,.55);
+}
+
+.promo-btn--outline:hover {
+  border-color: #fff;
+  background: rgba(255,255,255,.08);
+  color: #fff;
+  text-decoration: none;
+}
+
+/* Hero visual */
+.promo-hero-visual {
+  flex: 0 0 420px;
+  max-width: 420px;
+}
+
+.promo-hero-img {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  object-fit: cover;
+  box-shadow: 0 8px 32px rgba(0,0,0,.3);
+}
+
+/* ----------------------------------------------------------------
+   CATEGORY QUICK TABS
+   ---------------------------------------------------------------- */
+.promo-cats {
+  background: #fff;
+  padding: 28px 0;
+  border-bottom: 1px solid var(--promo-border);
+}
+
+.promo-cats-grid {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.promo-cat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  text-decoration: none;
+  color: var(--promo-text);
+  border-radius: 12px;
+  transition: all .2s ease;
+  min-width: 110px;
+}
+
+.promo-cat-item:hover {
+  background: var(--promo-bg);
+  transform: translateY(-2px);
+  text-decoration: none;
+  color: var(--promo-teal);
+}
+
+.promo-cat-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 14px;
+  background: var(--promo-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--promo-border);
+  transition: all .2s;
+}
+
+.promo-cat-item:hover .promo-cat-icon-wrap {
+  border-color: var(--promo-teal);
+  box-shadow: 0 2px 8px rgba(13,148,136,.15);
+}
+
+.promo-cat-icon-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.promo-cat-icon-wrap .fa {
+  font-size: 28px;
+  color: var(--promo-teal);
+}
+
+.promo-cat-name {
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ----------------------------------------------------------------
+   SECTION COMMON
+   ---------------------------------------------------------------- */
+.promo-section {
+  padding: 36px 0;
+}
+
+.promo-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.promo-section-head h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--promo-text);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.promo-see-all {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--promo-teal);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  transition: color .2s;
+}
+
+.promo-see-all:hover {
+  color: var(--promo-teal-dark);
+  text-decoration: none;
+}
+
+/* ----------------------------------------------------------------
+   ƯU ĐÃI NỔI BẬT — Promo Banner Cards
+   ---------------------------------------------------------------- */
+.promo-banner-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.promo-banner-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 28px 24px;
+  border-radius: var(--promo-radius);
+  min-height: 220px;
+  overflow: hidden;
+  text-decoration: none;
+  color: #fff;
+  transition: all .3s ease;
+}
+
+.promo-banner-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--promo-shadow-lg);
+  text-decoration: none;
+  color: #fff;
+}
+
+.promo-banner--blue {
+  background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+}
+
+.promo-banner--dark {
+  background: linear-gradient(135deg, #111827 0%, #374151 100%);
+}
+
+.promo-banner--teal {
+  background: linear-gradient(135deg, #064e3b 0%, #0d9488 100%);
+}
+
+.promo-banner--purple {
+  background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%);
+}
+
+/* Subtle pattern overlay on banners */
+.promo-banner-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 80% 20%, rgba(255,255,255,.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 20% 80%, rgba(255,255,255,.05) 0%, transparent 40%);
+  pointer-events: none;
+}
+
+.promo-banner-content {
+  position: relative;
+  z-index: 2;
+}
+
+.promo-banner-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: rgba(255,255,255,.18);
+  padding: 3px 10px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.promo-banner-content h3 {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.2;
+  margin: 0 0 10px;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+}
+
+.promo-banner-discount {
+  font-size: 13px;
+  color: rgba(255,255,255,.8);
+  margin-bottom: 14px;
+  line-height: 1.4;
+}
+
+.promo-banner-discount strong {
+  font-size: 36px;
+  font-weight: 800;
+  color: #fff;
+  display: block;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1px;
+}
+
+.promo-banner-cta {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,.9);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ----------------------------------------------------------------
+   FLASH SALE
+   ---------------------------------------------------------------- */
+.promo-flash {
+  background: #fff;
+  border-radius: var(--promo-radius);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.promo-flash .container {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.promo-flash-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.promo-flash-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #dc2626;
+}
+
+.promo-flash-header h2 .fa-bolt {
+  color: #f59e0b;
+}
+
+.promo-flash-timer {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--promo-text-muted);
+}
+
+.promo-flash-timer-label {
+  margin-right: 6px;
+}
+
+.promo-flash-timer strong {
+  background: #1f2937;
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 16px;
+  min-width: 32px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.promo-flash-timer span {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+/* Flash sale viewport - reuse existing tech-sale styles */
+.promo-flash .tech-sale-viewport {
+  margin-top: 16px;
+}
+
+/* ----------------------------------------------------------------
+   BỘ SƯU TẬP THEO NHU CẦU — Collection Cards
+   ---------------------------------------------------------------- */
+.promo-collection-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.promo-collection-card {
+  background: #fff;
+  border: 1px solid var(--promo-border);
+  border-radius: var(--promo-radius);
+  padding: 28px 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  text-decoration: none;
+  color: var(--promo-text);
+  transition: all .25s ease;
+}
+
+.promo-collection-card:hover {
+  border-color: var(--promo-teal);
+  box-shadow: var(--promo-shadow-md);
+  transform: translateY(-2px);
+  text-decoration: none;
+  color: var(--promo-text);
+}
+
+.promo-collection-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #e0f2fe, #dbeafe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.promo-collection-icon .fa {
+  font-size: 22px;
+  color: var(--promo-blue-light);
+}
+
+.promo-collection-body h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: var(--promo-text);
+}
+
+.promo-collection-body p {
+  font-size: 12px;
+  color: var(--promo-text-muted);
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+
+.promo-collection-cta {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--promo-teal);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.promo-collection-card:hover .promo-collection-cta {
+  gap: 8px;
+}
+
+/* ----------------------------------------------------------------
+   COUPON CARDS
+   ---------------------------------------------------------------- */
+.promo-coupon-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.promo-coupon-card {
+  border-radius: var(--promo-radius);
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  min-height: 110px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Dashed cut-out on left edge */
+.promo-coupon-card::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--promo-bg);
+}
+
+.promo-coupon-card::after {
+  content: '';
+  position: absolute;
+  right: -10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--promo-bg);
+}
+
+.promo-coupon--blue {
+  background: linear-gradient(135deg, #1e3a5f, #2563eb);
+}
+
+.promo-coupon--dark {
+  background: linear-gradient(135deg, #111827, #374151);
+}
+
+.promo-coupon--teal {
+  background: linear-gradient(135deg, #064e3b, #0d9488);
+}
+
+.promo-coupon--orange {
+  background: linear-gradient(135deg, #9a3412, #ea580c);
+}
+
+.promo-coupon-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.promo-coupon-code {
+  display: block;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+}
+
+.promo-coupon-title {
+  font-size: 12px;
+  margin: 0 0 4px;
+  opacity: .9;
+  line-height: 1.4;
+}
+
+.promo-coupon-desc {
+  font-size: 11px;
+  opacity: .7;
+}
+
+.promo-coupon-right {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.promo-coupon-copy {
+  background: rgba(255,255,255,.2);
+  border: 1px solid rgba(255,255,255,.35);
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.promo-coupon-copy:hover {
+  background: rgba(255,255,255,.3);
+}
+
+.promo-coupon-exp {
+  font-size: 10px;
+  opacity: .6;
+}
+
+/* ----------------------------------------------------------------
+   SẢN PHẨM TRONG KHUYẾN MÃI — Product Grid
+   ---------------------------------------------------------------- */
+.promo-product-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+}
+
+.promo-product-col {
+  min-width: 0;
+}
+
+/* ----------------------------------------------------------------
+   POLICY STRIP
+   ---------------------------------------------------------------- */
+.promo-policy-strip {
+  background: #fff;
+  border-top: 1px solid var(--promo-border);
+  padding: 28px 0;
+}
+
+.promo-policy-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.promo-policy-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.promo-policy-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #e0f2fe, #ccfbf1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.promo-policy-icon .fa {
+  font-size: 18px;
+  color: var(--promo-teal);
+}
+
+.promo-policy-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.promo-policy-text strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--promo-text);
+  line-height: 1.3;
+}
+
+.promo-policy-text span {
+  font-size: 11px;
+  color: var(--promo-text-muted);
+  line-height: 1.4;
+}
+
+/* ----------------------------------------------------------------
+   RESPONSIVE
+   ---------------------------------------------------------------- */
+@media (max-width: 1200px) {
+  .promo-product-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .promo-hero-inner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .promo-hero-visual {
+    flex: 0 0 auto;
+    max-width: 350px;
+  }
+
+  .promo-hero-countdown-boxes {
+    justify-content: center;
+  }
+
+  .promo-hero-actions {
+    justify-content: center;
+  }
+
+  .promo-banner-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .promo-collection-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .promo-coupon-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .promo-product-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .promo-policy-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .promo-hero {
+    padding: 32px 0 40px;
+  }
+
+  .promo-hero-title {
+    font-size: 32px;
+  }
+
+  .promo-hero-visual {
+    max-width: 280px;
+  }
+
+  .promo-cats-grid {
+    gap: 12px;
+  }
+
+  .promo-cat-item {
+    padding: 8px 12px;
+    min-width: 90px;
+  }
+
+  .promo-cat-icon-wrap {
+    width: 56px;
+    height: 56px;
+  }
+
+  .promo-banner-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .promo-banner-card {
+    min-height: 180px;
+  }
+
+  .promo-collection-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .promo-coupon-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .promo-product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .promo-policy-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .promo-flash-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .promo-hero-title {
+    font-size: 26px;
+  }
+
+  .promo-countdown-box {
+    padding: 8px 10px;
+    min-width: 48px;
+  }
+
+  .promo-countdown-box strong {
+    font-size: 20px;
+  }
+
+  .promo-hero-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .promo-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .promo-product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
+
+/* ----------------------------------------------------------------
+   COUPON COPY FEEDBACK
+   ---------------------------------------------------------------- */
+.promo-coupon-copy.copied {
+  background: rgba(255,255,255,.4);
+}
+
+/* ----------------------------------------------------------------
+   PRODUCT CARD OVERRIDES for 7-col grid
+   ---------------------------------------------------------------- */
+.promo-product-grid .tech-product-card {
+  font-size: 12px;
+}
+
+.promo-product-grid .tech-product-card .tech-product-body h3 {
+  font-size: 12px;
+  line-height: 1.35;
+  margin-bottom: 4px;
+}
+
+.promo-product-grid .tech-product-card .tech-product-body h3 a {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.promo-product-grid .tech-product-card .tech-sale-price,
+.promo-product-grid .tech-product-card .tech-old-price {
+  font-size: 12px;
+}
+
+.promo-product-grid .tech-product-card .tech-sale-price {
+  font-size: 13px;
+}
+
+.promo-product-grid .tech-product-card .tech-product-brand-row {
+  font-size: 10px;
+}
+
+.promo-product-grid .tech-product-card .tech-brand-chip {
+  width: 22px;
+  height: 22px;
+  font-size: 8px;
+}
+
+.promo-product-grid .tech-product-card .tech-product-rating {
+  font-size: 10px;
+}
+
+.promo-product-grid .tech-product-card .tech-product-rating .fa {
+  font-size: 10px;
+}
+
+.promo-product-grid .tech-add-cart-btn {
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+}
+
+/* ----------------------------------------------------------------
+   FLASH SALE — compact card items
+   ---------------------------------------------------------------- */
+.promo-flash .tech-sale-item {
+  min-width: 180px;
+  max-width: 200px;
+}
+
+/* ----------------------------------------------------------------
+   COUPON COPY JS INTERACTION
+   ---------------------------------------------------------------- */
+.promo-coupon-copy.is-copied {
+  background: rgba(255,255,255,.45);
+  pointer-events: none;
+}
+
+/* ----------------------------------------------------------------
+   NAV ACTIVE STATE — Khuyến mãi
+   ---------------------------------------------------------------- */
+.promo-page .header-bottom .shopw-links [data-storefront-nav-key="promo"] {
+  color: var(--promo-teal);
+  font-weight: 600;
+}
+
+/* ----------------------------------------------------------------
+   FOOTER gap between promo-policy and footer — match design spacing
+   ---------------------------------------------------------------- */
+.promo-main + .tech-footer {
+  margin-top: 0;
+}

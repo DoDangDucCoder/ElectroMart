@@ -7,14 +7,28 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class WelcomeNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    public int $tries = 3;
+
+    public int $timeout = 60;
+
     public function __construct(
         private readonly Customer $customer
     ) {
+    }
+
+    /**
+     * @return array<int, int>
+     */
+    public function backoff(): array
+    {
+        return [30, 120, 300];
     }
 
     public function via(object $notifiable): array
@@ -43,5 +57,14 @@ class WelcomeNotification extends Notification implements ShouldQueue
             'customer_name' => $this->customer->name,
             'message' => 'Chào mừng bạn đến với cửa hàng!',
         ];
+    }
+
+    public function failed(Throwable $exception): void
+    {
+        Log::error('Welcome notification failed permanently.', [
+            'customer_id' => $this->customer->id ?? null,
+            'customer_email' => $this->customer->email ?? null,
+            'exception' => $exception->getMessage(),
+        ]);
     }
 }

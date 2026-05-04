@@ -3,15 +3,17 @@
 namespace App\Http\Requests\Storefront\Checkout;
 
 use App\Http\Requests\BaseFormRequest;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 
 class CalculateFeeRequest extends BaseFormRequest
 {
     public function rules(): array
     {
         return [
-            'city_id' => ['required', 'integer', 'min:1'],
-            'province_id' => ['required', 'integer', 'min:1'],
-            'ward_id' => ['required', 'integer', 'min:1'],
+            'city_id' => $this->locationRules('city'),
+            'province_id' => $this->locationRules('province'),
+            'ward_id' => $this->locationRules('ward'),
         ];
     }
 
@@ -57,5 +59,17 @@ class CalculateFeeRequest extends BaseFormRequest
         }
 
         return $value;
+    }
+
+    protected function locationRules(string $type): array
+    {
+        $rules = ['required', 'integer', 'min:1'];
+
+        if (Schema::hasTable('locations')) {
+            $rules[] = Rule::exists('locations', 'id')
+                ->where(fn ($query) => $query->where('type', $type));
+        }
+
+        return $rules;
     }
 }

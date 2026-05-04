@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Storefront\Checkout;
 
 use App\Http\Requests\BaseFormRequest;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class ConfirmOrderRequest extends BaseFormRequest
@@ -19,9 +20,9 @@ class ConfirmOrderRequest extends BaseFormRequest
             'shipping_method' => ['nullable', 'string', 'max:50', Rule::in(['cod', 'bank_transfer', 'cash', 'card', 'paypal'])],
             // payment_method: phương thức thanh toán độc lập (nếu form gửi riêng biệt)
             'payment_method'  => ['nullable', 'string', 'max:50', Rule::in(['cod', 'bank_transfer', 'momo', 'vnpay', 'paypal', 'cash', 'card'])],
-            'city_id'         => ['nullable', 'integer', 'min:1'],
-            'province_id'     => ['nullable', 'integer', 'min:1'],
-            'ward_id'         => ['nullable', 'integer', 'min:1'],
+            'city_id'         => $this->locationRules('city'),
+            'province_id'     => $this->locationRules('province'),
+            'ward_id'         => $this->locationRules('ward'),
         ];
     }
 
@@ -88,5 +89,17 @@ class ConfirmOrderRequest extends BaseFormRequest
         }
 
         return $value;
+    }
+
+    protected function locationRules(string $type): array
+    {
+        $rules = ['nullable', 'integer', 'min:1'];
+
+        if (Schema::hasTable('locations')) {
+            $rules[] = Rule::exists('locations', 'id')
+                ->where(fn ($query) => $query->where('type', $type));
+        }
+
+        return $rules;
     }
 }

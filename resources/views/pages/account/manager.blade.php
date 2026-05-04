@@ -1,329 +1,321 @@
-@extends('layout')
+@extends('layouts.home-tech')
 @section('content')
-    <div class="shopw-account-manager-page container">
-        <nav aria-label="breadcrumb" class="shopw-pdp-breadcrumb" style="margin-bottom: 20px;">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url('/') }}">Trang chủ</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Quản lý tài khoản</li>
-            </ol>
-        </nav>
+    @php
+        $section = $active_section ?? 'payment-methods';
+        $customerName = $customer->name ?? 'Nguyễn Văn An';
+        $customerEmail = $customer->email ?? 'nguyenvanan@gmail.com';
+        $customerInitial = strtoupper(mb_substr($customerName, 0, 1, 'UTF-8'));
 
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-3">
-                <div class="shopw-account-sidebar">
-                    <div class="shopw-account-user-card">
-                        <div class="shopw-account-user-avatar">
-                            <img src="{{ Session::get('storefront_customer_picture', asset('frontend/images/storefront-account-avatar.svg')) }}"
-                                alt="Avatar">
+        $accountMenu = [
+            ['key' => 'overview', 'label' => 'Tổng quan tài khoản', 'icon' => 'fa-th-large', 'href' => route('customer.account', ['section' => 'overview'])],
+            ['key' => 'orders', 'label' => 'Đơn hàng của tôi', 'icon' => 'fa-shopping-bag', 'href' => route('customer.account', ['section' => 'orders'])],
+            ['key' => 'history', 'label' => 'Lịch sử mua hàng', 'icon' => 'fa-history', 'href' => route('customer.account', ['section' => 'history'])],
+            ['key' => 'order-detail', 'label' => 'Chi tiết đơn hàng', 'icon' => 'fa-file-text-o', 'href' => route('customer.account', ['section' => 'order-detail'])],
+            ['key' => 'tracking', 'label' => 'Theo dõi đơn hàng', 'icon' => 'fa-truck', 'href' => route('customer.account', ['section' => 'tracking'])],
+            ['key' => 'wishlist', 'label' => 'Sản phẩm yêu thích', 'icon' => 'fa-heart-o', 'href' => route('customer.account', ['section' => 'wishlist'])],
+            ['key' => 'address', 'label' => 'Địa chỉ của tôi', 'icon' => 'fa-map-marker', 'href' => route('customer.account', ['section' => 'address'])],
+            ['key' => 'billing', 'label' => 'Thông tin thanh toán', 'icon' => 'fa-credit-card', 'href' => route('customer.account', ['section' => 'billing'])],
+            ['key' => 'payment-methods', 'label' => 'Phương thức thanh toán', 'icon' => 'fa-money', 'href' => route('customer.account', ['section' => 'payment-methods'])],
+            ['key' => 'review', 'label' => 'Nhận xét của tôi', 'icon' => 'fa-comment-o', 'href' => route('customer.account', ['section' => 'review'])],
+            ['key' => 'password', 'label' => 'Cài đặt tài khoản', 'icon' => 'fa-cog', 'href' => route('customer.account', ['section' => 'password'])],
+        ];
+
+        $savedMethods = [
+            [
+                'type' => 'visa',
+                'logo' => 'visa',
+                'title' => 'Visa',
+                'masked' => '•••• 4242',
+                'holder' => 'NGUYEN VAN AN',
+                'extra' => 'Hết hạn 08/28',
+                'is_default' => true,
+                'verified' => true,
+                'status_label' => 'Đã xác minh',
+            ],
+            [
+                'type' => 'mastercard',
+                'logo' => 'mastercard',
+                'title' => 'Mastercard',
+                'masked' => '•••• 8891',
+                'holder' => 'NGUYEN VAN AN',
+                'extra' => 'Hết hạn 04/27',
+                'is_default' => false,
+                'verified' => true,
+                'status_label' => 'Đã liên kết',
+                'set_default' => true,
+            ],
+            [
+                'type' => 'momo',
+                'logo' => 'momo',
+                'title' => 'Ví MoMo',
+                'masked' => '0912 345 678',
+                'holder' => null,
+                'extra' => null,
+                'is_default' => false,
+                'verified' => true,
+                'status_label' => 'Đã liên kết',
+            ],
+            [
+                'type' => 'zalopay',
+                'logo' => 'zalopay',
+                'title' => 'Ví ZaloPay',
+                'masked' => 'nguyenvanan@gmail.com',
+                'holder' => null,
+                'extra' => null,
+                'is_default' => false,
+                'verified' => true,
+                'status_label' => 'Đã liên kết',
+            ],
+            [
+                'type' => 'vietcombank',
+                'logo' => 'vietcombank',
+                'title' => 'Vietcombank',
+                'masked' => 'TK thanh toán •••• 6789',
+                'holder' => 'NGUYEN VAN AN',
+                'extra' => null,
+                'is_default' => false,
+                'verified' => true,
+                'status_label' => 'Đã liên kết',
+            ],
+        ];
+
+        $promoOffers = [
+            ['logo' => 'visa', 'title' => 'Giảm 5%', 'sub' => 'Tối đa 300.000đ', 'desc' => 'Cho thẻ Visa'],
+            ['logo' => 'momo', 'title' => 'Giảm 10%', 'sub' => 'Tối đa 200.000đ', 'desc' => 'Khi thanh toán qua MoMo'],
+            ['logo' => 'zalopay', 'title' => 'Giảm 10%', 'sub' => 'Tối đa 150.000đ', 'desc' => 'Khi thanh toán qua ZaloPay'],
+            ['logo' => 'qr', 'title' => 'Giảm 5%', 'sub' => '', 'desc' => 'Thanh toán qua QR Code'],
+        ];
+    @endphp
+
+    <div class="pmpage">
+        <div class="container">
+            <nav aria-label="breadcrumb" class="pmpage-breadcrumb">
+                <ol>
+                    <li><a href="{{ url('/') }}">Trang chủ</a></li>
+                    <li><i class="fa fa-angle-right"></i></li>
+                    <li><a href="{{ route('customer.account') }}">Tài khoản</a></li>
+                    <li><i class="fa fa-angle-right"></i></li>
+                    <li class="is-current">Phương thức thanh toán</li>
+                </ol>
+            </nav>
+
+            @if (session()->has('message'))
+                <div class="pmpage-alert is-success">{{ session('message') }}</div>
+            @endif
+            @if ($errors->any())
+                <div class="pmpage-alert is-error">
+                    <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                </div>
+            @endif
+
+            <div class="pmpage-grid">
+                {{-- ===================== LEFT SIDEBAR ===================== --}}
+                <aside class="pmpage-sidebar">
+                    <div class="pmpage-user">
+                        <div class="pmpage-user-avatar">
+                            <span>{{ $customerInitial }}</span>
                         </div>
-                        <div class="shopw-account-user-info">
-                            <strong>TÀI KHOẢN</strong>
-                            <p>Xin chào {{ $customer->name }}</p>
+                        <div class="pmpage-user-info">
+                            <strong>{{ $customerName }}</strong>
+                            <span>{{ $customerEmail }}</span>
+                            <a href="{{ route('customer.account', ['section' => 'profile']) }}">Xem thông tin tài khoản <i class="fa fa-angle-right"></i></a>
                         </div>
                     </div>
-                    <ul class="shopw-account-nav">
-                        <li class="{{ $active_section == 'profile' ? 'active' : '' }}">
-                            <a href="{{ route('customer.account', ['section' => 'profile']) }}">
-                                <i class="fa fa-user"></i> Thông tin tài khoản
-                            </a>
-                        </li>
-                        <li class="{{ $active_section == 'edit' ? 'active' : '' }}">
-                            <a href="{{ route('customer.account', ['section' => 'edit']) }}">
-                                <i class="fa fa-edit"></i> Chỉnh sửa thông tin
-                            </a>
-                        </li>
-                        <li class="{{ $active_section == 'review' ? 'active' : '' }}">
-                            <a href="{{ route('customer.account', ['section' => 'review']) }}">
-                                <i class="fa fa-star"></i> Đánh giá website
-                            </a>
-                        </li>
-                        <li class="{{ $active_section == 'password' ? 'active' : '' }}">
-                            <a href="{{ route('customer.account', ['section' => 'password']) }}">
-                                <i class="fa fa-key"></i> Đổi mật khẩu
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ url('/dang-xuat-khach-hang') }}" class="text-danger">
-                                <i class="fa fa-sign-out"></i> Đăng xuất
-                            </a>
+
+                    <ul class="pmpage-nav">
+                        @foreach ($accountMenu as $item)
+                            <li class="{{ $section === $item['key'] ? 'is-active' : '' }}">
+                                <a href="{{ $item['href'] }}">
+                                    <i class="fa {{ $item['icon'] }}"></i>
+                                    <span>{{ $item['label'] }}</span>
+                                </a>
+                            </li>
+                        @endforeach
+                        <li class="pmpage-nav-sep"></li>
+                        <li class="pmpage-nav-logout">
+                            <form method="POST" action="{{ url('/dang-xuat-khach-hang') }}">
+                                @csrf
+                                <button type="submit">
+                                <i class="fa fa-sign-out"></i>
+                                <span>Đăng xuất</span>
+                                </button>
+                            </form>
                         </li>
                     </ul>
-                </div>
+                </aside>
+
+                {{-- ===================== MAIN CONTENT ===================== --}}
+                <main class="pmpage-main">
+                    @if ($section === 'payment-methods' || !in_array($section, ['profile','edit','review','password']))
+                        @include('pages.account.partials.payment-methods', ['savedMethods' => $savedMethods])
+                    @elseif ($section === 'profile')
+                        <div class="pmpage-card pmpage-card--padded">
+                            <div class="pmpage-section-head">
+                                <div>
+                                    <h2>Thông tin tài khoản</h2>
+                                    <p class="pmpage-section-sub">Xem chi tiết tài khoản của bạn.</p>
+                                </div>
+                            </div>
+                            <div class="pmpage-detail-list">
+                                <div class="pmpage-detail-row"><span>Họ và tên</span><strong>{{ $customer->name ?? '—' }}</strong></div>
+                                <div class="pmpage-detail-row"><span>Email</span><strong>{{ $customer->email ?? '—' }}</strong></div>
+                                <div class="pmpage-detail-row"><span>Số điện thoại</span><strong>{{ $customer->phone ?? 'Chưa cập nhật' }}</strong></div>
+                            </div>
+                        </div>
+                    @elseif ($section === 'edit')
+                        <div class="pmpage-card pmpage-card--padded">
+                            <div class="pmpage-section-head"><h2>Chỉnh sửa thông tin</h2></div>
+                            <form action="{{ route('customer.account.update') }}" method="POST" class="pmpage-form">
+                                @csrf
+                                <label>Họ và tên<input type="text" name="name" value="{{ $customer->name ?? '' }}" required></label>
+                                <label>Số điện thoại<input type="text" name="phone" value="{{ $customer->phone ?? '' }}"></label>
+                                <button type="submit" class="pmpage-btn pmpage-btn--primary">Lưu thay đổi</button>
+                            </form>
+                        </div>
+                    @elseif ($section === 'review')
+                        <div class="pmpage-card pmpage-card--padded">
+                            <div class="pmpage-section-head"><h2>Nhận xét của tôi</h2></div>
+                            <form action="{{ route('customer.account.review') }}" method="POST" class="pmpage-form">
+                                @csrf
+                                <textarea name="content" rows="6" placeholder="Cảm nhận của bạn..."></textarea>
+                                <button type="submit" class="pmpage-btn pmpage-btn--primary">Gửi đánh giá</button>
+                            </form>
+                        </div>
+                    @elseif ($section === 'password')
+                        <div class="pmpage-card pmpage-card--padded">
+                            <div class="pmpage-section-head"><h2>Cài đặt tài khoản</h2></div>
+                            <form action="{{ route('customer.account.change-password') }}" method="POST" class="pmpage-form">
+                                @csrf
+                                <label>Mật khẩu hiện tại<input type="password" name="current_password" required></label>
+                                <label>Mật khẩu mới<input type="password" name="new_password" required></label>
+                                <label>Xác nhận mật khẩu mới<input type="password" name="new_password_confirmation" required></label>
+                                <button type="submit" class="pmpage-btn pmpage-btn--primary">Đổi mật khẩu</button>
+                            </form>
+                        </div>
+                    @endif
+
+                    {{-- ===================== PROMO OFFERS ===================== --}}
+                    <div class="pmpage-card pmpage-promo">
+                        <div class="pmpage-promo-head">Ưu đãi thanh toán</div>
+                        <div class="pmpage-promo-grid">
+                            @foreach ($promoOffers as $offer)
+                                <div class="pmpage-promo-item">
+                                    <div class="pmpage-promo-logo pmpage-promo-logo--{{ $offer['logo'] }}">
+                                        @include('pages.account.partials.brand-mark', ['brand' => $offer['logo']])
+                                    </div>
+                                    <div class="pmpage-promo-body">
+                                        <strong>{{ $offer['title'] }}</strong>
+                                        @if ($offer['sub'])<span class="pmpage-promo-sub">{{ $offer['sub'] }}</span>@endif
+                                        <span class="pmpage-promo-desc">{{ $offer['desc'] }}</span>
+                                        <a href="#" class="pmpage-promo-link">Xem chi tiết <i class="fa fa-angle-right"></i></a>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </main>
+
+                {{-- ===================== RIGHT SIDEBAR ===================== --}}
+                <aside class="pmpage-aside">
+                    <div class="pmpage-aside-card">
+                        <div class="pmpage-aside-head">
+                            <span class="pmpage-aside-icon pmpage-aside-icon--blue"><i class="fa fa-shield"></i></span>
+                            <h4>Thanh toán an toàn</h4>
+                        </div>
+                        <p>Thông tin thanh toán của bạn được mã hóa và bảo mật tuyệt đối.</p>
+                        <div class="pmpage-aside-status is-ok"><i class="fa fa-check-circle"></i> Bảo mật SSL 256-bit</div>
+                    </div>
+
+                    <div class="pmpage-aside-card">
+                        <div class="pmpage-aside-head">
+                            <span class="pmpage-aside-icon pmpage-aside-icon--blue"><i class="fa fa-lock"></i></span>
+                            <h4>Xác thực 2 lớp (2FA)</h4>
+                        </div>
+                        <p>Tăng cường bảo mật cho tài khoản của bạn bằng mã xác thực.</p>
+                        <div class="pmpage-aside-row">
+                            <span class="pmpage-aside-status is-ok"><i class="fa fa-check-circle"></i> Đã bật</span>
+                            <label class="pmpage-switch">
+                                <input type="checkbox" checked>
+                                <span></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="pmpage-aside-card">
+                        <div class="pmpage-aside-head">
+                            <span class="pmpage-aside-icon pmpage-aside-icon--blue"><i class="fa fa-lightbulb-o"></i></span>
+                            <h4>Mẹo bảo mật khi lưu thẻ</h4>
+                        </div>
+                        <ul class="pmpage-aside-tips">
+                            <li><i class="fa fa-check"></i> Chỉ lưu thẻ trên thiết bị cá nhân.</li>
+                            <li><i class="fa fa-check"></i> Không chia sẻ thông tin thẻ với người khác.</li>
+                            <li><i class="fa fa-check"></i> Bật xác thực 2 lớp để bảo vệ tài khoản.</li>
+                        </ul>
+                        <a href="#" class="pmpage-aside-link">Xem thêm mẹo bảo mật <i class="fa fa-angle-right"></i></a>
+                    </div>
+
+                    <div class="pmpage-aside-card">
+                        <div class="pmpage-aside-head">
+                            <span class="pmpage-aside-icon pmpage-aside-icon--blue"><i class="fa fa-headphones"></i></span>
+                            <h4>Liên hệ hỗ trợ</h4>
+                        </div>
+                        <p>Chúng tôi luôn sẵn sàng hỗ trợ bạn.</p>
+                        <ul class="pmpage-aside-contact">
+                            <li><i class="fa fa-phone"></i> Hotline: <strong>1900 1234</strong></li>
+                            <li><i class="fa fa-envelope-o"></i> Email: <strong>support@dangduc.vn</strong></li>
+                            <li><i class="fa fa-clock-o"></i> Thời gian: <strong>8:00 - 21:00 (T2 - CN)</strong></li>
+                        </ul>
+                        <a href="#" class="pmpage-btn pmpage-btn--outline pmpage-btn--block"><i class="fa fa-comment-o"></i> Chat với chúng tôi</a>
+                    </div>
+
+                    <div class="pmpage-aside-card pmpage-aside-card--bank">
+                        <div class="pmpage-aside-head">
+                            <span class="pmpage-aside-icon pmpage-aside-icon--blue"><i class="fa fa-university"></i></span>
+                            <h4>Chuyển khoản</h4>
+                        </div>
+                        <div class="pmpage-aside-discount">
+                            <strong>Giảm 3%</strong>
+                            <span>Tối đa 100.000đ</span>
+                        </div>
+                        <p>Khi chuyển khoản trước</p>
+                        <a href="#" class="pmpage-aside-link">Xem chi tiết <i class="fa fa-angle-right"></i></a>
+                    </div>
+                </aside>
             </div>
 
-            <!-- Main Content -->
-            <div class="col-md-9">
-                <div class="shopw-account-content">
-                    @if (session()->has('message'))
-                        <div class="alert alert-success">
-                            {{ session('message') }}
-                        </div>
-                    @endif
-
-                    @if ($errors->any())
-                        <div class="alert alert-danger">
-                            <ul style="margin-bottom: 0;">
-                                @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-
-                    @if ($active_section == 'profile')
-                        <div class="shopw-account-profile">
-                            <div class="shopw-account-profile-header">
-                                <div class="shopw-account-profile-avatar">
-                                    <img src="{{ Session::get('storefront_customer_picture', asset('frontend/images/storefront-account-avatar.svg')) }}"
-                                        alt="Avatar">
-                                </div>
-                                <div class="shopw-account-profile-meta">
-                                    <h3>{{ $customer->name }}</h3>
-                                    <p>{{ $customer->email }}</p>
-                                    <a href="{{ route('customer.account', ['section' => 'password']) }}" class="btn btn-sm btn-default">Đổi mật khẩu</a>
-                                </div>
-                            </div>
-
-                            <div class="shopw-account-section-title">
-                                <h4>Thông tin tài khoản</h4>
-                            </div>
-
-                            <div class="shopw-account-details-list">
-                                <div class="shopw-account-detail-row">
-                                    <span class="label">Họ và tên</span>
-                                    <span class="value">{{ $customer->name }}</span>
-                                </div>
-                                <div class="shopw-account-detail-row">
-                                    <span class="label">Email</span>
-                                    <span class="value">{{ $customer->email }}</span>
-                                </div>
-                                <div class="shopw-account-detail-row">
-                                    <span class="label">Số điện thoại</span>
-                                    <span class="value">{{ $customer->phone ?? 'Chưa cập nhật' }}</span>
-                                </div>
-                                <div class="shopw-account-detail-row">
-                                    <span class="label">Ngày sinh</span>
-                                    <span class="value">Chưa cập nhật</span>
-                                </div>
-                                <div class="shopw-account-detail-row">
-                                    <span class="label">Giới tính</span>
-                                    <span class="value">Chưa cập nhật</span>
-                                </div>
-                            </div>
-                        </div>
-                    @elseif($active_section == 'edit')
-                        <div class="shopw-account-edit">
-                            <div class="shopw-account-section-title">
-                                <h4>Chỉnh sửa thông tin</h4>
-                            </div>
-                            <form action="{{ route('customer.account.update') }}" method="POST">
-                                @csrf
-                                <div class="form-group">
-                                    <label>Họ và tên</label>
-                                    <input type="text" name="name" class="form-control" value="{{ $customer->name }}"
-                                        required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Số điện thoại</label>
-                                    <input type="text" name="phone" class="form-control"
-                                        value="{{ $customer->phone }}">
-                                </div>
-                                <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Lưu thay đổi</button>
-                            </form>
-                        </div>
-                    @elseif($active_section == 'review')
-                        <div class="shopw-account-review">
-                            <div class="shopw-account-section-title">
-                                <h4>Đánh giá website của chúng tôi</h4>
-                            </div>
-                            <form action="{{ route('customer.account.review') }}" method="POST">
-                                @csrf
-                                <div class="form-group">
-                                    <textarea name="content" class="form-control" rows="6" placeholder="Cảm nhận của bạn..."></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Gửi đánh giá</button>
-                            </form>
-                        </div>
-                    @elseif($active_section == 'password')
-                        <div class="shopw-account-password">
-                            <div class="shopw-account-section-title">
-                                <h4>Đổi mật khẩu</h4>
-                            </div>
-                            <form action="{{ route('customer.account.change-password') }}" method="POST">
-                                @csrf
-                                <div class="form-group" style="margin-bottom: 15px;">
-                                    <label>Mật khẩu hiện tại</label>
-                                    <input type="password" name="current_password" class="form-control" required>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 15px;">
-                                    <label>Mật khẩu mới</label>
-                                    <input type="password" name="new_password" class="form-control" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Xác nhận mật khẩu mới</label>
-                                    <input type="password" name="new_password_confirmation" class="form-control" required>
-                                </div>
-                                <button type="submit" class="btn btn-primary" style="margin-top: 15px;">Đổi mật khẩu</button>
-                            </form>
-                        </div>
-                    @endif
+            {{-- ===================== SUPPORT CONTACT BAR ===================== --}}
+            <div class="pmpage-help">
+                <div class="pmpage-help-item">
+                    <span class="pmpage-help-icon"><i class="fa fa-question-circle"></i></span>
+                    <div>
+                        <strong>Cần hỗ trợ về thanh toán?</strong>
+                        <span>Đội ngũ của chúng tôi luôn sẵn sàng hỗ trợ bạn.</span>
+                    </div>
+                </div>
+                <div class="pmpage-help-item">
+                    <span class="pmpage-help-icon"><i class="fa fa-phone"></i></span>
+                    <div>
+                        <strong>Hotline: 1900 1234</strong>
+                        <span>8:00 - 21:00 (T2 - CN)</span>
+                    </div>
+                </div>
+                <div class="pmpage-help-item">
+                    <span class="pmpage-help-icon"><i class="fa fa-envelope-o"></i></span>
+                    <div>
+                        <strong>Email: support@dangduc.vn</strong>
+                        <span>Phản hồi trong 15 phút</span>
+                    </div>
+                </div>
+                <div class="pmpage-help-item">
+                    <span class="pmpage-help-icon"><i class="fa fa-comments-o"></i></span>
+                    <div>
+                        <strong>Chat trực tuyến</strong>
+                        <span>Trò chuyện ngay với chúng tôi</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <style>
-        .shopw-account-manager-page {
-            padding-top: 30px;
-            padding-bottom: 50px;
-            background: #f8fafc;
-        }
-
-        .shopw-account-sidebar {
-            background: #fff;
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .shopw-account-user-card {
-            padding: 24px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-
-        .shopw-account-user-avatar img {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #3b82f6;
-        }
-
-        .shopw-account-user-info strong {
-            display: block;
-            font-size: 14px;
-            color: #1e293b;
-        }
-
-        .shopw-account-user-info p {
-            margin: 0;
-            font-size: 12px;
-            color: #64748b;
-        }
-
-        .shopw-account-nav {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .shopw-account-nav li a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 24px;
-            color: #475569;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .shopw-account-nav li.active a {
-            background: #f1f5f9;
-            color: #3b82f6;
-        }
-
-        .shopw-account-nav li a:hover {
-            background: #f8fafc;
-            color: #3b82f6;
-        }
-
-        .shopw-account-nav li a i {
-            width: 20px;
-            text-align: center;
-        }
-
-        .shopw-account-content {
-            background: #fff;
-            border-radius: 16px;
-            padding: 30px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            min-height: 400px;
-        }
-
-        .shopw-account-profile-header {
-            display: flex;
-            align-items: center;
-            gap: 25px;
-            margin-bottom: 35px;
-        }
-
-        .shopw-account-profile-avatar img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid #f1f5f9;
-        }
-
-        .shopw-account-profile-meta h3 {
-            margin: 0 0 5px;
-            font-size: 24px;
-            font-weight: 800;
-            color: #1e293b;
-        }
-
-        .shopw-account-profile-meta p {
-            margin: 0 0 15px;
-            color: #64748b;
-        }
-
-        .shopw-account-section-title {
-            margin-bottom: 20px;
-            border-bottom: 1px solid #f1f5f9;
-            padding-bottom: 10px;
-        }
-
-        .shopw-account-section-title h4 {
-            margin: 0;
-            font-weight: 700;
-            color: #1e293b;
-        }
-
-        .shopw-account-details-list {
-            display: grid;
-            gap: 15px;
-        }
-
-        .shopw-account-detail-row {
-            display: flex;
-            padding: 12px 0;
-            border-bottom: 1px solid #f8fafc;
-        }
-
-        .shopw-account-detail-row .label {
-            width: 180px;
-            color: #64748b;
-            font-weight: 600;
-        }
-
-        .shopw-account-detail-row .value {
-            color: #1e293b;
-            font-weight: 700;
-        }
-
-        .shopw-account-manager-page .breadcrumb {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 10px 15px;
-        }
-    </style>
+    @include('pages.account.partials.payment-methods-styles')
 @endsection

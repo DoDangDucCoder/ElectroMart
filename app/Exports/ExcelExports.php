@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\CategoryProductModel;
+use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
 
 class ExcelExports
 {
@@ -11,6 +11,6 @@ class ExcelExports
      */
     public function collection()
     {
-        return CategoryProductModel::all();
+        return ProductCategory::all();
     }
 }

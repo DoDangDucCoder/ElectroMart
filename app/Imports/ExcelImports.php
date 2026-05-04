@@ -2,7 +2,8 @@
 
 namespace App\Imports;
 
-use App\Models\CategoryProductModel;
+use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
+use Illuminate\Support\Str;
 
 class ExcelImports
 {
@@ -13,12 +14,16 @@ class ExcelImports
      */
     public function model(array $row)
     {
-        return new CategoryProductModel([
-            'meta_keywords' => $row[0],
-            'category_name' => $row[1],
-            'slug_category_product' => $row[2],
-            'category_desc' => $row[3],
-            'category_status' => $row[4],
+        $name = trim((string) ($row[1] ?? ''));
+
+        return new ProductCategory([
+            'name' => $name,
+            'slug' => trim((string) ($row[2] ?? '')) ?: Str::slug($name),
+            'description' => $row[3] ?? null,
+            'is_active' => (int) ($row[4] ?? 0) === 0,
+            'meta' => [
+                'meta_keywords' => $row[0] ?? null,
+            ],
         ]);
     }
 }

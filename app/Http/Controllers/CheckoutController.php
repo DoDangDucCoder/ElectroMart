@@ -40,12 +40,12 @@ class CheckoutController extends Controller
 
     public function login_checkout(Request $request)
     {
-        return view('pages.checkout.auth_checkout', $this->storefrontAuthPageContext($request, 'login'));
+        return view('pages.auth.login', $this->storefrontAuthPageContext($request, 'login'));
     }
 
     public function register_checkout(Request $request)
     {
-        return view('pages.checkout.auth_checkout', $this->storefrontAuthPageContext($request, 'register'));
+        return view('pages.auth.register', $this->storefrontAuthPageContext($request, 'register'));
     }
 
     public function add_customer(RegisterCustomerRequest $request): RedirectResponse
@@ -118,7 +118,7 @@ class CheckoutController extends Controller
 
     public function dang_xuat_khachhang(Request $request): RedirectResponse
     {
-        $redirectKey = StorefrontCustomerAuth::normalizeRedirectKey($request->query('redirect'), 'login');
+        $redirectKey = StorefrontCustomerAuth::normalizeRedirectKey($request->input('redirect', $request->query('redirect')), 'login');
 
         $this->clearCustomerSession();
 
@@ -146,15 +146,6 @@ class CheckoutController extends Controller
         }
         // Allow guests to proceed
         $cities = Location::where('type', 'city')->orderBy('name')->get();
-        if ($cities->isEmpty()) {
-            $cities = collect([
-                (object) ['id' => 1, 'name' => 'TP. Hồ Chí Minh'],
-                (object) ['id' => 2, 'name' => 'TP. Hà Nội'],
-                (object) ['id' => 3, 'name' => 'TP. Đà Nẵng'],
-                (object) ['id' => 4, 'name' => 'TP. Hải Phòng'],
-                (object) ['id' => 5, 'name' => 'TP. Cần Thơ'],
-            ]);
-        }
 
         return view('pages.checkout.show_checkout', array_merge(
             $this->seoContext($request, 'Thanh toán', 'thanh toán'),
@@ -223,48 +214,6 @@ class CheckoutController extends Controller
                 ->where('parent_id', $parentId)
                 ->orderBy('name')
                 ->get();
-        }
-
-        if ($locations->isEmpty() && $parentId > 0) {
-            if ($action === 'city') {
-                if ($parentId == 1) { // HCM
-                    $locations = collect([
-                        (object) ['id' => 101, 'name' => 'Quận 1'],
-                        (object) ['id' => 102, 'name' => 'Quận 3'],
-                        (object) ['id' => 103, 'name' => 'Quận 7'],
-                        (object) ['id' => 104, 'name' => 'Quận Bình Thạnh'],
-                    ]);
-                } elseif ($parentId == 2) { // Hà Nội
-                    $locations = collect([
-                        (object) ['id' => 201, 'name' => 'Quận Hoàn Kiếm'],
-                        (object) ['id' => 202, 'name' => 'Quận Ba Đình'],
-                        (object) ['id' => 203, 'name' => 'Quận Đống Đa'],
-                        (object) ['id' => 204, 'name' => 'Quận Cầu Giấy'],
-                    ]);
-                } else {
-                    $locations = collect([
-                        (object) ['id' => 301, 'name' => 'Quận Hải Châu'],
-                        (object) ['id' => 302, 'name' => 'Quận Thanh Khê'],
-                    ]);
-                }
-            } elseif ($action === 'province') {
-                if ($parentId == 101) { // Quận 1
-                    $locations = collect([
-                        (object) ['id' => 1001, 'name' => 'Phường Bến Nghé'],
-                        (object) ['id' => 1002, 'name' => 'Phường Bến Thành'],
-                        (object) ['id' => 1003, 'name' => 'Phường Đa Kao'],
-                    ]);
-                } elseif ($parentId == 201) { // Hoàn Kiếm
-                    $locations = collect([
-                        (object) ['id' => 2001, 'name' => 'Phường Cửa Đông'],
-                        (object) ['id' => 2002, 'name' => 'Phường Hàng Bạc'],
-                    ]);
-                } else {
-                    $locations = collect([
-                        (object) ['id' => 9001, 'name' => 'Phường Trung Tâm'],
-                    ]);
-                }
-            }
         }
 
         foreach ($locations as $location) {
@@ -338,7 +287,7 @@ class CheckoutController extends Controller
         }
 
         $order = \App\Infrastructure\Persistence\Eloquent\Order\Order::where('code', $orderCode)
-            ->with(['items', 'shipping', 'payments', 'customer'])
+            ->with(['items.product', 'shipping.city', 'shipping.province', 'shipping.ward', 'payments', 'customer'])
             ->first();
 
         if (! $order) {
@@ -396,6 +345,152 @@ class CheckoutController extends Controller
                 'storefrontCustomerPicture' => Session::get(StorefrontCustomerAuth::SESSION_PICTURE_KEY),
             ]
         ));
+    }
+
+    public function orderSuccess(Request $request, string $orderCode)
+    {
+        $order = \App\Infrastructure\Persistence\Eloquent\Order\Order::where('code', $orderCode)
+            ->with(['items.product', 'shipping.city', 'shipping.province', 'shipping.ward', 'payments', 'customer'])
+            ->first();
+
+        if (!$order) {
+            return Redirect::to('/history')->with('error', 'Không tìm thấy đơn hàng.');
+        }
+
+        $orderView = $this->buildOrderViewData($order);
+
+        $recommendedProducts = \App\Infrastructure\Persistence\Eloquent\Catalog\Product::query()
+            ->where('is_active', true)->inRandomOrder()->limit(5)->get();
+
+        return view('pages.checkout.order_success', array_merge(
+            $this->seoContext($request, 'Đặt hàng thành công', 'đặt hàng thành công'),
+            $this->catalogContext(),
+            [
+                'orderView' => $orderView,
+                'recommendedProducts' => $recommendedProducts,
+            ]
+        ));
+    }
+
+    public function orderFailed(Request $request, string $orderCode)
+    {
+        $order = \App\Infrastructure\Persistence\Eloquent\Order\Order::where('code', $orderCode)
+            ->with(['items.product', 'shipping.city', 'shipping.province', 'shipping.ward', 'payments', 'customer'])
+            ->first();
+
+        if (!$order) {
+            return Redirect::to('/history')->with('error', 'Không tìm thấy đơn hàng.');
+        }
+
+        $orderView = $this->buildOrderViewData($order);
+        $orderView['fail_reason'] = $request->query('reason', 'Giao dịch bị từ chối bởi ngân hàng');
+        $orderView['status'] = 'failed';
+
+        $recommendedProducts = \App\Infrastructure\Persistence\Eloquent\Catalog\Product::query()
+            ->where('is_active', true)->inRandomOrder()->limit(5)->get();
+
+        return view('pages.checkout.order_failed', array_merge(
+            $this->seoContext($request, 'Đặt hàng thất bại', 'đặt hàng thất bại'),
+            $this->catalogContext(),
+            [
+                'orderView' => $orderView,
+                'recommendedProducts' => $recommendedProducts,
+            ]
+        ));
+    }
+
+    protected function buildOrderViewData($order): array
+    {
+        $items = $order->items->map(function ($item) {
+            return [
+                'name' => $item->product_name ?? $item->name ?? 'Sản phẩm',
+                'image' => $item->product?->product_image ?? data_get($item->meta, 'thumbnail') ?? '',
+                'quantity' => $item->quantity ?? $item->product_qty ?? 1,
+                'price' => (float)($item->price ?? $item->product_price ?? 0),
+                'subtotal' => (float)($item->subtotal ?? ($item->price ?? 0) * ($item->quantity ?? 1)),
+                'attributes' => $this->formatOrderItemAttributes($item->product_attribute ?? $item->attributes ?? null),
+            ];
+        })->toArray();
+
+        $shipping = $order->shipping;
+        $payment = $order->payments->first();
+
+        return [
+            'code' => $order->code,
+            'date' => ($order->placed_at ?? $order->created_at)?->format('d/m/Y H:i') ?? now()->format('d/m/Y H:i'),
+            'status' => $order->status ?? 'pending',
+            'items' => $items,
+            'totals' => [
+                'subtotal' => (float)($order->subtotal ?? $order->total ?? 0),
+                'shipping' => (float)($order->shipping_total ?? 0),
+                'discount' => (float)($order->discount_total ?? $order->coupon_discount ?? 0),
+                'total' => (float)($order->total ?? 0),
+            ],
+            'shipping' => [
+                'name' => $shipping?->recipient_name ?? $order->customer?->name ?? '',
+                'phone' => $shipping?->recipient_phone ?? $order->customer?->phone ?? '',
+                'address' => $this->formatShippingAddress($shipping),
+            ],
+            'payment' => [
+                'provider_label' => $this->formatPaymentProviderLabel($payment?->provider),
+            ],
+            'coupon_code' => $order->coupon_code ?? null,
+            'estimated_delivery' => now()->addDays(3)->format('d/m/Y') . ' - ' . now()->addDays(5)->format('d/m/Y'),
+        ];
+    }
+
+    protected function formatShippingAddress($shipping): string
+    {
+        if (! $shipping) {
+            return '';
+        }
+
+        return implode(', ', array_filter([
+            $shipping->address_line1,
+            $shipping->address_line2,
+            $shipping->ward?->name,
+            $shipping->province?->name,
+            $shipping->city?->name,
+            $shipping->country,
+        ]));
+    }
+
+    protected function formatOrderItemAttributes($attributes): string
+    {
+        if (empty($attributes)) {
+            return '';
+        }
+
+        if (is_string($attributes)) {
+            return $attributes;
+        }
+
+        $parts = [];
+        foreach ((array) $attributes as $key => $value) {
+            if (is_array($value)) {
+                $value = implode(', ', $value);
+            }
+
+            $parts[] = is_string($key)
+                ? ucfirst(str_replace('_', ' ', $key)) . ': ' . $value
+                : (string) $value;
+        }
+
+        return implode(' | ', array_filter($parts));
+    }
+
+    protected function formatPaymentProviderLabel(?string $provider): string
+    {
+        return match ($provider) {
+            'cod', 'cash' => 'Thanh toán khi nhận hàng (COD)',
+            'bank_transfer' => 'Chuyển khoản ngân hàng',
+            'card' => 'Thanh toán thẻ',
+            'paypal' => 'PayPal',
+            'momo' => 'MoMo',
+            'vnpay' => 'VNPay',
+            null, '' => 'Thanh toán khi nhận hàng (COD)',
+            default => strtoupper($provider),
+        };
     }
 
     protected function seoContext(Request $request, string $title = 'Thanh toán', string $keyword = 'thanh toán'): array

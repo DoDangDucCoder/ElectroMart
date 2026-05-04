@@ -2,7 +2,8 @@
 
 namespace App\Imports;
 
-use App\Models\CategoryProductModel;
+use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
+use Illuminate\Support\Str;
 
 class ImportProduct
 {
@@ -13,16 +14,21 @@ class ImportProduct
      */
     public function model(array $row)
     {
-        return new CategoryProductModel([
-            'product_name' => $row[0],
-            'product_slug' => $row[1],
-            'category_id' => $row[2],
-            'brand_id' => $row[3],
-            'product_desc' => $row[4],
-            'product_content' => $row[5],
-            'product_price' => $row[6],
-            'product_image' => $row[7],
-            'product_status' => $row[8],
+        $name = trim((string) ($row[0] ?? ''));
+        $thumbnail = trim((string) ($row[7] ?? ''));
+
+        return new Product([
+            'name' => $name,
+            'slug' => trim((string) ($row[1] ?? '')) ?: Str::slug($name),
+            'primary_category_id' => $row[2] ?? null,
+            'brand_id' => $row[3] ?? null,
+            'description' => $row[4] ?? null,
+            'content' => $row[5] ?? null,
+            'price' => (float) ($row[6] ?? 0),
+            'thumbnail_path' => $thumbnail !== '' && ! str_contains($thumbnail, '/')
+                ? 'uploads/product/'.$thumbnail
+                : ($thumbnail ?: null),
+            'is_active' => (int) ($row[8] ?? 0) === 0,
         ]);
     }
 }

@@ -14,6 +14,7 @@
     $isCategorySection = request()->is('san-pham') || request()->is('danh-muc/*');
     $isBlogSection = request()->is('danh-muc-bai-viet/*') || request()->is('bai-viet/*') || request()->is('video') || request()->is('video-shop') || request()->is('xem-video/*');
     $isCartSection = request()->is('gio-hang');
+    $isPromoSection = request()->is('khuyen-mai');
     $isContactSection = request()->is('lien-he');
     $isHistorySection = request()->is('history') || request()->is('view-history-order/*');
     $isLoginSection = request()->is('dang-nhap') || request()->is('dang-ky') || request()->is('quen-mat-khau') || request()->is('update-new-pass');
@@ -66,10 +67,10 @@
         <div class="container">
             <div class="shopw-topbar-inner">
                 <div class="shopw-topbar-highlights">
-                    <span class="shopw-topbar-pill"><i class="fa fa-gift"></i> Ưu đãi nổi bật mỗi ngày</span>
+                    <span class="shopw-topbar-pill"><i class="fa fa-gift"></i> Ưu đãi chọn lọc mỗi ngày</span>
                     <span class="shopw-topbar-pill"><i class="fa fa-truck"></i> Giao hàng nhanh nội thành</span>
                     <span class="shopw-topbar-pill"><i class="fa fa-shield"></i> Bảo hành minh bạch</span>
-                    <span class="shopw-topbar-pill"><i class="fa fa-headphones"></i> Hỗ trợ 24/7 ({{ $supportPhoneDisplay }})</span>
+                    <span class="shopw-topbar-pill"><i class="fa fa-headphones"></i> Hỗ trợ 24/7</span>
                 </div>
             </div>
         </div>
@@ -98,7 +99,7 @@
                     <div class="shopw-search-shell" data-search-trends="[]">
                         <form action="{{ url('/tim-kiem') }}" method="GET" class="shopw-search">
                             <label class="shopw-search-entry" for="keywords">
-                                <span class="shopw-search-prefix">Bạn cần gì?</span>
+                                <span class="shopw-search-prefix">Bạn cần gì hôm nay?</span>
                                 <span class="shopw-search-input-stage">
                                     <input type="text" name="keywords_submit" id="keywords"
                                         placeholder="Laptop gaming, iPhone 15..."
@@ -118,7 +119,10 @@
                         <li class="shopw-util">
                             <a href="{{ url('/lien-he') }}">
                                 <i class="fa fa-map-marker"></i>
-                                <span class="shopw-util-label">Cửa hàng</span>
+                                <span class="shopw-util-text">
+                                    <span class="shopw-util-label">Giao hàng</span>
+                                    <span class="shopw-util-sub">Hà Nội <i class="fa fa-angle-down"></i></span>
+                                </span>
                             </a>
                         </li>
                         <li class="shopw-util">
@@ -126,17 +130,27 @@
                                 <a href="{{ url('/history') }}" class="shopw-account-summary--avatar-only {{ $isAccountSection ? 'is-current' : '' }}">
                                     <img src="{{ $headerCustomerAvatar }}" alt="Avatar" style="display:none;">
                                     <i class="fa fa-user"></i>
-                                    <span class="shopw-util-label">{{ \Illuminate\Support\Str::limit($headerCustomerName, 12) }}</span>
+                                    <span class="shopw-util-text">
+                                        <span class="shopw-util-label">{{ \Illuminate\Support\Str::limit($headerCustomerName, 12) }}</span>
+                                        <span class="shopw-util-sub">Tài khoản <i class="fa fa-angle-down"></i></span>
+                                    </span>
                                 </a>
                                 <div class="shopw-account-menu" style="display:none;">
                                     <span class="shopw-account-name">Header Customer</span>
                                     <a href="{{ url('/history') }}">Đơn hàng của tôi</a>
-                                    <a href="{{ url('/dang-xuat-khach-hang?redirect=login') }}">Đăng xuất</a>
+                                    <form method="POST" action="{{ url('/dang-xuat-khach-hang') }}">
+                                        @csrf
+                                        <input type="hidden" name="redirect" value="login">
+                                        <button type="submit">Đăng xuất</button>
+                                    </form>
                                 </div>
                             @else
                                 <a href="{{ url('/dang-nhap') }}">
                                     <i class="fa fa-user"></i>
-                                    <span class="shopw-util-label">Đăng nhập</span>
+                                    <span class="shopw-util-text">
+                                        <span class="shopw-util-label">Đăng nhập</span>
+                                        <span class="shopw-util-sub">Tài khoản <i class="fa fa-angle-down"></i></span>
+                                    </span>
                                 </a>
                             @endif
                         </li>
@@ -289,21 +303,10 @@
                                     </ul>
                                 </li>
 
-                                <li><a href="{{ URL::to('/gio-hang') }}"
-                                            data-storefront-nav-key="cart"
-                                            @class(['active' => $isCartSection, 'is-current' => $isCartSection])
-                                            @if ($isCartSection) aria-current="page" @endif>
-                                            <span class="shopw-nav-label">
-                                            <span class="shopw-nav-icon"><i class="fa fa-shopping-cart"></i></span>
-                                            <span class="shopw-nav-text">
-                                                <strong>Giỏ hàng</strong>
-                                                <small>Xem sản phẩm đã chọn</small>
-                                            </span>
-                                        </span>
-                                        <span class="show-cart shopw-nav-inline-status"></span>
-                                    </a>
-
-                                </li>
+                                <li><a href="{{ URL::to('/khuyen-mai') }}"
+                                        data-storefront-nav-key="promo"
+                                        @class(['active' => $isPromoSection, 'is-current' => $isPromoSection])
+                                        @if ($isPromoSection) aria-current="page" @endif>Bộ sưu tập / Khuyến mãi</a></li>
 
                                 <li><a href="{{ URL::to('/lien-he') }}"
                                             data-storefront-nav-key="contact"

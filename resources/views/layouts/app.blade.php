@@ -21,7 +21,7 @@
 
     @include('partials.storefront.compare-modal')
     @include('partials.storefront.chatbot-widget')
-    @include('partials.storefront.footer')
+    @include('partials.home.footer', ['paymentItems' => []])
 
     @include('partials.storefront.scripts-stack')
 </body>

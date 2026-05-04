@@ -2,13 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\Product;
-use App\Models\Video;
-use App\Models\Customer;
-use App\Models\Post;
-use App\Models\Order;
-use App\Models\Icons;
-use App\Models\Contact;
 use Illuminate\Support\ServiceProvider;
 use App\Domain\Catalog\Repositories\CategoryRepositoryInterface;
 use App\Domain\Catalog\Repositories\BrandRepositoryInterface;
@@ -19,7 +12,6 @@ use App\Application\Shared\Services\EnhancedCacheService;
 use App\Application\Shared\Services\QueryMonitoringService;
 use App\Application\Shared\Services\EagerLoadingService;
 use App\Application\Shared\Services\CacheWarmingService;
-use App\Application\Shared\Services\PerformanceTestingService;
 use App\Application\Shared\Services\AuthenticationSecurityService;
 use App\Application\Shared\Services\AuthorizationSecurityService;
 use App\Application\Shared\Services\DataEncryptionService;
@@ -29,12 +21,6 @@ use App\Application\Shared\Services\FrontendOptimizationService;
 use App\Application\Shared\Services\ResponsiveDesignService;
 use App\Application\Shared\Services\UserExperienceEnhancementService;
 use App\Application\Shared\Services\ModernUIComponentsService;
-use App\Application\Shared\Services\APITestingService;
-use App\Application\Shared\Services\DatabaseTestingService;
-use App\Application\Shared\Services\SecurityTestingService;
-use App\Application\Shared\Services\BrowserAutomationTestingService;
-use App\Application\Shared\Services\UserJourneyTestingService;
-use App\Application\Shared\Services\CrossBrowserCompatibilityTestingService;
 use App\Application\Shared\Services\MonitoringLoggingService;
 use App\Application\Shared\Services\BackupRecoveryService;
 use App\Application\AI\Services\ChatInboxService;
@@ -44,6 +30,13 @@ use App\Domain\Checkout\Repositories\CouponRepositoryInterface;
 use App\Domain\Checkout\Repositories\ShippingFeeRepositoryInterface;
 use App\Domain\Cms\Repositories\BlogCategoryRepositoryInterface;
 use App\Domain\Cms\Repositories\BlogPostRepositoryInterface;
+use App\Infrastructure\Persistence\Eloquent\Catalog\Product as CatalogProduct;
+use App\Infrastructure\Persistence\Eloquent\Cms\BlogPost;
+use App\Infrastructure\Persistence\Eloquent\Cms\SiteContact;
+use App\Infrastructure\Persistence\Eloquent\Cms\SiteLink;
+use App\Infrastructure\Persistence\Eloquent\Cms\Video as CmsVideo;
+use App\Infrastructure\Persistence\Eloquent\Customer\Customer as StorefrontCustomer;
+use App\Infrastructure\Persistence\Eloquent\Order\Order as StorefrontOrder;
 use App\Infrastructure\Persistence\Repositories\Catalog\EloquentBrandRepository;
 use App\Infrastructure\Persistence\Repositories\Catalog\EloquentCategoryRepository;
 use App\Infrastructure\Persistence\Repositories\Catalog\EloquentProductRepository;
@@ -78,30 +71,23 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(BlogCategoryRepositoryInterface::class, EloquentBlogCategoryRepository::class);
         $this->app->bind(BlogPostRepositoryInterface::class, EloquentBlogPostRepository::class);
         
-                    // Bind shared services
-                    $this->app->singleton(CacheService::class);
-                    $this->app->singleton(DatabaseOptimizationService::class);
-                    $this->app->singleton(QueryOptimizationService::class);
-                    $this->app->singleton(EnhancedCacheService::class);
-                    $this->app->singleton(QueryMonitoringService::class);
-                    $this->app->singleton(EagerLoadingService::class);
-                    $this->app->singleton(CacheWarmingService::class);
-                    $this->app->singleton(PerformanceTestingService::class);
-                    $this->app->singleton(AuthenticationSecurityService::class);
-                    $this->app->singleton(AuthorizationSecurityService::class);
-                    $this->app->singleton(DataEncryptionService::class);
-                    $this->app->singleton(SecurityMonitoringService::class);
-                    $this->app->singleton(APISecurityService::class);
-                    $this->app->singleton(FrontendOptimizationService::class);
-                    $this->app->singleton(ResponsiveDesignService::class);
+        // Bind shared services
+        $this->app->singleton(CacheService::class);
+        $this->app->singleton(DatabaseOptimizationService::class);
+        $this->app->singleton(QueryOptimizationService::class);
+        $this->app->singleton(EnhancedCacheService::class);
+        $this->app->singleton(QueryMonitoringService::class);
+        $this->app->singleton(EagerLoadingService::class);
+        $this->app->singleton(CacheWarmingService::class);
+        $this->app->singleton(AuthenticationSecurityService::class);
+        $this->app->singleton(AuthorizationSecurityService::class);
+        $this->app->singleton(DataEncryptionService::class);
+        $this->app->singleton(SecurityMonitoringService::class);
+        $this->app->singleton(APISecurityService::class);
+        $this->app->singleton(FrontendOptimizationService::class);
+        $this->app->singleton(ResponsiveDesignService::class);
         $this->app->singleton(UserExperienceEnhancementService::class);
         $this->app->singleton(ModernUIComponentsService::class);
-        $this->app->singleton(APITestingService::class);
-        $this->app->singleton(DatabaseTestingService::class);
-        $this->app->singleton(SecurityTestingService::class);
-        $this->app->singleton(BrowserAutomationTestingService::class);
-        $this->app->singleton(UserJourneyTestingService::class);
-        $this->app->singleton(CrossBrowserCompatibilityTestingService::class);
         $this->app->singleton(MonitoringLoggingService::class);
         $this->app->singleton(BackupRecoveryService::class);
     }
@@ -135,36 +121,55 @@ class AppServiceProvider extends ServiceProvider
                     $app_video = 0;
                     $app_customer = 0;
 
-                    if (Schema::hasTable((new Post())->getTable())) {
-                        $post_footer = Post::where('blog_category_id', 7)->get();
-                        $app_post = Post::count();
+                    if (Schema::hasTable((new BlogPost())->getTable())) {
+                        $post_footer = BlogPost::query()
+                            ->where('blog_category_id', 7)
+                            ->where('status', 'published')
+                            ->get();
+                        $app_post = BlogPost::count();
                     }
 
-                    if (Schema::hasTable((new Contact())->getTable())) {
-                        $contact_footer = Contact::where('info_id', 1)->get();
+                    if (Schema::hasTable((new SiteContact())->getTable())) {
+                        $contact_footer = SiteContact::query()
+                            ->orderBy('id')
+                            ->limit(1)
+                            ->get()
+                            ->map(fn (SiteContact $contact): object => $this->legacyContactRecord($contact));
                     }
 
-                    if (Schema::hasTable((new Icons())->getTable())) {
-                        $icons = Icons::where('category', 'icons')->orderBy('id_icons', 'DESC')->get();
-                        $icons_doitac = Icons::where('category', 'doitac')->orderBy('id_icons', 'DESC')->get();
+                    if (Schema::hasTable((new SiteLink())->getTable())) {
+                        $icons = SiteLink::query()
+                            ->where('category', 'social')
+                            ->where('is_active', true)
+                            ->orderBy('display_order')
+                            ->orderByDesc('id')
+                            ->get()
+                            ->map(fn (SiteLink $link): object => $this->legacySiteLinkRecord($link));
+                        $icons_doitac = SiteLink::query()
+                            ->where('category', 'partner')
+                            ->where('is_active', true)
+                            ->orderBy('display_order')
+                            ->orderByDesc('id')
+                            ->get()
+                            ->map(fn (SiteLink $link): object => $this->legacySiteLinkRecord($link));
                     }
 
-                    if (Schema::hasTable((new Product())->getTable())) {
-                        $min_price = (float) (Product::min('product_price') ?? 0);
-                        $max_price = (float) (Product::max('product_price') ?? 0);
-                        $app_product = Product::count();
+                    if (Schema::hasTable((new CatalogProduct())->getTable())) {
+                        $min_price = (float) (CatalogProduct::min('price') ?? 0);
+                        $max_price = (float) (CatalogProduct::max('price') ?? 0);
+                        $app_product = CatalogProduct::count();
                     }
 
-                    if (Schema::hasTable((new Order())->getTable())) {
-                        $app_order = Order::count();
+                    if (Schema::hasTable((new StorefrontOrder())->getTable())) {
+                        $app_order = StorefrontOrder::count();
                     }
 
-                    if (Schema::hasTable((new Video())->getTable())) {
-                        $app_video = Video::count();
+                    if (Schema::hasTable((new CmsVideo())->getTable())) {
+                        $app_video = CmsVideo::count();
                     }
 
-                    if (Schema::hasTable((new Customer())->getTable())) {
-                        $app_customer = Customer::count();
+                    if (Schema::hasTable((new StorefrontCustomer())->getTable())) {
+                        $app_customer = StorefrontCustomer::count();
                     }
 
                     $sharedData = [
@@ -244,6 +249,35 @@ class AppServiceProvider extends ServiceProvider
             'icons_doitac' => collect(),
             'contact_footer' => collect(),
             'post_footer' => collect(),
+        ];
+    }
+
+    private function legacyContactRecord(SiteContact $contact): object
+    {
+        $socialLinks = is_array($contact->social_links) ? $contact->social_links : [];
+        $meta = is_array($contact->meta) ? $contact->meta : [];
+        $logoPath = trim((string) $contact->logo_path);
+
+        return (object) [
+            'info_id' => $contact->id,
+            'info_contact' => $contact->about,
+            'info_logo' => $logoPath !== '' ? basename($logoPath) : null,
+            'slogan_logo' => $meta['slogan_logo'] ?? null,
+            'info_map' => $contact->map_embed,
+            'info_fanpage' => $socialLinks['fanpage_embed'] ?? null,
+        ];
+    }
+
+    private function legacySiteLinkRecord(SiteLink $link): object
+    {
+        $iconPath = trim((string) $link->icon_path);
+
+        return (object) [
+            'id_icons' => $link->id,
+            'name' => $link->name,
+            'link' => $link->url,
+            'category' => $link->category,
+            'image' => $iconPath !== '' ? basename($iconPath) : null,
         ];
     }
 

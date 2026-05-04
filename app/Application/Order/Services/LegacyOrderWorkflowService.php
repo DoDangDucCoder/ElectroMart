@@ -2,50 +2,77 @@
 
 namespace App\Application\Order\Services;
 
-use App\Models\Coupon;
-use App\Models\Customer;
-use App\Models\Order;
-use App\Models\OrderDetails;
-use App\Models\Product;
-use App\Models\Shipping;
-use App\Models\Statistic;
+use App\Infrastructure\Persistence\Eloquent\Marketing\Coupon;
+use App\Infrastructure\Persistence\Eloquent\Order\Order;
+use App\Infrastructure\Persistence\Eloquent\Order\OrderItem;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class LegacyOrderWorkflowService
 {
+    public function __construct(
+        protected LegacyOrderPresentationService $presentationService
+    ) {
+    }
+
     public function canManageOrders(): bool
     {
-        return Schema::hasTable((new Order())->getTable())
-            && Schema::hasTable((new OrderDetails())->getTable())
-            && Schema::hasTable((new Product())->getTable());
+        return $this->presentationService->modernOrderTablesReady();
     }
 
     public function canRenderAdminOrderView(): bool
     {
-        return $this->canManageOrders()
-            && Schema::hasTable((new Customer())->getTable())
-            && Schema::hasTable((new Shipping())->getTable());
+        return $this->canManageOrders();
+    }
+
+    public function paginateAdminOrders(int $perPage = 5): LengthAwarePaginator
+    {
+        if (! $this->canManageOrders()) {
+            return $this->emptyPaginator($perPage);
+        }
+
+        $orders = Order::with(['shipping', 'payments'])
+            ->orderByDesc('id')
+            ->paginate($perPage);
+
+        $orders->setCollection(
+            $orders->getCollection()
+                ->map(fn (Order $order): object => $this->presentationService->legacyOrderRecord($order))
+        );
+
+        return $orders;
+    }
+
+    public function ordersForDate(string $orderDate)
+    {
+        if (! $this->canManageOrders()) {
+            return collect();
+        }
+
+        return Order::with(['shipping', 'payments'])
+            ->whereDate('placed_at', $orderDate)
+            ->orWhere(function ($query) use ($orderDate) {
+                $query->whereNull('placed_at')
+                    ->whereDate('created_at', $orderDate);
+            })
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (Order $order): object => $this->presentationService->legacyOrderRecord($order));
     }
 
     public function deleteOrderByCode(string $orderCode): array
     {
-        if (! Schema::hasTable((new Order())->getTable())) {
-            return $this->result(false, 404, 'Dữ liệu đơn hàng legacy hiện chưa sẵn sàng trên môi trường này.');
+        if (! $this->canManageOrders()) {
+            return $this->result(false, 404, 'Dữ liệu đơn hàng hiện chưa sẵn sàng trên môi trường này.');
         }
 
-        $order = Order::where('order_code', $orderCode)->first();
+        $order = Order::where('code', $orderCode)->first();
         if (! $order) {
             return $this->result(false, 404, 'Không tìm thấy đơn hàng cần xóa.');
         }
 
-        DB::transaction(function () use ($order, $orderCode): void {
-            if (Schema::hasTable((new OrderDetails())->getTable())) {
-                OrderDetails::where('order_code', $orderCode)->delete();
-            }
-
-            $order->delete();
-        });
+        $order->delete();
 
         return $this->result(true, 200, 'Xóa đơn hàng thành công');
     }
@@ -53,19 +80,30 @@ class LegacyOrderWorkflowService
     public function updateOrderLineQuantity(string $orderCode, int $productId, int $quantity): array
     {
         if (! $this->canManageOrders()) {
-            return $this->result(false, 404, 'Dữ liệu đơn hàng legacy hiện chưa sẵn sàng trên môi trường này.');
+            return $this->result(false, 404, 'Dữ liệu đơn hàng hiện chưa sẵn sàng trên môi trường này.');
         }
 
-        $orderDetails = OrderDetails::where('product_id', $productId)
-            ->where('order_code', $orderCode)
-            ->first();
+        $order = Order::with('items')->where('code', $orderCode)->first();
+        if (! $order) {
+            return $this->result(false, 404, 'Không tìm thấy đơn hàng cần cập nhật.');
+        }
 
-        if (! $orderDetails) {
+        if ($this->presentationService->legacyStatusFromModern($order->status) !== 1) {
+            return $this->result(false, 422, 'Chỉ có thể cập nhật số lượng khi đơn hàng chưa xử lý.');
+        }
+
+        $orderItem = $order->items->first(fn (OrderItem $item): bool => (int) $item->product_id === $productId);
+        if (! $orderItem) {
             return $this->result(false, 404, 'Không tìm thấy dòng sản phẩm cần cập nhật.');
         }
 
-        $orderDetails->product_sales_quantity = $quantity;
-        $orderDetails->save();
+        DB::transaction(function () use ($order, $orderItem, $quantity): void {
+            $orderItem->quantity = $quantity;
+            $orderItem->subtotal = (float) $orderItem->price * $quantity;
+            $orderItem->save();
+
+            $this->refreshOrderTotals($order->fresh('items'));
+        });
 
         return $this->result(true, 200, 'Cập nhật số lượng thành công.');
     }
@@ -77,10 +115,10 @@ class LegacyOrderWorkflowService
         }
 
         if (! $this->canManageOrders()) {
-            return $this->result(false, 404, 'Dữ liệu đơn hàng legacy hiện chưa sẵn sàng trên môi trường này.');
+            return $this->result(false, 404, 'Dữ liệu đơn hàng hiện chưa sẵn sàng trên môi trường này.');
         }
 
-        $order = Order::find($orderId);
+        $order = Order::with(['items.product'])->find($orderId);
         if (! $order) {
             return $this->result(false, 404, 'Không tìm thấy đơn hàng cần cập nhật.');
         }
@@ -91,7 +129,7 @@ class LegacyOrderWorkflowService
         }
 
         $lineItems = $lineItemsResult['data'];
-        $previousStatus = (int) $order->order_status;
+        $previousStatus = $this->presentationService->legacyStatusFromModern($order->status);
         $shouldFinalize = $newStatus === 2 && $previousStatus !== 2;
 
         foreach ($lineItems as $lineItem) {
@@ -99,7 +137,12 @@ class LegacyOrderWorkflowService
                 continue;
             }
 
-            $availableQuantity = (int) ($lineItem['product']->product_quantity ?? 0);
+            $product = $lineItem['detail']->product;
+            if (! $product) {
+                return $this->result(false, 404, 'Không tìm thấy sản phẩm của đơn hàng.');
+            }
+
+            $availableQuantity = (int) ($product->stock_quantity ?? 0);
             if ($lineItem['qty'] > $availableQuantity) {
                 return $this->result(false, 422, 'Số lượng bán trong kho không đủ.');
             }
@@ -107,39 +150,32 @@ class LegacyOrderWorkflowService
 
         DB::transaction(function () use ($lineItems, $order, $newStatus, $shouldFinalize): void {
             foreach ($lineItems as $lineItem) {
-                $lineItem['detail']->product_sales_quantity = $lineItem['qty'];
-                $lineItem['detail']->save();
-            }
-
-            $order->order_status = $newStatus;
-            $order->save();
-
-            if (! $shouldFinalize) {
-                return;
-            }
-
-            $sales = 0.0;
-            $profit = 0.0;
-            $quantity = 0;
-
-            foreach ($lineItems as $lineItem) {
-                $product = $lineItem['product'];
+                /** @var OrderItem $detail */
+                $detail = $lineItem['detail'];
                 $qty = $lineItem['qty'];
-                $productQuantity = (int) ($product->product_quantity ?? 0);
-                $productSold = (int) ($product->product_sold ?? 0);
-                $productPrice = (float) ($product->product_price ?? 0);
-                $productCost = (float) ($product->price_cost ?? 0);
 
-                $product->product_quantity = max(0, $productQuantity - $qty);
-                $product->product_sold = $productSold + $qty;
-                $product->save();
+                $detail->quantity = $qty;
+                $detail->subtotal = (float) $detail->price * $qty;
+                $detail->save();
 
-                $quantity += $qty;
-                $sales += $productPrice * $qty;
-                $profit += ($productPrice - $productCost) * $qty;
+                if ($shouldFinalize && $detail->product) {
+                    $detail->product->stock_quantity = max(0, (int) $detail->product->stock_quantity - $qty);
+                    $detail->product->save();
+                }
             }
 
-            $this->recordStatistic($order->order_date, $sales, $profit, $quantity);
+            $order->status = $this->modernStatusFromLegacy($newStatus);
+
+            if ($newStatus === 2) {
+                $order->fulfillment_status = 'fulfilled';
+                $order->payment_status = $order->payment_status === 'paid' ? 'paid' : $order->payment_status;
+                $order->completed_at = $order->completed_at ?: now();
+            } elseif ($newStatus === 3) {
+                $order->cancelled_at = $order->cancelled_at ?: now();
+            }
+
+            $order->save();
+            $this->refreshOrderTotals($order->fresh('items'));
         });
 
         return $this->result(true, 200, 'Thay đổi tình trạng đơn hàng thành công.');
@@ -148,37 +184,31 @@ class LegacyOrderWorkflowService
     public function buildAdminOrderViewData(string $orderCode): array
     {
         if (! $this->canRenderAdminOrderView()) {
-            return $this->result(false, 404, 'Dữ liệu đơn hàng legacy hiện chưa sẵn sàng trên môi trường này.');
+            return $this->result(false, 404, 'Dữ liệu đơn hàng hiện chưa sẵn sàng trên môi trường này.');
         }
 
-        $orderDetails = OrderDetails::with('product')->where('order_code', $orderCode)->get();
-        $orders = Order::where('order_code', $orderCode)->get();
-
-        if ($orders->isEmpty()) {
+        $package = $this->presentationService->loadOrderPackage($orderCode);
+        if (! $package) {
             return $this->result(false, 404, 'Không tìm thấy đơn hàng cần xem.');
         }
 
-        $order = $orders->first();
-        $customer = Customer::where('customer_id', $order->customer_id)->first();
-        $shipping = Shipping::where('shipping_id', $order->shipping_id)->first();
-        $couponMeta = $this->resolveCouponMeta($orderCode);
+        $order = $package['order'];
+        $totals = $package['totals'];
 
         return $this->result(true, 200, null, [
-            'order_details' => $orderDetails,
-            'customer' => $customer,
-            'shipping' => $shipping,
-            'coupon_condition' => $couponMeta['coupon_condition'],
-            'coupon_number' => $couponMeta['coupon_number'],
-            'getorder' => $orders,
+            'order_details' => $package['details'],
+            'customer' => $package['customer'],
+            'shipping' => $package['shipping'],
+            'coupon_condition' => $totals['coupon_condition'],
+            'coupon_number' => $totals['coupon_number'],
+            'getorder' => collect([$order]),
             'order_status' => (int) $order->order_status,
         ]);
     }
 
     protected function resolveLineItems(Order $order, array $quantities, array $productIds): array
     {
-        $orderDetails = OrderDetails::where('order_code', $order->order_code)
-            ->get()
-            ->keyBy(fn ($detail) => (int) $detail->product_id);
+        $orderDetails = $order->items->keyBy(fn (OrderItem $detail): int => (int) $detail->product_id);
 
         if ($orderDetails->isEmpty()) {
             return $this->result(false, 404, 'Không tìm thấy chi tiết đơn hàng cần cập nhật.');
@@ -195,14 +225,8 @@ class LegacyOrderWorkflowService
                 return $this->result(false, 404, 'Không tìm thấy dòng sản phẩm cần cập nhật.');
             }
 
-            $product = Product::find($productId);
-            if (! $product) {
-                return $this->result(false, 404, 'Không tìm thấy sản phẩm của đơn hàng.');
-            }
-
             $lineItems[] = [
                 'detail' => $detail,
-                'product' => $product,
                 'qty' => $qty,
             ];
         }
@@ -210,55 +234,63 @@ class LegacyOrderWorkflowService
         return $this->result(true, 200, null, $lineItems);
     }
 
-    protected function resolveCouponMeta(string $orderCode): array
+    protected function refreshOrderTotals(Order $order): void
     {
-        $couponCondition = 2;
-        $couponNumber = 0;
-        $couponCode = OrderDetails::where('order_code', $orderCode)->value('product_coupon');
+        $subtotal = (float) $order->items->sum(fn (OrderItem $item): float => (float) $item->subtotal);
+        $discount = $this->calculateDiscountForOrder($order, $subtotal);
 
-        if (
-            $couponCode &&
-            $couponCode !== 'no' &&
-            Schema::hasTable((new Coupon())->getTable())
-        ) {
-            $coupon = Coupon::where('coupon_code', $couponCode)->first();
-            if ($coupon) {
-                $couponCondition = (int) $coupon->coupon_condition;
-                $couponNumber = (float) $coupon->coupon_number;
-            }
-        }
-
-        return [
-            'coupon_condition' => $couponCondition,
-            'coupon_number' => $couponNumber,
-        ];
+        $order->subtotal = $subtotal;
+        $order->discount_total = $discount;
+        $order->coupon_discount = $discount;
+        $order->total = max(0, $subtotal + (float) $order->shipping_total - $discount);
+        $order->save();
     }
 
-    protected function recordStatistic(?string $orderDate, float $sales, float $profit, int $quantity): void
+    protected function calculateDiscountForOrder(Order $order, float $subtotal): float
     {
-        if (! $orderDate || ! Schema::hasTable((new Statistic())->getTable())) {
-            return;
+        $couponCode = trim((string) $order->coupon_code);
+
+        if ($couponCode === '' || ! Schema::hasTable((new Coupon())->getTable())) {
+            return (float) ($order->discount_total ?? 0);
         }
 
-        $statistic = Statistic::where('order_date', $orderDate)->first();
-
-        if ($statistic) {
-            $statistic->sales = $statistic->sales + $sales;
-            $statistic->profit = $statistic->profit + $profit;
-            $statistic->quantity = $statistic->quantity + $quantity;
-            $statistic->total_order = $statistic->total_order + 1;
-            $statistic->save();
-
-            return;
+        $coupon = Coupon::where('code', $couponCode)->first();
+        if (! $coupon) {
+            return (float) ($order->discount_total ?? 0);
         }
 
-        $statistic = new Statistic();
-        $statistic->order_date = $orderDate;
-        $statistic->sales = $sales;
-        $statistic->profit = $profit;
-        $statistic->quantity = $quantity;
-        $statistic->total_order = 1;
-        $statistic->save();
+        $discount = $coupon->type === 'percent'
+            ? ($subtotal * (float) $coupon->value) / 100
+            : (float) $coupon->value;
+
+        if ($coupon->type === 'percent' && $coupon->max_discount !== null) {
+            $discount = min($discount, (float) $coupon->max_discount);
+        }
+
+        return max(0, $discount);
+    }
+
+    protected function modernStatusFromLegacy(int $status): string
+    {
+        return match ($status) {
+            2 => 'completed',
+            3 => 'cancelled',
+            default => 'pending',
+        };
+    }
+
+    protected function emptyPaginator(int $perPage): LengthAwarePaginator
+    {
+        return new LengthAwarePaginator(
+            collect(),
+            0,
+            $perPage,
+            LengthAwarePaginator::resolveCurrentPage(),
+            [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'pageName' => 'page',
+            ]
+        );
     }
 
     protected function result(bool $ok, int $status, ?string $message = null, mixed $data = null): array

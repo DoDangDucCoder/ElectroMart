@@ -2,7 +2,7 @@
 
 namespace App\Application\Shared\MailData;
 
-use App\Models\Coupon;
+use App\Infrastructure\Persistence\Eloquent\Marketing\Coupon;
 
 class CouponCampaignMailData
 {
@@ -27,12 +27,12 @@ class CouponCampaignMailData
         string $shopName = 'DangDuc'
     ): self {
         return new self(
-            couponCode: (string) ($coupon->coupon_code ?? 'N/A'),
-            couponTime: (int) ($coupon->coupon_time ?? 0),
-            couponCondition: (int) ($coupon->coupon_condition ?? 1),
-            couponNumber: (int) ($coupon->coupon_number ?? 0),
-            startCoupon: (string) ($coupon->coupon_date_start ?? 'Chưa cập nhật'),
-            endCoupon: (string) ($coupon->coupon_date_end ?? 'Chưa cập nhật'),
+            couponCode: (string) ($coupon->code ?? 'N/A'),
+            couponTime: (int) ($coupon->usage_limit ?? 0),
+            couponCondition: $coupon->type === 'percent' ? 1 : 2,
+            couponNumber: (int) ($coupon->value ?? 0),
+            startCoupon: $coupon->starts_at?->timezone('Asia/Ho_Chi_Minh')->format('d/m/Y') ?? 'Chưa cập nhật',
+            endCoupon: $coupon->expires_at?->timezone('Asia/Ho_Chi_Minh')->format('d/m/Y') ?? 'Chưa cập nhật',
             audienceLabel: $audienceLabel,
             shopName: $shopName,
             shopUrl: $shopUrl ?? url('/'),

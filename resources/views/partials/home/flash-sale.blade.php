@@ -41,6 +41,13 @@
                     <i class="fa fa-angle-right"></i>
                 </button>
             </div>
+
+            <div class="tech-sale-dots" data-tech-sale-dots aria-hidden="true">
+                <span class="tech-sale-dot is-active"></span>
+                <span class="tech-sale-dot"></span>
+                <span class="tech-sale-dot"></span>
+                <span class="tech-sale-dot"></span>
+            </div>
         </div>
     </div>
 </section>

@@ -35,6 +35,8 @@ class BlogPostService
             if ($category) {
                 $queryFilters['category_id'] = $category->id;
             }
+        } elseif (! empty($filters['category_id'])) {
+            $queryFilters['category_id'] = (int) $filters['category_id'];
         }
 
         if (array_key_exists('featured', $filters)) {
@@ -43,6 +45,10 @@ class BlogPostService
 
         if (! empty($filters['search'])) {
             $queryFilters['search'] = $filters['search'];
+        }
+
+        if (! empty($filters['sort'])) {
+            $queryFilters['sort'] = $filters['sort'];
         }
 
         return $this->posts->paginate($queryFilters, $perPage);

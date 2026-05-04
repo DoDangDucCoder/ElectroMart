@@ -2434,7 +2434,7 @@
     function Deletecart(id) {
         loadStorefrontJson({
             url: '{{ url('/remove-item') }}',
-            method: 'GET',
+            method: 'DELETE',
             data: {
                 id: id
             },
@@ -2466,7 +2466,7 @@
 
         loadStorefrontJson({
             url: '{{ url('/del-product') }}' + '/' + session_id,
-            method: 'GET',
+            method: 'DELETE',
             data: {
                 _token: $('input[name="_token"]').val()
             },
@@ -2758,12 +2758,11 @@
         if (typeof $.fn.select2 === 'function') {
             $('.city, .province, .wards').select2({
                 width: '100%',
-                placeholder: '--- Chọn hoặc nhập ---',
+                placeholder: '--- Chọn nếu có dữ liệu ---',
                 allowClear: true,
-                tags: true,
                 language: {
                     noResults: function() {
-                        return "Không tìm thấy. Bạn có thể tự nhập địa chỉ.";
+                        return "Không có dữ liệu địa chỉ để chọn.";
                     }
                 }
             });
@@ -2786,8 +2785,8 @@
             var ward_id = $('.wards').val();
             var _token = $('input[name="_token"]').val();
 
-            if (shipping_email == '' || shipping_name == '' || shipping_address == '' || shipping_phone == '' || city_id == '' || province_id == '' || ward_id == '') {
-                swal("Thiếu thông tin", "Vui lòng điền đầy đủ thông tin giao hàng và chọn địa chỉ cụ thể.", "error");
+            if (shipping_email == '' || shipping_name == '' || shipping_address == '' || shipping_phone == '') {
+                swal("Thiếu thông tin", "Vui lòng điền đầy đủ tên, email, số điện thoại và địa chỉ nhận hàng.", "error");
                 return;
             }
 
@@ -2862,10 +2861,10 @@
             var maqh = $('.province').val();
             var xaid = $('.wards').val();
             var _token = $('input[name="_token"]').val();
-            if (matp == '' && maqh == '' && xaid == '') {
-                renderCheckoutDeliveryNotice('Làm ơn chọn địa chỉ để tính phí vận chuyển.', 'warning');
+            if (matp == '' || maqh == '' || xaid == '') {
+                renderCheckoutDeliveryNotice('Chưa có đủ dữ liệu địa chỉ để tính phí vận chuyển theo khu vực. Hệ thống sẽ dùng phí mặc định khi đặt hàng.', 'warning');
                 showStorefrontStatus('Thiếu thông tin giao hàng',
-                    'Làm ơn chọn địa chỉ để tính phí vận chuyển.', 'warning');
+                    'Chưa có đủ dữ liệu địa chỉ để tính phí vận chuyển theo khu vực.', 'warning');
             } else {
             loadStorefrontJson({
                 url: '{{ url('/calculate-fee') }}',

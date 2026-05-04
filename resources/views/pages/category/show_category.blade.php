@@ -1,245 +1,543 @@
-@extends('layout')
+@extends('layouts.home-tech')
 
 @section('body_class', 'g-category')
 
-@section('content_category')
+@section('content')
     @php
         $storefrontLabel = \App\Support\StorefrontLabel::class;
         $activeCategory = $category_name->first();
         $activeCategoryLabel = $activeCategory
             ? $storefrontLabel::category($activeCategory->category_name, $activeCategory->slug_category_product ?? null)
-            : null;
-        $supportConfig = config('services.storefront_support', []);
-        $supportPhoneDisplay = $supportConfig['phone_display'] ?? '1900.0000';
-        $supportPhoneHref = $supportConfig['phone_href'] ?? 'tel:19000000';
-        $categoryDescription = trim(strip_tags((string) optional($activeCategory)->category_desc));
+            : 'Sản phẩm';
+
         $productCount = method_exists($category_by_id, 'total') ? $category_by_id->total() : $category_by_id->count();
-        $rangeMinLabel = $range_min_price > 0 ? number_format($range_min_price, 0, ',', '.') . 'đ' : 'Đang cập nhật';
-        $rangeMaxLabel = $range_max_price > 0 ? number_format($range_max_price, 0, ',', '.') . 'đ' : 'Đang cập nhật';
-        $selectedMinLabel = number_format((float) ($filter_start_price ?? 0), 0, ',', '.') . 'đ';
-        $selectedMaxLabel = number_format((float) ($filter_end_price ?? 0), 0, ',', '.') . 'đ';
-        $hasActivePriceFilter = request()->filled('start_price') || request()->filled('end_price');
-        $categoryQuickLinks = [
-            [
-                'icon' => 'fa-phone',
-                'label' => config('storefront.labels.hotline_consulting', 'Hotline tư vấn'),
-                'value' => $supportPhoneDisplay,
-                'url' => $supportPhoneHref,
-            ],
-            [
-                'icon' => 'fa-random',
-                'label' => config('storefront.labels.compare_products', 'So sánh sản phẩm'),
-                'value' => config('storefront.copy.category_compare_value', 'Mở bảng so sánh nhanh'),
-                'url' => url('/so-sanh'),
-            ],
-            [
-                'icon' => 'fa-history',
-                'label' => config('storefront.labels.order_tracking', 'Theo dõi đơn hàng'),
-                'value' => 'Xem lịch sử mua sắm',
-                'url' => url('/history'),
-            ],
+        $perPage = method_exists($category_by_id, 'perPage') ? $category_by_id->perPage() : 12;
+        $currentPage = method_exists($category_by_id, 'currentPage') ? $category_by_id->currentPage() : 1;
+        $fromIndex = $productCount > 0 ? (($currentPage - 1) * $perPage) + 1 : 0;
+        $toIndex = $productCount > 0 ? min($currentPage * $perPage, $productCount) : 0;
+
+        $allCategoryItems = collect($category ?? [])
+            ->filter(fn($c) => (int)($c->category_status ?? $c->is_active ?? 1) >= 0);
+
+        $activeId = (int) optional($activeCategory)->category_id;
+        $activeParentId = (int) optional($activeCategory)->category_parent;
+
+        // Sibling categories (same parent) — fall back to children, then top-level
+        $sidebarCategories = $allCategoryItems
+            ->filter(fn($c) => (int) ($c->category_parent ?? 0) === $activeParentId && (int) $c->category_id !== 0)
+            ->values();
+        if ($sidebarCategories->count() <= 1) {
+            $sidebarCategories = $allCategoryItems
+                ->filter(fn($c) => (int) ($c->category_parent ?? 0) === $activeId)
+                ->values();
+        }
+        if ($sidebarCategories->isEmpty()) {
+            $sidebarCategories = $allCategoryItems
+                ->filter(fn($c) => (int) ($c->category_parent ?? 0) === 0)
+                ->values();
+        }
+
+        $categoryIcons = [
+            'gaming' => 'fa-gamepad',
+            'office' => 'fa-briefcase',
+            'ultrabook' => 'fa-leaf',
+            '2-in-1' => 'fa-refresh',
+            'mini' => 'fa-cube',
+            'macbook' => 'fa-apple',
+            'pc' => 'fa-desktop',
+            'man-hinh' => 'fa-television',
+            'ban-phim' => 'fa-keyboard-o',
+            'chuot' => 'fa-mouse-pointer',
+            'tai-nghe' => 'fa-headphones',
+        ];
+        $resolveIcon = function ($name, $slug) use ($categoryIcons) {
+            $haystack = strtolower(($name ?? '') . ' ' . ($slug ?? ''));
+            foreach ($categoryIcons as $needle => $icon) {
+                if (str_contains($haystack, $needle)) {
+                    return $icon;
+                }
+            }
+            return 'fa-laptop';
+        };
+
+        $brandCollection = collect($brand ?? [])->take(10);
+
+        $useNeeds = [
+            ['label' => 'Gaming - Đồ họa', 'slug' => 'gaming'],
+            ['label' => 'Văn phòng - Học tập', 'slug' => 'van-phong'],
+            ['label' => 'Đồ họa - Kỹ thuật', 'slug' => 'do-hoa'],
+            ['label' => 'Doanh nhân - Mỏng nhẹ', 'slug' => 'mong-nhe'],
+            ['label' => 'Lập trình - IT', 'slug' => 'lap-trinh'],
+        ];
+        $stockOptions = [
+            ['label' => 'Tất cả', 'value' => ''],
+            ['label' => 'Mới 100%', 'value' => 'new'],
+            ['label' => 'Like New', 'value' => 'like_new'],
+            ['label' => 'Trưng bày', 'value' => 'display'],
+        ];
+        $sortRadios = [
+            'none' => 'Phổ biến',
+            'moi_nhat' => 'Mới nhất',
+            'tang_dan' => 'Giá thấp đến cao',
+            'giam_dan' => 'Giá cao đến thấp',
+            'danh_gia' => 'Đánh giá cao',
         ];
         $sortLabels = [
-            'none' => 'Mặc định',
-            'tang_dan' => 'Giá tăng dần',
-            'giam_dan' => 'Giá giảm dần',
+            'none' => 'Phổ biến',
+            'tang_dan' => 'Giá thấp đến cao',
+            'giam_dan' => 'Giá cao đến thấp',
             'kytu_az' => 'Tên A-Z',
             'kytu_za' => 'Tên Z-A',
             'khuyen_mai' => 'Khuyến mãi nhiều nhất',
         ];
+
+        $rangeMin = (float) ($range_min_price ?? 0);
+        $rangeMax = (float) ($range_max_price ?? 50000000);
+        $selectedMin = (float) ($filter_start_price ?? $rangeMin);
+        $selectedMax = (float) ($filter_end_price ?? $rangeMax);
+        $hasActivePriceFilter = request()->filled('start_price') || request()->filled('end_price');
+
+        $fmtPrice = function ($value) {
+            $value = (float) $value;
+            if ($value >= 1000000) {
+                $millions = $value / 1000000;
+                $rounded = ($millions == (int) $millions) ? (int) $millions : number_format($millions, 1, ',', '');
+                return $rounded . 'tr' . ($value > 0 && $value % 1000000 === 0 ? '' : '');
+            }
+            if ($value <= 0) {
+                return '0đ';
+            }
+            return number_format($value, 0, ',', '.') . 'đ';
+        };
     @endphp
 
-    <div class="shopw-category-page">
-        <section class="shopw-category-hero">
-            <div class="shopw-category-hero-copy">
-                <div class="shopw-category-hero-copy-shell">
-                    <span class="shopw-category-kicker">Danh mục sản phẩm</span>
-                    <h1>{{ $activeCategoryLabel }}</h1>
-                    @if ($categoryDescription !== '')
-                        <p>{{ $categoryDescription }}</p>
-                    @else
-                        <p>Khám phá danh sách sản phẩm, lọc theo khoảng giá và sắp xếp theo nhu cầu mua sắm của bạn.</p>
-                    @endif
-                </div>
+    <section class="cat-x">
+        <div class="cat-x__container">
 
-                <div class="shopw-category-meta">
-                    <div class="shopw-category-meta-card">
-                        <span>Sản phẩm hiển thị</span>
-                        <strong>{{ number_format($productCount) }}</strong>
-                        <small>Danh sách được cập nhật trực tiếp từ kho sản phẩm hiện có.</small>
-                    </div>
-                    <div class="shopw-category-meta-card">
-                        <span>Khoảng giá</span>
-                        <strong>{{ $rangeMinLabel }} - {{ $rangeMaxLabel }}</strong>
-                        <small>Giúp bạn chốt nhanh mức chi phù hợp trước khi lọc sâu hơn.</small>
-                    </div>
-                    <div class="shopw-category-meta-card">
-                        <span>Sắp xếp</span>
-                        <strong>{{ $sortLabels[$selected_sort] ?? 'Mặc định' }}</strong>
-                        <small>Ưu tiên theo giá hoặc tên sản phẩm tùy cách bạn muốn duyệt.</small>
-                    </div>
-                </div>
-            </div>
+            {{-- Breadcrumb --}}
+            <nav class="cat-x__breadcrumb" aria-label="breadcrumb">
+                <a href="{{ url('/') }}">Trang chủ</a>
+                <span class="sep">/</span>
+                <a href="{{ url('/san-pham') }}">Sản phẩm</a>
+                <span class="sep">/</span>
+                <span class="current">{{ $activeCategoryLabel }}</span>
+            </nav>
 
-            <div class="shopw-category-hero-actions">
-                <div class="shopw-category-hero-rail">
-                    <div class="shopw-category-hero-note">
-                        <span class="shopw-category-hero-note-label">Tư vấn nhanh</span>
-                        <strong>Chưa biết chọn gì?</strong>
-                        <p>Gọi ngay {{ $supportPhoneDisplay }} hoặc mở bảng so sánh để chốt cấu hình phù hợp.</p>
-                    </div>
+            {{-- Title --}}
+            <header class="cat-x__title-block">
+                <h1>{{ $activeCategoryLabel }}</h1>
+                <p>Khám phá {{ number_format($productCount) }} sản phẩm chính hãng với giá tốt, bảo hành uy tín</p>
+            </header>
 
-                    <div class="shopw-category-hero-links">
-                        <a href="{{ url('/') }}" class="shopw-category-action-link">
-                            <i class="fa fa-home"></i>Về trang chủ
+            {{-- Category quick chips --}}
+            @if ($sidebarCategories->isNotEmpty())
+                <div class="cat-x__chips-wrap">
+                    <button type="button" class="cat-x__chips-nav is-prev" aria-label="Cuộn trái" data-cat-chips-prev>
+                        <i class="fa fa-angle-left"></i>
+                    </button>
+                    <div class="cat-x__chips" data-cat-chips>
+                        @php
+                            // First chip = "Tất cả ..." pointing to current category
+                            $firstLabel = 'Tất cả ' . ($activeCategoryLabel);
+                            $isFirstActive = !request()->has('child');
+                        @endphp
+                        <a href="{{ url('/danh-muc/' . optional($activeCategory)->slug_category_product) }}"
+                            class="cat-x__chip {{ $isFirstActive ? 'is-active' : '' }}">
+                            <span class="cat-x__chip-icon">
+                                <i class="fa {{ $resolveIcon($activeCategoryLabel, optional($activeCategory)->slug_category_product) }}"></i>
+                            </span>
+                            <span class="cat-x__chip-text">
+                                <strong>{{ $firstLabel }}</strong>
+                                <span>{{ number_format($productCount) }}</span>
+                            </span>
                         </a>
-                        <a href="{{ $supportPhoneHref }}" class="shopw-category-action-link is-hotline">
-                            <i class="fa fa-phone"></i>{{ $supportPhoneDisplay }}
-                        </a>
-                    </div>
-                </div>
-
-                <div class="shopw-category-share">
-                    <div class="fb-share-button" data-href="{{ $url_canonical }}" data-layout="button_count"
-                        data-size="small">
-                        <a target="_blank"
-                            href="https://www.facebook.com/sharer/sharer.php?u={{ $url_canonical }}&amp;src=sdkpreparse"
-                            rel="noopener" class="fb-xfbml-parse-ignore">Chia sẻ</a>
-                    </div>
-                    <div class="fb-like" data-href="{{ $url_canonical }}" data-width=""
-                        data-layout="button_count" data-action="like" data-size="small" data-share="false"></div>
-                </div>
-            </div>
-        </section>
-
-        <section class="shopw-category-toolbar">
-            <div class="shopw-category-toolbar-card">
-                <label for="sort" class="shopw-category-toolbar-label">Sắp xếp theo</label>
-                <select name="sort" id="sort" class="form-control">
-                    <option value="{{ request()->fullUrlWithoutQuery(['sort_by']) }}"
-                        {{ $selected_sort === 'none' ? 'selected' : '' }}>
-                        Mặc định
-                    </option>
-                    <option value="{{ request()->fullUrlWithQuery(['sort_by' => 'tang_dan']) }}"
-                        {{ $selected_sort === 'tang_dan' ? 'selected' : '' }}>
-                        Giá tăng dần
-                    </option>
-                    <option value="{{ request()->fullUrlWithQuery(['sort_by' => 'giam_dan']) }}"
-                        {{ $selected_sort === 'giam_dan' ? 'selected' : '' }}>
-                        Giá giảm dần
-                    </option>
-                    <option value="{{ request()->fullUrlWithQuery(['sort_by' => 'kytu_az']) }}"
-                        {{ $selected_sort === 'kytu_az' ? 'selected' : '' }}>
-                        Tên A đến Z
-                    </option>
-                    <option value="{{ request()->fullUrlWithQuery(['sort_by' => 'kytu_za']) }}"
-                        {{ $selected_sort === 'kytu_za' ? 'selected' : '' }}>
-                        Tên Z đến A
-                    </option>
-                    <option value="{{ request()->fullUrlWithQuery(['sort_by' => 'khuyen_mai']) }}"
-                        {{ $selected_sort === 'khuyen_mai' ? 'selected' : '' }}>
-                        Khuyến mãi nhiều nhất
-                    </option>
-                </select>
-            </div>
-
-            <div class="shopw-category-toolbar-card shopw-category-filter-card">
-                <div class="shopw-category-filter-head">
-                    <div>
-                        <div class="shopw-category-toolbar-label">Lọc theo khoảng giá</div>
-                        <p>Thu hẹp danh sách để tập trung vào dải giá bạn muốn mua ngay hôm nay.</p>
-                    </div>
-                    @if ($hasActivePriceFilter)
-                        <span class="shopw-category-filter-chip">{{ $selectedMinLabel }} - {{ $selectedMaxLabel }}</span>
-                    @endif
-                </div>
-
-                @if (!empty($price_buckets))
-                    <div class="shopw-category-price-buckets">
-                        @foreach ($price_buckets as $bucket)
-                            <a href="{{ $bucket['url'] }}" class="shopw-category-price-bucket">
-                                {{ $bucket['label'] }}
+                        @foreach ($sidebarCategories as $cat)
+                            @continue((int) $cat->category_id === $activeId)
+                            @php
+                                $catLabel = $storefrontLabel::category($cat->category_name, $cat->slug_category_product);
+                            @endphp
+                            <a href="{{ url('/danh-muc/' . $cat->slug_category_product) }}"
+                                class="cat-x__chip">
+                                <span class="cat-x__chip-icon">
+                                    <i class="fa {{ $resolveIcon($cat->category_name, $cat->slug_category_product) }}"></i>
+                                </span>
+                                <span class="cat-x__chip-text">
+                                    <strong>{{ $catLabel }}</strong>
+                                    <span>—</span>
+                                </span>
                             </a>
                         @endforeach
                     </div>
-                @endif
-
-                <form method="GET" action="{{ $url_canonical }}" class="shopw-category-filter-form">
-                    @if ($selected_sort !== 'none')
-                        <input type="hidden" name="sort_by" value="{{ $selected_sort }}">
-                    @endif
-
-                    <div id="slider-range"></div>
-
-                    <div class="shopw-category-range-values">
-                        <label>
-                            <span>Từ</span>
-                            <input type="text" id="amount_start" readonly value="{{ $filter_start_price }}">
-                        </label>
-                        <label>
-                            <span>Đến</span>
-                            <input type="text" id="amount_end" readonly value="{{ $filter_end_price }}">
-                        </label>
-                    </div>
-
-                    <input type="hidden" name="start_price" id="start_price" value="{{ $filter_start_price }}">
-                    <input type="hidden" name="end_price" id="end_price" value="{{ $filter_end_price }}">
-
-                    <button type="submit" name="filter_price" class="btn btn-default shopw-category-filter-submit">
-                        <i class="fa fa-sliders"></i>Áp dụng mức giá
+                    <button type="button" class="cat-x__chips-nav is-next" aria-label="Cuộn phải" data-cat-chips-next>
+                        <i class="fa fa-angle-right"></i>
                     </button>
-                </form>
+                </div>
+            @endif
+
+            {{-- Promo banner --}}
+            <div class="cat-x__promo">
+                <div class="cat-x__promo-copy">
+                    <h3>TRẢ GÓP 0% – DỄ DÀNG SỞ HỮU</h3>
+                    <p>Hỗ trợ trả góp qua thẻ tín dụng &amp; CMND/CCCD</p>
+                    <a href="{{ url('/lien-he') }}" class="cat-x__promo-cta">Xem ngay</a>
+                </div>
+                <div class="cat-x__promo-zero">0%</div>
+                <div class="cat-x__promo-warranty">
+                    <i class="fa fa-shield"></i>
+                    <span>BẢO HÀNH<br>CHÍNH HÃNG</span>
+                </div>
             </div>
 
-            <aside class="shopw-category-toolbar-card shopw-category-service-card">
-                <div class="shopw-category-filter-head">
-                    <div>
-                        <div class="shopw-category-toolbar-label">Hỗ trợ mua nhanh</div>
-                        <p>Giữ nhịp mua sắm liên tục với các lối tắt hỗ trợ thiết thực ngay trong quá trình chọn hàng.</p>
+            {{-- Layout: sidebar + main --}}
+            <div class="cat-x__layout">
+
+                {{-- Sidebar --}}
+                <aside class="cat-x__sidebar">
+
+                    {{-- Danh mục --}}
+                    <div class="cat-x__panel">
+                        <h4>Danh mục</h4>
+                        <ul class="cat-x__filter-list">
+                            <li>
+                                <a href="{{ url('/danh-muc/' . optional($activeCategory)->slug_category_product) }}"
+                                    class="cat-x__filter-item is-active">
+                                    <span class="ck"></span>
+                                    <span class="lb">Tất cả {{ $activeCategoryLabel }}</span>
+                                    <span class="cnt">{{ number_format($productCount) }}</span>
+                                </a>
+                            </li>
+                            @foreach ($sidebarCategories->take(6) as $cat)
+                                @continue((int) $cat->category_id === $activeId)
+                                @php
+                                    $catLabel = $storefrontLabel::category($cat->category_name, $cat->slug_category_product);
+                                @endphp
+                                <li>
+                                    <a href="{{ url('/danh-muc/' . $cat->slug_category_product) }}"
+                                        class="cat-x__filter-item">
+                                        <span class="ck"></span>
+                                        <span class="lb">{{ $catLabel }}</span>
+                                        <span class="cnt">—</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                            @if ($sidebarCategories->count() > 6)
+                                <li><a href="#" class="cat-x__see-more">Xem thêm</a></li>
+                            @endif
+                        </ul>
                     </div>
-                </div>
 
-                <div class="shopw-category-service-list">
-                    @foreach ($categoryQuickLinks as $quickLink)
-                        <a href="{{ $quickLink['url'] }}" class="shopw-category-service-item">
-                            <span class="shopw-category-service-icon">
-                                <i class="fa {{ $quickLink['icon'] }}"></i>
-                            </span>
-                            <span class="shopw-category-service-copy">
-                                <strong>{{ $quickLink['label'] }}</strong>
-                                <small>{{ $quickLink['value'] }}</small>
-                            </span>
-                            <span class="shopw-category-service-arrow">
+                    {{-- Khoảng giá --}}
+                    <div class="cat-x__panel">
+                        <h4>Khoảng giá</h4>
+                        <form method="GET" action="{{ $url_canonical }}" id="cat-x-price-form">
+                            @if ($selected_sort !== 'none')
+                                <input type="hidden" name="sort_by" value="{{ $selected_sort }}">
+                            @endif
+
+                            <div class="cat-x__price-range">
+                                <strong>{{ $fmtPrice($rangeMin) }}</strong>
+                                <strong>{{ $fmtPrice($rangeMax) }}+</strong>
+                            </div>
+                            <div id="slider-range" class="cat-x__slider"></div>
+                            <div class="cat-x__price-ticks">
+                                <span>{{ $fmtPrice($rangeMin) }}</span>
+                                <span>{{ $fmtPrice(($rangeMin + $rangeMax) / 2) }}</span>
+                                <span>{{ $fmtPrice($rangeMax) }}+</span>
+                            </div>
+
+                            <input type="hidden" name="start_price" id="start_price" value="{{ (int) $selectedMin }}">
+                            <input type="hidden" name="end_price" id="end_price" value="{{ (int) $selectedMax }}">
+                            <input type="text" id="amount_start" hidden value="{{ (int) $selectedMin }}">
+                            <input type="text" id="amount_end" hidden value="{{ (int) $selectedMax }}">
+
+                            <div class="cat-x__price-buckets">
+                                <a href="{{ request()->fullUrlWithQuery(['start_price' => 0, 'end_price' => 10000000]) }}"
+                                    class="cat-x__price-bucket">Dưới 10 triệu</a>
+                                <a href="{{ request()->fullUrlWithQuery(['start_price' => 10000000, 'end_price' => 20000000]) }}"
+                                    class="cat-x__price-bucket">10 - 20 triệu</a>
+                                <a href="{{ request()->fullUrlWithQuery(['start_price' => 20000000, 'end_price' => 30000000]) }}"
+                                    class="cat-x__price-bucket">20 - 30 triệu</a>
+                                <a href="{{ request()->fullUrlWithQuery(['start_price' => 30000000, 'end_price' => 50000000]) }}"
+                                    class="cat-x__price-bucket">30 - 50 triệu</a>
+                                <a href="{{ request()->fullUrlWithQuery(['start_price' => 50000000, 'end_price' => 999000000]) }}"
+                                    class="cat-x__price-bucket cat-x__price-bucket--full">Trên 50 triệu</a>
+                            </div>
+                        </form>
+                    </div>
+
+                    {{-- Thương hiệu --}}
+                    @if ($brandCollection->isNotEmpty())
+                        <div class="cat-x__panel">
+                            <h4>Thương hiệu</h4>
+                            <ul class="cat-x__filter-list">
+                                @foreach ($brandCollection->take(7) as $brandItem)
+                                    @php
+                                        $brandSlug = $brandItem->brand_slug ?? \Illuminate\Support\Str::slug($brandItem->brand_name);
+                                        $brandActive = request('brand') === $brandSlug;
+                                    @endphp
+                                    <li>
+                                        <a href="{{ request()->fullUrlWithQuery(['brand' => $brandActive ? null : $brandSlug]) }}"
+                                            class="cat-x__filter-item {{ $brandActive ? 'is-active' : '' }}">
+                                            <span class="ck"></span>
+                                            <span class="lb">{{ $brandItem->brand_name }}</span>
+                                            <span class="cnt">—</span>
+                                        </a>
+                                    </li>
+                                @endforeach
+                                @if ($brandCollection->count() > 7)
+                                    <li><a href="#" class="cat-x__see-more">Xem thêm</a></li>
+                                @endif
+                            </ul>
+                        </div>
+                    @endif
+
+                    {{-- Nhu cầu sử dụng --}}
+                    <div class="cat-x__panel">
+                        <h4>Nhu cầu sử dụng</h4>
+                        <ul class="cat-x__filter-list">
+                            @foreach ($useNeeds as $need)
+                                @php $needActive = request('use') === $need['slug']; @endphp
+                                <li>
+                                    <a href="{{ request()->fullUrlWithQuery(['use' => $needActive ? null : $need['slug']]) }}"
+                                        class="cat-x__filter-item {{ $needActive ? 'is-active' : '' }}">
+                                        <span class="ck"></span>
+                                        <span class="lb">{{ $need['label'] }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+
+                    {{-- Tình trạng hàng --}}
+                    <div class="cat-x__panel">
+                        <h4>Tình trạng hàng</h4>
+                        <ul class="cat-x__filter-list">
+                            @foreach ($stockOptions as $option)
+                                @php $stockActive = (string) request('stock', '') === $option['value']; @endphp
+                                <li>
+                                    <a href="{{ request()->fullUrlWithQuery(['stock' => $option['value'] ?: null]) }}"
+                                        class="cat-x__filter-item cat-x__filter-radio {{ $stockActive ? 'is-active' : '' }}">
+                                        <span class="rd"></span>
+                                        <span class="lb">{{ $option['label'] }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+
+                    {{-- Sắp xếp theo --}}
+                    <div class="cat-x__panel">
+                        <h4>Sắp xếp theo</h4>
+                        <ul class="cat-x__filter-list">
+                            @foreach ($sortRadios as $sortKey => $sortLabel)
+                                @php
+                                    $sortActive = $selected_sort === $sortKey;
+                                    $sortUrl = $sortKey === 'none'
+                                        ? request()->fullUrlWithoutQuery(['sort_by'])
+                                        : request()->fullUrlWithQuery(['sort_by' => $sortKey]);
+                                @endphp
+                                <li>
+                                    <a href="{{ $sortUrl }}"
+                                        class="cat-x__filter-item cat-x__filter-radio {{ $sortActive ? 'is-active' : '' }}">
+                                        <span class="rd"></span>
+                                        <span class="lb">{{ $sortLabel }}</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+
+                    <a href="{{ url()->current() }}" class="cat-x__clear-filter">Xóa tất cả bộ lọc</a>
+                </aside>
+
+                {{-- Main --}}
+                <div class="cat-x__main">
+                    <div class="cat-x__toolbar">
+                        <div class="cat-x__count">
+                            Hiển thị {{ $fromIndex }}-{{ $toIndex }} trong {{ number_format($productCount) }} sản phẩm
+                        </div>
+
+                        <div class="cat-x__view-toggle" role="tablist" aria-label="Chế độ hiển thị">
+                            <button type="button" class="is-active" data-cat-view="grid" aria-label="Lưới">
+                                <i class="fa fa-th"></i>
+                            </button>
+                            <button type="button" data-cat-view="list" aria-label="Danh sách">
+                                <i class="fa fa-list"></i>
+                            </button>
+                        </div>
+
+                        <div class="cat-x__sort-wrap">
+                            <span>Sắp xếp:</span>
+                            <select id="cat-x-sort" onchange="if(this.value){window.location.href=this.value;}">
+                                <option value="{{ request()->fullUrlWithoutQuery(['sort_by']) }}"
+                                    {{ $selected_sort === 'none' ? 'selected' : '' }}>Phổ biến</option>
+                                <option value="{{ request()->fullUrlWithQuery(['sort_by' => 'tang_dan']) }}"
+                                    {{ $selected_sort === 'tang_dan' ? 'selected' : '' }}>Giá thấp đến cao</option>
+                                <option value="{{ request()->fullUrlWithQuery(['sort_by' => 'giam_dan']) }}"
+                                    {{ $selected_sort === 'giam_dan' ? 'selected' : '' }}>Giá cao đến thấp</option>
+                                <option value="{{ request()->fullUrlWithQuery(['sort_by' => 'kytu_az']) }}"
+                                    {{ $selected_sort === 'kytu_az' ? 'selected' : '' }}>Tên A-Z</option>
+                                <option value="{{ request()->fullUrlWithQuery(['sort_by' => 'kytu_za']) }}"
+                                    {{ $selected_sort === 'kytu_za' ? 'selected' : '' }}>Tên Z-A</option>
+                                <option value="{{ request()->fullUrlWithQuery(['sort_by' => 'khuyen_mai']) }}"
+                                    {{ $selected_sort === 'khuyen_mai' ? 'selected' : '' }}>Khuyến mãi nhiều nhất</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Product grid --}}
+                    <div class="cat-x__grid" data-cat-grid>
+                        @forelse ($category_by_id as $product)
+                            @include('pages.category.partials.product_card_x', ['product' => $product])
+                        @empty
+                            <div style="grid-column: 1 / -1;">
+                                @include('partials.storefront.empty-state', [
+                                    'title' => 'Hiện chưa có sản phẩm nào trong danh mục này.',
+                                    'message' => 'Hãy thử chuyển danh mục, thay đổi bộ lọc hoặc quay lại trang chủ.',
+                                    'icon' => 'fa fa-cubes',
+                                    'compact' => true,
+                                ])
+                            </div>
+                        @endforelse
+                    </div>
+
+                    {{-- Pagination --}}
+                    @if ($category_by_id instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator && $category_by_id->lastPage() > 1)
+                        <div class="cat-x__pagination">
+                            {{ $category_by_id->onEachSide(1)->links() }}
+                        </div>
+                    @endif
+
+                    {{-- Recently viewed --}}
+                    <div class="cat-x__recent" id="cat-x-recent" style="display:none;">
+                        <div class="cat-x__recent-head">
+                            <h3>Sản phẩm đã xem gần đây</h3>
+                            <a href="{{ url('/san-pham') }}">Xem tất cả →</a>
+                        </div>
+                        <div class="cat-x__recent-track-wrap">
+                            <button type="button" class="cat-x__recent-nav is-prev" aria-label="Cuộn trái" data-recent-prev>
+                                <i class="fa fa-angle-left"></i>
+                            </button>
+                            <div class="cat-x__recent-track" data-recent-track></div>
+                            <button type="button" class="cat-x__recent-nav is-next" aria-label="Cuộn phải" data-recent-next>
                                 <i class="fa fa-angle-right"></i>
-                            </span>
-                        </a>
-                    @endforeach
-                </div>
-            </aside>
-        </section>
+                            </button>
+                        </div>
+                    </div>
 
-        <section class="shopw-category-results">
-            <div class="shopw-category-results-head">
-                <div>
-                    <span class="shopw-category-kicker">Kết quả hiển thị</span>
-                    <h2>{{ $activeCategoryLabel }}</h2>
-                    <p>{{ number_format($productCount) }} sản phẩm đang được hiển thị trong danh sách này.</p>
-                </div>
-                <div class="shopw-category-results-tags">
-                    <span class="shopw-category-result-tag">Sắp xếp: {{ $sortLabels[$selected_sort] ?? 'Mặc định' }}</span>
-                    @if ($hasActivePriceFilter)
-                        <span class="shopw-category-result-tag">Giá: {{ $selectedMinLabel }} - {{ $selectedMaxLabel }}</span>
+                    {{-- Brand partners --}}
+                    @if ($brandCollection->isNotEmpty())
+                        <div class="cat-x__brands">
+                            <div class="cat-x__brands-head">
+                                <i class="fa fa-handshake-o"></i>THƯƠNG HIỆU ĐỐI TÁC
+                            </div>
+                            <div class="cat-x__brands-grid">
+                                @foreach ($brandCollection->take(8) as $brandItem)
+                                    @php
+                                        $brandLogoUrl = $brandItem->logo_path ? \App\Support\AssetUrl::resolve($brandItem->logo_path, null) : null;
+                                    @endphp
+                                    @if ($brandLogoUrl)
+                                        <img src="{{ $brandLogoUrl }}" alt="{{ $brandItem->brand_name }}">
+                                    @else
+                                        <span class="brand-text">{{ strtoupper($brandItem->brand_name) }}</span>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
                     @endif
                 </div>
             </div>
+        </div>
+    </section>
 
-            @include('pages.category.partials.product_grid', [
-                'products' => $category_by_id,
-                'emptyMessage' => 'Hiện chưa có sản phẩm nào trong danh mục này.',
-                'cardColumnClass' => 'col-xs-12 col-sm-6 col-md-4 col-lg-3',
-                'showWishlist' => true,
-                'showCompare' => true,
-            ])
-        </section>
-    </div>
+    <script>
+        (function () {
+            'use strict';
+
+            // Chips horizontal scroll buttons
+            const chipsTrack = document.querySelector('[data-cat-chips]');
+            if (chipsTrack) {
+                const prev = document.querySelector('[data-cat-chips-prev]');
+                const next = document.querySelector('[data-cat-chips-next]');
+                const update = () => {
+                    if (prev) prev.disabled = chipsTrack.scrollLeft <= 4;
+                    if (next) next.disabled = chipsTrack.scrollLeft + chipsTrack.clientWidth >= chipsTrack.scrollWidth - 4;
+                };
+                if (prev) prev.addEventListener('click', () => chipsTrack.scrollBy({ left: -260, behavior: 'smooth' }));
+                if (next) next.addEventListener('click', () => chipsTrack.scrollBy({ left: 260, behavior: 'smooth' }));
+                chipsTrack.addEventListener('scroll', update, { passive: true });
+                window.addEventListener('resize', update);
+                update();
+            }
+
+            // View toggle (grid / list)
+            const grid = document.querySelector('[data-cat-grid]');
+            document.querySelectorAll('[data-cat-view]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-cat-view]').forEach((b) => b.classList.remove('is-active'));
+                    btn.classList.add('is-active');
+                    if (btn.getAttribute('data-cat-view') === 'list') {
+                        grid.classList.add('is-list');
+                    } else {
+                        grid.classList.remove('is-list');
+                    }
+                });
+            });
+
+            // Recently viewed (read from localStorage 'recent-products')
+            try {
+                const raw = localStorage.getItem('recent-products');
+                const parsed = raw ? JSON.parse(raw) : [];
+                if (Array.isArray(parsed) && parsed.length) {
+                    const wrap = document.getElementById('cat-x-recent');
+                    const track = wrap.querySelector('[data-recent-track]');
+                    parsed.slice(0, 12).forEach((p) => {
+                        const a = document.createElement('a');
+                        a.className = 'cat-x__recent-card';
+                        a.href = p.url || '#';
+                        a.innerHTML = `
+                            <button type="button" class="like" aria-label="Yêu thích"><i class="fa fa-heart-o"></i></button>
+                            <div class="img"><img src="${p.image}" alt=""></div>
+                            <div class="ttl">${p.name || ''}</div>
+                            <div class="pr">${p.price || ''}</div>
+                            <div class="rt">
+                                <span class="stars">★★★★<span class="o">★</span></span>
+                                <button type="button" class="add" aria-label="Thêm vào giỏ"><i class="fa fa-shopping-cart"></i></button>
+                            </div>
+                        `;
+                        track.appendChild(a);
+                    });
+                    wrap.style.display = '';
+                    const prev = wrap.querySelector('[data-recent-prev]');
+                    const next = wrap.querySelector('[data-recent-next]');
+                    if (prev) prev.addEventListener('click', () => track.scrollBy({ left: -260, behavior: 'smooth' }));
+                    if (next) next.addEventListener('click', () => track.scrollBy({ left: 260, behavior: 'smooth' }));
+                }
+            } catch (e) { /* ignore */ }
+        })();
+    </script>
+
+    {{-- Price slider (jQuery UI) --}}
+    @push('scripts')
+        <script>
+            $(function () {
+                if (!$.fn.slider || !document.getElementById('slider-range')) return;
+                $('#slider-range').slider({
+                    range: true,
+                    min: {{ (int) $rangeMin }},
+                    max: {{ (int) max($rangeMax, $rangeMin + 1) }},
+                    values: [{{ (int) $selectedMin }}, {{ (int) $selectedMax }}],
+                    slide: function (event, ui) {
+                        $('#start_price').val(ui.values[0]);
+                        $('#end_price').val(ui.values[1]);
+                    },
+                    change: function (event, ui) {
+                        $('#start_price').val(ui.values[0]);
+                        $('#end_price').val(ui.values[1]);
+                        $('#cat-x-price-form').submit();
+                    }
+                });
+            });
+        </script>
+    @endpush
 @endsection

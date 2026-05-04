@@ -1,4 +1,4 @@
-@extends('layout')
+@extends('layouts.home-tech')
 @section('content')
     <div class="features_items"><!--features_items-->
         <h2 class="title text-center">{{ $selected_brand->brand_name ?? $meta_title }}</h2>

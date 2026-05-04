@@ -1,106 +1,232 @@
-@extends('layout')
+@extends('layouts.home-tech')
 
 @section('content')
     @php
         $storefrontLabel = \App\Support\StorefrontLabel::class;
-        $blogQuickLinks = [
-            [
-                'icon' => 'fa-home',
-                'label' => 'Về trang chủ',
-                'value' => 'Quay lại trang chủ để tiếp tục xem sản phẩm',
-                'url' => url('/'),
-            ],
-            [
-                'icon' => 'fa-youtube-play',
-                'label' => 'Video cửa hàng',
-                'value' => 'Xem thêm clip review và hướng dẫn',
-                'url' => url('/video-shop'),
-            ],
-            [
-                'icon' => 'fa-lightbulb-o',
-                'label' => 'Gợi ý sản phẩm',
-                'value' => 'Tiếp tục mua sắm với gợi ý phù hợp',
-                'url' => url('/goi-y-san-pham'),
-            ],
+        $blogCategories = collect($blog_categories ?? $category_post ?? []);
+        $totalPublished = $total_published ?? $blogCategories->sum(fn($c) => $category_counts[$c->id] ?? 0);
+        $sortCurrent = $sort_current ?? 'moi-nhat';
+        $searchKeyword = $search_keyword ?? '';
+        $featuredPosts = collect($featured_posts ?? []);
+        $hotKeywords = $hot_keywords ?? [];
+
+        $sortOptions = [
+            'moi-nhat' => 'Mới nhất',
+            'cu-nhat' => 'Cũ nhất',
+            'xem-nhieu' => 'Xem nhiều',
+            'noi-bat' => 'Nổi bật',
         ];
+
+        $kickerLabel = function ($post) use ($selected_category) {
+            $name = optional($post->category)->cate_post_name
+                ?? optional($selected_category)->cate_post_name
+                ?? 'Tin tức';
+            return mb_strtoupper($name, 'UTF-8');
+        };
+
+        $formatViews = function ($value) {
+            $value = (int) $value;
+            if ($value >= 1000) {
+                return number_format($value, 0, ',', '.');
+            }
+            return (string) $value;
+        };
     @endphp
-    <div class="g-blog-list">
-        <section class="shopw-blog-list-hero">
-            <div class="shopw-blog-list-hero-copy">
-                <span class="shopw-blog-kicker">Tin tức / {{ $storefrontLabel::blogCategory($selected_category->cate_post_name ?? null, $selected_category->cate_post_slug ?? null, $meta_title) }}</span>
-                <h1>{{ $storefrontLabel::blogCategory($selected_category->cate_post_name ?? null, $selected_category->cate_post_slug ?? null, $meta_title) }}</h1>
-                <p>{{ $selected_category->cate_post_desc ?: 'Tổng hợp bài viết, tin nhanh và hướng dẫn liên quan đến nhóm nội dung này.' }}</p>
-            </div>
-            <div class="shopw-blog-list-hero-meta">
-                <strong>{{ method_exists($post_cate, 'total') ? $post_cate->total() : count($post_cate) }}</strong>
-                <span>bài viết đang hiển thị</span>
-            </div>
-        </section>
 
-        <div class="shopw-content-support-strip">
-            @foreach ($blogQuickLinks as $quickLink)
-                <a href="{{ $quickLink['url'] }}" class="shopw-content-support-item">
-                    <span class="shopw-content-support-icon">
-                        <i class="fa {{ $quickLink['icon'] }}"></i>
-                    </span>
-                    <span class="shopw-content-support-copy">
-                        <strong>{{ $quickLink['label'] }}</strong>
-                        <small>{{ $quickLink['value'] }}</small>
-                    </span>
-                    <span class="shopw-content-support-arrow">
-                        <i class="fa fa-angle-right"></i>
-                    </span>
-                </a>
-            @endforeach
-        </div>
+    <div class="dd-blog-archive">
+        <div class="dd-blog-shell">
+            <nav class="dd-blog-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ url('/') }}">Trang chủ</a>
+                <span class="dd-blog-breadcrumb-sep">/</span>
+                <span class="dd-blog-breadcrumb-current">Bài viết</span>
+            </nav>
 
-        <section class="shopw-blog-share-row">
-            <a class="shopw-blog-share-link" href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode($url_canonical) }}"
-                target="_blank" rel="noopener noreferrer">
-                <i class="fa fa-facebook"></i>
-                <span>Chia sẻ Facebook</span>
-            </a>
-            <a class="shopw-blog-share-link" href="https://zalo.me/share?url={{ urlencode($url_canonical) }}" target="_blank"
-                rel="noopener noreferrer">
-                <i class="fa fa-commenting"></i>
-                <span>Chia sẻ Zalo</span>
-            </a>
-        </section>
+            <header class="dd-blog-archive-head">
+                <h1>{{ mb_strtoupper($hero_title ?? 'Bài viết & Tin tức', 'UTF-8') }}</h1>
+                <p>{{ $hero_desc ?? 'Cập nhật xu hướng công nghệ, hướng dẫn sử dụng và mẹo chọn mua sản phẩm phù hợp.' }}</p>
+            </header>
 
-        @if ($post_cate->count())
-            <div class="shopw-blog-list-grid">
-                @foreach ($post_cate as $post)
-                    <article class="shopw-blog-card">
-                        <a class="shopw-blog-card-media" href="{{ url('/bai-viet/' . $post->post_slug) }}">
-                            <img src="{{ $post->featured_image_path ? asset($post->featured_image_path) : asset('uploads/product/no-image.svg') }}"
-                                alt="{{ $post->post_title }}">
-                        </a>
-                        <div class="shopw-blog-card-copy">
-                            <span class="shopw-blog-card-chip">{{ $storefrontLabel::blogCategory($selected_category->cate_post_name ?? null, $selected_category->cate_post_slug ?? null, 'Tin tức') }}</span>
-                            <h2>
-                                <a href="{{ url('/bai-viet/' . $post->post_slug) }}">{{ $post->post_title }}</a>
-                            </h2>
-                            <p>{{ \Illuminate\Support\Str::limit(strip_tags((string) $post->post_desc), 165) }}</p>
-                            <div class="shopw-blog-card-actions">
-                                <a href="{{ url('/bai-viet/' . $post->post_slug) }}" class="shopw-blog-card-link">
-                                    Đọc bài viết
-                                    <i class="fa fa-arrow-right"></i>
+            <div class="dd-blog-archive-grid">
+                <main class="dd-blog-archive-main">
+                    <div class="dd-blog-toolbar">
+                        <div class="dd-blog-tabs" role="tablist">
+                            <a href="{{ url('/bai-viet') . ($sortCurrent !== 'moi-nhat' ? '?sort=' . $sortCurrent : '') }}"
+                                class="dd-blog-tab {{ ! $selected_category ? 'is-active' : '' }}">
+                                Tất cả bài viết
+                            </a>
+                            @foreach ($blogCategories as $cat)
+                                @php
+                                    $catUrl = url('/danh-muc-bai-viet/' . $cat->cate_post_slug)
+                                        . ($sortCurrent !== 'moi-nhat' ? '?sort=' . $sortCurrent : '');
+                                    $isActive = $selected_category && (int) $selected_category->id === (int) $cat->id;
+                                @endphp
+                                <a href="{{ $catUrl }}" class="dd-blog-tab {{ $isActive ? 'is-active' : '' }}">
+                                    {{ $cat->cate_post_name }}
                                 </a>
-                            </div>
+                            @endforeach
                         </div>
-                    </article>
-                @endforeach
-            </div>
 
-            <div class="shopw-blog-pagination">
-                {{ $post_cate->appends(request()->query())->links() }}
+                        <form method="GET" class="dd-blog-sort" data-dd-sort-form>
+                            @if ($searchKeyword)
+                                <input type="hidden" name="search" value="{{ $searchKeyword }}">
+                            @endif
+                            <div class="dd-blog-sort-control">
+                                <select name="sort" data-dd-sort onchange="this.form.submit()">
+                                    @foreach ($sortOptions as $value => $label)
+                                        <option value="{{ $value }}" {{ $sortCurrent === $value ? 'selected' : '' }}>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <i class="fa fa-angle-down"></i>
+                            </div>
+                        </form>
+                    </div>
+
+                    @if ($post_cate->count())
+                        <div class="dd-blog-list">
+                            @foreach ($post_cate as $post)
+                                @php
+                                    $postUrl = url('/bai-viet/' . $post->post_slug);
+                                    $imgSrc = $post->featured_image_path
+                                        ? asset($post->featured_image_path)
+                                        : asset('uploads/product/no-image.svg');
+                                    $excerpt = \Illuminate\Support\Str::limit(strip_tags((string) $post->post_desc), 140);
+                                @endphp
+                                <article class="dd-blog-card">
+                                    <a class="dd-blog-card-media" href="{{ $postUrl }}">
+                                        <img src="{{ $imgSrc }}" alt="{{ $post->post_title }}" loading="lazy">
+                                    </a>
+                                    <div class="dd-blog-card-body">
+                                        <span class="dd-blog-card-kicker">{{ $kickerLabel($post) }}</span>
+                                        <h2 class="dd-blog-card-title">
+                                            <a href="{{ $postUrl }}">{{ $post->post_title }}</a>
+                                        </h2>
+                                        <p class="dd-blog-card-excerpt">{{ $excerpt }}</p>
+                                        <div class="dd-blog-card-foot">
+                                            <div class="dd-blog-card-meta">
+                                                @if ($post->published_at)
+                                                    <span><i class="fa fa-calendar-o"></i> {{ $post->published_at->format('d/m/Y') }}</span>
+                                                @endif
+                                                <span><i class="fa fa-eye"></i> {{ $formatViews($post->post_views) }} lượt xem</span>
+                                            </div>
+                                            <a class="dd-blog-card-link" href="{{ $postUrl }}">
+                                                Xem chi tiết <i class="fa fa-arrow-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </article>
+                            @endforeach
+                        </div>
+
+                        <div class="dd-blog-pagination">
+                            {{ $post_cate->onEachSide(1)->links('pagination::bootstrap-4') }}
+                        </div>
+                    @else
+                        <div class="dd-blog-empty">
+                            <i class="fa fa-newspaper-o"></i>
+                            <h2>Chưa có bài viết phù hợp</h2>
+                            <p>Hãy thử bỏ bộ lọc, đổi từ khóa tìm kiếm hoặc quay lại sau để xem thêm nội dung mới.</p>
+                            <a href="{{ url('/bai-viet') }}" class="dd-blog-empty-cta">Quay lại tất cả bài viết</a>
+                        </div>
+                    @endif
+                </main>
+
+                <aside class="dd-blog-sidebar">
+                    <section class="dd-blog-side-card dd-blog-side-search">
+                        <h3>TÌM KIẾM BÀI VIẾT</h3>
+                        <form action="{{ url('/bai-viet') }}" method="GET" class="dd-blog-side-search-form">
+                            @if ($sortCurrent !== 'moi-nhat')
+                                <input type="hidden" name="sort" value="{{ $sortCurrent }}">
+                            @endif
+                            <input type="text" name="search" value="{{ $searchKeyword }}" placeholder="Nhập từ khóa...">
+                            <button type="submit" aria-label="Tìm kiếm">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </form>
+                    </section>
+
+                    <section class="dd-blog-side-card dd-blog-side-cats">
+                        <h3>DANH MỤC BÀI VIẾT</h3>
+                        <ul>
+                            <li>
+                                <a href="{{ url('/bai-viet') }}" class="{{ ! $selected_category ? 'is-active' : '' }}">
+                                    <span>Tất cả bài viết</span>
+                                    <span class="dd-blog-side-count">({{ $totalPublished }})</span>
+                                </a>
+                            </li>
+                            @foreach ($blogCategories as $cat)
+                                @php
+                                    $count = (int) ($category_counts[$cat->id] ?? 0);
+                                    $isActive = $selected_category && (int) $selected_category->id === (int) $cat->id;
+                                @endphp
+                                <li>
+                                    <a href="{{ url('/danh-muc-bai-viet/' . $cat->cate_post_slug) }}"
+                                        class="{{ $isActive ? 'is-active' : '' }}">
+                                        <span>{{ $cat->cate_post_name }}</span>
+                                        <span class="dd-blog-side-count">({{ $count }})</span>
+                                    </a>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </section>
+
+                    @if ($featuredPosts->isNotEmpty())
+                        <section class="dd-blog-side-card dd-blog-side-featured">
+                            <h3>BÀI VIẾT NỔI BẬT</h3>
+                            <ul>
+                                @foreach ($featuredPosts as $featured)
+                                    @php
+                                        $fUrl = url('/bai-viet/' . $featured->post_slug);
+                                        $fImg = $featured->featured_image_path
+                                            ? asset($featured->featured_image_path)
+                                            : asset('uploads/product/no-image.svg');
+                                    @endphp
+                                    <li>
+                                        <a href="{{ $fUrl }}" class="dd-blog-side-featured-item">
+                                            <span class="dd-blog-side-featured-thumb">
+                                                <img src="{{ $fImg }}" alt="{{ $featured->post_title }}" loading="lazy">
+                                            </span>
+                                            <span class="dd-blog-side-featured-copy">
+                                                <strong>{{ \Illuminate\Support\Str::limit($featured->post_title, 60) }}</strong>
+                                                @if ($featured->published_at)
+                                                    <small>{{ $featured->published_at->format('d/m/Y') }}</small>
+                                                @endif
+                                            </span>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </section>
+                    @endif
+
+                    @if (! empty($hotKeywords))
+                        <section class="dd-blog-side-card dd-blog-side-tags">
+                            <h3>TỪ KHÓA NỔI BẬT</h3>
+                            <div class="dd-blog-side-tags-wrap">
+                                @foreach ($hotKeywords as $kw)
+                                    <a href="{{ $kw['url'] }}" class="dd-blog-tag-pill">{{ $kw['label'] }}</a>
+                                @endforeach
+                            </div>
+                        </section>
+                    @endif
+
+                    <section class="dd-blog-side-card dd-blog-side-newsletter">
+                        <h3>ĐĂNG KÝ NHẬN TIN</h3>
+                        <p>Nhận ngay thông tin khuyến mãi và bài viết mới nhất từ DangDuc.</p>
+                        <form class="dd-blog-side-newsletter-form" onsubmit="event.preventDefault(); this.querySelector('input').value=''; alert('Cảm ơn bạn đã đăng ký nhận tin!');">
+                            <input type="email" required placeholder="Nhập email của bạn">
+                            <button type="submit" aria-label="Đăng ký">
+                                <i class="fa fa-paper-plane"></i>
+                            </button>
+                        </form>
+                        <small class="dd-blog-side-newsletter-note">
+                            <i class="fa fa-shield"></i>
+                            Chúng tôi cam kết không gửi thư rác và bảo mật thông tin của bạn.
+                        </small>
+                    </section>
+                </aside>
             </div>
-        @else
-            <section class="shopw-blog-empty">
-                <h2>Danh mục này chưa có bài viết</h2>
-                <p>Nội dung mới trong danh mục này đang được cập nhật. Vui lòng quay lại sau để xem thêm bài viết.</p>
-            </section>
-        @endif
+        </div>
     </div>
 @endsection
-

@@ -2,6 +2,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    @php
+        $meta_desc = $meta_desc ?? 'DangDuc - Chuyên cung cấp laptop, linh kiện PC và phụ kiện công nghệ chính hãng.';
+        $meta_keywords = $meta_keywords ?? 'DangDuc, laptop, linh kiện, phụ kiện, công nghệ';
+        $url_canonical = $url_canonical ?? url()->current();
+        $meta_title = $meta_title ?? 'DangDuc - Laptop & Công nghệ';
+    @endphp
+
     <!---------Seo--------->
     <meta name="description" content="{{ $meta_desc }}">
     <meta name="keywords" content="{{ $meta_keywords }}" />
@@ -41,6 +48,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
     <link href="{{ asset('frontend/css/storefront.css') }}" rel="stylesheet">
     <link href="{{ asset('frontend/css/tech-modern-polish.css') }}" rel="stylesheet">
+    <link href="{{ asset('frontend/css/category-redesign.css') }}" rel="stylesheet">
+
+    @stack('styles')
 
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />

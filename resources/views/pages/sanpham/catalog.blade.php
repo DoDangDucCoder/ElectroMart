@@ -1,6 +1,4 @@
-@extends('layout')
-
-@section('body_class', 'g-catalog')
+@extends('layouts.home-tech')
 
 @section('content')
     @php
@@ -12,267 +10,438 @@
         $selectedSort = $filters['sort'] ?? 'popular';
         $keyword = trim((string) ($search_keyword ?? ''));
         $productCount = method_exists($search_product, 'total') ? $search_product->total() : $search_product->count();
+        $perPage = method_exists($search_product, 'perPage') ? $search_product->perPage() : 12;
+        $currentPage = method_exists($search_product, 'currentPage') ? $search_product->currentPage() : 1;
+        $rangeFrom = $productCount > 0 ? (($currentPage - 1) * $perPage) + 1 : 0;
+        $rangeTo = $productCount > 0 ? min($currentPage * $perPage, $productCount) : 0;
         $currentItems = method_exists($search_product, 'getCollection') ? $search_product->getCollection() : collect($search_product);
         $activeCategory = $selectedCategory ? ($search_categories ?? collect())->firstWhere('category_id', (int) $selectedCategory) : null;
         $activeCategoryLabel = $activeCategory
             ? $storefrontLabel::category($activeCategory->category_name, $activeCategory->slug_category_product ?? null)
-            : 'Sản phẩm';
-        $activeBrandLabel = $selectedBrand
-            ? $storefrontLabel::neutralizeSource(optional(($search_brands ?? collect())->firstWhere('brand_id', (int) $selectedBrand))->brand_name)
-            : null;
+            : 'Tất cả sản phẩm';
+        $catalogTitle = $activeCategory ? $activeCategoryLabel : ($search_page_title ?? 'Tất cả sản phẩm');
         $catalogSummary = $activeCategory
             ? trim(strip_tags((string) ($activeCategory->category_desc ?? '')))
-            : 'Khám phá các sản phẩm công nghệ đang mở bán, lọc nhanh theo danh mục, thương hiệu và khoảng giá phù hợp.';
-        $catalogSummary = $catalogSummary !== ''
-            ? $catalogSummary
-            : 'Khám phá danh sách sản phẩm, lọc theo khoảng giá và sắp xếp theo nhu cầu mua sắm của bạn.';
-        $priceValues = $currentItems
-            ->map(fn ($product) => (float) ($product->final_price ?? $product->product_price ?? $product->price ?? 0))
-            ->filter(fn ($price) => $price > 0);
-        $rangeMin = $priceValues->isNotEmpty() ? $priceValues->min() : 0;
-        $rangeMax = $priceValues->isNotEmpty() ? $priceValues->max() : 0;
-        $selectedMin = $filters['price_min'] ?? $rangeMin;
-        $selectedMax = $filters['price_max'] ?? $rangeMax;
+            : 'Khám phá ' . number_format($productCount) . ' sản phẩm chính hãng với giá tốt, bảo hành uy tín';
+        if ($catalogSummary === '') {
+            $catalogSummary = 'Khám phá ' . number_format($productCount) . ' sản phẩm chính hãng với giá tốt, bảo hành uy tín';
+        }
         $formatMoney = fn ($value) => $value > 0 ? number_format((float) $value, 0, ',', '.') . 'đ' : 'Đang cập nhật';
         $sortLabels = [
-            'popular' => 'Mặc định',
+            'popular' => 'Phổ biến',
+            'created_at_desc' => 'Mới nhất',
             'price_asc' => 'Giá thấp đến cao',
             'price_desc' => 'Giá cao đến thấp',
-            'created_at_desc' => 'Mới nhất',
             'best_selling' => 'Bán chạy',
             'sale_desc' => 'Khuyến mãi',
-            'name_asc' => 'Tên A-Z',
-            'name_desc' => 'Tên Z-A',
         ];
         $searchFormAction = $search_form_action ?? url('/san-pham');
         $searchClearUrl = $search_clear_url ?? url('/san-pham');
+
+        $allCategories = collect($search_categories ?? []);
+        $rootCategories = $allCategories->filter(fn ($cat) => (int) ($cat->category_parent ?? 0) === 0);
+        if ($rootCategories->isEmpty()) {
+            $rootCategories = $allCategories;
+        }
+        $subcategoryChips = $rootCategories->take(6)->values();
+
+        $brandChunks = collect($search_brands ?? [])->take(7);
+
+        $brandUsageOptions = [
+            'gaming' => 'Gaming - Đồ họa',
+            'office' => 'Văn phòng - Học tập',
+            'design' => 'Đồ họa - Kỹ thuật',
+            'business' => 'Doanh nhân - Mỏng nhẹ',
+            'developer' => 'Lập trình - IT',
+        ];
+
+        $stockOptions = [
+            '' => 'Tất cả',
+            'new' => 'Mới 100%',
+            'like_new' => 'Like New',
+            'showcase' => 'Trưng bày',
+        ];
+
+        $catalogPriceBuckets = [
+            ['label' => 'Dưới 10 triệu', 'min' => 0, 'max' => 10000000],
+            ['label' => '10 - 20 triệu', 'min' => 10000000, 'max' => 20000000],
+            ['label' => '20 - 30 triệu', 'min' => 20000000, 'max' => 30000000],
+            ['label' => '30 - 50 triệu', 'min' => 30000000, 'max' => 50000000],
+            ['label' => 'Trên 50 triệu', 'min' => 50000000, 'max' => null],
+        ];
+
+        $heroLevelTitle = mb_strtoupper($activeCategoryLabel === 'Tất cả sản phẩm' ? 'Sản phẩm công nghệ' : $activeCategoryLabel);
+
+        $brandItems = collect(['ASUS', 'MSI', 'DELL', 'Lenovo', 'Samsung', 'Logitech', 'Kingston', 'Intel'])
+            ->map(fn (string $name) => [
+                'name' => $name,
+                'url' => url('/thuong-hieu/' . \Illuminate\Support\Str::slug($name)),
+                'logo' => null,
+                'initials' => mb_strtoupper(mb_substr($name, 0, 2)),
+            ]);
+
+        $paymentItems = ['VISA', 'Mastercard', 'Momo', 'ZaloPay'];
+
+        $cardForProduct = function ($product) use ($storefrontLabel, $assetUrl) {
+            $finalPrice = (float) ($product->final_price ?? $product->product_price ?? 0);
+            $originalPrice = (float) ($product->price ?? $product->product_price ?? $finalPrice);
+            $discount = 0;
+            if ($originalPrice > 0 && $finalPrice > 0 && $finalPrice < $originalPrice) {
+                $discount = (int) round((($originalPrice - $finalPrice) / $originalPrice) * 100);
+            }
+            $brandName = $storefrontLabel::neutralizeSource(optional($product->brand)->brand_name ?? ($product->brand_name ?? 'DangDuc'));
+
+            return [
+                'id' => $product->product_id ?? $product->id,
+                'name' => $storefrontLabel::neutralizeSource($product->product_name),
+                'url' => url('/chi-tiet/' . $product->product_slug),
+                'image' => $assetUrl::product($product->product_image),
+                'brand' => $brandName,
+                'brand_initials' => mb_strtoupper(mb_substr($brandName, 0, 2)),
+                'price' => $finalPrice,
+                'original_price' => $originalPrice,
+                'discount_percent' => $discount,
+            ];
+        };
     @endphp
 
-<div class="dd-catalog-page">
-    {{-- Hero Section with Teal Background --}}
-    <section class="dd-catalog-hero">
-        <div class="dd-catalog-hero-content">
-            <nav class="dd-catalog-breadcrumb" aria-label="breadcrumb">
+    <main class="tech-home-main catalog-tech-main">
+        <div class="container">
+            <nav class="catalog-breadcrumb" aria-label="breadcrumb">
                 <a href="{{ url('/') }}">Trang chủ</a>
-                <span>/</span>
+                <span class="catalog-breadcrumb-sep">/</span>
                 <a href="{{ url('/san-pham') }}">Sản phẩm</a>
                 @if ($activeCategory)
-                    <span>/</span>
-                    <strong>{{ $activeCategoryLabel }}</strong>
+                    <span class="catalog-breadcrumb-sep">/</span>
+                    <span class="catalog-breadcrumb-current">{{ $activeCategoryLabel }}</span>
                 @endif
             </nav>
 
-            <h1>{{ $activeCategoryLabel }}</h1>
-            <p class="dd-catalog-hero-desc">{{ $catalogSummary }}</p>
+            <header class="catalog-hero-head">
+                <h1 class="catalog-title">{{ $catalogTitle }}</h1>
+                <p class="catalog-summary">{{ $catalogSummary }}</p>
+            </header>
 
-            <div class="dd-catalog-hero-meta">
-                <div class="dd-catalog-meta-card">
-                    <span>Sản phẩm:</span>
-                    <strong>{{ number_format($productCount) }}</strong>
-                </div>
-                <div class="dd-catalog-meta-card">
-                    <span>Giá:</span>
-                    <strong>{{ $formatMoney($rangeMin) }} - {{ $formatMoney($rangeMax) }}</strong>
-                </div>
-                <div class="dd-catalog-meta-card">
-                    <span>Cập nhật:</span>
-                    <strong>{{ now()->format('d/m/Y') }}</strong>
-                </div>
-            </div>
-        </div>
-
-        {{-- Floating action buttons --}}
-        <div class="dd-catalog-hero-actions">
-            <button type="button" class="dd-hero-action-btn" onclick="document.querySelector('.dd-catalog-sidebar').scrollIntoView({behavior: 'smooth'})">
-                <i class="fa fa-filter"></i>
-            </button>
-        </div>
-    </section>
-
-    {{-- Main Content: Sidebar + Product Grid --}}
-    <div class="dd-catalog-container">
-
-        {{-- Left Sidebar: Filters --}}
-        <aside class="dd-catalog-sidebar">
-            <form action="{{ $searchFormAction }}" method="GET" class="dd-catalog-filter-form">
-                @if ($keyword !== '')
-                    <input type="hidden" name="keywords_submit" value="{{ $keyword }}">
-                @endif
-                @if (!empty($filters['product_code']))
-                    <input type="hidden" name="product_code" value="{{ $filters['product_code'] }}">
-                @endif
-                @if (!empty($filters['highlight_product']))
-                    <input type="hidden" name="highlight_product" value="{{ $filters['highlight_product'] }}">
-                @endif
-
-                <section class="dd-filter-section">
-                    <h2>Danh mục</h2>
-                    <label>
-                        <input type="radio" name="category_id" value="" @checked(empty($selectedCategory))>
-                        <span>Tất cả</span>
-                    </label>
-                    @foreach (($search_categories ?? collect())->take(8) as $categoryItem)
-                        <label>
-                            <input type="radio" name="category_id" value="{{ $categoryItem->category_id }}"
-                                @checked((string) $selectedCategory === (string) $categoryItem->category_id)>
-                            <span>{{ $storefrontLabel::category($categoryItem->category_name, $categoryItem->slug_category_product ?? null) }}</span>
-                        </label>
-                    @endforeach
-                </section>
-
-                <section class="dd-filter-section">
-                    <h2>Khoảng giá</h2>
-                    <label class="dd-filter-input">
-                        <span>Min</span>
-                        <input type="text" name="price_min" value="{{ old('price_min', $filters['price_min'] ?? '') }}"
-                            placeholder="{{ $formatMoney($rangeMin) }}">
-                    </label>
-                    <label class="dd-filter-input">
-                        <span>Max</span>
-                        <input type="text" name="price_max" value="{{ old('price_max', $filters['price_max'] ?? '') }}"
-                            placeholder="{{ $formatMoney($rangeMax) }}">
-                    </label>
-                    <button type="submit" class="dd-filter-primary">Áp dụng</button>
-                </section>
-
-                <section class="dd-filter-section">
-                    <h2>Thương hiệu</h2>
-                    <label>
-                        <input type="radio" name="brand_id" value="" @checked(empty($selectedBrand))>
-                        <span>Tất cả</span>
-                    </label>
-                    @foreach (($search_brands ?? collect())->take(10) as $brandItem)
-                        <label>
-                            <input type="radio" name="brand_id" value="{{ $brandItem->brand_id }}"
-                                @checked((string) $selectedBrand === (string) $brandItem->brand_id)>
-                            <span>{{ $storefrontLabel::neutralizeSource($brandItem->brand_name) }}</span>
-                        </label>
-                    @endforeach
-                </section>
-
-                <section class="dd-filter-section">
-                    <h2>Tình trạng</h2>
-                    <label><input type="checkbox" checked disabled><span>Đang mở bán</span></label>
-                    <label><input type="checkbox" disabled><span>Có khuyến mãi</span></label>
-                    <label><input type="checkbox" disabled><span>Nổi bật</span></label>
-                </section>
-
-                <div class="dd-filter-actions">
-                    <button type="submit" class="dd-filter-primary">Áp dụng bộ lọc</button>
-                    <a href="{{ $searchClearUrl }}">Xóa lọc</a>
-                </div>
-            </form>
-        </aside>
-
-        {{-- Right Main Content: Product Grid --}}
-        <main class="dd-catalog-main">
-            {{-- Toolbar with sort and result count --}}
-            <div class="dd-catalog-toolbar">
-                <div class="dd-catalog-toolbar-left">
-                    <h2 class="dd-catalog-result-title">Tìm thấy {{ number_format($productCount) }} sản phẩm {{ $activeCategoryLabel }}</h2>
-                </div>
-
-                <form action="{{ $searchFormAction }}" method="GET" class="dd-sort-form">
-                    @if ($keyword !== '')
-                        <input type="hidden" name="keywords_submit" value="{{ $keyword }}">
-                    @endif
-                    @if (!empty($filters['product_code']))
-                        <input type="hidden" name="product_code" value="{{ $filters['product_code'] }}">
-                    @endif
-                    @if (!empty($selectedCategory))
-                        <input type="hidden" name="category_id" value="{{ $selectedCategory }}">
-                    @endif
-                    @if (!empty($selectedBrand))
-                        <input type="hidden" name="brand_id" value="{{ $selectedBrand }}">
-                    @endif
-                    @if (!empty($filters['price_min']))
-                        <input type="hidden" name="price_min" value="{{ $filters['price_min'] }}">
-                    @endif
-                    @if (!empty($filters['price_max']))
-                        <input type="hidden" name="price_max" value="{{ $filters['price_max'] }}">
-                    @endif
-                    <label for="dd-sort">Sắp xếp:</label>
-                    <select id="dd-sort" name="sort" onchange="this.form.submit()">
-                        @foreach ($sortLabels as $sortKey => $sortLabel)
-                            <option value="{{ $sortKey }}" @selected($selectedSort === $sortKey)>{{ $sortLabel }}</option>
-                        @endforeach
-                    </select>
-                </form>
-            </div>
-
-            @if ($search_product->isEmpty())
-                @include('partials.storefront.empty-state', [
-                    'title' => 'Không tìm thấy sản phẩm phù hợp',
-                    'message' => 'Thử đổi danh mục, thương hiệu hoặc khoảng giá để xem thêm sản phẩm.',
-                    'icon' => 'fa fa-search',
-                    'class' => 'shopw-search-empty',
-                    'actionText' => 'Xóa bộ lọc',
-                    'actionUrl' => $searchClearUrl,
-                ])
-            @else
-                <div class="dd-product-grid">
-                    @foreach ($search_product as $product)
+            @if ($subcategoryChips->isNotEmpty())
+                <div class="catalog-subcat-rail" role="tablist">
+                    <a href="{{ $searchClearUrl }}"
+                       class="catalog-subcat-card {{ ! $selectedCategory ? 'is-active' : '' }}">
+                        <span class="catalog-subcat-icon"><i class="fa fa-th-large"></i></span>
+                        <span class="catalog-subcat-copy">
+                            <strong>Tất cả {{ $catalogTitle }}</strong>
+                            <small>{{ number_format($productCount) }}</small>
+                        </span>
+                    </a>
+                    @foreach ($subcategoryChips as $sub)
                         @php
-                            $productId = $product->product_id;
-                            $productName = $storefrontLabel::neutralizeSource($product->product_name);
-                            $productUrl = url('chi-tiet/' . $product->product_slug);
-                            $imagePath = $assetUrl::product($product->product_image);
-                            $finalPrice = (float) ($product->final_price ?? $product->product_price ?? 0);
-                            $originalPrice = (float) ($product->price ?? $product->product_price ?? $finalPrice);
-                            $displayCode = $product->sku ?: '#' . str_pad((string) $productId, 6, '0', STR_PAD_LEFT);
-                            $brandLabel = $storefrontLabel::neutralizeSource(optional($product->brand)->brand_name ?? ($product->brand_name ?? ''));
+                            $subUrl = url('/san-pham?category_id=' . $sub->category_id);
+                            $subLabel = $storefrontLabel::category($sub->category_name, $sub->slug_category_product ?? null);
+                            $subCount = $sub->product_count ?? $sub->products_count ?? null;
+                            $isActive = (string) $selectedCategory === (string) $sub->category_id;
                         @endphp
-                        <article class="dd-product-card">
-                            <form class="shopw-product-form">
-                                @csrf
-                                <input type="hidden" value="{{ $productId }}" class="cart_product_id_{{ $productId }}">
-                                <input type="hidden" id="wishlist_productname{{ $productId }}" value="{{ $productName }}"
-                                    class="cart_product_name_{{ $productId }}">
-                                <input type="hidden" value="{{ $imagePath }}" class="cart_product_image_{{ $productId }}">
-                                <input type="hidden" value="{{ $product->product_quantity }}" class="cart_product_quantity_{{ $productId }}">
-                                <input type="hidden" id="wishlist_productprice{{ $productId }}" value="{{ number_format($finalPrice, 0, ',', '.') }}đ">
-                                <input type="hidden" value="{{ $finalPrice }}" class="cart_product_price_{{ $productId }}">
-                                <input type="hidden" value="1" class="cart_product_qty_{{ $productId }}">
-                                <a id="wishlist_producturl{{ $productId }}" href="{{ $productUrl }}" class="hidden" aria-hidden="true"></a>
-
-                                {{-- Product Image --}}
-                                <a href="{{ $productUrl }}" class="dd-product-media">
-                                    <img id="wishlist_productimage{{ $productId }}" src="{{ $imagePath }}" alt="{{ $productName }}">
-                                </a>
-
-                                {{-- Product Info --}}
-                                <div class="dd-product-info">
-                                    <span class="dd-product-code">{{ $displayCode }}</span>
-                                    <h3 class="dd-product-name">
-                                        <a href="{{ $productUrl }}">{{ $productName }}</a>
-                                    </h3>
-                                    
-                                    {{-- Price Section --}}
-                                    <div class="dd-product-price-section">
-                                        @if ($originalPrice > $finalPrice)
-                                            <span class="dd-product-price-original">{{ number_format($originalPrice, 0, ',', '.') }}đ</span>
-                                        @endif
-                                        <strong class="dd-product-price-current">{{ number_format($finalPrice, 0, ',', '.') }}đ</strong>
-                                    </div>
-                                </div>
-
-                                {{-- Action Buttons --}}
-                                <div class="dd-product-actions">
-                                    <a href="{{ $productUrl }}" class="dd-btn-detail">Chi tiết</a>
-                                    <button type="button" class="dd-btn-cart" data-id_product="{{ $productId }}" onclick="Addtocart({{ $productId }});">Thêm giỏ</button>
-                                </div>
-                            </form>
-                        </article>
+                        <a href="{{ $subUrl }}" class="catalog-subcat-card {{ $isActive ? 'is-active' : '' }}">
+                            <span class="catalog-subcat-icon"><i class="fa fa-laptop"></i></span>
+                            <span class="catalog-subcat-copy">
+                                <strong>{{ $subLabel }}</strong>
+                                @if ($subCount !== null)
+                                    <small>{{ number_format($subCount) }}</small>
+                                @endif
+                            </span>
+                        </a>
                     @endforeach
+                    <button type="button" class="catalog-subcat-arrow" aria-label="Xem thêm danh mục">
+                        <i class="fa fa-angle-right"></i>
+                    </button>
                 </div>
-
-                @if (method_exists($search_product, 'links'))
-                    <div class="dd-catalog-pagination">
-                        {{ $search_product->links() }}
-                    </div>
-                @endif
             @endif
-        </main>
-    </div>
-</div>
+
+            <a href="#" class="catalog-promo-banner" aria-label="Trả góp 0% và bảo hành chính hãng">
+                <div class="catalog-promo-copy">
+                    <h2>TRẢ GÓP 0% – DỄ DÀNG SỞ HỮU</h2>
+                    <p>Hỗ trợ trả góp qua thẻ tín dụng &amp; CMND/CCCD</p>
+                    <span class="catalog-promo-cta">Xem ngay</span>
+                </div>
+                <div class="catalog-promo-art" aria-hidden="true">
+                    <span class="catalog-promo-zero">0%</span>
+                    <span class="catalog-promo-shield">
+                        <i class="fa fa-shield"></i>
+                        <span>BẢO HÀNH<br>CHÍNH HÃNG</span>
+                    </span>
+                </div>
+            </a>
+
+            <div class="catalog-shell">
+                <aside class="catalog-sidebar" aria-label="Bộ lọc sản phẩm">
+                    <form action="{{ $searchFormAction }}" method="GET" class="catalog-filter-form">
+                        @if ($keyword !== '')
+                            <input type="hidden" name="keywords_submit" value="{{ $keyword }}">
+                        @endif
+                        @if (! empty($filters['product_code']))
+                            <input type="hidden" name="product_code" value="{{ $filters['product_code'] }}">
+                        @endif
+                        @if (! empty($filters['highlight_product']))
+                            <input type="hidden" name="highlight_product" value="{{ $filters['highlight_product'] }}">
+                        @endif
+
+                        <section class="catalog-filter-block">
+                            <h3>Danh mục</h3>
+                            <ul class="catalog-filter-list">
+                                <li>
+                                    <label>
+                                        <input type="radio" name="category_id" value="" @checked(empty($selectedCategory))>
+                                        <span class="catalog-filter-check"></span>
+                                        <span class="catalog-filter-text">Tất cả {{ $catalogTitle }}</span>
+                                        <small class="catalog-filter-count">{{ number_format($productCount) }}</small>
+                                    </label>
+                                </li>
+                                @foreach ($rootCategories->take(8) as $cat)
+                                    @php
+                                        $catLabel = $storefrontLabel::category($cat->category_name, $cat->slug_category_product ?? null);
+                                        $catCount = $cat->product_count ?? $cat->products_count ?? null;
+                                    @endphp
+                                    <li>
+                                        <label>
+                                            <input type="radio" name="category_id" value="{{ $cat->category_id }}"
+                                                @checked((string) $selectedCategory === (string) $cat->category_id)>
+                                            <span class="catalog-filter-check"></span>
+                                            <span class="catalog-filter-text">{{ $catLabel }}</span>
+                                            @if ($catCount !== null)
+                                                <small class="catalog-filter-count">{{ number_format($catCount) }}</small>
+                                            @endif
+                                        </label>
+                                    </li>
+                                @endforeach
+                            </ul>
+                            @if ($rootCategories->count() > 8)
+                                <button type="button" class="catalog-filter-more">Xem thêm</button>
+                            @endif
+                        </section>
+
+                        <section class="catalog-filter-block">
+                            <h3>Khoảng giá</h3>
+                            <div class="catalog-price-meta">
+                                <span>{{ $formatMoney($filters['price_min'] ?? 0) }}</span>
+                                <span>{{ $filters['price_max'] ? $formatMoney($filters['price_max']) : '50.000.000đ+' }}</span>
+                            </div>
+                            <div class="catalog-price-rail">
+                                <span class="catalog-price-line"></span>
+                                <span class="catalog-price-handle catalog-price-handle--start"></span>
+                                <span class="catalog-price-handle catalog-price-handle--end"></span>
+                            </div>
+                            <div class="catalog-price-scale">
+                                <span>0đ</span>
+                                <span>25tr</span>
+                                <span>50tr+</span>
+                            </div>
+                            <div class="catalog-price-buckets">
+                                @foreach ($catalogPriceBuckets as $bucket)
+                                    @php
+                                        $bucketUrl = url('/san-pham?price_min=' . $bucket['min'] . ($bucket['max'] !== null ? '&price_max=' . $bucket['max'] : '') . ($selectedCategory ? '&category_id=' . $selectedCategory : ''));
+                                        $isActiveBucket = (string) ($filters['price_min'] ?? '') === (string) $bucket['min']
+                                            && (string) ($filters['price_max'] ?? '') === (string) ($bucket['max'] ?? '');
+                                    @endphp
+                                    <a href="{{ $bucketUrl }}" class="catalog-price-bucket {{ $isActiveBucket ? 'is-active' : '' }}">{{ $bucket['label'] }}</a>
+                                @endforeach
+                            </div>
+                            <input type="hidden" name="price_min" value="{{ $filters['price_min'] ?? '' }}">
+                            <input type="hidden" name="price_max" value="{{ $filters['price_max'] ?? '' }}">
+                        </section>
+
+                        <section class="catalog-filter-block">
+                            <h3>Thương hiệu</h3>
+                            <ul class="catalog-filter-list">
+                                @foreach ($brandChunks as $brandItem)
+                                    @php
+                                        $brandLabel = $storefrontLabel::neutralizeSource($brandItem->brand_name);
+                                        $brandCount = $brandItem->product_count ?? $brandItem->products_count ?? null;
+                                    @endphp
+                                    <li>
+                                        <label>
+                                            <input type="radio" name="brand_id" value="{{ $brandItem->brand_id }}"
+                                                @checked((string) $selectedBrand === (string) $brandItem->brand_id)>
+                                            <span class="catalog-filter-check catalog-filter-check--square"></span>
+                                            <span class="catalog-filter-text">{{ $brandLabel }}</span>
+                                            @if ($brandCount !== null)
+                                                <small class="catalog-filter-count">({{ number_format($brandCount) }})</small>
+                                            @endif
+                                        </label>
+                                    </li>
+                                @endforeach
+                            </ul>
+                            @if (collect($search_brands ?? [])->count() > 7)
+                                <button type="button" class="catalog-filter-more">Xem thêm</button>
+                            @endif
+                        </section>
+
+                        <section class="catalog-filter-block">
+                            <h3>Nhu cầu sử dụng</h3>
+                            <ul class="catalog-filter-list">
+                                @foreach ($brandUsageOptions as $usageKey => $usageLabel)
+                                    <li>
+                                        <label>
+                                            <input type="checkbox" name="usage[]" value="{{ $usageKey }}" disabled>
+                                            <span class="catalog-filter-check catalog-filter-check--square"></span>
+                                            <span class="catalog-filter-text">{{ $usageLabel }}</span>
+                                        </label>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </section>
+
+                        <section class="catalog-filter-block">
+                            <h3>Tình trạng hàng</h3>
+                            <ul class="catalog-filter-list">
+                                @foreach ($stockOptions as $stockKey => $stockLabel)
+                                    <li>
+                                        <label>
+                                            <input type="radio" name="stock_status" value="{{ $stockKey }}" @checked($stockKey === '')>
+                                            <span class="catalog-filter-check"></span>
+                                            <span class="catalog-filter-text">{{ $stockLabel }}</span>
+                                        </label>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </section>
+
+                        <section class="catalog-filter-block">
+                            <h3>Sắp xếp theo</h3>
+                            <ul class="catalog-filter-list">
+                                @foreach ($sortLabels as $sortKey => $sortLabel)
+                                    <li>
+                                        <label>
+                                            <input type="radio" name="sort" value="{{ $sortKey }}" @checked($selectedSort === $sortKey)>
+                                            <span class="catalog-filter-check"></span>
+                                            <span class="catalog-filter-text">{{ $sortLabel }}</span>
+                                        </label>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </section>
+
+                        <div class="catalog-filter-actions">
+                            <button type="submit" class="catalog-filter-apply">Áp dụng bộ lọc</button>
+                            <a href="{{ $searchClearUrl }}" class="catalog-filter-reset">Xóa tất cả bộ lọc</a>
+                        </div>
+                    </form>
+                </aside>
+
+                <section class="catalog-results" aria-label="Danh sách sản phẩm">
+                    <div class="catalog-toolbar">
+                        <div class="catalog-toolbar-info">
+                            Hiển thị <strong>{{ $rangeFrom }}-{{ $rangeTo }}</strong> trong <strong>{{ number_format($productCount) }}</strong> sản phẩm
+                        </div>
+                        <div class="catalog-toolbar-controls">
+                            <div class="catalog-view-toggle" role="group" aria-label="Chế độ xem">
+                                <button type="button" class="catalog-view-btn is-active" data-view="grid" aria-label="Xem dạng lưới">
+                                    <i class="fa fa-th-large"></i>
+                                </button>
+                                <button type="button" class="catalog-view-btn" data-view="list" aria-label="Xem dạng danh sách">
+                                    <i class="fa fa-list"></i>
+                                </button>
+                            </div>
+
+                            <form action="{{ $searchFormAction }}" method="GET" class="catalog-sort-form">
+                                @if ($keyword !== '')
+                                    <input type="hidden" name="keywords_submit" value="{{ $keyword }}">
+                                @endif
+                                @if (! empty($selectedCategory))
+                                    <input type="hidden" name="category_id" value="{{ $selectedCategory }}">
+                                @endif
+                                @if (! empty($selectedBrand))
+                                    <input type="hidden" name="brand_id" value="{{ $selectedBrand }}">
+                                @endif
+                                @if (! empty($filters['price_min']))
+                                    <input type="hidden" name="price_min" value="{{ $filters['price_min'] }}">
+                                @endif
+                                @if (! empty($filters['price_max']))
+                                    <input type="hidden" name="price_max" value="{{ $filters['price_max'] }}">
+                                @endif
+                                <label for="catalog-sort-select">Sắp xếp:</label>
+                                <select id="catalog-sort-select" name="sort" onchange="this.form.submit()">
+                                    @foreach ($sortLabels as $sortKey => $sortLabel)
+                                        <option value="{{ $sortKey }}" @selected($selectedSort === $sortKey)>{{ $sortLabel }}</option>
+                                    @endforeach
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+
+                    @if ($search_product->isEmpty())
+                        @include('partials.storefront.empty-state', [
+                            'title' => 'Không tìm thấy sản phẩm phù hợp',
+                            'message' => 'Thử đổi danh mục, thương hiệu hoặc khoảng giá để xem thêm sản phẩm.',
+                            'icon' => 'fa fa-search',
+                            'class' => 'shopw-search-empty',
+                            'actionText' => 'Xóa bộ lọc',
+                            'actionUrl' => $searchClearUrl,
+                        ])
+                    @else
+                        <div class="catalog-grid" data-catalog-view="grid">
+                            @foreach ($search_product as $product)
+                                <div class="catalog-grid-item">
+                                    @include('partials.home.product-card', [
+                                        'product' => $cardForProduct($product),
+                                    ])
+                                </div>
+                            @endforeach
+                        </div>
+
+                        @if (method_exists($search_product, 'links'))
+                            <nav class="catalog-pagination" aria-label="Phân trang">
+                                {{ $search_product->onEachSide(1)->links() }}
+                            </nav>
+                        @endif
+                    @endif
+                </section>
+            </div>
+
+            @if (! empty($recommended_products) && count($recommended_products) > 0)
+                <section class="catalog-recent-section" aria-label="Sản phẩm đã xem gần đây">
+                    <div class="tech-section-head">
+                        <div>
+                            <h2>Sản phẩm đã xem gần đây</h2>
+                        </div>
+                        <a href="{{ url('/san-pham') }}" class="tech-section-link">Xem tất cả <i class="fa fa-angle-right"></i></a>
+                    </div>
+
+                    <div class="catalog-recent-viewport" data-tech-sale-viewport>
+                        <button type="button" class="catalog-recent-nav catalog-recent-prev" data-tech-sale-prev aria-label="Trước">
+                            <i class="fa fa-angle-left"></i>
+                        </button>
+                        <div class="catalog-recent-track" data-tech-sale-track>
+                            @foreach ($recommended_products as $recent)
+                                <div class="catalog-recent-item">
+                                    @include('partials.home.product-card', [
+                                        'product' => $cardForProduct($recent),
+                                        'compact' => true,
+                                    ])
+                                </div>
+                            @endforeach
+                        </div>
+                        <button type="button" class="catalog-recent-nav catalog-recent-next" data-tech-sale-next aria-label="Sau">
+                            <i class="fa fa-angle-right"></i>
+                        </button>
+                    </div>
+                </section>
+            @endif
+        </div>
+
+        @include('partials.home.partners', ['brandItems' => $brandItems])
+    </main>
+
+    <script>
+        (function () {
+            const grid = document.querySelector('[data-catalog-view]');
+            const buttons = document.querySelectorAll('.catalog-view-btn');
+            buttons.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    buttons.forEach((b) => b.classList.remove('is-active'));
+                    btn.classList.add('is-active');
+                    if (grid) {
+                        grid.setAttribute('data-catalog-view', btn.getAttribute('data-view'));
+                    }
+                });
+            });
+        })();
+    </script>
 @endsection

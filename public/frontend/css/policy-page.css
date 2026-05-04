@@ -1,0 +1,144 @@
+/* ============================================================
+   Policy Page Shared Styles (.pp-*)
+   Used by: đổi trả, bảo mật, thanh toán, vận chuyển, điều khoản
+   ============================================================ */
+
+/* Container */
+.pp-wrap{max-width:1240px;margin:0 auto;padding:0 16px}
+.pp-breadcrumb{padding:14px 0;font-size:13px;color:#64748b}
+.pp-breadcrumb a{color:#64748b;text-decoration:none}
+.pp-breadcrumb a:hover{color:#0d9488}
+
+/* Hero */
+.pp-hero{display:flex;align-items:center;justify-content:space-between;padding:36px 48px;border-radius:16px;background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);margin-bottom:32px;position:relative;overflow:hidden}
+.pp-hero::after{content:'';position:absolute;right:-40px;top:-40px;width:300px;height:300px;border-radius:50%;background:rgba(13,148,136,.12)}
+.pp-hero-copy{max-width:560px;position:relative;z-index:1}
+.pp-hero h1{color:#fff;font-size:30px;font-weight:800;margin:0 0 12px;line-height:1.25}
+.pp-hero p{color:#94a3b8;font-size:14px;margin:0;line-height:1.65}
+.pp-hero .pp-update{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);color:#94a3b8;padding:5px 14px;border-radius:20px;font-size:11.5px;margin-top:12px}
+.pp-hero-art{position:relative;z-index:1;display:flex;align-items:center;gap:16px;flex-shrink:0}
+.pp-hero-art .pp-icon-box{width:90px;height:90px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:36px}
+.pp-hero-art .pp-icon-sm{width:60px;height:60px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px}
+
+/* Highlight cards (4-col) */
+.pp-highlights{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px}
+.pp-highlight{padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;text-align:center}
+.pp-highlight i{font-size:28px;color:#0f172a;display:block;margin-bottom:10px}
+.pp-highlight strong{font-size:13px;color:#111827;display:block;margin-bottom:6px}
+.pp-highlight p{font-size:12px;color:#64748b;margin:0;line-height:1.4}
+
+/* Numbered sections */
+.pp-section{margin-bottom:32px}
+.pp-section-title{font-size:16px;font-weight:700;color:#0f172a;margin:0 0 16px;display:flex;align-items:center;gap:8px}
+.pp-num{width:26px;height:26px;border-radius:6px;background:#0f172a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+
+/* Scope icon grid */
+.pp-scope{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.pp-scope-5{grid-template-columns:repeat(5,1fr)}
+.pp-scope-item{text-align:center;padding:16px 8px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
+.pp-scope-item i{font-size:24px;color:#0f172a;display:block;margin-bottom:6px}
+.pp-scope-item strong{font-size:11.5px;color:#111827;display:block;line-height:1.3}
+
+/* Table */
+.pp-table{width:100%;border-collapse:collapse;font-size:13px;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden}
+.pp-table th{background:#f8fafc;padding:11px 16px;text-align:left;font-weight:700;color:#0f172a;border-bottom:1px solid #e5e7eb;font-size:12px}
+.pp-table td{padding:10px 16px;border-bottom:1px solid #f1f5f9;color:#374151;font-size:12.5px}
+.pp-table tr:last-child td{border-bottom:none}
+
+/* Conditions (2 col layout) */
+.pp-conditions{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:32px}
+.pp-cond-card{padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#fff}
+.pp-cond-card ul{list-style:none;padding:0;margin:0}
+.pp-cond-card li{padding:5px 0;font-size:12.5px;color:#374151;display:flex;align-items:flex-start;gap:8px;line-height:1.45}
+.pp-cond-card li i{margin-top:3px;flex-shrink:0;font-size:11px}
+.pp-cond-card li i.fa-check,.pp-cond-card li i.fa-check-circle{color:#0d9488}
+.pp-cond-card li i.fa-times,.pp-cond-card li i.fa-times-circle{color:#dc2626}
+.pp-cond-card li i.fa-exclamation-triangle{color:#f59e0b}
+
+/* Bullet list card */
+.pp-bullet-card{padding:20px;border:1px solid #e5e7eb;border-radius:12px;background:#fff}
+.pp-bullet-card ul{list-style:none;padding:0;margin:0}
+.pp-bullet-card li{padding:5px 0;font-size:12.5px;color:#374151;display:flex;align-items:flex-start;gap:8px;line-height:1.45}
+.pp-bullet-card li i{color:#0d9488;margin-top:3px;flex-shrink:0;font-size:11px}
+
+/* Process steps (4-col) */
+.pp-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.pp-step{padding:20px 16px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;position:relative}
+.pp-step-num{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#0f172a,#1e3a5f);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;margin-bottom:10px}
+.pp-step strong{font-size:13px;color:#111827;display:block;margin-bottom:4px}
+.pp-step p{font-size:11.5px;color:#64748b;margin:0;line-height:1.4}
+.pp-step-arrow{position:absolute;right:-14px;top:50%;transform:translateY(-50%);color:#cbd5e1;font-size:18px;z-index:2}
+
+/* Info cards (4-col) */
+.pp-info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.pp-info-card{padding:18px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;text-align:center}
+.pp-info-card i{font-size:24px;color:#0d9488;display:block;margin-bottom:8px}
+.pp-info-card strong{font-size:13px;color:#111827;display:block;margin-bottom:4px}
+.pp-info-card span{font-size:11.5px;color:#64748b;display:block;line-height:1.4}
+
+/* Info icon grid (for data collection etc) */
+.pp-icon-list{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.pp-icon-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px;border:1px solid #e5e7eb;border-radius:10px;background:#fff;text-align:center}
+.pp-icon-item i{font-size:22px;color:#0f172a}
+.pp-icon-item span{font-size:11.5px;color:#374151}
+
+/* Security measures (4-col) */
+.pp-measures{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.pp-measure{padding:16px;border:1px solid #e5e7eb;border-radius:12px;background:#fff}
+.pp-measure i{font-size:20px;color:#0d9488;display:block;margin-bottom:8px}
+.pp-measure strong{font-size:12.5px;color:#111827;display:block;margin-bottom:4px}
+.pp-measure span{font-size:11.5px;color:#64748b;line-height:1.4}
+
+/* FAQ (link list, 2-col) */
+.pp-faq-list{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:8px}
+.pp-faq-item{border-bottom:1px solid #f1f5f9}
+.pp-faq-item a{display:flex;align-items:center;gap:8px;padding:11px 16px;color:#374151;text-decoration:none;font-size:12.5px;transition:color .15s}
+.pp-faq-item a:hover{color:#0d9488;background:#f8fffe}
+.pp-faq-item a i{color:#0d9488;font-size:9px;flex-shrink:0}
+
+/* CTA banner */
+.pp-cta{background:linear-gradient(135deg,#0f172a,#164e63);border-radius:14px;padding:28px 36px;text-align:center;margin-bottom:36px;color:#fff}
+.pp-cta h3{font-size:18px;font-weight:700;margin:0 0 6px}
+.pp-cta p{color:#94a3b8;font-size:13px;margin:0 0 16px}
+.pp-cta-buttons{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+.pp-cta-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;border:1px solid rgba(255,255,255,.2);color:#fff;transition:all .2s;background:transparent}
+.pp-cta-btn.primary{background:#0d9488;border-color:#0d9488}
+.pp-cta-btn:hover{opacity:.88;color:#fff}
+.pp-cta-btn small{font-size:10.5px;font-weight:400;opacity:.8}
+
+/* Policy strip (5-col) */
+.pp-policies{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:36px}
+.pp-pol{display:flex;align-items:center;gap:10px;padding:14px;border:1px solid #e5e7eb;border-radius:10px;background:#fff}
+.pp-pol i{font-size:20px;color:#0d9488;flex-shrink:0}
+.pp-pol strong{font-size:12px;color:#111827;display:block}
+.pp-pol span{font-size:11px;color:#64748b}
+
+/* 2-col & 3-col section grids */
+.pp-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.pp-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+
+/* Terms of service numbered grid */
+.pp-terms-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:32px}
+.pp-terms-card{padding:18px;border:1px solid #e5e7eb;border-radius:12px;background:#fff}
+.pp-terms-card h4{font-size:13px;font-weight:700;color:#0f172a;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.pp-terms-card h4 .pp-num{width:24px;height:24px;font-size:11px}
+.pp-terms-card ul{list-style:none;padding:0;margin:0}
+.pp-terms-card li{padding:4px 0;font-size:12px;color:#374151;display:flex;align-items:flex-start;gap:6px;line-height:1.4}
+.pp-terms-card li i{color:#0d9488;margin-top:3px;flex-shrink:0;font-size:10px}
+
+/* Responsive */
+@media(max-width:900px){
+.pp-hero{flex-direction:column;padding:24px}.pp-hero-art{display:none}
+.pp-highlights,.pp-measures,.pp-info-grid,.pp-steps{grid-template-columns:repeat(2,1fr)}
+.pp-scope,.pp-icon-list{grid-template-columns:repeat(3,1fr)}
+.pp-scope-5{grid-template-columns:repeat(3,1fr)}
+.pp-conditions,.pp-grid-2,.pp-grid-3,.pp-faq-list{grid-template-columns:1fr}
+.pp-terms-grid{grid-template-columns:1fr 1fr}
+.pp-policies{grid-template-columns:repeat(2,1fr)}
+.pp-cta-buttons{flex-direction:column;align-items:center}
+}
+@media(max-width:600px){
+.pp-highlights,.pp-measures,.pp-info-grid,.pp-steps,.pp-policies{grid-template-columns:1fr}
+.pp-scope,.pp-scope-5,.pp-icon-list{grid-template-columns:repeat(2,1fr)}
+.pp-terms-grid{grid-template-columns:1fr}
+}

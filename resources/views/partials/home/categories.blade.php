@@ -7,7 +7,6 @@
         ['name' => 'Chuột', 'icon' => 'fa-mouse-pointer', 'query' => 'chuột'],
         ['name' => 'Tai nghe', 'icon' => 'fa-headphones', 'query' => 'tai nghe'],
         ['name' => 'Ổ cứng', 'icon' => 'fa-hdd-o', 'query' => 'ổ cứng'],
-        ['name' => 'Iphone', 'icon' => 'fa-mobile', 'query' => 'iphone'],
         ['name' => 'Phụ kiện khác', 'icon' => 'fa-cube', 'query' => 'phụ kiện'],
     ];
 @endphp

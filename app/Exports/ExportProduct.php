@@ -2,7 +2,7 @@
 
 namespace App\Exports;
 
-use App\Models\Product;
+use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 
 class ExportProduct
 {

@@ -148,10 +148,10 @@ class CustomerCartService
 
     protected function recalculateCart(Cart $cart): void
     {
-        $cart->loadMissing('items');
+        $items = $cart->items()->get();
 
-        $subtotal = $cart->items->sum(fn (CartItem $item) => (float) $item->price * (int) $item->quantity);
-        $itemsCount = $cart->items->sum('quantity');
+        $subtotal = $items->sum(fn (CartItem $item) => (float) $item->price * (int) $item->quantity);
+        $itemsCount = $items->sum('quantity');
         $discount = (float) $cart->discount_amount;
         $shipping = (float) $cart->shipping_fee;
         $total = max(0, $subtotal - $discount + $shipping);
@@ -160,6 +160,8 @@ class CustomerCartService
         $cart->items_count = $itemsCount;
         $cart->total = $total;
         $cart->save();
+        $cart->unsetRelation('items');
+        $cart->refresh();
     }
 
     protected function loadCart(Cart $cart): Cart

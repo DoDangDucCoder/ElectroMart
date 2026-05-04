@@ -2,29 +2,36 @@
 
 namespace App\Http\Controllers;
 
+use App\Application\Catalog\Services\BrandService;
+use App\Application\Catalog\Services\CategoryService;
+use App\Application\Catalog\Services\ProductService;
 use App\Application\Shared\MailData\CouponCampaignMailData;
 use App\Application\Shared\MailData\OrderConfirmationMailData;
 use App\Application\Shared\MailData\PasswordRecoveryMailData;
 use App\Application\Shared\Services\LegacyMailWorkflowService;
+use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use App\Http\Requests\Admin\Legacy\Mail\SendCouponCampaignRequest;
 use App\Http\Requests\Storefront\Checkout\RecoverPasswordRequest;
 use App\Http\Requests\Storefront\Checkout\ResetPasswordRequest;
 use App\Mail\LegacyCouponCampaignMail;
 use App\Mail\LegacyPasswordRecoveryMail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Models\CatePost;
-use App\Models\CategoryProductModel;
-use App\Models\Slider;
 use Illuminate\Mail\Markdown;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\Response;
 
 class MailController extends Controller
 {
+    use LegacyStorefrontContext;
+
+    public function __construct(
+        private readonly CategoryService $categoryService,
+        private readonly BrandService $brandService,
+        private readonly ProductService $productService,
+    ) {
+    }
+
     public function preview(Request $request)
     {
         $previews = $this->mailPreviewDefinitions();
@@ -87,7 +94,7 @@ class MailController extends Controller
         );
 
         if (! $result['ok']) {
-            return redirect('quen-mat-khau')->with('error', 'Vui lòng nhập lại email vì link đã quá hạn');
+            return redirect('quen-mat-khau')->with('error', $result['message']);
         }
 
         return redirect('dang-nhap')->with('message', $result['message']);
@@ -104,6 +111,15 @@ class MailController extends Controller
             'token.min' => 'Mã xác thực đặt lại mật khẩu không hợp lệ.',
         ]);
 
+        $tokenValidation = app(LegacyMailWorkflowService::class)->validatePasswordResetToken(
+            (string) $validated['email'],
+            (string) $validated['token']
+        );
+
+        if (! $tokenValidation['ok']) {
+            return redirect('quen-mat-khau')->with('error', $tokenValidation['message']);
+        }
+
         return view('pages.checkout.new_pass', array_merge(
             $this->passwordPageContext($request, 'Quên mật khẩu'),
             [
@@ -114,34 +130,20 @@ class MailController extends Controller
     }
     public function quen_mat_khau(Request $request)
     {
-        return view('pages.checkout.forget_pass', $this->passwordPageContext($request, 'Quên mật khẩu'));
+        return view('pages.auth.forgot-password', $this->passwordPageContext($request, 'Quên mật khẩu'));
     }
 
     protected function passwordPageContext(Request $request, string $title): array
     {
-        $categoryPost = Schema::hasTable('tbl_category_post')
-            ? CatePost::orderBy('cate_post_id', 'DESC')->get()
-            : collect();
-
-        $slider = Schema::hasTable('tbl_slider')
-            ? Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get()
-            : collect();
-
-        $categories = Schema::hasTable('tbl_category_product')
-            ? DB::table('tbl_category_product')->where('category_status', '0')->orderby('category_parent', 'desc')->orderby('category_order', 'ASC')->get()
-            : collect();
-
-        $brands = Schema::hasTable('tbl_brand')
-            ? DB::table('tbl_brand')->where('brand_status', '0')->orderby('brand_id', 'desc')->get()
-            : collect();
-
-        $allProducts = Schema::hasTable('tbl_product')
-            ? DB::table('tbl_product')->where('product_status', '0')->orderby(DB::raw('RAND()'))->paginate(6)
-            : new LengthAwarePaginator([], 0, 6, 1, ['path' => $request->url()]);
-
-        $categoryTabs = Schema::hasTable('tbl_category_product')
-            ? CategoryProductModel::where('category_parent', '<>', 0)->orderBy('category_order', 'ASC')->get()
-            : collect();
+        $categoryPost = $this->legacyCategoryPosts();
+        $slider = $this->legacyActiveSliders();
+        $categories = $this->categoryService->listAll(['is_active' => true]);
+        $brands = $this->brandService->listAll(['is_active' => true]);
+        $allProducts = $this->productService->getRandomProducts(6);
+        $categoryTabs = $categories
+            ->filter(fn ($category) => ! empty($category->parent_id))
+            ->sortBy('display_order')
+            ->values();
 
         return [
             'category' => $categories,

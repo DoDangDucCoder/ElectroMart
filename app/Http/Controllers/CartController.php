@@ -8,6 +8,7 @@ use App\Application\Checkout\Services\CartService;
 use App\Application\Checkout\Services\CouponService;
 use App\Application\Checkout\Services\ShippingService;
 use App\Application\Cms\Services\BlogCategoryService;
+use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use App\Http\Requests\Storefront\Cart\AddCartAjaxRequest;
 use App\Http\Requests\Storefront\Cart\ApplyCouponRequest;
 use App\Http\Requests\Storefront\Cart\RemoveCartItemRequest;
@@ -15,18 +16,18 @@ use App\Http\Requests\Storefront\Cart\SaveCartRequest;
 use App\Http\Requests\Storefront\Cart\UpdateCartQuantityRequest;
 use App\Http\Requests\Storefront\Cart\UpdateCartRequest;
 use App\Http\Requests\Storefront\Cart\UpdateQuickCartRequest;
-use App\Models\Slider;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Schema;
 use RuntimeException;
 
 class CartController extends Controller
 {
+    use LegacyStorefrontContext;
+
     public function __construct(
         private readonly CartService $cartService,
         private readonly CouponService $couponService,
@@ -249,15 +250,6 @@ class CartController extends Controller
             'category' => $this->categoryService->listAll(['is_active' => true]),
             'brand' => $this->brandService->listAll(['is_active' => true]),
         ];
-    }
-
-    protected function legacyActiveSliders()
-    {
-        if (! Schema::hasTable('tbl_slider')) {
-            return collect();
-        }
-
-        return Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
     }
 
     protected function renderCartPartial(string $view, array $data = []): Response

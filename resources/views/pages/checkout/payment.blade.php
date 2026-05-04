@@ -1,4 +1,4 @@
-@extends('layout')
+@extends('layouts.home-tech')
 @section('content')
     <section id="cart_items">
         <div class="container">

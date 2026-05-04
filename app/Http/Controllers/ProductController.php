@@ -15,7 +15,7 @@ use App\Http\Requests\Storefront\Product\SendCommentRequest;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
-use App\Models\ProductAttribute;
+use App\Infrastructure\Persistence\Eloquent\Catalog\ProductVariant;
 use App\Support\AssetUrl;
 use App\Support\StorefrontLabel;
 use Illuminate\Http\JsonResponse;
@@ -237,7 +237,7 @@ class ProductController extends Controller
 
         Session::put('message', 'Không kích hoạt sản phẩm thành công');
 
-        return Redirect::to('all-product');
+        return Redirect::to('/admin/products-management');
     }
 
     public function active_product(int $product_id)
@@ -252,7 +252,7 @@ class ProductController extends Controller
 
         Session::put('message', 'Kích hoạt sản phẩm thành công');
 
-        return Redirect::to('all-product');
+        return Redirect::to('/admin/products-management');
     }
 
     public function edit_product(int $product_id)
@@ -295,7 +295,7 @@ class ProductController extends Controller
 
         Session::put('message', 'Cập nhật sản phẩm thành công');
 
-        return Redirect::to('all-product');
+        return Redirect::to('/admin/products-management');
     }
 
     public function delete_document(Request $request): JsonResponse
@@ -325,7 +325,7 @@ class ProductController extends Controller
 
         Session::put('message', 'Xóa sản phẩm thành công');
 
-        return Redirect::to('all-product');
+        return Redirect::to('/admin/products-management');
     }
 
     protected function validateProductRequest(Request $request, ?int $productId = null): array
@@ -496,7 +496,7 @@ class ProductController extends Controller
     {
         Session::put('error', $message);
 
-        return Redirect::to('all-product');
+        return Redirect::to('/admin/products-management');
     }
 
     //End Admin Page
@@ -670,10 +670,28 @@ class ProductController extends Controller
 
     protected function legacyProductAttributes(int $productId)
     {
-        if (! Schema::hasTable('tbl_product_attribute')) {
+        $table = (new ProductVariant())->getTable();
+
+        if (! Schema::hasTable($table)) {
             return collect();
         }
 
-        return ProductAttribute::where('product_id', $productId)->get();
+        return ProductVariant::query()
+            ->where('product_id', $productId)
+            ->where('is_active', true)
+            ->orderBy('id')
+            ->get()
+            ->map(function (ProductVariant $variant) {
+                $imagePath = trim((string) $variant->image_path);
+
+                return (object) [
+                    'id' => $variant->id,
+                    'product_id' => $variant->product_id,
+                    'name' => $variant->name,
+                    'price' => (float) ($variant->sale_price ?: $variant->price),
+                    'quantity' => (int) $variant->stock_quantity,
+                    'image' => $imagePath !== '' ? basename($imagePath) : null,
+                ];
+            });
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Storefront\Checkout;
 
 use App\Http\Requests\BaseFormRequest;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 
 class SelectDeliveryHomeRequest extends BaseFormRequest
@@ -11,7 +12,7 @@ class SelectDeliveryHomeRequest extends BaseFormRequest
     {
         return [
             'action' => ['required', 'string', Rule::in(['city', 'province'])],
-            'ma_id' => ['required', 'integer', 'min:1'],
+            'ma_id' => $this->parentLocationRules(),
         ];
     }
 
@@ -50,5 +51,16 @@ class SelectDeliveryHomeRequest extends BaseFormRequest
         }
 
         return $value;
+    }
+
+    protected function parentLocationRules(): array
+    {
+        $rules = ['required', 'integer', 'min:1'];
+
+        if (Schema::hasTable('locations')) {
+            $rules[] = Rule::exists('locations', 'id');
+        }
+
+        return $rules;
     }
 }

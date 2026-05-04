@@ -2,12 +2,9 @@
 
 namespace App\Application\Order\Services;
 
-use App\Models\Order;
-use App\Models\Shipping;
+use App\Infrastructure\Persistence\Eloquent\Order\Order;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Schema;
 
 class LegacyOrderHistoryService
 {
@@ -18,18 +15,17 @@ class LegacyOrderHistoryService
 
     public function paginateCustomerOrders(int $customerId, int $perPage = 10): LengthAwarePaginator
     {
-        if (! Schema::hasTable((new Order())->getTable())) {
+        if (! $this->presentationService->modernOrderTablesReady()) {
             return $this->emptyPaginator($perPage);
         }
 
-        $orders = Order::where('customer_id', $customerId)
-            ->orderByDesc('order_id')
+        $orders = Order::with(['items', 'shipping', 'payments'])
+            ->where('customer_id', $customerId)
+            ->orderByDesc('id')
             ->paginate($perPage);
 
-        $shippingById = $this->shippingMapForOrders($orders->getCollection());
-
         $orders->setCollection(
-            $orders->getCollection()->map(fn (Order $order) => $this->mapHistoryOrder($order, $shippingById->get((int) $order->shipping_id)))
+            $orders->getCollection()->map(fn (Order $order): array => $this->mapHistoryOrder($order))
         );
 
         return $orders;
@@ -37,19 +33,21 @@ class LegacyOrderHistoryService
 
     public function buildDetailView(Order $order): array
     {
-        $package = $this->presentationService->loadOrderPackage($order->order_code);
+        $package = $this->presentationService->loadOrderPackage($order->code);
         $orderDetails = $package['details'] ?? collect();
         $customer = $package['customer'] ?? null;
         $shipping = $package['shipping'] ?? null;
-        $totals = $package['totals'] ?? $this->presentationService->calculateTotals($order->order_code, $orderDetails);
+        $totals = $package['totals'] ?? $this->presentationService->calculateTotals($order->code, $orderDetails);
 
         return [
-            'code' => $order->order_code,
-            'placed_at_label' => $order->created_at ? Carbon::parse($order->created_at)->format('d/m/Y H:i') : 'Chưa xác định',
-            'status' => $this->statusKey((int) $order->order_status),
-            'status_label' => $this->formatStatusLabel((int) $order->order_status),
+            'code' => $order->code,
+            'placed_at_label' => ($order->placed_at ?: $order->created_at)
+                ? ($order->placed_at ?: $order->created_at)->format('d/m/Y H:i')
+                : 'Chưa xác định',
+            'status' => $this->statusKey($order->status),
+            'status_label' => $this->formatStatusLabel($order->status),
             'can_cancel' => $this->canCancel($order),
-            'cancel_reason' => $order->order_destroy ?? null,
+            'cancel_reason' => data_get($order->meta, 'cancel_reason'),
             'customer' => [
                 'name' => $customer?->customer_name ?? 'Khách hàng',
                 'phone' => $customer?->customer_phone,
@@ -67,11 +65,11 @@ class LegacyOrderHistoryService
             ],
             'payment' => [
                 'provider_label' => $this->formatShippingMethodLabel($shipping?->shipping_method),
-                'status_label' => (int) $order->order_status === 3 ? 'Đã hủy' : 'Chưa xác định',
+                'status_label' => $order->status === 'cancelled' ? 'Đã hủy' : 'Chưa xác định',
                 'amount' => (float) $totals['total'],
                 'reference' => null,
             ],
-            'items' => $orderDetails->map(function ($item) {
+            'items' => $orderDetails->map(function ($item): array {
                 return [
                     'name' => $item->product_name,
                     'attributes' => $item->product_attribute ?: 'Mặc định',
@@ -83,51 +81,34 @@ class LegacyOrderHistoryService
             }),
             'totals' => $totals,
             'coupon_code' => $totals['coupon_code'] !== 'no' ? $totals['coupon_code'] : null,
-            'note' => null,
-            'source' => 'legacy',
+            'note' => $order->note,
+            'source' => $order->source,
         ];
     }
 
     public function canCancel(Order $order): bool
     {
-        return ! in_array((int) $order->order_status, [2, 3], true);
+        return ! in_array($order->status, ['completed', 'cancelled', 'refunded'], true);
     }
 
-    protected function mapHistoryOrder(Order $order, ?Shipping $shipping = null): array
+    protected function mapHistoryOrder(Order $order): array
     {
-        $totals = $this->presentationService->calculateTotals($order->order_code);
-        $createdAt = $order->created_at ? Carbon::parse($order->created_at) : null;
+        $totals = $this->presentationService->calculateTotals($order->code);
+        $createdAt = $order->placed_at ?: ($order->created_at ? Carbon::parse($order->created_at) : null);
+        $payment = $order->payments->first();
 
         return [
-            'code' => $order->order_code,
+            'code' => $order->code,
             'placed_at_label' => $createdAt ? $createdAt->format('d/m/Y H:i') : 'Chưa xác định',
-            'status' => $this->statusKey((int) $order->order_status),
-            'status_label' => $this->formatStatusLabel((int) $order->order_status),
-            'payment_label' => $this->formatShippingMethodLabel($shipping?->shipping_method),
-            'payment_status_label' => (int) $order->order_status === 3 ? 'Đã hủy' : 'Chưa xác định',
+            'status' => $this->statusKey($order->status),
+            'status_label' => $this->formatStatusLabel($order->status),
+            'payment_label' => $this->formatModernPaymentProviderLabel($payment?->provider),
+            'payment_status_label' => $this->formatModernPaymentStatusLabel($payment?->status),
             'items_count' => (int) $totals['items_count'],
             'total' => (float) $totals['total'],
             'can_cancel' => $this->canCancel($order),
-            'cancel_reason' => $order->order_destroy ?? null,
+            'cancel_reason' => data_get($order->meta, 'cancel_reason'),
         ];
-    }
-
-    protected function shippingMapForOrders(Collection $orders): Collection
-    {
-        $shippingIds = $orders->pluck('shipping_id')
-            ->filter()
-            ->map(fn ($id) => (int) $id)
-            ->unique()
-            ->values();
-
-        if (
-            $shippingIds->isEmpty() ||
-            ! Schema::hasTable((new Shipping())->getTable())
-        ) {
-            return collect();
-        }
-
-        return Shipping::whereIn('shipping_id', $shippingIds)->get()->keyBy(fn ($shipping) => (int) $shipping->shipping_id);
     }
 
     protected function emptyPaginator(int $perPage): LengthAwarePaginator
@@ -144,22 +125,25 @@ class LegacyOrderHistoryService
         );
     }
 
-    protected function statusKey(int $status): string
+    protected function statusKey(?string $status): string
     {
         return match ($status) {
-            2 => 'completed',
-            3 => 'cancelled',
+            'completed' => 'completed',
+            'cancelled', 'refunded' => 'cancelled',
             default => 'pending',
         };
     }
 
-    protected function formatStatusLabel(int $status): string
+    protected function formatStatusLabel(?string $status): string
     {
         return match ($status) {
-            1 => 'Đơn hàng mới',
-            2 => 'Đã xử lý - Đã giao hàng',
-            3 => 'Đơn hàng đã bị hủy',
-            default => 'Chưa xác định',
+            'completed' => 'Đã xử lý - Đã giao hàng',
+            'cancelled' => 'Đơn hàng đã bị hủy',
+            'refunded' => 'Đã hoàn tiền',
+            'confirmed' => 'Đã xác nhận',
+            'processing' => 'Đang xử lý',
+            'shipped' => 'Đang giao hàng',
+            default => 'Đơn hàng mới',
         };
     }
 
@@ -170,6 +154,32 @@ class LegacyOrderHistoryService
             '1' => 'Tiền mặt',
             '2' => 'Paypal',
             default => 'Chưa xác định',
+        };
+    }
+
+    protected function formatModernPaymentProviderLabel(?string $provider): string
+    {
+        return match ($provider) {
+            'cod', 'cash' => 'Thanh toán khi nhận hàng',
+            'bank_transfer' => 'Chuyển khoản ngân hàng',
+            'paypal' => 'PayPal',
+            'momo' => 'MoMo',
+            'vnpay' => 'VNPay',
+            null, '' => 'Chưa xác định',
+            default => strtoupper($provider),
+        };
+    }
+
+    protected function formatModernPaymentStatusLabel(?string $status): string
+    {
+        return match ($status) {
+            'pending' => 'Chờ thanh toán',
+            'processing' => 'Đang xử lý',
+            'succeeded', 'paid' => 'Đã thanh toán',
+            'failed' => 'Thanh toán thất bại',
+            'refunded' => 'Đã hoàn tiền',
+            null, '' => 'Chưa xác định',
+            default => ucfirst($status),
         };
     }
 }

@@ -6,19 +6,22 @@ use App\Application\Catalog\Services\BrandService;
 use App\Application\Catalog\Services\CategoryService;
 use App\Application\Cms\Services\BlogCategoryService;
 use App\Application\Shared\Services\PublicUploadService;
+use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use App\Http\Requests\Admin\Legacy\Media\StoreContactInfoRequest;
 use App\Http\Requests\Admin\Legacy\Media\StoreIconRequest;
 use App\Http\Requests\Admin\Legacy\Media\UpdateContactInfoRequest;
-use App\Models\Contact;
-use App\Models\Icons;
-use App\Models\Slider;
+use App\Http\Requests\Storefront\Contact\StoreContactMessageRequest;
+use App\Infrastructure\Persistence\Eloquent\Cms\ContactMessage;
+use App\Infrastructure\Persistence\Eloquent\Cms\SiteContact;
+use App\Infrastructure\Persistence\Eloquent\Cms\SiteLink;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
 
 class ContactController extends Controller
 {
+    use LegacyStorefrontContext;
+
     public function __construct(
         private readonly CategoryService $categoryService,
         private readonly BrandService $brandService,
@@ -29,60 +32,60 @@ class ContactController extends Controller
 
     public function add_doitac(StoreIconRequest $request)
     {
-        if (! Schema::hasTable((new Icons())->getTable())) {
+        if (! $this->siteLinksTableExists()) {
             return response()->json(['message' => 'Bảng icon chưa sẵn sàng.'], 422);
         }
 
         $data = $request->validated();
-
-        $icons = new Icons();
         $get_image = $request->file('file');
+        $imagePath = $get_image
+            ? 'uploads/icons/'.$this->publicUploadService->storeLegacyImage($get_image, 'uploads/icons')
+            : null;
 
-        //them hinh anh
-        if ($get_image) {
-            $icons->image = $this->publicUploadService->storeLegacyImage($get_image, 'uploads/icons');
-        }
-        $icons->name = $data['name'];
-        $icons->link = $data['link'] ?? null;
-        $icons->category = 'doitac';
-
-        $icons->save();
+        SiteLink::create([
+            'name' => $data['name'],
+            'category' => 'partner',
+            'url' => $data['link'] ?: '#',
+            'icon_path' => $imagePath,
+            'display_order' => (int) (SiteLink::max('display_order') ?? 0) + 1,
+            'is_active' => true,
+        ]);
 
         return response()->noContent();
     }
     public function add_nut(StoreIconRequest $request)
     {
-        if (! Schema::hasTable((new Icons())->getTable())) {
+        if (! $this->siteLinksTableExists()) {
             return response()->json(['message' => 'Bảng icon chưa sẵn sàng.'], 422);
         }
 
         $data = $request->validated();
-
-        $icons = new Icons();
         $get_image = $request->file('file');
+        $imagePath = $get_image
+            ? 'uploads/icons/'.$this->publicUploadService->storeLegacyImage($get_image, 'uploads/icons')
+            : null;
 
-        //them hinh anh
-        if ($get_image) {
-            $icons->image = $this->publicUploadService->storeLegacyImage($get_image, 'uploads/icons');
-        }
-        $icons->name = $data['name'];
-        $icons->link = $data['link'] ?? null;
-        $icons->category = 'icons';
-
-        $icons->save();
+        SiteLink::create([
+            'name' => $data['name'],
+            'category' => 'social',
+            'url' => $data['link'] ?: '#',
+            'icon_path' => $imagePath,
+            'display_order' => (int) (SiteLink::max('display_order') ?? 0) + 1,
+            'is_active' => true,
+        ]);
 
         return response()->noContent();
     }
     public function delete_icons(Request $request)
     {
-        if (! Schema::hasTable((new Icons())->getTable())) {
+        if (! $this->siteLinksTableExists()) {
             return response()->noContent();
         }
 
-        $icons = Icons::find($request->integer('id'));
+        $icons = SiteLink::find($request->integer('id'));
 
         if ($icons) {
-            $this->publicUploadService->deletePublicFile('uploads/icons/' . $icons->image);
+            $this->publicUploadService->deletePublicFile($icons->icon_path);
             $icons->delete();
         }
 
@@ -91,11 +94,16 @@ class ContactController extends Controller
 
     public function list_doitac()
     {
-        if (! Schema::hasTable((new Icons())->getTable())) {
+        if (! $this->siteLinksTableExists()) {
             return response('<div class="g-admin-empty-state">Chưa có bảng đối tác/icons trên môi trường này.</div>');
         }
 
-        $icons = Icons::where('category', 'doitac')->orderBy('id_icons', 'DESC')->get();
+        $icons = SiteLink::query()
+            ->where('category', 'partner')
+            ->orderBy('display_order')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (SiteLink $link) => $this->mapSiteLinkToLegacyIconShape($link));
 
         return response()->view('admin.information.partials.icons_table', [
             'icons' => $icons,
@@ -110,11 +118,16 @@ class ContactController extends Controller
     }
     public function list_nut()
     {
-        if (! Schema::hasTable((new Icons())->getTable())) {
+        if (! $this->siteLinksTableExists()) {
             return response('<div class="g-admin-empty-state">Chưa có bảng đối tác/icons trên môi trường này.</div>');
         }
 
-        $icons = Icons::where('category', 'icons')->orderBy('id_icons', 'DESC')->get();
+        $icons = SiteLink::query()
+            ->where('category', 'social')
+            ->orderBy('display_order')
+            ->orderByDesc('id')
+            ->get()
+            ->map(fn (SiteLink $link) => $this->mapSiteLinkToLegacyIconShape($link));
 
         return response()->view('admin.information.partials.icons_table', [
             'icons' => $icons,
@@ -129,9 +142,7 @@ class ContactController extends Controller
     }
     public function lien_he(Request $request)
     {
-        $contact = Schema::hasTable((new Contact())->getTable())
-            ? Contact::where('info_id', 1)->get()
-            : collect();
+        $contact = $this->siteContactCollection();
 
         return view('pages.lienhe.contact', [
             'category' => $this->categoryService->listAll(['is_active' => true]),
@@ -145,70 +156,139 @@ class ContactController extends Controller
             'contact' => $contact,
         ]);
     }
+
+    public function submitContact(StoreContactMessageRequest $request)
+    {
+        if (! Schema::hasTable((new ContactMessage())->getTable())) {
+            return Redirect::back()
+                ->withInput()
+                ->with('error', 'Hệ thống chưa sẵn sàng nhận liên hệ. Vui lòng thử lại sau.');
+        }
+
+        $data = $request->validated();
+
+        ContactMessage::create([
+            'name' => $data['full_name'],
+            'email' => $data['email'],
+            'phone' => $data['phone'] ?? null,
+            'subject' => $data['subject'] ?? null,
+            'message' => $data['message'],
+            'status' => 'new',
+            'ip_address' => $request->ip(),
+            'user_agent' => substr((string) $request->userAgent(), 0, 500),
+        ]);
+
+        return Redirect::back()->with('message', 'Cảm ơn bạn đã liên hệ. Chúng tôi sẽ phản hồi trong thời gian sớm nhất.');
+    }
+
     public function information()
     {
-        $contact = Schema::hasTable((new Contact())->getTable())
-            ? Contact::where('info_id', 1)->get()
-            : collect();
+        $contact = $this->siteContactCollection();
 
         return view('admin.information.add_information')->with(compact('contact'));
     }
     public function update_info(UpdateContactInfoRequest $request, $info_id)
     {
-        if (! Schema::hasTable((new Contact())->getTable())) {
+        if (! $this->siteContactsTableExists()) {
             return Redirect::to('/information')->with('message', 'Bảng thông tin website chưa sẵn sàng.');
         }
 
         $data = $request->validated();
 
-        $contact = Contact::find($info_id);
+        $contact = SiteContact::find($info_id);
         if (! $contact) {
             return Redirect::to('/information')->with('message', 'Không tìm thấy thông tin website cần cập nhật');
         }
 
-        $contact->info_contact = $data['info_contact'];
-        $contact->slogan_logo = $data['slogan_logo'] ?? null;
-        $contact->info_map = $data['info_map'] ?? null;
-        $contact->info_fanpage = $data['info_fanpage'] ?? null;
-        $get_image = $request->file('info_image');
-        if ($get_image) {
-            $this->publicUploadService->deletePublicFile('uploads/contact/' . $contact->info_logo);
-            $contact->info_logo = $this->publicUploadService->storeLegacyImage($get_image, 'uploads/contact');
-        }
+        $this->fillSiteContactFromRequest($contact, $data, $request);
 
-        $contact->save();
         return Redirect::to('/information')->with('message', 'Cập nhật thông tin website thành công');
     }
     public function save_info(StoreContactInfoRequest $request)
     {
-        if (! Schema::hasTable((new Contact())->getTable())) {
+        if (! $this->siteContactsTableExists()) {
             return Redirect::to('/information')->with('message', 'Bảng thông tin website chưa sẵn sàng.');
         }
 
         $data = $request->validated();
 
-        $contact = Contact::find(1) ?? new Contact();
-        $contact->info_id = 1;
-        $contact->info_contact = $data['info_contact'];
-        $contact->slogan_logo = $data['slogan_logo'] ?? null;
-        $contact->info_map = $data['info_map'] ?? null;
-        $contact->info_fanpage = $data['info_fanpage'] ?? null;
-        $get_image = $request->file('info_image');
-        if ($get_image) {
-            $this->publicUploadService->deletePublicFile('uploads/contact/' . $contact->info_logo);
-            $contact->info_logo = $this->publicUploadService->storeLegacyImage($get_image, 'uploads/contact');
-        }
+        $contact = SiteContact::query()->orderBy('id')->first() ?? new SiteContact();
+        $this->fillSiteContactFromRequest($contact, $data, $request);
 
-        $contact->save();
         return Redirect::to('/information')->with('message', 'Cập nhật thông tin website thành công');
     }
 
-    protected function legacyActiveSliders()
+    protected function siteLinksTableExists(): bool
     {
-        if (! Schema::hasTable('tbl_slider')) {
+        return Schema::hasTable((new SiteLink())->getTable());
+    }
+
+    protected function siteContactsTableExists(): bool
+    {
+        return Schema::hasTable((new SiteContact())->getTable());
+    }
+
+    protected function siteContactCollection()
+    {
+        if (! $this->siteContactsTableExists()) {
             return collect();
         }
 
-        return Slider::orderBy('slider_id', 'DESC')->where('slider_status', '1')->take(4)->get();
+        return SiteContact::query()
+            ->orderBy('id')
+            ->limit(1)
+            ->get()
+            ->map(fn (SiteContact $contact) => $this->mapSiteContactToLegacyShape($contact));
     }
+
+    protected function fillSiteContactFromRequest(SiteContact $contact, array $data, Request $request): void
+    {
+        $contact->company_name = config('services.storefront_brand.name', 'ShopW');
+        $contact->about = $data['info_contact'];
+        $contact->map_embed = $data['info_map'] ?? null;
+        $contact->social_links = [
+            'fanpage_embed' => $data['info_fanpage'] ?? null,
+        ];
+        $contact->meta = array_filter([
+            'slogan_logo' => $data['slogan_logo'] ?? null,
+        ], static fn ($value) => $value !== null && $value !== '');
+
+        $get_image = $request->file('info_image');
+        if ($get_image) {
+            $this->publicUploadService->deletePublicFile($contact->logo_path);
+            $contact->logo_path = 'uploads/contact/'.$this->publicUploadService->storeLegacyImage($get_image, 'uploads/contact');
+        }
+
+        $contact->save();
+    }
+
+    protected function mapSiteContactToLegacyShape(SiteContact $contact): object
+    {
+        $socialLinks = is_array($contact->social_links) ? $contact->social_links : [];
+        $meta = is_array($contact->meta) ? $contact->meta : [];
+        $logoPath = trim((string) $contact->logo_path);
+
+        return (object) [
+            'info_id' => $contact->id,
+            'info_contact' => $contact->about,
+            'info_logo' => $logoPath !== '' ? basename($logoPath) : null,
+            'slogan_logo' => $meta['slogan_logo'] ?? null,
+            'info_map' => $contact->map_embed,
+            'info_fanpage' => $socialLinks['fanpage_embed'] ?? null,
+        ];
+    }
+
+    protected function mapSiteLinkToLegacyIconShape(SiteLink $link): object
+    {
+        $iconPath = trim((string) $link->icon_path);
+
+        return (object) [
+            'id_icons' => $link->id,
+            'name' => $link->name,
+            'link' => $link->url,
+            'category' => $link->category,
+            'image' => $iconPath !== '' ? basename($iconPath) : null,
+        ];
+    }
+
 }
