@@ -1,9 +1,11 @@
+/.phpunit.result.cache
 /vendor/
 /node_modules/
-/.phpunit.result.cache
 /.env
 /.env.*
 !/.env.example
+/docs/report/
+/.claude/
 /public/build/
 /public/hot
 /public/uploads/attribute/attribute*.png
