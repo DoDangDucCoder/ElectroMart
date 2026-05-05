@@ -16436,11 +16436,12 @@ body.g-search {
   position: fixed;
   right: 18px;
   bottom: 82px;
-  z-index: 1200;
+  z-index: 2300;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 14px;
+  pointer-events: none;
 }
 
 a#scrollUp {
@@ -16472,6 +16473,8 @@ a#scrollUp i {
   background: transparent;
   box-shadow: none;
   color: #fff;
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .shopw-chatbot-toggle-main {
@@ -16621,6 +16624,8 @@ a#scrollUp i {
   .shopw-chatbot {
     right: 14px;
     bottom: 78px;
+    left: 14px;
+    align-items: stretch;
   }
 
   a#scrollUp {
@@ -16671,12 +16676,15 @@ a#scrollUp i {
 }
 
 .shopw-chatbot-panel {
-  width: min(380px, calc(100vw - 24px));
+  width: min(420px, calc(100vw - 24px));
   border: 1px solid rgba(226, 232, 240, 0.9);
   border-radius: 24px;
   background: #fff;
   box-shadow: 0 30px 80px rgba(15, 23, 42, 0.25);
   overflow: hidden;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
 .shopw-chatbot-header {
@@ -16705,6 +16713,14 @@ a#scrollUp i {
   font-weight: 800;
 }
 
+.shopw-chatbot-subtitle {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 12px;
+  font-weight: 700;
+}
+
 .shopw-chatbot-close {
   display: inline-flex;
   align-items: center;
@@ -16715,6 +16731,9 @@ a#scrollUp i {
   border-radius: 50%;
   background: #fff;
   color: #64748b;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
 }
 
 .shopw-chatbot-body {
@@ -22042,7 +22061,23 @@ a:focus,
 }
 
 .shopw-chatbot-toggle {
+    display: inline-flex !important;
+}
+
+.shopw-chatbot.is-open .shopw-chatbot-toggle {
     display: none !important;
+}
+
+@media (min-width: 992px) {
+    .g-home .shopw-chatbot-toggle {
+        display: none !important;
+    }
+}
+
+@media (max-width: 991px) {
+    .shopw-chatbot-toggle {
+        display: inline-flex !important;
+    }
 }
 
 .shopw-chatbot-toggle-main {
@@ -22059,6 +22094,11 @@ a:focus,
 .shopw-chatbot-header,
 .shopw-chatbot-form button {
     background: linear-gradient(135deg, var(--shopw-red), var(--shopw-teal)) !important;
+}
+
+.shopw-chatbot-header h3,
+.shopw-chatbot-header .shopw-chatbot-kicker {
+    color: #fff !important;
 }
 
 .shopw-support-dock-host {

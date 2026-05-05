@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="96" viewBox="0 0 240 96" role="img" aria-label="HP">
+  <rect width="240" height="96" rx="22" fill="#ffffff"/>
+  <circle cx="120" cy="48" r="30" fill="#0096d6"/>
+  <text x="120" y="59" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" fill="#ffffff">hp</text>
+</svg>

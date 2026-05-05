@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120" role="img" aria-labelledby="title">
+  <title id="title">Baseus</title>
+  <rect width="320" height="120" rx="18" fill="#f8fafc"/>
+  <text x="160" y="74" text-anchor="middle" font-family="Arial, sans-serif" font-size="46" font-weight="800" fill="#0f172a">Baseus</text>
+  <path d="M64 88h192" stroke="#14b8a6" stroke-width="6" stroke-linecap="round" opacity="0.42"/>
+</svg>

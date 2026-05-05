@@ -25,6 +25,7 @@
 
                 <div class="tech-sale-track" data-tech-sale-track aria-label="Danh sách sản phẩm khuyến mãi">
                     @foreach ($products as $product)
+                        @continue(empty($product['image']))
                         <div class="tech-sale-item">
                             @include('partials.home.product-card', [
                                 'product' => $product,

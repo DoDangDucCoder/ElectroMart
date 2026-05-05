@@ -1,13 +1,13 @@
 @php
     $featuredCategories = [
         ['name' => 'Laptop', 'icon' => 'fa-laptop', 'query' => 'laptop'],
-        ['name' => 'PC - Linh kiện', 'icon' => 'fa-server', 'query' => 'linh kiện'],
+        ['name' => 'PC - Linh kiện', 'icon' => 'fa-cogs', 'query' => 'linh kiện'],
         ['name' => 'Màn hình', 'icon' => 'fa-desktop', 'query' => 'màn hình'],
         ['name' => 'Bàn phím', 'icon' => 'fa-keyboard-o', 'query' => 'bàn phím'],
-        ['name' => 'Chuột', 'icon' => 'fa-mouse-pointer', 'query' => 'chuột'],
+        ['name' => 'Chuột', 'icon' => 'fa-location-arrow', 'query' => 'chuột'],
         ['name' => 'Tai nghe', 'icon' => 'fa-headphones', 'query' => 'tai nghe'],
         ['name' => 'Ổ cứng', 'icon' => 'fa-hdd-o', 'query' => 'ổ cứng'],
-        ['name' => 'Phụ kiện khác', 'icon' => 'fa-cube', 'query' => 'phụ kiện'],
+        ['name' => 'Phụ kiện khác', 'icon' => 'fa-puzzle-piece', 'query' => 'phụ kiện'],
     ];
 @endphp
 
@@ -17,7 +17,7 @@
             <div>
                 <span class="tech-eyebrow">Danh mục nổi bật</span>
             </div>
-            <a href="{{ url('/san-pham') }}" class="tech-section-link">Xem tất cả danh mục</a>
+            <a href="{{ url('/san-pham') }}" class="tech-section-link">Xem tất cả danh mục <i class="fa fa-angle-right" aria-hidden="true"></i></a>
         </div>
 
         <div class="tech-categories-grid">

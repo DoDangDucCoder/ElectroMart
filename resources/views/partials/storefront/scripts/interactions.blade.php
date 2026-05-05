@@ -1324,8 +1324,8 @@
 
             if (typeof $carousel.carousel === 'function') {
                 $carousel.carousel({
-                    interval: 4000,
-                    pause: false,
+                    interval: 7000,
+                    pause: 'hover',
                     wrap: true
                 });
                 $carousel.carousel('cycle');
@@ -1342,7 +1342,7 @@
                 $items.eq(index).removeClass('active');
                 index = (index + 1) % $items.length;
                 $items.eq(index).addClass('active');
-            }, 4000);
+            }, 7000);
         }
 
         $(window).on('load', function() {
@@ -2275,8 +2275,6 @@
             dragState.moved = false;
             suppressClick = false;
             setCarouselEngaged(true, 1800);
-
-            event.preventDefault();
         });
 
         $(document).on('pointermove.flashSaleCarousel', function(event) {
@@ -2342,6 +2340,7 @@
 
             event.preventDefault();
             event.stopImmediatePropagation();
+            suppressClick = false;
         });
 
         $carousel.on('mouseenter focusin', function() {
@@ -3019,6 +3018,149 @@
         const messagesContainer = widget.querySelector('[data-chatbot-messages]');
         const quickActions = widget.querySelectorAll('[data-chatbot-prompt]');
         const launchers = document.querySelectorAll('[data-chatbot-launch]');
+        let demoMessageId = 1;
+
+        const demoSetExpanded = function (isExpanded) {
+            if (toggle) {
+                toggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+            }
+
+            launchers.forEach((launcher) => {
+                launcher.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+            });
+        };
+
+        const demoScrollToBottom = function () {
+            if (messagesContainer) {
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+        };
+
+        const demoAppendMessage = function (sender, message) {
+            const cleanMessage = (message || '').trim();
+
+            if (!messagesContainer || !cleanMessage) {
+                return;
+            }
+
+            const wrapper = document.createElement('article');
+            wrapper.className = `shopw-chatbot-message shopw-chatbot-message-${sender}`;
+            wrapper.setAttribute('data-message-id', String(++demoMessageId));
+            wrapper.innerHTML = `
+                <div class="shopw-chatbot-bubble">
+                    <p>${escapeHtml(cleanMessage)}</p>
+                </div>
+            `;
+
+            messagesContainer.appendChild(wrapper);
+            demoScrollToBottom();
+        };
+
+        const demoOpenPanel = function () {
+            if (!panel) {
+                return;
+            }
+
+            panel.removeAttribute('hidden');
+            widget.classList.add('is-open');
+            demoSetExpanded(true);
+            demoScrollToBottom();
+
+            if (input) {
+                window.setTimeout(() => input.focus(), 30);
+            }
+        };
+
+        const demoClosePanel = function () {
+            if (!panel) {
+                return;
+            }
+
+            panel.setAttribute('hidden', 'hidden');
+            widget.classList.remove('is-open');
+            demoSetExpanded(false);
+        };
+
+        const demoSendMessage = function (message) {
+            const cleanMessage = (message || '').trim();
+
+            if (!cleanMessage) {
+                return;
+            }
+
+            demoAppendMessage('user', cleanMessage);
+
+            window.setTimeout(() => {
+                demoAppendMessage(
+                    'bot',
+                    'Cảm ơn bạn! Hiện đây là trợ lý demo. Vui lòng để lại nhu cầu, nhân viên sẽ hỗ trợ bạn sau.'
+                );
+            }, 240);
+        };
+
+        if (toggle) {
+            toggle.addEventListener('click', function () {
+                if (panel.hasAttribute('hidden')) {
+                    demoOpenPanel();
+                } else {
+                    demoClosePanel();
+                }
+            });
+        }
+
+        launchers.forEach((launcher) => {
+            launcher.setAttribute('role', 'button');
+            launcher.setAttribute('aria-controls', 'shopw-chatbot-panel');
+            launcher.setAttribute('aria-expanded', 'false');
+
+            launcher.addEventListener('click', function (event) {
+                event.preventDefault();
+                demoOpenPanel();
+            });
+        });
+
+        if (closeButton) {
+            closeButton.addEventListener('click', function () {
+                demoClosePanel();
+            });
+        }
+
+        if (form) {
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                if (!input || !input.value.trim()) {
+                    return;
+                }
+
+                const value = input.value;
+                input.value = '';
+                demoSendMessage(value);
+                input.focus();
+            });
+        }
+
+        quickActions.forEach((button) => {
+            button.addEventListener('click', function () {
+                const prompt = button.getAttribute('data-chatbot-prompt') || '';
+
+                if (!prompt) {
+                    return;
+                }
+
+                demoOpenPanel();
+                demoSendMessage(prompt);
+            });
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && panel && !panel.hasAttribute('hidden')) {
+                demoClosePanel();
+            }
+        });
+
+        return;
+
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
         let loaded = false;

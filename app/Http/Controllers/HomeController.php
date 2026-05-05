@@ -46,6 +46,14 @@ class HomeController extends Controller
         return app()->environment(['local', 'testing']);
     }
 
+    private function allowsLocalPreviewCatalog(): bool
+    {
+        $appUrl = Str::lower((string) config('app.url'));
+
+        return $this->allowsDemoFallbacks()
+            || Str::contains($appUrl, ['localhost', '127.0.0.1']);
+    }
+
     public function load_more_product(LoadMoreProductsRequest $request)
     {
         $lastId = $request->validated('id');
@@ -152,7 +160,10 @@ class HomeController extends Controller
     {
         $productTable = (new Product)->getTable();
 
-        if (Schema::hasTable($productTable)) {
+        if (
+            Schema::hasTable($productTable)
+            && Schema::hasColumn($productTable, 'thumbnail_path')
+        ) {
             try {
                 $hasIsHotColumn = Schema::hasColumn($productTable, 'is_hot');
                 $hasIsFeaturedColumn = Schema::hasColumn($productTable, 'is_featured');
@@ -160,10 +171,24 @@ class HomeController extends Controller
                 $hasSalePriceColumn = Schema::hasColumn($productTable, 'sale_price');
                 $hasSaleValueColumn = Schema::hasColumn($productTable, 'sale_value');
                 $hasPriceColumn = Schema::hasColumn($productTable, 'price');
+                $hasImageStatusColumn = Schema::hasColumn($productTable, 'image_status');
 
                 $query = Product::query()
                     ->with('brand')
-                    ->where('is_active', true);
+                    ->whereNotNull('thumbnail_path')
+                    ->where('thumbnail_path', '!=', '');
+
+                if (! $this->allowsLocalPreviewCatalog() && Schema::hasColumn($productTable, 'is_active')) {
+                    $query->where('is_active', true);
+                }
+
+                if ($hasImageStatusColumn) {
+                    $query->where(function ($imageStatusQuery) {
+                        $imageStatusQuery
+                            ->whereNull('image_status')
+                            ->orWhere('image_status', '!=', 'REVIEW_IMAGE');
+                    });
+                }
 
                 if ($onlyDiscounted && $hasPriceColumn && ($hasSalePriceColumn || $hasSaleValueColumn)) {
                     $query->where(function ($discountQuery) use ($hasSalePriceColumn, $hasSaleValueColumn) {
@@ -200,8 +225,9 @@ class HomeController extends Controller
                 $products = $query
                     ->orderByDesc('views_count')
                     ->orderByDesc('id')
-                    ->limit($limit * 3)
+                    ->limit($limit * 5)
                     ->get()
+                    ->filter(fn (Product $product) => $this->localPublicAssetExists($product->thumbnail_path))
                     ->map(fn (Product $product) => $this->mapTechHomeProduct($product));
 
                 if ($onlyDiscounted) {
@@ -220,7 +246,7 @@ class HomeController extends Controller
             return collect();
         }
 
-        return $this->fallbackTechHomeProducts($limit, $onlyDiscounted);
+        return collect();
     }
 
     private function mapTechHomeProduct(Product $product): array
@@ -248,7 +274,7 @@ class HomeController extends Controller
             'brand' => $brandName,
             'brand_logo' => $this->resolveTechHomeAssetUrl($product->brand?->logo_path),
             'brand_initials' => $this->brandInitials($brandName),
-            'image' => $this->resolveTechHomeAssetUrl($product->thumbnail_path, 'uploads/product/no-image.svg'),
+            'image' => $this->resolveTechHomeAssetUrl($product->thumbnail_path),
             'original_price' => $originalPrice,
             'price' => $finalPrice,
             'discount_percent' => $discountPercent,
@@ -342,18 +368,22 @@ class HomeController extends Controller
             try {
                 $newsItems = News::query()
                     ->where('is_active', true)
+                    ->whereNotNull('thumbnail_path')
+                    ->where('thumbnail_path', '!=', '')
                     ->orderByDesc('is_featured')
                     ->orderByRaw('CASE WHEN published_at IS NULL THEN 1 ELSE 0 END ASC')
                     ->orderByDesc('published_at')
                     ->orderByDesc('id')
-                    ->limit($limit)
+                    ->limit($limit * 3)
                     ->get()
+                    ->filter(fn (News $news) => $this->localPublicAssetExists($news->thumbnail_path))
+                    ->take($limit)
                     ->map(fn (News $news) => [
                         'title' => $news->title,
                         'url' => '#',
                         'summary' => $news->summary,
                         'published_at' => $news->published_at,
-                        'thumbnail' => $this->resolveTechHomeAssetUrl($news->thumbnail_path, 'uploads/contact/blog-three41.jpg'),
+                        'thumbnail' => $this->resolveTechHomeAssetUrl($news->thumbnail_path),
                     ]);
 
                 if ($newsItems->isNotEmpty()) {
@@ -395,14 +425,41 @@ class HomeController extends Controller
 
     private function resolveTechHomeBrands(int $limit = 8): Collection
     {
+        $configuredBrands = collect(config('homepage.partner_brands', []))
+            ->map(function (array $brand, string $slug) {
+                $name = StorefrontLabel::neutralizeSource($brand['name'] ?? $slug);
+                $logo = $this->resolveTechHomeAssetUrl($brand['logo'] ?? null);
+
+                if (! $logo) {
+                    return null;
+                }
+
+                return [
+                    'name' => $name,
+                    'url' => url('/thuong-hieu/'.$slug),
+                    'logo' => $logo,
+                    'initials' => $this->brandInitials($name),
+                ];
+            })
+            ->filter()
+            ->values();
+
+        if ($configuredBrands->isNotEmpty()) {
+            return $configuredBrands->take($limit)->values();
+        }
+
         if (Schema::hasTable((new Brand)->getTable())) {
             try {
                 $brands = Brand::query()
                     ->where('is_active', true)
+                    ->whereNotNull('logo_path')
+                    ->where('logo_path', '!=', '')
                     ->orderBy('display_order')
                     ->orderBy('name')
-                    ->limit($limit)
+                    ->limit($limit * 2)
                     ->get()
+                    ->filter(fn (Brand $brand) => $this->localPublicAssetExists($brand->logo_path))
+                    ->take($limit)
                     ->map(fn (Brand $brand) => [
                         'name' => StorefrontLabel::neutralizeSource($brand->brand_name ?? $brand->name),
                         'url' => filled($brand->brand_slug ?? $brand->slug) ? url('/thuong-hieu/'.($brand->brand_slug ?? $brand->slug)) : '#',
@@ -467,6 +524,17 @@ class HomeController extends Controller
     private function resolveTechHomeAssetUrl(?string $path, ?string $fallback = null): ?string
     {
         return AssetUrl::resolve($path, $fallback);
+    }
+
+    private function localPublicAssetExists(?string $path): bool
+    {
+        $path = trim((string) $path);
+
+        if ($path === '' || AssetUrl::isAbsoluteUrl($path)) {
+            return false;
+        }
+
+        return file_exists(public_path(ltrim($path, '/\\')));
     }
 
     private function brandInitials(?string $brandName): string
@@ -1442,7 +1510,7 @@ class HomeController extends Controller
 
     private function legacyIcons()
     {
-        $table = (new SiteLink())->getTable();
+        $table = (new SiteLink)->getTable();
 
         if (! Schema::hasTable($table)) {
             return collect();

@@ -20,7 +20,7 @@
     }
 @endphp
 
-<article class="tech-product-card {{ $compact ? 'tech-product-card-compact' : '' }}">
+<article class="tech-product-card {{ $compact ? 'tech-product-card-compact' : '' }}" data-product-url="{{ $productUrl }}">
     @if (!empty($product['is_hot']))
         <span class="tech-hot-ribbon">Nổi bật</span>
     @endif

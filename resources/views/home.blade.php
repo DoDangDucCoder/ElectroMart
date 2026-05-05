@@ -8,9 +8,11 @@
             'policyItems' => $policyItems,
         ])
 
-        @include('partials.home.flash-sale', [
-            'products' => $flashSaleProducts,
-        ])
+        @if ($flashSaleProducts->isNotEmpty())
+            @include('partials.home.flash-sale', [
+                'products' => $flashSaleProducts,
+            ])
+        @endif
 
         @include('partials.home.categories')
 
@@ -28,6 +30,7 @@
 
                 <div class="row tech-product-grid">
                     @foreach ($featuredProducts as $product)
+                        @continue(empty($product['image']))
                         <div class="col-xs-12 col-sm-6 col-md-3">
                             @include('partials.home.product-card', [
                                 'product' => $product,
@@ -38,12 +41,16 @@
             </div>
         </section>
 
-        @include('partials.home.news', [
-            'newsItems' => $newsItems,
-        ])
+        @if ($newsItems->isNotEmpty())
+            @include('partials.home.news', [
+                'newsItems' => $newsItems,
+            ])
+        @endif
 
-        @include('partials.home.partners', [
-            'brandItems' => $brandItems,
-        ])
+        @if ($brandItems->isNotEmpty())
+            @include('partials.home.partners', [
+                'brandItems' => $brandItems,
+            ])
+        @endif
     </main>
 @endsection

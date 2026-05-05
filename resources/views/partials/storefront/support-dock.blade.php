@@ -1,5 +1,9 @@
 @php
     $supportConfig = config('services.storefront_support', []);
+    $supportPhoneDial = preg_replace('/\D+/', '', (string) ($supportConfig['contact_phone_href'] ?? '19000000')) ?: '19000000';
+    $zaloUrl = filled($supportConfig['zalo_url'] ?? null)
+        ? $supportConfig['zalo_url']
+        : 'https://zalo.me/' . $supportPhoneDial;
     $supportChannels = [
         [
             'variant' => 'facebook',
@@ -13,15 +17,15 @@
             'variant' => 'zalo',
             'title' => 'Chat Zalo',
             'meta' => $supportConfig['zalo_hours'] ?? '8h-21h',
-            'href' => filled($supportConfig['zalo_url'] ?? null) ? $supportConfig['zalo_url'] : url('/lien-he'),
+            'href' => $zaloUrl,
             'icon' => 'Zalo',
-            'external' => filled($supportConfig['zalo_url'] ?? null),
+            'external' => true,
         ],
         [
             'variant' => 'hotline',
             'title' => $supportConfig['contact_phone_display'] ?? '1900.0000',
             'meta' => $supportConfig['contact_hours'] ?? '8h-21h',
-            'href' => 'tel:' . ($supportConfig['contact_phone_href'] ?? '19000000'),
+            'href' => 'tel:' . $supportPhoneDial,
             'icon_class' => 'fa fa-phone',
             'external' => false,
         ],
@@ -65,7 +69,7 @@
                 @endforeach
             </div>
 
-            <a href="{{ url('/lien-he') }}" class="shopw-hero-support-cta"
+            <button type="button" class="shopw-hero-support-cta"
                 aria-label="{{ config('storefront.labels.chat_assistant', 'Trợ lý bán hàng') }} - {{ $heroSupportCta }}"
                 data-chatbot-launch>
                 <span class="shopw-hero-support-cta-main">
@@ -80,7 +84,7 @@
                 <span class="shopw-hero-support-cta-tail" aria-hidden="true">
                     <i class="fa fa-angle-up"></i>
                 </span>
-            </a>
+            </button>
         </aside>
     </div>
 </section>

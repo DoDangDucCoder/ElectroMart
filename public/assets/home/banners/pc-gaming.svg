@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="540" viewBox="0 0 900 540" role="img" aria-label="PC Gaming">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#111827"/><stop offset="1" stop-color="#0f766e"/></linearGradient></defs>
+  <rect width="900" height="540" fill="url(#g)"/>
+  <circle cx="720" cy="120" r="150" fill="#22d3ee" opacity=".18"/>
+  <rect x="520" y="165" width="170" height="245" rx="24" fill="#0f172a" stroke="#67e8f9" stroke-width="8"/>
+  <rect x="706" y="190" width="70" height="195" rx="16" fill="#111827" stroke="#a7f3d0" stroke-width="6"/>
+  <path d="M558 225h95M558 265h95M558 305h95" stroke="#22d3ee" stroke-width="10" stroke-linecap="round"/>
+</svg>

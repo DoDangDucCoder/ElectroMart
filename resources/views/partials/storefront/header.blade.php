@@ -36,6 +36,17 @@
     $headerCustomerAvatar = $headerCustomerPicture ?: $defaultStorefrontAvatar;
     $isAuthenticatedCustomer = ! empty($headerCustomerName) || ! empty($headerCustomerEmail);
     $isAccountSection = $isAuthenticatedCustomer ? $isHistorySection : $isLoginSection;
+    $headerSearchSuggestions = [
+        'Laptop gaming',
+        'MacBook Air',
+        'Màn hình 27 inch',
+        'Router WiFi 6',
+        'Máy in văn phòng',
+        'Chuột gaming',
+        'Tai nghe Bluetooth',
+        'Bàn phím cơ',
+        'PC văn phòng',
+    ];
 
     $categoryItems = collect($category ?? [])->filter(fn($item) => ! empty($item->slug_category_product));
     $blogCategoryItems = collect($category_post ?? [])->filter(fn($item) => ! empty($item->cate_post_slug));
@@ -96,14 +107,19 @@
                 </div>
 
                 <div class="shopw-header-center">
-                    <div class="shopw-search-shell" data-search-trends="[]">
+                    <div class="shopw-search-shell">
                         <form action="{{ url('/tim-kiem') }}" method="GET" class="shopw-search">
                             <label class="shopw-search-entry" for="keywords">
-                                <span class="shopw-search-prefix">Bạn cần gì hôm nay?</span>
+                                <span class="shopw-search-prefix">Bạn cần gì?</span>
                                 <span class="shopw-search-input-stage">
                                     <input type="text" name="keywords_submit" id="keywords"
-                                        placeholder="Laptop gaming, iPhone 15..."
+                                        placeholder=""
+                                        data-placeholder-base=""
+                                        data-search-trends='@json($headerSearchSuggestions)'
                                         autocomplete="off">
+                                    <span class="shopw-search-rotator" data-search-rotator aria-hidden="true">
+                                        <span class="shopw-search-rotator-word" data-search-rotator-word>Laptop gaming</span>
+                                    </span>
                                 </span>
                             </label>
                             <button type="submit" class="shopw-search-btn">
@@ -183,86 +199,6 @@
                         </div>
                         <div class="mainmenu pull-left">
                             <ul class="nav navbar-nav shopw-links">
-                                <li class="dropdown shopw-nav-group {{ $isCategorySection ? 'is-current' : '' }}" id="shopw-nav-group-categories">
-                                    <div class="shopw-nav-row">
-                                        <a href="{{ url('/san-pham') }}"
-                                            data-storefront-nav-parent="categories"
-                                            @class(['is-current' => $isCategorySection])
-                                            @if ($isCategorySection) aria-current="page" @endif>
-                                            <span class="shopw-nav-label">
-                                                <span class="shopw-nav-icon"><i class="fa fa-bars"></i></span>
-                                                <span class="shopw-nav-text">
-                                                    <strong>Danh mục sản phẩm</strong>
-                                                    <small class="shopw-cat-btn-copy">Laptop, PC, linh kiện và phụ kiện</small>
-                                                </span>
-                                            </span>
-                                            <span class="shopw-nav-desktop-arrow" data-desktop-panel="#shopw-desktop-category-panel"><i class="fa fa-angle-down"></i></span>
-                                        </a>
-                                        <div class="shopw-header-category-shell" style="display:none;">
-                                            <div id="shopw-desktop-category-panel">
-                                                <div class="shopw-desktop-category-nav">
-                                                    <div class="shopw-desktop-category-trigger"></div>
-                                                    <div class="shopw-desktop-category-panel">
-                                                        <div class="shopw-desktop-category-pane">
-                                                            <div class="shopw-desktop-category-section">
-                                                                <div class="shopw-desktop-category-rail">
-                                                                    <div class="shopw-desktop-category-section-link-icon"></div>
-                                                                    <div class="shopw-desktop-category-promo-icon"></div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <button type="button" class="shopw-submenu-toggle" aria-expanded="false"
-                                            aria-label="Mở sản phẩm">
-                                            <i class="fa fa-angle-down"></i>
-                                        </button>
-                                    </div>
-                                    <ul role="menu" class="sub-menu">
-                                        @foreach ($categoryItems as $key => $cate)
-                                            @if ($cate->category_parent == 0)
-                                                @php
-                                                    $categoryChildren = $categoryItems->filter(
-                                                        fn($item) => (int) $item->category_parent === (int) $cate->category_id &&
-                                                            (int) $item->category_status === 0,
-                                                    );
-                                                @endphp
-                                                <li class="menu-item {{ $categoryChildren->isNotEmpty() ? 'has-children' : '' }}">
-                                                    @if ($categoryChildren->isNotEmpty())
-                                                        <div class="shopw-submenu-row">
-                                                            <a href="{{ URL::to('/danh-muc/' . $cate->slug_category_product) }}">
-                                                                {{ $storefrontLabel::category($cate->category_name, $cate->slug_category_product) }}
-                                                            </a>
-                                                            <button type="button" class="shopw-childmenu-toggle"
-                                                                aria-expanded="false"
-                                                                aria-label="Mở danh mục {{ $storefrontLabel::category($cate->category_name, $cate->slug_category_product) }}">
-                                                                <i class="fa fa-angle-down"></i>
-                                                            </button>
-                                                        </div>
-                                                    @else
-                                                        <a href="{{ URL::to('/danh-muc/' . $cate->slug_category_product) }}">
-                                                            {{ $storefrontLabel::category($cate->category_name, $cate->slug_category_product) }}
-                                                        </a>
-                                                    @endif
-                                                    @if ($categoryChildren->isNotEmpty())
-                                                        <ul class="cate_sub">
-                                                            @foreach ($categoryChildren as $cate_sub)
-                                                                <li class="submenu-item">
-                                                                    <a href="{{ URL::to('/danh-muc/' . $cate_sub->slug_category_product) }}">
-                                                                        {{ $storefrontLabel::category($cate_sub->category_name, $cate_sub->slug_category_product) }}
-                                                                    </a>
-                                                                </li>
-                                                            @endforeach
-                                                        </ul>
-                                                    @endif
-                                                </li>
-                                            @endif
-                                        @endforeach
-                                    </ul>
-                                </li>
-
                                 <li><a href="{{ URL::to('/trang-chu') }}"
                                         data-storefront-nav-key="home"
                                         @class(['active' => $isHomeRoute, 'is-current' => $isHomeRoute])
@@ -277,21 +213,7 @@
                                         <a href="{{ $featuredBlogUrl }}"
                                             data-storefront-nav-parent="blogs"
                                             @class(['is-current' => $isBlogSection])
-                                            @if ($isBlogSection) aria-current="page" @endif>
-                                            <span class="shopw-nav-label">
-                                                <span class="shopw-nav-icon"><i class="fa fa-newspaper-o"></i></span>
-                                                <span class="shopw-nav-text">
-                                                    <strong>Bài viết</strong>
-                                                    <small>Tin tức, review và hướng dẫn nhanh</small>
-                                                </span>
-                                            </span>
-                                            <span class="shopw-nav-badge shopw-nav-badge-cool">Mới</span>
-                                            <span class="shopw-nav-desktop-arrow"><i class="fa fa-angle-down"></i></span>
-                                        </a>
-                                        <button type="button" class="shopw-submenu-toggle" aria-expanded="false"
-                                            aria-label="Mở danh mục bài viết">
-                                            <i class="fa fa-angle-down"></i>
-                                        </button>
+                                            @if ($isBlogSection) aria-current="page" @endif>Bài viết</a>
                                     </div>
                                     <ul role="menu" class="sub-menu">
                                         @foreach ($blogCategoryItems as $key => $danhmucbaiviet)
@@ -311,16 +233,7 @@
                                 <li><a href="{{ URL::to('/lien-he') }}"
                                             data-storefront-nav-key="contact"
                                             @class(['active' => $isContactSection, 'is-current' => $isContactSection])
-                                            @if ($isContactSection) aria-current="page" @endif>
-                                            <span class="shopw-nav-label">
-                                            <span class="shopw-nav-icon"><i class="fa fa-headphones"></i></span>
-                                            <span class="shopw-nav-text">
-                                                <strong>Liên hệ</strong>
-                                                <small>CSKH, kỹ thuật và bảo hành</small>
-                                            </span>
-                                        </span>
-                                        <span class="shopw-nav-badge shopw-nav-badge-soft">24/7</span>
-                                    </a></li>
+                                            @if ($isContactSection) aria-current="page" @endif>Liên hệ</a></li>
                             </ul>
                         </div>
                         <div class="shopw-mobile-drawer-links">

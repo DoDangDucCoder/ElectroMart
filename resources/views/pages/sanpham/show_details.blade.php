@@ -153,10 +153,44 @@
             ];
         }
 
+        $resolveLocalProductImage = function ($related) {
+            $candidates = collect([
+                $related->thumbnail_path ?? null,
+                $related->product_image ?? null,
+            ])
+                ->filter()
+                ->map(fn ($path) => trim((string) $path))
+                ->reject(fn ($path) => $path === '' || str_contains($path, 'no-image'))
+                ->values();
+
+            foreach ($candidates as $path) {
+                if (\App\Support\AssetUrl::isAbsoluteUrl($path)) {
+                    continue;
+                }
+
+                $localPath = ltrim($path, '/\\');
+                $publicPath = public_path($localPath);
+
+                if (file_exists($publicPath) && is_file($publicPath)) {
+                    return asset($localPath);
+                }
+
+                if (! str_contains($localPath, '/') && file_exists(public_path('uploads/product/' . $localPath))) {
+                    return asset('uploads/product/' . $localPath);
+                }
+            }
+
+            return null;
+        };
+
         // ========== Related products mapping for tech-product-card ==========
         $relatedProductCards = collect($relate ?? [])
-            ->take(5)
-            ->map(function ($related) use ($storefrontLabel) {
+            ->map(function ($related) use ($storefrontLabel, $resolveLocalProductImage) {
+                $relatedImage = $resolveLocalProductImage($related);
+                if (! $relatedImage) {
+                    return null;
+                }
+
                 $relatedFinal = (float) ($related->final_price ?? $related->product_price ?? 0);
                 $relatedOriginal = (float) ($related->price ?? $related->product_price ?? $relatedFinal);
                 $relatedDiscount = 0;
@@ -167,7 +201,7 @@
                     'id' => $related->product_id ?? $related->id,
                     'name' => $storefrontLabel::neutralizeSource($related->product_name),
                     'url' => url('/chi-tiet/' . $related->product_slug),
-                    'image' => \App\Support\AssetUrl::product($related->product_image),
+                    'image' => $relatedImage,
                     'brand' => $storefrontLabel::neutralizeSource($related->brand_name ?? 'DangDuc'),
                     'brand_initials' => mb_strtoupper(mb_substr($related->brand_name ?? 'DD', 0, 2)),
                     'original_price' => $relatedOriginal,
@@ -175,6 +209,8 @@
                     'discount_percent' => $relatedDiscount,
                 ];
             })
+            ->filter()
+            ->take(5)
             ->values();
 
         // ========== Sidebar promo & deal data ==========
@@ -187,7 +223,7 @@
 
         $dealItems = [
             ['icon' => 'fa-gift', 'title' => 'Tặng túi chống sốc cao cấp', 'sub' => 'Trị giá 490.000đ'],
-            ['icon' => 'fa-percent', 'title' => 'Giảm thêm 300.000đ', 'sub' => 'Khi thanh toán online'],
+            ['icon' => 'fa-credit-card', 'title' => 'Giảm thêm 300.000đ', 'sub' => 'Khi thanh toán online'],
             ['icon' => 'fa-check-circle', 'title' => 'Miễn phí cài đặt', 'sub' => 'Phần mềm cơ bản'],
         ];
 
@@ -202,34 +238,49 @@
         $newsItems = collect([
             [
                 'title' => 'Đánh giá ' . $productName . ' sau 1 năm sử dụng: Vẫn là lựa chọn đáng giá?',
-                'url' => '#',
+                'url' => url('/video-shop'),
                 'summary' => 'Trải nghiệm thực tế sau thời gian dài sử dụng và những điểm cộng còn lại.',
                 'published_at' => now()->subDays(2),
-                'thumbnail' => asset('uploads/post/smartphone12.jpg'),
+                'thumbnail' => asset('assets/news/anker-735-review-1-year.svg'),
             ],
             [
                 'title' => 'So sánh ' . $productName . ' với phiên bản trước: Nên chọn máy nào?',
-                'url' => '#',
+                'url' => url('/video-shop'),
                 'summary' => 'So sánh chi tiết SSD và HDD: ưu nhược điểm và lời khuyên cho từng nhu cầu sử dụng.',
                 'published_at' => now()->subDays(5),
-                'thumbnail' => asset('uploads/post/smartphone24.jpg'),
+                'thumbnail' => asset('assets/news/anker-735-compare.svg'),
             ],
             [
                 'title' => '7 mẹo tối ưu pin MacBook giúp tăng thời lượng sử dụng',
-                'url' => '#',
+                'url' => url('/video-shop'),
                 'summary' => 'Cấu hình macOS hợp lý và thói quen sạc đúng cách giúp pin bền lâu.',
                 'published_at' => now()->subDays(8),
-                'thumbnail' => asset('uploads/post/smartphone31.jpg'),
+                'thumbnail' => asset('assets/news/macbook-battery-tips.svg'),
             ],
         ]);
 
-        $brandItems = collect(['ASUS', 'MSI', 'DELL', 'Lenovo', 'Samsung', 'Logitech', 'Kingston', 'Intel'])
-            ->map(fn (string $name) => [
-                'name' => $name,
-                'url' => url('/thuong-hieu/' . Str::slug($name)),
-                'logo' => null,
-                'initials' => mb_strtoupper(mb_substr($name, 0, 2)),
-            ]);
+        $brandConfig = collect(config('homepage.partner_brands', []));
+        $brandItems = collect(['apple', 'samsung', 'asus', 'acer', 'dell', 'hp', 'lenovo', 'anker', 'baseus', 'jbl'])
+            ->map(function (string $key) use ($brandConfig) {
+                $brand = $brandConfig->get($key, [
+                    'name' => Str::headline($key),
+                    'logo' => 'assets/home/brands/' . $key . '.svg',
+                ]);
+                $logoPath = $brand['logo'] ?? null;
+
+                if (! $logoPath || ! file_exists(public_path($logoPath))) {
+                    return null;
+                }
+
+                return [
+                    'name' => $brand['name'],
+                    'url' => url('/thuong-hieu/' . Str::slug($brand['name'])),
+                    'logo' => asset($logoPath),
+                    'initials' => mb_strtoupper(mb_substr($brand['name'], 0, 2)),
+                ];
+            })
+            ->filter()
+            ->values();
 
         $tagList = collect(explode(',', (string) $product->product_tags))
             ->map(static fn($tag) => trim($tag))
@@ -327,7 +378,7 @@
             border-radius: 12px;
             border: 1px solid #eef2f7;
             padding: 24px;
-            display: flex; flex-direction: column; gap: 14px;
+            display: flex; flex-direction: column; gap: 16px;
         }
         .pdx-brand {
             font-size: 12px; font-weight: 700; letter-spacing: .08em;
@@ -349,6 +400,7 @@
         .pdx-price-card {
             background: #fff5f5; border-radius: 10px; padding: 14px 16px;
             display: flex; flex-direction: column; gap: 6px;
+            margin-top: 2px;
         }
         .pdx-price-current {
             font-size: 30px; font-weight: 800; color: #ef4444; line-height: 1.1;
@@ -386,7 +438,8 @@
         .pdx-features i { color: #14b8a6; font-size: 14px; margin-top: 3px; flex-shrink: 0; }
 
         /* Variant groups */
-        .pdx-variant { display: flex; flex-direction: column; gap: 8px; }
+        .shopw-pdp-purchase { margin-top: 6px !important; gap: 18px !important; }
+        .pdx-variant { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; }
         .pdx-variant-label {
             font-size: 13px; font-weight: 600; color: #475569;
         }
@@ -424,14 +477,15 @@
             display: inline-flex; align-items: center;
             border: 1.5px solid #e2e8f0; border-radius: 8px;
             overflow: hidden; width: fit-content;
+            background: #fff;
         }
         .pdx-qty button {
-            width: 38px; height: 40px; background: #fff; border: 0;
+            width: 42px; height: 42px; background: #fff; border: 0;
             font-size: 18px; font-weight: 600; color: #475569; cursor: pointer;
         }
         .pdx-qty button:hover { background: #f1f5f9; }
         .pdx-qty input {
-            width: 56px; height: 40px; border: 0;
+            width: 58px; height: 42px; border: 0;
             border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;
             text-align: center; font-size: 14px; font-weight: 600; color: #0f172a;
             -moz-appearance: textfield;
@@ -441,14 +495,16 @@
 
         /* CTA buttons */
         .pdx-actions {
-            display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 12px;
+            display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;
         }
         @media (max-width: 480px) { .pdx-actions { grid-template-columns: 1fr; } }
         .pdx-btn {
-            border-radius: 10px; padding: 12px 18px;
+            width: 100%;
+            min-height: 60px;
+            border-radius: 12px; padding: 12px 18px;
             font-size: 14px; font-weight: 600; cursor: pointer;
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            line-height: 1.2;
+            line-height: 1.2; text-align: center;
             transition: background .15s, border-color .15s, transform .15s;
         }
         .pdx-btn:hover { transform: translateY(-1px); }
@@ -469,7 +525,7 @@
         /* Support row */
         .pdx-support {
             display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-            padding-top: 14px; border-top: 1px solid #eef2f7;
+            margin-top: 2px; padding-top: 16px; border-top: 1px solid #eef2f7;
             font-size: 13px; color: #475569;
         }
         .pdx-support-item { display: inline-flex; align-items: center; gap: 6px; }
@@ -499,11 +555,12 @@
         }
         .pdx-side-row { display: flex; align-items: flex-start; gap: 12px; }
         .pdx-side-icon {
-            flex: 0 0 36px; width: 36px; height: 36px; border-radius: 8px;
+            flex: 0 0 40px; width: 40px; height: 40px; border-radius: 10px;
             background: #f0fdfa; color: #0d9488;
             display: inline-flex; align-items: center; justify-content: center;
-            font-size: 16px;
+            font-size: 18px;
         }
+        .pdx-side-icon .fa { line-height: 1; }
         .pdx-side-text strong {
             display: block; font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 2px;
         }
@@ -521,28 +578,31 @@
         @media (max-width: 575px) { .pdx-policies { grid-template-columns: 1fr; } }
         .pdx-policy {
             background: #fff; border: 1px solid #eef2f7; border-radius: 12px;
-            padding: 18px;
-            display: flex; align-items: center; gap: 14px;
+            padding: 20px;
+            display: flex; align-items: center; gap: 16px;
         }
         .pdx-policy-icon {
-            flex: 0 0 44px; width: 44px; height: 44px; border-radius: 10px;
+            flex: 0 0 60px; width: 60px; height: 60px; border-radius: 14px;
             background: #f0fdfa; color: #0d9488;
             display: inline-flex; align-items: center; justify-content: center;
-            font-size: 18px;
+            font-size: 26px;
         }
+        .pdx-policy-icon .fa { line-height: 1; }
         .pdx-policy strong { display: block; font-size: 14px; color: #0f172a; margin-bottom: 4px; }
         .pdx-policy span { font-size: 12.5px; color: #64748b; line-height: 1.45; display: block; }
 
         /* ===== Tabs section ===== */
         .pdx-tabs {
             background: #fff; border: 1px solid #eef2f7; border-radius: 12px;
-            margin-bottom: 24px;
+            margin-bottom: 24px; overflow: visible;
         }
         .pdx-tabs-nav {
             display: flex; gap: 0; border-bottom: 1px solid #eef2f7;
             padding: 0 24px;
             overflow-x: auto;
+            scrollbar-width: none;
         }
+        .pdx-tabs-nav::-webkit-scrollbar { display: none; }
         .pdx-tab-btn {
             background: 0; border: 0;
             padding: 16px 20px; font-size: 14px; font-weight: 600; color: #64748b;
@@ -554,14 +614,14 @@
             content: ''; position: absolute; left: 16px; right: 16px; bottom: -1px;
             height: 2px; background: #14b8a6; border-radius: 2px;
         }
-        .pdx-tab-pane { display: none; padding: 24px; }
+        .pdx-tab-pane { display: none; padding: 24px; max-height: none; overflow: visible; }
         .pdx-tab-pane.is-active { display: block; }
         .pdx-tab-grid {
-            display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 32px;
+            display: grid; grid-template-columns: 1fr; gap: 24px;
         }
         @media (max-width: 991px) { .pdx-tab-grid { grid-template-columns: 1fr; } }
         .pdx-tab-desc :is(h2, h3, h4) { margin: 18px 0 12px; color: #0f172a; font-size: 16px; }
-        .pdx-tab-desc :is(p, ul, ol) { margin: 0 0 12px; color: #334155; font-size: 14px; line-height: 1.65; }
+        .pdx-tab-desc :is(p, ul, ol) { margin: 0 0 14px; color: #334155; font-size: 14px; line-height: 1.78; text-align: justify; }
         .pdx-tab-desc ul li { margin-bottom: 6px; }
 
         .pdx-spec-table {
@@ -580,6 +640,13 @@
         .pdx-tab-spec :is(table) {
             width: 100%; border-collapse: collapse; border: 1px solid #eef2f7;
             border-radius: 8px; overflow: hidden;
+        }
+        .pdx-tab-spec :is(p, ul, ol) {
+            margin: 0 0 14px;
+            color: #334155;
+            font-size: 14px;
+            line-height: 1.78;
+            text-align: justify;
         }
         .pdx-tab-spec :is(td, th) {
             padding: 12px 14px; font-size: 13.5px; text-align: left;

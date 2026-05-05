@@ -37,13 +37,47 @@
     <script>
         (function () {
             const counters = document.querySelectorAll('[data-tech-countdown]');
+            const flashSaleDeadlineKey = 'dangduc_flash_sale_deadline_v1';
+            const flashSaleDefaultDuration = 24 * 60 * 60 * 1000;
+
+            function readFlashSaleDeadline(counter) {
+                const configuredDeadline = counter.getAttribute('data-deadline');
+
+                if (configuredDeadline) {
+                    const configuredTime = new Date(configuredDeadline).getTime();
+
+                    if (!Number.isNaN(configuredTime)) {
+                        return configuredTime;
+                    }
+                }
+
+                try {
+                    const storedDeadline = Number(localStorage.getItem(flashSaleDeadlineKey));
+
+                    if (storedDeadline > Date.now()) {
+                        return storedDeadline;
+                    }
+
+                    if (storedDeadline && storedDeadline <= Date.now()) {
+                        return storedDeadline;
+                    }
+
+                    const nextDeadline = Date.now() + flashSaleDefaultDuration;
+                    localStorage.setItem(flashSaleDeadlineKey, String(nextDeadline));
+
+                    return nextDeadline;
+                } catch (error) {
+                    return Date.now() + flashSaleDefaultDuration;
+                }
+            }
 
             counters.forEach((counter) => {
-                const end = new Date(Date.now() + 6 * 24 * 60 * 60 * 1000 + 23 * 60 * 60 * 1000 + 41 * 60 * 1000 + 58 * 1000);
+                // Reset demo campaigns by deleting localStorage key dangduc_flash_sale_deadline_v1 or bumping the key version.
+                const endTime = readFlashSaleDeadline(counter);
                 const boxes = counter.querySelectorAll('[data-countdown-unit]');
 
                 const render = () => {
-                    const distance = Math.max(0, end.getTime() - Date.now());
+                    const distance = Math.max(0, endTime - Date.now());
                     const days = Math.floor(distance / (1000 * 60 * 60 * 24));
                     const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
                     const minutes = Math.floor((distance / (1000 * 60)) % 60);
@@ -54,6 +88,8 @@
                         const unit = box.getAttribute('data-countdown-unit');
                         box.textContent = String(values[unit] || 0).padStart(2, '0');
                     });
+
+                    counter.classList.toggle('is-ended', distance <= 0);
                 };
 
                 render();
@@ -147,18 +183,25 @@
                     let startX = 0;
                     let scrollStart = 0;
                     let moved = false;
-                    const dragThreshold = 5;
+                    let suppressClick = false;
+                    const dragThreshold = 8;
+                    const getMaxScroll = () => Math.max(track.scrollWidth - track.clientWidth, 0);
+                    const getStep = () => Math.max(track.clientWidth - 80, 260);
+                    const scrollToPosition = (left) => {
+                        track.scrollTo({
+                            left,
+                            behavior: 'smooth'
+                        });
+                    };
 
                     const updateState = () => {
                         const hasOverflow = track.scrollWidth > track.clientWidth + 4;
-                        const hasMoreLeft = track.scrollLeft > 4;
-                        const hasMoreRight = track.scrollLeft + track.clientWidth < track.scrollWidth - 4;
 
-                        prev.disabled = !hasOverflow || !hasMoreLeft;
-                        next.disabled = !hasOverflow || !hasMoreRight;
+                        prev.disabled = !hasOverflow;
+                        next.disabled = !hasOverflow;
 
                         if (dots.length) {
-                            const maxScroll = Math.max(track.scrollWidth - track.clientWidth, 1);
+                            const maxScroll = Math.max(getMaxScroll(), 1);
                             const ratio = Math.min(Math.max(track.scrollLeft / maxScroll, 0), 1);
                             const activeIndex = hasOverflow
                                 ? Math.min(dots.length - 1, Math.round(ratio * (dots.length - 1)))
@@ -197,6 +240,7 @@
                     const endDrag = () => {
                         if (!isDown) return;
                         isDown = false;
+                        suppressClick = moved;
                         track.classList.remove('is-dragging');
                     };
 
@@ -204,23 +248,41 @@
                     track.addEventListener('mouseleave', endDrag);
 
                     track.addEventListener('click', (event) => {
-                        if (moved) {
-                            event.preventDefault();
-                            event.stopPropagation();
+                        if (!suppressClick) {
                             moved = false;
+                            return;
                         }
+
+                        event.preventDefault();
+                        event.stopPropagation();
+                        suppressClick = false;
+                        moved = false;
                     }, true);
 
                     prev.addEventListener('click', () => {
+                        const maxScroll = getMaxScroll();
+
+                        if (track.scrollLeft <= 4) {
+                            scrollToPosition(maxScroll);
+                            return;
+                        }
+
                         track.scrollBy({
-                            left: -Math.max(track.clientWidth - 80, 260),
+                            left: -getStep(),
                             behavior: 'smooth'
                         });
                     });
 
                     next.addEventListener('click', () => {
+                        const maxScroll = getMaxScroll();
+
+                        if (track.scrollLeft >= maxScroll - 4) {
+                            scrollToPosition(0);
+                            return;
+                        }
+
                         track.scrollBy({
-                            left: Math.max(track.clientWidth - 80, 260),
+                            left: getStep(),
                             behavior: 'smooth'
                         });
                     });
@@ -230,6 +292,20 @@
                     updateState();
                 });
             }
+
+            document.addEventListener('click', (event) => {
+                const card = event.target.closest('[data-tech-sale-track] .tech-product-card[data-product-url]');
+
+                if (!card || event.target.closest('a, button, input, select, textarea, label')) {
+                    return;
+                }
+
+                const productUrl = card.getAttribute('data-product-url');
+
+                if (productUrl && productUrl !== '#') {
+                    window.location.href = productUrl;
+                }
+            });
 
             document.addEventListener('click', (event) => {
                 const wishlistButton = event.target.closest('[data-tech-wishlist]');

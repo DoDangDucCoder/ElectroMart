@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 520" role="img" aria-labelledby="title desc">
+  <title id="title">Technology hero background</title>
+  <desc id="desc">Abstract laptop, phone and technology shapes on a navy cyan gradient.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071728"/>
+      <stop offset=".55" stop-color="#0f3b57"/>
+      <stop offset="1" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e0f2fe"/>
+      <stop offset="1" stop-color="#38bdf8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#020617" flood-opacity=".35"/>
+    </filter>
+  </defs>
+  <rect width="1440" height="520" fill="url(#bg)"/>
+  <circle cx="1120" cy="80" r="230" fill="#22d3ee" opacity=".16"/>
+  <circle cx="1280" cy="440" r="260" fill="#0f172a" opacity=".28"/>
+  <path d="M650 90h420c38 0 70 31 70 70v210c0 39-32 70-70 70H650c-39 0-70-31-70-70V160c0-39 31-70 70-70Z" fill="#082f49" opacity=".85" filter="url(#shadow)"/>
+  <path d="M680 124h360c22 0 40 18 40 40v170c0 22-18 40-40 40H680c-22 0-40-18-40-40V164c0-22 18-40 40-40Z" fill="url(#panel)" opacity=".95"/>
+  <rect x="705" y="154" width="170" height="20" rx="10" fill="#0f172a" opacity=".2"/>
+  <rect x="705" y="196" width="300" height="14" rx="7" fill="#0f172a" opacity=".18"/>
+  <rect x="705" y="228" width="250" height="14" rx="7" fill="#0f172a" opacity=".14"/>
+  <rect x="705" y="284" width="110" height="46" rx="14" fill="#0284c7" opacity=".8"/>
+  <rect x="840" y="284" width="170" height="46" rx="14" fill="#f8fafc" opacity=".85"/>
+  <path d="M540 430h640l52 48H488l52-48Z" fill="#0f172a" opacity=".88" filter="url(#shadow)"/>
+  <rect x="1145" y="160" width="130" height="245" rx="28" fill="#020617" opacity=".86" filter="url(#shadow)"/>
+  <rect x="1162" y="185" width="96" height="170" rx="18" fill="#67e8f9"/>
+  <circle cx="1210" cy="380" r="10" fill="#e0f2fe" opacity=".75"/>
+  <g fill="none" stroke="#bae6fd" stroke-width="3" opacity=".6">
+    <path d="M1020 72h80v-34"/>
+    <path d="M1210 110h80v42"/>
+    <path d="M1170 455h-90v34"/>
+  </g>
+  <g fill="#facc15">
+    <circle cx="1032" cy="72" r="5"/>
+    <circle cx="1290" cy="152" r="5"/>
+    <circle cx="1080" cy="489" r="5"/>
+  </g>
+  <g opacity=".42">
+    <path d="M80 110h190" stroke="#7dd3fc" stroke-width="2"/>
+    <path d="M120 160h240" stroke="#7dd3fc" stroke-width="2"/>
+    <path d="M70 370h250" stroke="#7dd3fc" stroke-width="2"/>
+    <circle cx="330" cy="92" r="8" fill="#22d3ee"/>
+    <circle cx="410" cy="380" r="6" fill="#fde68a"/>
+  </g>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="540" viewBox="0 0 900 540" role="img" aria-label="Gaming Accessories">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#581c87"/><stop offset="1" stop-color="#0f766e"/></linearGradient></defs>
+  <rect width="900" height="540" fill="url(#g)"/>
+  <rect x="500" y="250" width="260" height="95" rx="26" fill="#f8fafc"/>
+  <circle cx="565" cy="298" r="22" fill="#111827"/>
+  <circle cx="705" cy="285" r="12" fill="#ef4444"/>
+  <circle cx="735" cy="310" r="12" fill="#22d3ee"/>
+  <path d="M610 298h52M636 272v52" stroke="#111827" stroke-width="12" stroke-linecap="round"/>
+  <path d="M575 195c40-45 105-45 145 0" stroke="#e9d5ff" stroke-width="16" fill="none" stroke-linecap="round"/>
+</svg>

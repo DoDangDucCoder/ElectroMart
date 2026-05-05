@@ -1,3 +1,10 @@
+@php
+    $visibleBrands = collect($brandItems ?? [])
+        ->filter(fn ($brand) => ! empty($brand['logo']))
+        ->values();
+@endphp
+
+@if ($visibleBrands->isNotEmpty())
 <section class="tech-section tech-partners-section tech-brand-section">
     <div class="container">
         <div class="tech-partners-shell">
@@ -9,16 +16,13 @@
             </div>
 
             <div class="tech-partners-row">
-                @foreach ($brandItems as $brand)
+                @foreach ($visibleBrands as $brand)
                     <a href="{{ $brand['url'] }}" class="tech-partner-logo" title="{{ $brand['name'] }}">
-                        @if (!empty($brand['logo']))
-                            <img src="{{ $brand['logo'] }}" alt="{{ $brand['name'] }}">
-                        @else
-                            <span>{{ $brand['initials'] }}</span>
-                        @endif
+                        <img src="{{ $brand['logo'] }}" alt="{{ $brand['name'] }}">
                     </a>
                 @endforeach
             </div>
         </div>
     </div>
 </section>
+@endif

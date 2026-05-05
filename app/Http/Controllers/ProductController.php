@@ -504,6 +504,17 @@ class ProductController extends Controller
     {
         $product = $this->productService->findProductBySlug($product_slug);
 
+        if (! $product && $this->allowsLocalPreviewCatalog()) {
+            $product = Product::with([
+                'brand',
+                'categories',
+                'media' => fn ($query) => $query->orderBy('display_order')->orderBy('id'),
+                'variants.attributeValues.attribute',
+            ])
+                ->where('slug', $product_slug)
+                ->first();
+        }
+
         if (! $product) {
             abort(404);
         }
@@ -540,7 +551,25 @@ class ProductController extends Controller
 
         $gallery = $product->media ?? collect();
         $product_attribute = $this->legacyProductAttributes($product->product_id);
-        $related_product = $this->productService->getRelatedProducts($product, 6);
+        $related_product = $this->productService->getRelatedProducts($product, 12);
+        if ($this->allowsLocalPreviewCatalog() && $related_product->count() < 6) {
+            $fallbackRelated = Product::with(['brand', 'categories'])
+                ->where('id', '!=', $product->id)
+                ->whereNotNull('thumbnail_path')
+                ->where('thumbnail_path', '!=', '')
+                ->when($product->primary_category_id, function ($query, $categoryId) {
+                    $query->orderByRaw('primary_category_id = ? desc', [$categoryId]);
+                })
+                ->orderByDesc('is_hot')
+                ->orderByDesc('id')
+                ->limit(18)
+                ->get();
+
+            $related_product = $related_product
+                ->merge($fallbackRelated)
+                ->unique('id')
+                ->values();
+        }
         $recommendedProducts = $this->productService->getRecommendedProducts(
             (int) Session::get('customer_id') ?: null,
             $request->ip(),
@@ -570,6 +599,14 @@ class ProductController extends Controller
             ->with('rating', $rating)
             ->with('share_image', $share_image)
             ->with('share_images', $share_image);
+    }
+
+    private function allowsLocalPreviewCatalog(): bool
+    {
+        $appUrl = Str::lower((string) config('app.url'));
+
+        return app()->environment(['local', 'testing'])
+            || Str::contains($appUrl, ['localhost', '127.0.0.1']);
     }
 
     public function tag(Request $request, $product_tag)
@@ -670,7 +707,7 @@ class ProductController extends Controller
 
     protected function legacyProductAttributes(int $productId)
     {
-        $table = (new ProductVariant())->getTable();
+        $table = (new ProductVariant)->getTable();
 
         if (! Schema::hasTable($table)) {
             return collect();

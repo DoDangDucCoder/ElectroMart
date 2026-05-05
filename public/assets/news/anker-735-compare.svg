@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="title desc">
+  <title id="title">Anker 735 comparison</title>
+  <desc id="desc">Editorial card illustration comparing compact chargers.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#083344"/>
+      <stop offset="0.55" stop-color="#0e7490"/>
+      <stop offset="1" stop-color="#38bdf8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#020617" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <rect width="960" height="540" rx="36" fill="url(#bg)"/>
+  <path d="M0 440c120-70 240-72 360-14s238 58 356-18 198-64 244-24v156H0z" fill="#ecfeff" opacity="0.16"/>
+  <g filter="url(#shadow)">
+    <rect x="520" y="132" width="150" height="242" rx="28" fill="#f8fafc"/>
+    <rect x="704" y="170" width="116" height="204" rx="24" fill="#e0f2fe"/>
+    <circle cx="570" cy="278" r="14" fill="#14b8a6"/>
+    <circle cx="620" cy="278" r="14" fill="#0284c7"/>
+    <circle cx="742" cy="280" r="12" fill="#0891b2"/>
+    <circle cx="782" cy="280" r="12" fill="#0f172a" opacity="0.7"/>
+  </g>
+  <g fill="#fff">
+    <text x="84" y="148" font-family="Arial, sans-serif" font-size="32" font-weight="700" opacity="0.82">COMPARE</text>
+    <text x="84" y="212" font-family="Arial, sans-serif" font-size="54" font-weight="800">Which charger</text>
+    <text x="84" y="270" font-family="Arial, sans-serif" font-size="44" font-weight="800">fits your setup?</text>
+    <text x="84" y="336" font-family="Arial, sans-serif" font-size="22" opacity="0.82">Port count, wattage, heat and travel convenience.</text>
+  </g>
+  <g fill="#ccfbf1" opacity="0.9">
+    <rect x="86" y="390" width="110" height="14" rx="7"/>
+    <rect x="86" y="424" width="178" height="14" rx="7"/>
+    <rect x="86" y="458" width="142" height="14" rx="7"/>
+  </g>
+</svg>
