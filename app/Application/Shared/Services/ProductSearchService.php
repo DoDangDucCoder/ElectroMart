@@ -24,6 +24,8 @@ class ProductSearchService
         $query->where('is_active', true)
             ->with(['brand', 'categories', 'primaryCategory']);
 
+        $this->applyLocalDemoImageSafety($query);
+
         if (! empty($filters['keyword'])) {
             $this->applyKeywordFilter($query, (string) $filters['keyword']);
         }
@@ -67,28 +69,31 @@ class ProductSearchService
 
     public function getSuggestions(string $query): Collection
     {
-        $query = trim($query);
+        $keyword = trim($query);
 
-        if ($query === '') {
+        if ($keyword === '') {
             return collect();
         }
 
-        return Product::query()
+        $query = Product::query()
             ->with(['brand', 'primaryCategory'])
             ->where('is_active', true)
-            ->where(function (Builder $builder) use ($query) {
-                $builder->where('name', 'like', '%' . $query . '%')
-                    ->orWhere('sku', 'like', '%' . $query . '%')
-                    ->orWhere('slug', 'like', '%' . $query . '%');
+            ->where(function (Builder $builder) use ($keyword) {
+                $builder->where('name', 'like', '%' . $keyword . '%')
+                    ->orWhere('sku', 'like', '%' . $keyword . '%')
+                    ->orWhere('slug', 'like', '%' . $keyword . '%');
             })
             ->orderByRaw(
                 'CASE WHEN sku = ? THEN 0 WHEN name LIKE ? THEN 1 WHEN name LIKE ? THEN 2 ELSE 3 END',
-                [$query, $query . '%', '%' . $query . '%']
+                [$keyword, $keyword . '%', '%' . $keyword . '%']
             )
             ->orderByDesc('views_count')
             ->orderByDesc('id')
-            ->limit(8)
-            ->get();
+            ->limit(8);
+
+        $this->applyLocalDemoImageSafety($query);
+
+        return $query->get();
     }
 
     public function searchCatalog(array $filters, int $perPage = 12): LengthAwarePaginator
@@ -255,5 +260,22 @@ class ProductSearchService
     protected function productTable(): string
     {
         return (new Product())->getTable();
+    }
+
+    protected function applyLocalDemoImageSafety(Builder $query): Builder
+    {
+        if (! (bool) config('storefront.local_demo_sales_mode', false)) {
+            return $query;
+        }
+
+        $table = $this->productTable();
+
+        return $query
+            ->whereNotNull($table . '.thumbnail_path')
+            ->where($table . '.thumbnail_path', '!=', '')
+            ->where(function (Builder $builder) use ($table) {
+                $builder->where($table . '.thumbnail_path', 'like', 'assets/%')
+                    ->orWhere($table . '.thumbnail_path', 'like', 'uploads/%');
+            });
     }
 }

@@ -1,0 +1,520 @@
+[
+    {
+        "sku": "PHONE-013",
+        "name": "OPPO Reno13 Pro 5G 512GB",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "PHONE-015",
+        "name": "Vivo V40 5G 256GB",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "PHONE-016",
+        "name": "Vivo Y28 256GB",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "PHONE-017",
+        "name": "realme 13 Plus 5G 256GB",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "PHONE-020",
+        "name": "ASUS ROG Phone 8 Pro 512GB",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-001",
+        "name": "MacBook Air 13 inch M3 8GB 256GB",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-002",
+        "name": "MacBook Air 15 inch M3 8GB 512GB",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-003",
+        "name": "MacBook Pro 14 inch M4 16GB 512GB",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-004",
+        "name": "Dell XPS 13 9340 Core Ultra 7",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-005",
+        "name": "Dell Inspiron 14 5440 Core 5",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-006",
+        "name": "HP Spectre x360 14 Core Ultra 7",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-007",
+        "name": "HP Pavilion 15 Ryzen 7 7730U",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-008",
+        "name": "Lenovo Yoga Slim 7 Core Ultra 7",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-009",
+        "name": "Lenovo ThinkPad E14 Gen 6",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-011",
+        "name": "ASUS TUF Gaming A15 Ryzen 7 RTX 4060",
+        "images_found": 4,
+        "missing_main": false,
+        "missing_gallery_count": 1,
+        "reason": "pass 4 laptops did not reach 5 validated high-confidence images",
+        "attempted_sources": [
+            "official product page pass 4 laptops"
+        ]
+    },
+    {
+        "sku": "LAPTOP-012",
+        "name": "Acer Swift Go 14 OLED Core Ultra 5",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-013",
+        "name": "Acer Nitro V 15 Core i7 RTX 4050",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-014",
+        "name": "MSI Modern 14 Core i5",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-015",
+        "name": "MSI Katana 15 Core i7 RTX 4060",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-016",
+        "name": "LG Gram 16 Core Ultra 7",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-017",
+        "name": "Microsoft Surface Laptop 7 13.8 inch",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-018",
+        "name": "Gigabyte G5 KF Core i5 RTX 4060",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "LAPTOP-019",
+        "name": "Huawei MateBook D14 2024",
+        "images_found": 4,
+        "missing_main": true,
+        "missing_gallery_count": 0,
+        "reason": "pass 4 laptops did not reach 5 validated high-confidence images",
+        "attempted_sources": [
+            "official product page pass 4 laptops"
+        ]
+    },
+    {
+        "sku": "LAPTOP-020",
+        "name": "Samsung Galaxy Book4 Pro 14",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not processed in pass 4; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "TABLET-005",
+        "name": "Samsung Galaxy Tab S9 FE Plus 128GB",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 5; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "TABLET-007",
+        "name": "Lenovo Tab P12 128GB",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 5; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "TABLET-008",
+        "name": "Huawei MatePad 11.5 128GB",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 5; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "TABLET-009",
+        "name": "OPPO Pad Neo 128GB",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 5; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "TABLET-010",
+        "name": "Microsoft Surface Pro 11 256GB",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 5; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "AUDIO-001",
+        "name": "Apple AirPods Pro 2 USB-C",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 6; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "AUDIO-002",
+        "name": "Samsung Galaxy Buds3 Pro",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 6; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "AUDIO-003",
+        "name": "Sony WH-1000XM5",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 6; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "AUDIO-004",
+        "name": "Sony WF-1000XM5",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 6; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "AUDIO-010",
+        "name": "Bose QuietComfort Ultra Earbuds",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 6; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "WATCH-003",
+        "name": "Samsung Galaxy Watch Ultra LTE",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 5; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "WATCH-004",
+        "name": "Samsung Galaxy Watch7 44mm",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 5; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "WATCH-005",
+        "name": "Garmin Forerunner 265",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 5; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "WATCH-006",
+        "name": "Garmin Venu 3",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 5; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "WATCH-007",
+        "name": "Huawei Watch GT 5 Pro",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 5; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "MONITOR-001",
+        "name": "Dell UltraSharp U2723QE 27 inch 4K",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 6; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "MONITOR-003",
+        "name": "Samsung Odyssey G5 32 inch QHD 165Hz",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 6; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "MONITOR-005",
+        "name": "AOC 24G4 24 inch 180Hz",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 6; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "MONITOR-006",
+        "name": "MSI MAG 274QRF QD E2 27 inch",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 6; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "MONITOR-007",
+        "name": "BenQ GW2790QT 27 inch",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "not enough high-confidence official images processed in pass 6; queued for later pass",
+        "attempted_sources": []
+    },
+    {
+        "sku": "GEAR-004",
+        "name": "Razer DeathAdder V3 Pro",
+        "images_found": 2,
+        "missing_main": false,
+        "missing_gallery_count": 3,
+        "reason": "pass 7 processed only high-confidence images; still missing enough verified model images",
+        "attempted_sources": [
+            "https://www.razer.com/gaming-mice/razer-deathadder-v3-pro"
+        ]
+    },
+    {
+        "sku": "GEAR-008",
+        "name": "SteelSeries Apex Pro TKL Wireless",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "no high-confidence official/source image attached in pass 7; kept for review",
+        "attempted_sources": []
+    },
+    {
+        "sku": "GEAR-009",
+        "name": "Corsair K70 RGB Pro",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "no high-confidence official/source image attached in pass 7; kept for review",
+        "attempted_sources": []
+    },
+    {
+        "sku": "ACCESSORY-001",
+        "name": "Apple 20W USB-C Power Adapter",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "no high-confidence official/source image attached in pass 7; kept for review",
+        "attempted_sources": []
+    },
+    {
+        "sku": "ACCESSORY-002",
+        "name": "Apple USB-C Charge Cable 1m",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "no high-confidence official/source image attached in pass 7; kept for review",
+        "attempted_sources": []
+    },
+    {
+        "sku": "ACCESSORY-003",
+        "name": "Samsung 25W Power Adapter USB-C",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "no high-confidence official/source image attached in pass 7; kept for review",
+        "attempted_sources": []
+    },
+    {
+        "sku": "ACCESSORY-006",
+        "name": "Baseus Cafule USB-C 100W Cable 2m",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "no high-confidence official/source image attached in pass 7; kept for review",
+        "attempted_sources": []
+    },
+    {
+        "sku": "ACCESSORY-007",
+        "name": "Xiaomi 67W Charging Combo",
+        "images_found": 2,
+        "missing_main": false,
+        "missing_gallery_count": 3,
+        "reason": "pass 7 processed only high-confidence images; still missing enough verified model images",
+        "attempted_sources": [
+            "https://www.mi.com/global/product/xiaomi-67w-charging-combo-type-a/"
+        ]
+    },
+    {
+        "sku": "ACCESSORY-008",
+        "name": "Belkin BoostCharge Pro 3-in-1 MagSafe",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "no high-confidence official/source image attached in pass 7; kept for review",
+        "attempted_sources": []
+    },
+    {
+        "sku": "OFFICE-001",
+        "name": "Canon PIXMA G3770 WiFi",
+        "images_found": 0,
+        "missing_main": true,
+        "missing_gallery_count": 4,
+        "reason": "no high-confidence official/source image attached in pass 8; kept for review",
+        "attempted_sources": [
+            "https://asia.canon/en/consumer/pixma-g3770/black/product"
+        ]
+    },
+    {
+        "sku": "OFFICE-002",
+        "name": "Epson EcoTank L3250 WiFi",
+        "images_found": 1,
+        "missing_main": false,
+        "missing_gallery_count": 4,
+        "reason": "pass 8 processed only high-confidence images; still missing enough verified model images",
+        "attempted_sources": [
+            "https://www.epson.com.vn/For-Home/Printers/Ink-Tank-Printers/Epson-EcoTank-L3250-A4-Wi-Fi-All-in-One-Ink-Tank-Printer/p/C11CJ67503"
+        ]
+    },
+    {
+        "sku": "OFFICE-003",
+        "name": "HP LaserJet MFP M236dw",
+        "images_found": 1,
+        "missing_main": false,
+        "missing_gallery_count": 4,
+        "reason": "pass 8 processed only high-confidence images; still missing enough verified model images",
+        "attempted_sources": [
+            "https://www.hp.com/my-en/shop/hp-laserjet-mfp-m236dw-printer-9yf95a.html"
+        ]
+    }
+]

@@ -14,15 +14,18 @@ class EloquentProductRepository implements ProductRepositoryInterface
 {
     public function findBySlug(string $slug): ?Product
     {
-        return Product::with([
+        $query = Product::with([
             'brand',
             'categories',
             'media' => fn ($query) => $query->orderBy('display_order')->orderBy('id'),
             'variants.attributeValues.attribute',
         ])
             ->where('slug', $slug)
-            ->where('is_active', true)
-            ->first();
+            ->where('is_active', true);
+
+        $this->applyLocalDemoImageSafety($query);
+
+        return $query->first();
     }
 
     public function findById(int $id): ?Product
@@ -69,24 +72,28 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
     public function relatedProducts(Product $product, int $limit = 6): Collection
     {
-        return Product::with(['brand', 'categories'])
+        $query = Product::with(['brand', 'categories'])
             ->where('id', '!=', $product->id)
             ->where('is_active', true)
             ->when($product->primary_category_id, function ($query, $categoryId) {
                 $query->where('primary_category_id', $categoryId);
             })
-            ->orderByDesc('id')
-            ->limit($limit)
-            ->get();
+            ->orderByDesc('id');
+
+        $this->applyLocalDemoImageSafety($query);
+
+        return $query->limit($limit)->get();
     }
 
     public function latestProducts(int $limit = 6): Collection
     {
-        return Product::with(['brand', 'categories'])
+        $query = Product::with(['brand', 'categories'])
             ->where('is_active', true)
-            ->orderByDesc('id')
-            ->limit($limit)
-            ->get();
+            ->orderByDesc('id');
+
+        $this->applyLocalDemoImageSafety($query);
+
+        return $query->limit($limit)->get();
     }
 
     public function incrementViews(Product $product): void
@@ -98,16 +105,18 @@ class EloquentProductRepository implements ProductRepositoryInterface
     {
         $normalized = trim(str_replace('-', ' ', $tag));
 
-        return Product::with(['brand', 'categories'])
+        $query = Product::with(['brand', 'categories'])
             ->where('is_active', true)
             ->where(function (Builder $query) use ($normalized) {
                 $query->where('name', 'like', "%{$normalized}%")
                     ->orWhere('slug', 'like', "%{$normalized}%")
                     ->orWhere('meta->tags', 'like', "%{$normalized}%");
             })
-            ->orderByDesc('id')
-            ->limit($limit)
-            ->get();
+            ->orderByDesc('id');
+
+        $this->applyLocalDemoImageSafety($query);
+
+        return $query->limit($limit)->get();
     }
 
     public function productsByCategoryIds(array $ids, int $limit = 12): Collection
@@ -116,15 +125,17 @@ class EloquentProductRepository implements ProductRepositoryInterface
             return collect();
         }
 
-        return Product::with(['brand', 'categories'])
+        $query = Product::with(['brand', 'categories'])
             ->where('is_active', true)
             ->where(function (Builder $builder) use ($ids) {
                 $builder->whereIn('primary_category_id', $ids)
                     ->orWhereHas('categories', fn (Builder $relation) => $relation->whereIn('product_categories.id', $ids));
             })
-            ->orderByDesc('id')
-            ->limit($limit)
-            ->get();
+            ->orderByDesc('id');
+
+        $this->applyLocalDemoImageSafety($query);
+
+        return $query->limit($limit)->get();
     }
 
     public function priceRangeByCategorySlug(string $slug): array
@@ -160,6 +171,8 @@ class EloquentProductRepository implements ProductRepositoryInterface
             ->where('is_active', true)
             ->orderByDesc('id');
 
+        $this->applyLocalDemoImageSafety($query);
+
         if ($afterId) {
             $query->where('id', '<', $afterId);
         }
@@ -169,10 +182,13 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
     public function randomActivePaginate(int $perPage = 6): LengthAwarePaginator
     {
-        return Product::with(['brand', 'categories'])
+        $query = Product::with(['brand', 'categories'])
             ->where('is_active', true)
-            ->inRandomOrder()
-            ->paginate($perPage);
+            ->inRandomOrder();
+
+        $this->applyLocalDemoImageSafety($query);
+
+        return $query->paginate($perPage);
     }
 
     public function searchActive(string $keyword, ?int $limit = null): Collection
@@ -180,6 +196,8 @@ class EloquentProductRepository implements ProductRepositoryInterface
         $query = Product::with(['brand', 'categories'])
             ->where('is_active', true)
             ->where('name', 'like', "%{$keyword}%");
+
+        $this->applyLocalDemoImageSafety($query);
 
         $query->orderByDesc('id');
 
@@ -196,6 +214,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
         if ($onlyActive) {
             $query->where('is_active', true);
+            $this->applyLocalDemoImageSafety($query);
         }
 
         if (array_key_exists('status', $filters)) {
@@ -323,6 +342,21 @@ class EloquentProductRepository implements ProductRepositoryInterface
             '0', 'false', 'no', 'inactive' => false,
             default => null,
         };
+    }
+
+    protected function applyLocalDemoImageSafety(Builder $query): Builder
+    {
+        if (! (bool) config('storefront.local_demo_sales_mode', false)) {
+            return $query;
+        }
+
+        return $query
+            ->whereNotNull('thumbnail_path')
+            ->where('thumbnail_path', '!=', '')
+            ->where(function (Builder $builder) {
+                $builder->where('thumbnail_path', 'like', 'assets/%')
+                    ->orWhere('thumbnail_path', 'like', 'uploads/%');
+            });
     }
 
     public function create(array $data): Product

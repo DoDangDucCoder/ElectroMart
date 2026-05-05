@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'local_demo_sales_mode' => filter_var(env('LOCAL_DEMO_SALES_MODE', false), FILTER_VALIDATE_BOOL),
+
     'flash_sale' => [
         'enabled' => filter_var(env('STOREFRONT_FLASH_SALE_ENABLED', true), FILTER_VALIDATE_BOOL),
         'kicker' => env('STOREFRONT_FLASH_SALE_KICKER', ''),
