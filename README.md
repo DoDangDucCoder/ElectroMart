@@ -1,94 +1,233 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Website thương mại điện tử bán thiết bị điện tử
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Dự án Laravel local phục vụ đồ án tốt nghiệp với đề tài **“Xây dựng website thương mại điện tử bán thiết bị điện tử”**. Hệ thống mô phỏng một website bán lẻ thiết bị điện tử gồm storefront cho khách hàng, khu vực quản trị, tài khoản khách hàng, giỏ hàng, đặt hàng COD và các API phục vụ tích hợp.
 
-## About Laravel
+## Tổng quan
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Hệ thống tập trung vào các luồng nghiệp vụ cốt lõi của thương mại điện tử:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Hiển thị sản phẩm, danh mục, thương hiệu và chi tiết sản phẩm.
+- Tìm kiếm, lọc sản phẩm, giỏ hàng và checkout COD.
+- Quản lý tài khoản khách hàng, địa chỉ và lịch sử đơn hàng.
+- Quản trị sản phẩm, danh mục, thương hiệu, khách hàng, đơn hàng và nội dung.
+- API public/customer/admin với xác thực token bằng Laravel Sanctum.
+- Cơ chế phân quyền, middleware, CSRF, session và hàng đợi database.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Công nghệ sử dụng
 
-# 🛍️ Laravel Shop Website (Laravel 11)
+| Nhóm | Công nghệ |
+|---|---|
+| Backend | Laravel 11, PHP 8.2+ |
+| Database | MariaDB/MySQL |
+| Frontend | Blade, HTML, CSS, JavaScript, Vite |
+| API/Auth | Laravel Sanctum |
+| Phân quyền | spatie/laravel-permission |
+| PDF/Tài liệu | barryvdh/laravel-dompdf, L5 Swagger |
+| Queue | Database queue |
+| Tooling | Composer, npm, Git |
 
-Dự án **Laravel11_Shop_Website_Full** là website thương mại điện tử được xây dựng bằng **Laravel 11**, hỗ trợ đầy đủ các tính năng quản lý sản phẩm, người dùng, giỏ hàng, thanh toán, v.v.
+## Chức năng chính
 
----
+### Storefront
 
-## 🚀 1. Yêu cầu hệ thống
+- Trang chủ, danh sách sản phẩm, trang chi tiết sản phẩm.
+- Duyệt sản phẩm theo danh mục, thương hiệu.
+- Tìm kiếm và gợi ý sản phẩm.
+- Giỏ hàng, checkout COD.
+- Trang liên hệ, blog/tin tức, video và các thành phần nội dung.
 
-Trước khi cài đặt, đảm bảo bạn đã cài:
+### Customer
 
-- **PHP >= 8.2**
-- **Composer**
-- **Node.js & npm**
-- **MySQL hoặc PostgreSQL**
-- **Git**
+- Đăng ký, đăng nhập, đăng xuất.
+- Quản lý hồ sơ và địa chỉ nhận hàng.
+- Xem lịch sử đơn hàng.
+- Theo dõi thông tin đơn hàng đã đặt.
 
-## 🧩 2. Clone source về máy
+### Admin
 
-git clone https://github.com/HieuTanGitHub/Laravel11_Shop_Website_Full.git
+- Quản lý sản phẩm, danh mục, thương hiệu và ảnh sản phẩm.
+- Quản lý khách hàng, đơn hàng, thanh toán và giao hàng.
+- Quản lý nội dung, banner, blog, video, liên hệ.
+- Quản lý vai trò, quyền, cấu hình và dữ liệu vận hành.
 
-Di chuyển vào thư mục dự án:
+### API
 
-cd Laravel11_Shop_Website_Full
+- Public API cho dữ liệu công khai.
+- Customer API cho tác vụ của khách hàng.
+- Admin API cho tác vụ quản trị.
+- Xác thực token bằng Laravel Sanctum.
 
-## ⚙️ 3. Cài đặt các thư viện PHP (vendor)
+## Dữ liệu mẫu và ảnh sản phẩm
 
-composer install hay composer update
+Dữ liệu mẫu chính nằm trong:
 
-## 🛠️ 4. Cấu hình môi trường .env
+- `docs/import/products-sample-100.csv`
+- `docs/import/product-images-manifest.csv`
+- `docs/import/product-images-manifest.json`
+- `docs/import/product-images-review.csv`
+- `docs/import/product-images-review.json`
 
-Mở file .env và sửa các thông tin kết nối database:
+Ảnh sản phẩm mẫu được lưu theo cấu trúc:
 
-## 🛠️ 4.1 Nạp dữ liệu thật từ `shopbanhang.sql`
+```text
+public/uploads/products/sample-imported/<SKU>/
+```
 
-APP_NAME="Laravel Shop"
-APP_URL=http://localhost:8000
+Quy ước:
 
-DB_CONNECTION=mysql
+- `products.thumbnail_path`: ảnh chính của sản phẩm.
+- `product_media.file_path`: ảnh gallery/phụ của sản phẩm.
+- `docs/import/product-images-manifest.*`: lưu nguồn ảnh, domain, đường dẫn lưu, kích thước và ghi chú sử dụng.
+- `docs/import/product-images-review.*`: danh sách sản phẩm còn thiếu ảnh hoặc cần kiểm tra thêm.
+
+Lưu ý: ảnh và một phần dữ liệu sản phẩm dùng cho mục đích học tập/local demo. Khi triển khai kinh doanh thật cần thay bằng ảnh tự chụp, ảnh nhà cung cấp hoặc ảnh được cấp quyền chính thức.
+
+## Yêu cầu môi trường
+
+- PHP 8.2 trở lên.
+- Composer.
+- Node.js và npm.
+- MariaDB hoặc MySQL.
+- Git.
+
+## Cài đặt local
+
+1. Cài thư viện PHP:
+
+```bash
+composer install
+```
+
+2. Cài thư viện frontend:
+
+```bash
+npm install
+```
+
+3. Tạo file môi trường:
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Trên Windows PowerShell có thể dùng:
+
+```powershell
+Copy-Item .env.example .env
+php artisan key:generate
+```
+
+4. Cấu hình database trong `.env`:
+
+```env
+APP_URL=http://127.0.0.1:8000
+
+DB_CONNECTION=mariadb
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=tendatabase
+DB_DATABASE=shopbanhang
 DB_USERNAME=root
 DB_PASSWORD=
 
+MAIL_MAILER=log
+QUEUE_CONNECTION=database
+```
 
-Tạo key cho ứng dụng:
-php artisan key:generate
+Không commit mật khẩu thật, SMTP production hoặc thông tin gateway thật vào repository.
 
-Nạp dump thật và chuyển sang schema hiện tại:
-php artisan data:load-real --dump=shopbanhang.sql --force
+5. Chạy migration và seeder nếu dựng database mới:
 
-Nếu chỉ muốn seed demo để test nhanh, giữ nguyên `DatabaseSeeder` hiện tại và chạy:
+```bash
+php artisan migrate
 php artisan db:seed
+```
 
-## ⚙️ 5. Chạy ứng dụng
-Chạy server Laravel:
+Nếu đang phục hồi từ backup/dump local đã có sẵn, kiểm tra kỹ trước khi chạy migration hoặc seeder để tránh ghi đè dữ liệu.
+
+6. Tạo storage link nếu cần dùng file trong `storage/app/public`:
+
+```bash
+php artisan storage:link
+```
+
+7. Build hoặc chạy frontend:
+
+```bash
+npm run build
+```
+
+Hoặc khi phát triển:
+
+```bash
+npm run dev
+```
+
+8. Chạy ứng dụng:
+
+```bash
 php artisan serve
+```
 
-Mở trình duyệt và truy cập:
-👉 http://127.0.0.1:8000
+Mở trình duyệt tại:
 
-## 🚀 6. Contact
-fb/hieutruong19 | zalo 0932023992 fix code, any question | YT tutorials: https://www.youtube.com/@hieutancodeproject
+```text
+http://127.0.0.1:8000
+```
 
-## 🚀 7. Web Images
-<img width="1358" height="1154" alt="Image" src="https://github.com/user-attachments/assets/19d9f5a2-eeb7-4ca7-9215-d732f778b842" />
-<img width="1358" height="1605" alt="Image" src="https://github.com/user-attachments/assets/ba16f255-21bb-4cdb-865f-c02f05d7dd77" />
-<img width="1358" height="2532" alt="Image" src="https://github.com/user-attachments/assets/17813296-e7c9-44be-ae32-ae34f0723961" />
-<img width="1358" height="1794" alt="Image" src="https://github.com/user-attachments/assets/4d9eab3e-14fa-4a07-a733-ac55f8b8d628" />
-<img width="1358" height="1113" alt="Image" src="https://github.com/user-attachments/assets/d51b21a4-6d2b-4129-bccf-977df33aef82" />
-<img width="1358" height="1514" alt="Image" src="https://github.com/user-attachments/assets/236f8fff-1332-447c-9884-b5815f28da6c" />
+## Lệnh kiểm tra thường dùng
+
+```bash
+php artisan migrate:status --pending
+php artisan legacy:audit-runtime --fail-on-issues
+php artisan queue:failed --no-ansi
+```
+
+Khi có thay đổi PHP, có thể chạy thêm nếu công cụ tồn tại trong môi trường:
+
+```bash
+vendor/bin/pint --dirty
+php artisan test
+```
+
+Khi có thay đổi frontend:
+
+```bash
+npm run build
+```
+
+## Một số tài liệu trong dự án
+
+- `docs/setup.md`: hướng dẫn setup chi tiết.
+- `docs/architecture.md`: kiến trúc hệ thống.
+- `docs/data-model.md`: mô hình dữ liệu.
+- `docs/request-flows.md`: luồng request/nghiệp vụ.
+- `docs/demo-data-lifecycle.md`: vòng đời dữ liệu demo.
+- `docs/report/diagrams`: sơ đồ dùng cho báo cáo.
+- `docs/report/screenshots`: ảnh giao diện dùng cho báo cáo.
+
+## Ảnh giao diện
+
+Một số ảnh minh họa giao diện đã được lưu trong `docs/report/screenshots`:
+
+- `hinh-2-13-trang-chu.png`
+- `hinh-2-14-danh-sach-san-pham.png`
+- `hinh-2-15-chi-tiet-san-pham.png`
+- `hinh-2-11-dashboard-admin.png`
+- `hinh-2-12-quan-ly-san-pham.png`
+- `hinh-2-16-tai-khoan-khach-hang.png`
+- `hinh-2-17-gio-hang.png`
+- `hinh-2-18-checkout-cod.png`
+
+## Lưu ý an toàn
+
+- Không chạy `migrate:fresh` trên database có dữ liệu cần giữ.
+- Không import SQL khi chưa backup.
+- Không gọi payment gateway thật trong môi trường local/demo.
+- Không tạo dữ liệu khách hàng/đơn hàng giả trên môi trường thật.
+- Không bật hiển thị sản phẩm mẫu nếu chưa rà soát ảnh, giá, tồn kho và quyền sử dụng nội dung.
+- Luôn tạo backup trước các thao tác import, cleanup hoặc cập nhật dữ liệu hàng loạt.
+
+## Trạng thái đồ án
+
+Dự án đang phục vụ môi trường học tập/local demo. Các luồng chính của website thương mại điện tử đã được xây dựng, bao gồm storefront, admin, customer account, checkout COD, API, dữ liệu mẫu sản phẩm và cơ chế ảnh sản phẩm. Trước khi triển khai production cần rà soát lại dữ liệu thật, ảnh sản phẩm, thanh toán, vận chuyển, email, bảo mật vận hành và kiểm thử tự động.
