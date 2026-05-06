@@ -9,6 +9,16 @@ body.g-admin-shell-modern {
     font-family: 'Inter', 'Roboto', system-ui, -apple-system, "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+}
+
+html {
+    min-height: 100%;
+    background: #f4f6fb;
+}
+
+body.g-admin-shell-modern .g-admin-shell {
+    min-height: 100vh;
 }
 
 /* ----------- Top header ----------- */
@@ -298,9 +308,12 @@ body.g-admin-shell-modern {
 .g-admin-shell-modern #sidebar {
     background: #0f172a;
     color: #cbd5e1;
+    top: 64px;
+    bottom: 0;
     padding-top: 12px;
     padding-bottom: 80px;
-    height: calc(100vh - 64px);
+    height: auto;
+    min-height: calc(100vh - 64px);
     overflow-y: auto;
 }
 
@@ -468,6 +481,7 @@ body.g-admin-shell-modern {
 /* ----------- Content area ----------- */
 .g-admin-shell-modern #main-content {
     background: #f4f6fb;
+    min-height: 100vh;
 }
 
 .g-admin-shell-modern #main-content > .wrapper {
