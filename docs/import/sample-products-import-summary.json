@@ -1,0 +1,25 @@
+{
+    "dry_run": false,
+    "commit": true,
+    "target": 1,
+    "max_pages": 3,
+    "products_checked": 1,
+    "valid_products": 1,
+    "products_imported": 1,
+    "products_updated": 0,
+    "products_duplicate": 0,
+    "products_skipped": 0,
+    "products_error": 0,
+    "images_validated": 8,
+    "images_saved": 5,
+    "backup_path": "C:\\Users\\Admin\\Desktop\\shop/_backups/Laravel11_Shop_Website_Full/20260506-183602-before-import-sample-products",
+    "reports": {
+        "audit_csv": "docs/import/sample-products-import-audit.csv",
+        "audit_json": "docs/import/sample-products-import-audit.json",
+        "summary_json": "docs/import/sample-products-import-summary.json",
+        "errors_json": "docs/import/sample-products-import-errors.json"
+    },
+    "sources": {
+        "xgear": "XGear"
+    }
+}

@@ -3,7 +3,7 @@
 Project có hai lớp dữ liệu đang cùng tồn tại:
 
 - Schema mới trong `database/migrations`, model mới trong `app/Infrastructure/Persistence/Eloquent`.
-- Schema legacy từ `shopbanhang.sql`, model legacy trong `app/Models`.
+- Schema legacy có thể đối chiếu từ `shopbanhang.sql`, nhưng dump này là archive cũ, không phải dữ liệu production hiện hành.
 
 Khi sửa dữ liệu, luôn xác định flow đang dùng model nào.
 
@@ -61,12 +61,12 @@ erDiagram
 
 | Bảng | Model mới | Model legacy liên quan | Field quan trọng |
 | --- | --- | --- | --- |
-| `brands` | `Catalog\Brand` | `BrandProduct` controller cũ | `name`, `slug`, `logo_path`, `is_active`, `display_order`, `meta` |
-| `product_categories` | `Catalog\ProductCategory` | `CategoryProductModel` | `parent_id`, `name`, `slug`, `is_active`, `display_order`, `meta` |
-| `products` | `Catalog\Product` | `app/Models/Product` (`tbl_product`) | `brand_id`, `primary_category_id`, `name`, `slug`, `price`, `sale_price`, `cost_price`, `stock_quantity`, `is_active`, `is_featured`, `is_hot`, `thumbnail_path`, `meta` |
+| `brands` | `Catalog\Brand` | legacy archive: `Brand`/old brand controllers | `name`, `slug`, `logo_path`, `is_active`, `display_order`, `meta` |
+| `product_categories` | `Catalog\ProductCategory` | legacy archive: `CategoryProductModel` | `parent_id`, `name`, `slug`, `is_active`, `display_order`, `meta` |
+| `products` | `Catalog\Product` | legacy archive: `app/Models/Product` (`tbl_product`) | `brand_id`, `primary_category_id`, `name`, `slug`, `price`, `sale_price`, `cost_price`, `stock_quantity`, `is_active`, `is_featured`, `is_hot`, `thumbnail_path`, `meta` |
 | `product_category_product` | quan hệ many-to-many | không rõ | `product_id`, `product_category_id` |
 | `product_media` | `Catalog\ProductMedia` | `Gallery` | `product_id`, `file_path`, `disk`, `collection`, `display_order` |
-| `product_variants` | `Catalog\ProductVariant` | `ProductAttribute` legacy | `product_id`, `sku`, `price`, `stock_quantity`, `is_active` |
+| `product_variants` | `Catalog\ProductVariant` | legacy archive: `ProductAttribute` | `product_id`, `sku`, `price`, `stock_quantity`, `is_active` |
 | `product_reviews` | `Catalog\ProductReview` | `Comment`, `Rating` | `product_id`, `customer_id`, `rating`, `comment`, `status` |
 | `product_views` | `Catalog\ProductView` | không | `product_id`, `customer_id`, `ip_address`, `user_agent`, tracking recommendation/search |
 
@@ -89,7 +89,7 @@ erDiagram
 
 | Bảng | Model mới | Model legacy liên quan | Field quan trọng |
 | --- | --- | --- | --- |
-| `customers` | `Customer\Customer` | `app/Models/Customer` | `name`, `email`, `phone`, `password`, `avatar_path`, `is_active`, `meta` |
+| `customers` | `Customer\Customer` | legacy archive: `app/Models/Customer` | `name`, `email`, `phone`, `password`, `avatar_path`, `is_active`, `meta` |
 | `customer_addresses` | `Customer\Address` | `Shipping` legacy | `customer_id`, `recipient_name`, `recipient_phone`, `email`, `address_line1`, `location_*_id`, `is_default` |
 | `locations` | `Geo\Location` | `City`, `Province`, `Wards` | `name`, `code`, `type`, `parent_id`, `is_active` |
 | `shipping_fees` | `Shipping\ShippingFee` | `Feeship` | `city_id`, `province_id`, `ward_id`, `amount` |
@@ -102,7 +102,7 @@ Web storefront cart không ghi vào `carts/cart_items`. Nó dùng session key `c
 
 | Bảng | Model mới | Model legacy liên quan | Field quan trọng |
 | --- | --- | --- | --- |
-| `orders` | `Order\Order` | `app/Models/Order` | `code`, `customer_id`, `status`, `payment_status`, `fulfillment_status`, `subtotal`, `discount_total`, `shipping_total`, `total`, `coupon_code`, `source`, `placed_at`, `meta` |
+| `orders` | `Order\Order` | legacy archive: `app/Models/Order` | `code`, `customer_id`, `status`, `payment_status`, `fulfillment_status`, `subtotal`, `discount_total`, `shipping_total`, `total`, `coupon_code`, `source`, `placed_at`, `meta` |
 | `order_items` | `Order\OrderItem` | `OrderDetails` | `order_id`, `product_id`, `product_name`, `attributes`, `original_price`, `price`, `sale_price`, `cost_price`, `quantity`, `subtotal`, `discount_amount`, `meta` |
 | `order_shipping` | `Order\OrderShipping` | `Shipping` legacy | `order_id`, `recipient_name`, `recipient_phone`, `email`, `city_id`, `province_id`, `ward_id`, `address_line1`, `shipping_method`, `shipping_fee` |
 | `payments` | `Order\Payment` | cổng thanh toán legacy | `order_id`, `provider`, `status`, `currency`, `amount`, `paid_at`, `meta` |
@@ -131,23 +131,27 @@ Coupon web được apply trong `CartController@check_coupon`, lưu session `cou
 
 | Bảng | Model mới/legacy | Vai trò |
 | --- | --- | --- |
-| `blog_categories`, `blog_posts` | `Cms\BlogCategory`, `Cms\BlogPost`, legacy `Post`, `CatePost` | Bài viết. |
-| `banners`, `site_links`, `site_contacts`, `documents`, `videos`, `news` | `Cms\*`, legacy `Slider`, `Contact`, `Document`, `Video`, `News` | Nội dung site. |
+| `blog_categories`, `blog_posts` | `Cms\BlogCategory`, `Cms\BlogPost`, compatibility `Post`, legacy `CatePost` | Bài viết. |
+| `banners`, `site_links`, `site_contacts`, `documents`, `videos`, `news` | `Cms\*`, compatibility/legacy classes như `Slider`, `Contact`, `Document`, `Video`, `News` | Nội dung site. |
 | `settings` | `System\Setting` | Cấu hình hệ thống. |
 | `chat_conversations`, `chat_messages` | `Support\ChatConversation`, `Support\ChatMessage` | Chatbot và admin chat inbox. |
 | `analytics_daily`, `analytics_events`, `page_views`, `conversion_tracking`, `user_sessions` | `Analytics\*` | Analytics. |
 | `users`, Spatie permission tables | `app/Models/User`, Spatie models | Admin auth/roles/permissions. |
 | `jobs`, `cache`, `personal_access_tokens` | Laravel tables | Queue/cache/Sanctum. |
 
-## Legacy Tables Cần Nhớ
+## Legacy Tables / Archive Notes
 
-Các model legacy thường khai báo `$table` và `$primaryKey` riêng. Ví dụ `app/Models/Product.php` dùng:
+Các model legacy còn trong `app/Models` chủ yếu là compatibility/archive và không nên dùng cho flow runtime mới. Ví dụ `app/Models/Product.php` dùng:
 
 - table: `tbl_product`
 - primary key: `product_id`
 - field: `product_name`, `product_slug`, `category_id`, `brand_id`, `product_price`, `product_image`, `product_status`, `price_cost`
 
-Một số code mới đã chuyển sang bảng `products`, nhưng admin/order/CMS vẫn còn nhiều nhánh legacy. Không viết query raw dựa trên suy đoán tên bảng.
+Runtime đã được audit để không còn phụ thuộc trực tiếp vào `tbl_*` trong các vùng được scan. Không viết query raw dựa trên suy đoán tên bảng; dùng model mới trong `App\Infrastructure\Persistence\Eloquent` hoặc chạy audit trước khi cleanup:
+
+```bash
+php artisan legacy:audit-runtime --fail-on-issues
+```
 
 ## Quy Tắc Khi Sửa Data Model
 

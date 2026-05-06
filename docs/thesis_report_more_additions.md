@@ -9,7 +9,6 @@ Dưới đây là phần gợi ý bổ sung theo đúng định hướng: tăng 
 - Phân tích **quyết định kiến trúc**: vì sao không để logic trong controller, vì sao tách sang service, request validation, support class, repository.
 - Viết riêng mục **so sánh MVC cơ bản với kiến trúc hiện tại của dự án** để làm rõ repo đã vượt khỏi CRUD thông thường.
 - Thêm mục **rủi ro kỹ thuật**: dữ liệu hybrid legacy + modern, UI đổi có thể ảnh hưởng nghiệp vụ, rủi ro phân quyền admin/API.
-- Thêm mục **chiến lược giảm thiểu rủi ro**: tách validation, mở rộng feature test, harden màn legacy, gom rule vào support classes.
 - Thêm phân tích về **dữ liệu hành vi**, **recommendation** và **product discovery** để báo cáo có chất TMĐT hiện đại hơn.
 
 ---
@@ -25,9 +24,7 @@ Dưới đây là phần gợi ý bổ sung theo đúng định hướng: tăng 
 
 ## 3. Làm Chương 5 mạnh hơn
 
-- Ngoài test case thủ công, thêm tiểu mục **đánh giá mức độ hoàn thiện từ góc độ kiểm thử**.
-- Thêm phần **rủi ro regression khi refactor hệ hybrid** và vì sao feature test có ý nghĩa sống còn.
-- Thêm **ảnh terminal chạy test**, **ảnh cây thư mục tests/Feature**, **ảnh một số màn liên quan đến luồng test**.
+- Ngoài kịch bản kiểm tra thủ công, thêm tiểu mục **đánh giá mức độ hoàn thiện từ góc độ kiểm tra chất lượng**.
 
 ---
 

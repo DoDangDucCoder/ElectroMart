@@ -1,0 +1,20 @@
+{
+    "dry_run": false,
+    "commit": true,
+    "products_audited": 20,
+    "products_missing_gallery": 20,
+    "products_with_images_added": 0,
+    "products_with_planned_images": 0,
+    "products_review_image": 20,
+    "products_partial": 0,
+    "products_error": 0,
+    "images_added": 0,
+    "planned_images": 0,
+    "backup_path": "C:\\Users\\Admin\\Desktop\\shop/_backups/Laravel11_Shop_Website_Full/20260506-163925-before-supplement-gallery",
+    "reports": {
+        "audit_csv": "C:\\Users\\Admin\\Desktop\\shop\\Laravel11_Shop_Website_Full\\docs/import/supplement-gallery-audit.csv",
+        "audit_json": "C:\\Users\\Admin\\Desktop\\shop\\Laravel11_Shop_Website_Full\\docs/import/supplement-gallery-audit.json",
+        "summary_json": "C:\\Users\\Admin\\Desktop\\shop\\Laravel11_Shop_Website_Full\\docs/import/supplement-gallery-summary.json",
+        "errors_json": "C:\\Users\\Admin\\Desktop\\shop\\Laravel11_Shop_Website_Full\\docs/import/supplement-gallery-errors.json"
+    }
+}

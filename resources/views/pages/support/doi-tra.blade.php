@@ -9,7 +9,7 @@ $meta_title=$meta_title??'Chính sách đổi trả - DangDuc';
 @push('styles')<link href="{{ asset('frontend/css/policy-page.css') }}" rel="stylesheet">@endpush
 @section('content')
 <div class="pp-wrap">
-    <nav class="pp-breadcrumb"><a href="{{ url('/') }}">Trang chủ</a> <i class="fa fa-angle-right"></i> Chính sách đổi trả</nav>
+    @include('partials.storefront.breadcrumb', ['class' => 'pp-breadcrumb', 'separator' => '›', 'items' => [['label' => 'Chính sách đổi trả', 'current' => true]]])
 
     {{-- Hero --}}
     <section class="pp-hero">

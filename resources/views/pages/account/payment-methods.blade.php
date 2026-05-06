@@ -78,7 +78,14 @@
 @endphp
 
 <div class="accp-wrap">
-    <div class="accp-crumb"><a href="{{ url('/') }}">Trang chủ</a><span class="sep">›</span><a href="{{ route('customer.account') }}">Tài khoản</a><span class="sep">›</span><span class="current">Phương thức thanh toán</span></div>
+    @include('partials.storefront.breadcrumb', [
+        'class' => 'accp-crumb',
+        'separator' => '›',
+        'items' => [
+            ['label' => 'Tài khoản', 'url' => route('customer.account')],
+            ['label' => 'Phương thức thanh toán', 'current' => true],
+        ],
+    ])
 
     <div class="accp-grid">
         @include('pages.account.partials.sidebar', ['currentSection' => 'payment-methods'])

@@ -270,15 +270,15 @@
 
 /* Hero visual */
 .promo-hero-visual {
-  flex: 0 0 420px;
-  max-width: 420px;
+  flex: 0 0 500px;
+  max-width: 500px;
 }
 
 .promo-hero-img {
   width: 100%;
-  height: auto;
+  height: 340px;
   border-radius: 16px;
-  object-fit: cover;
+  object-fit: contain;
   box-shadow: 0 8px 32px rgba(0,0,0,.3);
 }
 
@@ -319,6 +319,7 @@
 }
 
 .promo-cat-icon-wrap {
+  position: relative;
   width: 72px;
   height: 72px;
   border-radius: 14px;
@@ -329,6 +330,16 @@
   overflow: hidden;
   border: 1px solid var(--promo-border);
   transition: all .2s;
+}
+
+.promo-cat-icon-wrap::before {
+  content: '';
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: #ecfeff;
+  z-index: 0;
 }
 
 .promo-cat-item:hover .promo-cat-icon-wrap {
@@ -343,6 +354,8 @@
 }
 
 .promo-cat-icon-wrap .fa {
+  position: relative;
+  z-index: 1;
   font-size: 28px;
   color: var(--promo-teal);
 }
@@ -762,12 +775,13 @@
    ---------------------------------------------------------------- */
 .promo-product-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
 }
 
 .promo-product-col {
   min-width: 0;
+  display: flex;
 }
 
 /* ----------------------------------------------------------------
@@ -830,7 +844,7 @@
    ---------------------------------------------------------------- */
 @media (max-width: 1200px) {
   .promo-product-grid {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -866,7 +880,7 @@
   }
 
   .promo-product-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .promo-policy-row {
@@ -919,7 +933,7 @@
   }
 
   .promo-product-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .promo-policy-row {
@@ -959,8 +973,8 @@
   }
 
   .promo-product-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
 }
 
@@ -971,17 +985,15 @@
   background: rgba(255,255,255,.4);
 }
 
-/* ----------------------------------------------------------------
-   PRODUCT CARD OVERRIDES for 7-col grid
-   ---------------------------------------------------------------- */
 .promo-product-grid .tech-product-card {
-  font-size: 12px;
+  width: 100%;
+  font-size: 14px;
 }
 
 .promo-product-grid .tech-product-card .tech-product-body h3 {
-  font-size: 12px;
-  line-height: 1.35;
-  margin-bottom: 4px;
+  font-size: 15px;
+  line-height: 1.45;
+  margin-bottom: 12px;
 }
 
 .promo-product-grid .tech-product-card .tech-product-body h3 a {
@@ -993,43 +1005,43 @@
 
 .promo-product-grid .tech-product-card .tech-sale-price,
 .promo-product-grid .tech-product-card .tech-old-price {
-  font-size: 12px;
-}
-
-.promo-product-grid .tech-product-card .tech-sale-price {
   font-size: 13px;
 }
 
+.promo-product-grid .tech-product-card .tech-sale-price {
+  font-size: 21px;
+}
+
 .promo-product-grid .tech-product-card .tech-product-brand-row {
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .promo-product-grid .tech-product-card .tech-brand-chip {
-  width: 22px;
-  height: 22px;
-  font-size: 8px;
+  width: 32px;
+  height: 32px;
+  font-size: 11px;
 }
 
 .promo-product-grid .tech-product-card .tech-product-rating {
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .promo-product-grid .tech-product-card .tech-product-rating .fa {
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .promo-product-grid .tech-add-cart-btn {
-  width: 30px;
-  height: 30px;
-  font-size: 12px;
+  width: 42px;
+  height: 42px;
+  font-size: 16px;
 }
 
 /* ----------------------------------------------------------------
    FLASH SALE — compact card items
    ---------------------------------------------------------------- */
 .promo-flash .tech-sale-item {
-  min-width: 180px;
-  max-width: 200px;
+  min-width: 0;
+  max-width: none;
 }
 
 /* ----------------------------------------------------------------

@@ -17,7 +17,7 @@ Sử dụng gợi ý tiêu đề phù hợp với loại đề tài của đồ 
 Nội dung bên trong tiểu mục nên bám theo gợi ý nội dung của loại đề tài đã chọn, ví dụ:
 
 - Đề tài lập trình
-- Đề tài kiểm thử
+- Đề tài kiểm tra chất lượng
 - Đề tài SEO
 - Đề tài SEO video
 - Đề tài phân tích nghiệp vụ hoặc phân tích thiết kế hệ thống
@@ -27,7 +27,7 @@ Nội dung bên trong tiểu mục nên bám theo gợi ý nội dung của lo�
 - Độ dài nội dung tối thiểu của một chương là 10 trang.
 - Độ dài tối thiểu của quyển ĐATN là 50 trang.
 - Tất cả hình vẽ, biểu đồ, bảng biểu hoặc nội dung không do tác giả tự tạo ra bắt buộc phải trích dẫn nguồn.
-- Mã nguồn, script test, hoặc tài liệu tham khảo nếu lấy từ nguồn khác phải ghi rõ nguồn.
+- Mã nguồn, script vận hành, hoặc tài liệu tham khảo nếu lấy từ nguồn khác phải ghi rõ nguồn.
 - Nếu sản phẩm tham khảo mã nguồn mở, cần công khai URL mã nguồn và lời cảm ơn tác giả ở phần `About`, `Về chúng tôi`, hoặc trong file script liên quan.
 - Báo cáo ĐATN sẽ in 02 mặt, chỉ in màu những trang cần thiết.
 - Các hình có quá nhiều chi tiết cần bổ sung bản mềm hoặc URL download để GVPB và hội đồng tiện theo dõi.
@@ -42,7 +42,7 @@ Nội dung bên trong tiểu mục nên bám theo gợi ý nội dung của lo�
 - Quyển báo cáo nộp sau bảo vệ đính kèm bản gốc có chữ ký tươi của GVHD và sinh viên.
 - Trước thứ 6 của tuần thứ 10, sinh viên cần in 02 quyển báo cáo, xin chữ ký xác nhận cho phép bảo vệ của GVHD ở bìa trắng, rồi nộp về bộ môn để phân công phản biện.
 - Sinh viên không có chữ ký xác nhận của GVHD sẽ không được phân công phản biện và bị nhập điểm 0 ĐATN.
-- Sau khi nộp báo cáo bản cứng, sinh viên nộp bản mềm, mã nguồn, test case nếu có, tài liệu tham khảo, file thiết kế, mockup, diagrams vào form thu thập dữ liệu trước bảo vệ.
+- Sau khi nộp báo cáo bản cứng, sinh viên nộp bản mềm, mã nguồn, kịch bản kiểm tra nếu có, tài liệu tham khảo, file thiết kế, mockup, diagrams vào form thu thập dữ liệu trước bảo vệ.
 - Nếu có nhiều file hoặc dung lượng lớn, cần nén thành `.rar`, `.zip`, `.7zip`, sau đó đổi đuôi thành `.pdf` nếu form không cho upload file nén.
 - Trong vòng 10 ngày kể từ khi nộp báo cáo và upload file, sinh viên chủ động liên hệ GVPB được phân công để tiến hành phản biện.
 - GVPB sử dụng Turnitin để kiểm tra đạo văn. Nếu tỷ lệ trùng lặp lớn hơn 30%, sinh viên không được bảo vệ và nhận điểm F ĐATN.
@@ -83,13 +83,13 @@ Chương 1. Cơ sở lý thuyết
 - Framework và thư viện được sử dụng.
 - Tiêu chuẩn và quy trình phát triển phần mềm áp dụng nếu có.
 
-##### Đối với đề tài kiểm thử
+##### Đối với đề tài kiểm tra chất lượng
 
 Chương 1. Cơ sở lý thuyết
 
-- Các phương pháp kiểm thử như kiểm thử hộp đen, hộp trắng.
-- Các kỹ thuật kiểm thử như kiểm thử đơn vị, kiểm thử tích hợp, kiểm thử hệ thống.
-- Công cụ và framework kiểm thử sử dụng.
+- Các phương pháp kiểm tra chất lượng như kiểm tra chất lượng hộp đen, hộp trắng.
+- Các kỹ thuật kiểm tra chất lượng như kiểm tra chất lượng đơn vị, kiểm tra chất lượng tích hợp, kiểm tra chất lượng hệ thống.
+- Công cụ và framework kiểm tra chất lượng sử dụng.
 
 ##### Đối với đề tài SEO
 
@@ -167,19 +167,19 @@ Chương 2. Phân tích và thiết kế hệ thống
 
 Chú ý: Đề tài phân tích thiết kế hệ thống hoặc BA có thể sử dụng cấu trúc 3 chương của đề tài lập trình và không cần làm chương 4.
 
-##### Đối với đề tài kiểm thử
+##### Đối với đề tài kiểm tra chất lượng
 
-Chương 2. Phân tích yêu cầu, thiết kế và triển khai kiểm thử
+Chương 2. Phân tích yêu cầu, thiết kế và triển khai kiểm tra chất lượng
 
-- Phân tích yêu cầu của hệ thống cần kiểm thử.
-- Xác định các trường hợp kiểm thử.
-- Thiết kế kịch bản kiểm thử.
-- Triển khai kiểm thử.
-- Môi trường kiểm thử.
-- Chuẩn bị dữ liệu kiểm thử.
-- Thực hiện các trường hợp kiểm thử.
-- Ghi nhận kết quả kiểm thử.
-- Tự động hóa kiểm thử nếu áp dụng.
+- Phân tích yêu cầu của hệ thống cần kiểm tra chất lượng.
+- Xác định các trường hợp kiểm tra chất lượng.
+- Thiết kế kịch bản kiểm tra chất lượng.
+- Triển khai kiểm tra chất lượng.
+- Môi trường kiểm tra chất lượng.
+- Chuẩn bị dữ liệu kiểm tra chất lượng.
+- Thực hiện các trường hợp kiểm tra chất lượng.
+- Ghi nhận kết quả kiểm tra chất lượng.
+- Tự động hóa kiểm tra chất lượng nếu áp dụng.
 - Lựa chọn công cụ tự động hóa.
 - Xây dựng kịch bản tự động.
 - Thực hiện và duy trì các bài kiểm tra tự động.
@@ -274,15 +274,15 @@ Chương 3. Kết quả cài đặt, thử nghiệm hoặc kết quả nghiên c
 - Cài đặt và cấu hình hệ thống.
 - Mô tả chi tiết các chức năng đã thực hiện.
 - Giao diện và luồng hoạt động của hệ thống.
-- Kết quả kiểm thử đơn vị nếu có.
+- Kết quả kiểm tra chất lượng đơn vị nếu có.
 - Đánh giá hiệu năng hệ thống.
 - So sánh kết quả với mục tiêu ban đầu.
 
-##### Đối với đề tài kiểm thử
+##### Đối với đề tài kiểm tra chất lượng
 
 Chương 3. Phân tích kết quả
 
-- Tổng hợp kết quả kiểm thử.
+- Tổng hợp kết quả kiểm tra chất lượng.
 - Phân tích các lỗi và vấn đề phát hiện được.
 - Đề xuất cải tiến cho hệ thống.
 
@@ -297,7 +297,7 @@ Chương 3. Phân tích kết quả
 
 #### 4.1.4. Kết luận và hướng phát triển
 
-Đối với đề tài lập trình hoặc kiểm thử:
+Đối với đề tài lập trình hoặc kiểm tra chất lượng:
 
 - Nêu những điểm đạt được.
 - Nêu hạn chế.
@@ -380,7 +380,7 @@ Nội dung nên có:
 - Route/API liên quan
 - Database liên quan
 - Validation
-- Test case
+- Kịch bản kiểm tra
 - Rủi ro
 - Việc cần làm tiếp
 
@@ -397,7 +397,7 @@ Nội dung nên có:
 - Nguyên nhân gốc
 - File đã sửa
 - Cách kiểm tra lại
-- Regression test nếu có
+- Rà soát hồi quy nếu có
 
 ### Architecture Note
 
@@ -443,7 +443,7 @@ Nội dung nên có:
 - Validation
 - Permission
 - Ví dụ request/response
-- Test case
+- Kịch bản kiểm tra
 
 ## Standard Structure
 
@@ -498,7 +498,7 @@ Không chỉ liệt kê file đã sửa. Cần nói rõ vì sao cách này phù 
 Đã kiểm tra bằng:
 
 ```bash
-php artisan test
+php artisan route:list --no-ansi
 ```
 
 Hoặc nếu chưa kiểm tra được, ghi rõ lý do và command nên chạy.
@@ -575,10 +575,10 @@ Người dùng nhập thông tin giao hàng, chọn phương thức thanh toán,
 Chạy:
 
 ```bash
-php artisan test --filter=Checkout
+php artisan route:list --no-ansi
 ```
 
-Nếu chưa có test, kiểm tra thủ công:
+Kiểm tra thủ công:
 
 1. Thêm sản phẩm vào giỏ hàng.
 2. Vào checkout.

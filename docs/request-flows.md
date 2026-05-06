@@ -22,7 +22,7 @@ Tài liệu này mô tả các luồng request chính theo route, controller, se
 | Request | `app/Http/Requests/Storefront/Product/*` |
 | Service | `ProductService`, `ProductReviewService`, `ProductPricingService` |
 | Model mới | `Infrastructure/Persistence/Eloquent/Catalog/Product`, `ProductCategory`, `Brand`, `ProductMedia`, `ProductView` |
-| Model legacy | `app/Models/ProductAttribute` cho tùy chọn legacy `tbl_product_attribute` |
+| Variant/attribute | `Infrastructure/Persistence/Eloquent/Catalog/ProductVariant` được map thành shape cũ cho Blade |
 | View | `resources/views/pages/sanpham/show_details.blade.php`, `partials/quickview_modal_body`, `partials/review_thread` |
 
 ```mermaid
@@ -57,7 +57,7 @@ Ghi chú:
 
 - `Product` mới có accessor legacy như `product_id`, `product_name`, `product_price`, nên Blade cũ vẫn dùng được key legacy.
 - Product view được ghi qua `ProductService::recordProductView`.
-- Nếu bảng `tbl_product_attribute` không tồn tại, `legacyProductAttributes()` trả collection rỗng.
+- `legacyProductAttributes()` là tên helper compatibility; dữ liệu hiện lấy từ `product_variants`, không đọc trực tiếp `tbl_product_attribute`.
 
 ## 2. Luồng Thêm Giỏ Hàng
 
@@ -69,9 +69,9 @@ Ghi chú:
 | Thêm qua AJAX | `POST /add-cart-ajax` | `CartController@add_cart_ajax` |
 | Cập nhật nhiều item | `POST /update-cart` | `CartController@update_cart` |
 | Cập nhật quick cart | `POST /update-quick-cart` | `CartController@update_quick_cart` |
-| Xóa item | `GET /del-product/{session_id}` hoặc `/delete-to-cart/{rowId}` | `CartController@delete_product` |
+| Xóa item | `DELETE /del-product/{session_id}` hoặc `DELETE /delete-to-cart/{rowId}` | `CartController@delete_product` |
 | Xóa theo product id | `POST/DELETE /remove-item` | `CartController@remove_item` |
-| Xóa toàn bộ | `GET/POST /del-all-product` | `CartController@delete_all_product` |
+| Xóa toàn bộ | `POST/DELETE /del-all-product` | `CartController@delete_all_product` |
 
 ### File liên quan
 
@@ -83,7 +83,6 @@ Ghi chú:
 | Model | `Catalog\Product`, legacy `ProductAttribute` nếu chọn attribute |
 | Session | `cart`, `coupon`, `fee` |
 | View | `resources/views/pages/cart/cart_ajax.blade.php`, `pages/cart/partials/*` |
-| Test | `tests/Feature/CartFlowTest.php` |
 
 ```mermaid
 sequenceDiagram
@@ -141,7 +140,6 @@ Ghi chú:
 | Service | `CheckoutService`, `CartService`, `CouponService`, `ShippingService` |
 | Model | `Customer`, `Address`, `Location`, `ShippingFee`, `Order`, `OrderItem`, `OrderShipping`, `Payment`, `CouponRedemption` |
 | View | `pages/checkout/show_checkout`, `payment`, `bank_transfer_instructions` |
-| Test | `tests/Feature/CheckoutFlowTest.php` |
 
 ```mermaid
 sequenceDiagram
@@ -253,7 +251,8 @@ Admin login dùng `Auth::guard('web')`, sau đó middleware `admin.access` và `
 
 | Tác vụ | Route | Controller |
 | --- | --- | --- |
-| Danh sách | `GET /all-product` | `ProductController@all_product` |
+| Danh sách chính | `GET /admin/products-management` | `Admin\AdminWorkspaceController@productsManagement` |
+| Danh sách cũ | `GET /all-product` | Compatibility redirect to `/admin/products-management` |
 | Form thêm | `GET /add-product` | `ProductController@add_product` |
 | Lưu mới | `POST /save-product` | `ProductController@save_product` |
 | Form sửa | `GET /edit-product/{product_id}` | `ProductController@edit_product` |
@@ -274,7 +273,6 @@ Tất cả nằm trong permission `manage products`.
 | Model | `Catalog\Product`, `ProductMedia`, `ProductCategory`, `Brand` |
 | View | `resources/views/admin/add_product.blade.php`, `all_product.blade.php`, `edit_product.blade.php` |
 | Upload | `public/uploads/product`, `public/uploads/document`, copy tương thích sang `public/uploads/gallery` |
-| Test | `tests/Feature/AdminProductCrudTest.php` |
 
 ```mermaid
 sequenceDiagram
@@ -311,7 +309,8 @@ Ghi chú:
 
 | Tác vụ | Route | Controller |
 | --- | --- | --- |
-| Danh sách đơn | `GET /manage-order` | `OrderController@manage_order` |
+| Danh sách đơn chính | `GET /admin/orders-management` | `Admin\AdminWorkspaceController@ordersManagement` |
+| Danh sách đơn cũ | `GET /manage-order` | Compatibility redirect to `/admin/orders-management` |
 | Chi tiết đơn | `GET /view-order/{order_code}` | `OrderController@view_order` |
 | In PDF | `GET /print-order/{checkout_code}` | `OrderController@print_order` |
 | Cập nhật trạng thái/số lượng | `POST /update-order-qty` | `OrderController@update_order_qty` |
@@ -327,15 +326,15 @@ Tất cả nằm trong permission `manage orders`.
 | --- | --- |
 | Controller | `app/Http/Controllers/OrderController.php` |
 | Service | `LegacyOrderWorkflowService`, `LegacyOrderPresentationService`, `LegacyOrderHistoryService` |
-| Model legacy | `app/Models/Order`, `app/Models/OrderDetails` |
-| Model mới cho history | `Infrastructure/Persistence\Eloquent\Order\Order`, `OrderItem`, `OrderShipping`, `Payment` |
+| Model runtime | `Infrastructure/Persistence\Eloquent\Order\Order`, `OrderItem`, `OrderShipping`, `Payment` |
+| Legacy note | Service names còn chữ `Legacy` vì giữ compatibility cho route/view cũ; runtime không import trực tiếp `app/Models/Order` hoặc `tbl_order`. |
 | View | `resources/views/admin/manage_order.blade.php`, `admin/view_order.blade.php`, `admin/order/print.blade.php` |
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Admin
-    participant Route as /manage-order /view-order/{code}
+    participant Route as /admin/orders-management /view-order/{code}
     participant Middleware as auth:web + admin.access + manage orders
     participant Controller as OrderController
     participant Workflow as LegacyOrderWorkflowService
@@ -357,6 +356,6 @@ sequenceDiagram
 
 Ghi chú:
 
-- Admin order vẫn ưu tiên legacy `app/Models/Order`.
-- Storefront history có nhánh modern nếu bảng `orders`, `order_items`, `order_shipping`, `payments` sẵn sàng; nếu không, fallback legacy.
+- Admin order hiện đi qua service compatibility nhưng dùng schema modern `orders`, `order_items`, `order_shipping`, `payments`.
+- Storefront history dùng schema modern khi các bảng `orders`, `order_items`, `order_shipping`, `payments` sẵn sàng.
 - Khi sửa trạng thái đơn hoặc tồn kho, đọc service trong `app/Application/Order/Services` trước.

@@ -327,13 +327,20 @@
     </style>
 
     <div class="ckq-wrap">
-        <div class="ckq-crumb">
-            <a href="{{ url('/') }}">Trang chủ</a>
-            <span class="sep">›</span>
-            <a href="{{ url('/gio-hang') }}">Giỏ hàng</a>
-            <span class="sep">›</span>
-            <span class="current">Thanh toán</span>
-        </div>
+        @include('partials.storefront.breadcrumb', [
+            'class' => 'ckq-crumb',
+            'separator' => '›',
+            'items' => [
+                [
+                    'label' => 'Giỏ hàng',
+                    'url' => url('/gio-hang'),
+                ],
+                [
+                    'label' => 'Thanh toán',
+                    'current' => true,
+                ],
+            ],
+        ])
 
         <div class="ckq-head">
             <div class="ckq-title">

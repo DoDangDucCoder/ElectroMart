@@ -188,7 +188,7 @@ Negative prompt:
 
 ## 3. Ảnh Bằng Chứng Kiểm Thử
 
-### 3.1. Danh sách file test trong IDE
+### 3.1. Danh sách file kiểm tra trong IDE
 
 Khuyến nghị:
 - tốt nhất chụp thật từ IDE
@@ -196,13 +196,11 @@ Khuyến nghị:
 
 Prompt:
 
-`realistic Visual Studio Code screenshot on Windows showing a Laravel project explorer, expanded tests/Feature folder with many test files such as HomepageTest.php, CartFlowTest.php, CheckoutFlowTest.php, AdminAuthFlowTest.php, AdminProductCrudTest.php, ProductDiscoveryReportTest.php, ChatbotFeatureTest.php, clean developer workspace, code editor on the right, realistic file tree, not stylized`
 
 Negative prompt:
 
 `no fake hacker screen, no terminal only, no macOS UI if Windows layout is requested, no blurry unreadable file names`
 
-### 3.2. Terminal chạy php artisan test
 
 Khuyến nghị:
 - tốt nhất chạy thật rồi chụp ảnh thật
@@ -210,20 +208,19 @@ Khuyến nghị:
 
 Prompt:
 
-`realistic Windows terminal or PowerShell screenshot running "php artisan test" inside a Laravel project, many passing test lines in green, references to storefront admin api and report tests, clear command line output, believable developer environment, no futuristic effects, no fake matrix background, high readability`
 
 Negative prompt:
 
 `no Linux hacker terminal aesthetic, no red failing output if the intention is a successful run, no unreadable tiny text`
 
-### 3.3. Ảnh giao diện liên hệ giữa luồng kiểm thử và màn hình thật
+### 3.3. Ảnh giao diện liên hệ giữa luồng kiểm tra chất lượng và màn hình thật
 
 Mục đích:
 - dùng ở Chương 5 khi muốn minh họa một test bằng màn hình tương ứng
 
 Prompt:
 
-`realistic split-style thesis illustration showing on the left a browser screenshot of a Vietnamese Laravel e-commerce page and on the right a small code editor or terminal snippet related to its test, academic software testing evidence style, clean light theme, practical not artistic, suitable for a graduation thesis report`
+`realistic split-style thesis illustration showing on the left a browser screenshot of a Vietnamese Laravel e-commerce page and on the right a small code editor or terminal snippet related to route inspection, academic software review evidence style, clean light theme, practical not artistic, suitable for a graduation thesis report`
 
 Negative prompt:
 
@@ -263,8 +260,7 @@ Khuyến nghị cho các ảnh này:
 10. Quản lý đơn hàng admin
 11. Báo cáo product discovery
 12. Hộp thư chat admin
-13. Danh sách file test trong IDE
-14. Terminal chạy `php artisan test`
+13. Danh sách file kiểm tra trong IDE
 
 ## 6. Mẹo để ảnh ra đúng hơn
 

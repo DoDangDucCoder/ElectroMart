@@ -15,7 +15,6 @@ Các phần bên dưới được viết theo hướng Word-ready. Anh có thể
 
 ## 3.x.1. Khảo sát hiện trạng hệ thống
 
-Trước khi tiến hành mô hình hóa và thiết kế, bước đầu tiên của đề tài là khảo sát hiện trạng của hệ thống đang có. Khác với các đồ án được xây dựng hoàn toàn từ đầu, dự án này có đặc thù là tồn tại đồng thời lớp mã nguồn legacy và lớp kiến trúc mới đang được chuẩn hóa dần. Vì vậy, hoạt động khảo sát không chỉ dừng ở việc liệt kê tính năng, mà cần đọc trực tiếp cấu trúc route, controller, service, support class, migration, model và test suite.
 
 Quá trình khảo sát hiện trạng cho thấy hệ thống hiện tại được tổ chức quanh ba mặt triển khai chính. Mặt thứ nhất là storefront dành cho khách hàng, được định nghĩa chủ yếu trong `routes/web/frontend.php` và nhóm view `resources/views/pages`. Mặt thứ hai là khu vực admin, được định nghĩa trong `routes/web/admin.php` cùng các controller và view quản trị. Mặt thứ ba là REST API, được tổ chức trong `routes/api.php` với các nhóm public, protected và admin.
 
@@ -29,7 +28,7 @@ Sau khi khảo sát hiện trạng, bước tiếp theo là xác định các y�
 
 Ở mức chức năng, yêu cầu được chia theo ba nhóm. Nhóm thứ nhất là yêu cầu của khách hàng trên storefront, bao gồm tìm kiếm, xem sản phẩm, thêm giỏ hàng, áp dụng coupon, đăng nhập, checkout, thanh toán, theo dõi đơn hàng, bình luận, đánh giá và so sánh sản phẩm. Nhóm thứ hai là yêu cầu của quản trị viên, bao gồm quản lý catalog, nội dung, đơn hàng, quyền truy cập, báo cáo, tài liệu và inbox hỗ trợ. Nhóm thứ ba là yêu cầu của API, bao gồm cung cấp dữ liệu cho client và hỗ trợ tích hợp.
 
-Ở mức phi chức năng, hệ thống cần bảo đảm giao diện dễ dùng, phân quyền rõ ràng, dữ liệu tương đối nhất quán, có khả năng mở rộng và có kiểm thử cho các luồng quan trọng. Với dự án hybrid, yêu cầu phi chức năng còn bao gồm khả năng duy trì tương thích với luồng cũ trong khi vẫn cho phép chuẩn hóa dần sang kiến trúc mới.
+Ở mức phi chức năng, hệ thống cần bảo đảm giao diện dễ dùng, phân quyền rõ ràng, dữ liệu tương đối nhất quán, có khả năng mở rộng và có kiểm tra chất lượng cho các luồng quan trọng. Với dự án hybrid, yêu cầu phi chức năng còn bao gồm khả năng duy trì tương thích với luồng cũ trong khi vẫn cho phép chuẩn hóa dần sang kiến trúc mới.
 
 ## 3.x.3. Mô hình hóa hệ thống
 
@@ -122,7 +121,7 @@ Thiết kế kiến trúc tổng thể theo luồng xử lý nêu trên giúp h�
 
 ## 3.x.1. Nguyên tắc thiết kế dữ liệu trong dự án
 
-Thiết kế cơ sở dữ liệu của dự án không diễn ra trong bối cảnh xây mới hoàn toàn, mà trong bối cảnh phải dung hòa giữa hai yêu cầu. Yêu cầu thứ nhất là duy trì tính chạy được của các luồng đang bám vào bảng legacy. Yêu cầu thứ hai là từng bước chuẩn hóa schema để phục vụ API, service layer, testing và mở rộng nghiệp vụ.
+Thiết kế cơ sở dữ liệu của dự án không diễn ra trong bối cảnh xây mới hoàn toàn, mà trong bối cảnh phải dung hòa giữa hai yêu cầu. Yêu cầu thứ nhất là duy trì tính chạy được của các luồng đang bám vào bảng legacy. Yêu cầu thứ hai là từng bước chuẩn hóa schema để phục vụ API, service layer và mở rộng nghiệp vụ.
 
 Vì vậy, phần thiết kế dữ liệu cần nhìn theo hai chiều. Chiều thứ nhất là dữ liệu đang được vận hành trong hiện tại. Chiều thứ hai là đích dữ liệu chuẩn hóa mà hệ thống đang hướng tới. Sự song song này không phải là dấu hiệu của một hệ thống sai, mà là biểu hiện của một chiến lược chuyển đổi dần và an toàn hơn viết lại toàn bộ.
 
@@ -154,7 +153,7 @@ Qua bảng mapping có thể thấy không phải mọi bảng legacy đều chu
 
 ## 3.x.4. Ý nghĩa của thiết kế dữ liệu hybrid
 
-Thiết kế dữ liệu hybrid mang lại hai lợi ích lớn. Thứ nhất, nó giúp hệ thống duy trì khả năng vận hành đối với các luồng cũ mà không cần đóng băng toàn bộ việc phát triển. Thứ hai, nó tạo ra nền tảng chuẩn để các phần mới như API, reports, chatbot, analytics và testing có thể bám vào.
+Thiết kế dữ liệu hybrid mang lại hai lợi ích lớn. Thứ nhất, nó giúp hệ thống duy trì khả năng vận hành đối với các luồng cũ mà không cần đóng băng toàn bộ việc phát triển. Thứ hai, nó tạo ra nền tảng chuẩn để các phần mới như API, reports, chatbot và analytics có thể bám vào.
 
 Tuy nhiên, mặt còn lại của cách tiếp cận này là báo cáo phải mô tả trung thực sự song song giữa hai lớp dữ liệu. Nếu chỉ mô tả schema mới mà bỏ qua legacy, phần phân tích sẽ thiếu chính xác. Nếu chỉ mô tả legacy, báo cáo sẽ không phản ánh đúng hướng hiện đại hóa của dự án.
 
@@ -247,7 +246,7 @@ flowchart TD
     A[Quan tri vien gui form cap nhat san pham] --> B[POST /update-product/{product_id}]
     B --> C[ProductController tim san pham theo id]
     C --> D{San pham ton tai?}
-    D -- Khong --> E[Redirect ve all-product voi thong bao loi]
+    D -- Khong --> E[Redirect ve /admin/products-management voi thong bao loi]
     D -- Co --> F[validateProductRequest]
     F --> G{Du lieu hop le?}
     G -- Khong --> H[Quay lai form va hien thi loi validation]
@@ -272,7 +271,7 @@ flowchart TD
     W --> Y[Fresh brand, categories, media]
     X --> Y
     Y --> Z[Invalidate product cache]
-    Z --> AA[Redirect /all-product voi thong bao thanh cong]
+    Z --> AA[Redirect /admin/products-management voi thong bao thanh cong]
 ```
 
 **Mô tả dưới hình:**  

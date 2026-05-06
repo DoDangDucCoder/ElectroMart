@@ -180,14 +180,14 @@ flowchart TD
     SelectTask{"Chọn nghiệp vụ"}
 
     ProductPerm{"Có quyền manage products?"}
-    ProductList["Xem danh sách sản phẩm: GET /all-product"]
+    ProductList["Xem danh sách sản phẩm: GET /admin/products-management"]
     ProductForm["Thêm/sửa sản phẩm: /add-product hoặc /edit-product/{product_id}"]
     ProductValidate{"Dữ liệu sản phẩm hợp lệ?"}
     SaveProduct["Lưu sản phẩm: POST /save-product hoặc /update-product/{product_id}"]
     ProductStatus["Bật/tắt/xóa sản phẩm"]
 
     OrderPerm{"Có quyền manage orders?"}
-    OrderList["Xem danh sách đơn: GET /manage-order"]
+    OrderList["Xem danh sách đơn: GET /admin/orders-management"]
     OrderDetail["Xem chi tiết đơn: GET /view-order/{order_code}"]
     OrderUpdate["Cập nhật trạng thái/số lượng: POST /update-order-qty hoặc /update-qty"]
     OrderPrint["In đơn: GET /print-order/{checkout_code}"]
@@ -675,7 +675,7 @@ Nhóm catalog gồm `brands`, `product_categories`, `products`, `product_variant
 
 ### Ghi chú chưa xác định từ code
 
-Một số bảng legacy như `tbl_slider`, `tbl_icons`, `tbl_product_attribute` được controller kiểm tra bằng `Schema::hasTable`, nhưng không nằm trong nhóm ERD chuẩn hóa chính ở trên. Nếu báo cáo cần mô tả đầy đủ phần legacy, cần đối chiếu thêm với `database/import_legacy_tables.sql` hoặc script setup legacy.
+Một số bảng legacy như `tbl_slider`, `tbl_icons`, `tbl_product_attribute` chỉ còn nên được xem như archive để đối chiếu dữ liệu cũ, không phải dependency runtime chính. Nếu báo cáo cần mô tả đầy đủ phần legacy, cần đối chiếu thêm với `database/import_legacy_tables.sql` hoặc tooling setup legacy đã được guard.
 
 ## 7. Sơ đồ kiến trúc tổng quan hệ thống
 
@@ -1595,8 +1595,8 @@ flowchart LR
     CartRoute["GET /gio-hang"]
     CheckoutRoute["GET /checkout, /payment"]
     HistoryRoute["GET /history, /view-history-order/{order_code}"]
-    AdminProductRoute["/add-product, /all-product, /edit-product/{id}"]
-    AdminOrderRoute["/manage-order, /view-order/{code}"]
+    AdminProductRoute["/add-product, /admin/products-management, /edit-product/{id}"]
+    AdminOrderRoute["/admin/orders-management, /view-order/{code}"]
 
     HomeController["HomeController"]
     ProductController["ProductController"]

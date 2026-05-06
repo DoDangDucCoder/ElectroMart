@@ -4,9 +4,8 @@
 
 Chương này trình bày các cơ sở lý thuyết làm nền tảng cho việc xây dựng website bán hàng bằng Laravel. Theo định hướng của mục `Graduation Thesis Report Guide` trong `DOCUMENTATION_TEMPLATE.md`, Chương 1 tập trung vào các khái niệm cơ bản liên quan đến đề tài, lý thuyết nền tảng trong phát triển hệ thống, công nghệ và ngôn ngữ lập trình sử dụng, framework và thư viện liên quan, cùng một số tiêu chuẩn và quy trình phát triển phần mềm áp dụng trong phạm vi đồ án.
 
-Đề tài thuộc nhóm đề tài lập trình, vì vậy nội dung chương không đi sâu vào mô tả mã nguồn triển khai cụ thể mà trình bày những kiến thức nền cần thiết để hiểu các chương sau. Các nội dung chính bao gồm website thương mại điện tử, mô hình MVC, framework `Laravel 11`, `Blade` template engine, cơ sở dữ liệu quan hệ và `MySQL`, `Eloquent ORM`, routing, controller, middleware, session, authentication, cart, checkout, frontend với `HTML`, `CSS`, `JavaScript`, `Vite`, kiểm thử phần mềm trong Laravel và bảo mật cơ bản cho website bán hàng.
+Đề tài thuộc nhóm đề tài lập trình, vì vậy nội dung chương không đi sâu vào mô tả mã nguồn triển khai cụ thể mà trình bày những kiến thức nền cần thiết để hiểu các chương sau. Các nội dung chính bao gồm website thương mại điện tử, mô hình MVC, framework `Laravel 11`, `Blade` template engine, cơ sở dữ liệu quan hệ và `MySQL`, `Eloquent ORM`, routing, controller, middleware, session, authentication, cart, checkout, frontend với `HTML`, `CSS`, `JavaScript`, `Vite`, kiểm tra chất lượng phần mềm trong Laravel và bảo mật cơ bản cho website bán hàng.
 
-Qua việc khảo sát dự án hiện tại, hệ thống được xây dựng trên nền `Laravel 11` và `PHP 8.2`, sử dụng giao diện `Blade`, cấu hình cơ sở dữ liệu mặc định là `mysql`, có các nhóm route web cho storefront và admin tại `routes/web/frontend.php`, `routes/web/admin.php`, đồng thời có API tại `routes/api.php`. Dự án cũng sử dụng `laravel/sanctum` cho API authentication, `laravel/ui` cho auth scaffolding, `spatie/laravel-permission` cho phân quyền và `PHPUnit` cho kiểm thử. Phần frontend được quản lý qua `Vite` trong `package.json`, kết hợp các tài nguyên như `HTML`, `CSS`, `JavaScript`, `Bootstrap`, `Tailwind CSS` và một số thành phần `Vue`.
 
 ## 1.2. Các khái niệm cơ bản về website thương mại điện tử
 
@@ -81,7 +80,7 @@ Trong Laravel, controller thường được lưu trong `app/Http/Controllers`. 
 
 ### 1.4.1. Tổng quan về Laravel
 
-Laravel là một framework phát triển ứng dụng web mã nguồn mở sử dụng ngôn ngữ `PHP`. Framework này cung cấp sẵn nhiều thành phần nền tảng như routing, controller, middleware, request validation, authentication, authorization, migration, `Eloquent ORM`, `Blade`, queue, cache, session và testing.
+Laravel là một framework phát triển ứng dụng web mã nguồn mở sử dụng ngôn ngữ `PHP`. Framework này cung cấp sẵn nhiều thành phần nền tảng như routing, controller, middleware, request validation, authentication, authorization, migration, `Eloquent ORM`, `Blade`, queue, cache và session.
 
 Việc sử dụng framework giúp giảm thời gian xây dựng các chức năng cơ bản, đồng thời tạo ra một cấu trúc dự án nhất quán. Thay vì tự xây dựng toàn bộ từ đầu, lập trình viên có thể dựa trên các thành phần đã được chuẩn hóa của Laravel để tập trung vào nghiệp vụ chính của hệ thống.
 
@@ -106,7 +105,6 @@ Laravel cung cấp nhiều thành phần quan trọng cho quá trình xây dựn
 - `Blade`: xây dựng giao diện server-rendered.
 - Session: lưu trạng thái tạm thời giữa các request.
 - Authentication và authorization: xác thực danh tính và kiểm soát quyền truy cập.
-- Testing: hỗ trợ viết unit test và feature test.
 
 Các thành phần này tạo thành nền tảng để xây dựng website bán hàng có cấu trúc rõ ràng và phù hợp với quy trình phát triển phần mềm hiện đại.
 
@@ -179,7 +177,7 @@ ORM, viết tắt của Object Relational Mapping, là kỹ thuật ánh xạ d�
 
 Trong website bán hàng, Eloquent giúp biểu diễn các thực thể nghiệp vụ như sản phẩm, danh mục, thương hiệu, khách hàng, giỏ hàng, đơn hàng và thanh toán. Khi cần lấy danh sách sản phẩm theo danh mục, lấy đơn hàng của khách hàng hoặc lấy chi tiết đơn hàng, hệ thống có thể sử dụng quan hệ Eloquent để mã nguồn rõ ràng hơn.
 
-Eloquent cũng hỗ trợ migration và factory trong hệ sinh thái Laravel. Migration giúp định nghĩa schema theo mã nguồn, còn factory giúp tạo dữ liệu giả phục vụ kiểm thử. Trong dự án hiện tại, thư mục `database/migrations` và `database/factories` cho thấy hệ thống có sử dụng các công cụ dữ liệu tiêu chuẩn của Laravel.
+Eloquent cũng hỗ trợ migration và factory trong hệ sinh thái Laravel. Migration giúp định nghĩa schema theo mã nguồn, còn factory giúp tạo dữ liệu giả phục vụ kiểm tra chất lượng. Trong dự án hiện tại, thư mục `database/migrations` và `database/factories` cho thấy hệ thống có sử dụng các công cụ dữ liệu tiêu chuẩn của Laravel.
 
 ### 1.7.3. Lưu ý khi sử dụng ORM
 
@@ -292,36 +290,32 @@ Dự án hiện tại có script `dev` và `build` trong `package.json`, lần l
 
 Việc sử dụng Vite giúp quy trình phát triển frontend thuận tiện hơn, đặc biệt khi hệ thống có nhiều file CSS, JavaScript và component cần được đóng gói, tối ưu hóa trước khi triển khai.
 
-## 1.11. Kiểm thử phần mềm trong Laravel
+## 1.11. Kiểm tra chất lượng phần mềm trong Laravel
 
-### 1.11.1. Khái niệm kiểm thử phần mềm
+### 1.11.1. Khái niệm kiểm tra chất lượng phần mềm
 
-Kiểm thử phần mềm là quá trình kiểm tra và đánh giá hệ thống nhằm phát hiện lỗi, xác minh chức năng hoạt động đúng yêu cầu và giảm rủi ro khi thay đổi mã nguồn. Đối với website bán hàng, kiểm thử có vai trò quan trọng vì hệ thống liên quan trực tiếp đến dữ liệu sản phẩm, khách hàng, đơn hàng, thanh toán và quyền truy cập.
+Kiểm tra chất lượng phần mềm là quá trình kiểm tra và đánh giá hệ thống nhằm phát hiện lỗi, xác minh chức năng hoạt động đúng yêu cầu và giảm rủi ro khi thay đổi mã nguồn. Đối với website bán hàng, kiểm tra chất lượng có vai trò quan trọng vì hệ thống liên quan trực tiếp đến dữ liệu sản phẩm, khách hàng, đơn hàng, thanh toán và quyền truy cập.
 
-Một lỗi trong luồng giỏ hàng hoặc checkout có thể ảnh hưởng đến doanh thu và trải nghiệm khách hàng. Một lỗi trong khu vực admin có thể làm sai dữ liệu sản phẩm hoặc đơn hàng. Vì vậy, kiểm thử không chỉ là bước phụ trợ mà là một phần quan trọng của quy trình phát triển.
+Một lỗi trong luồng giỏ hàng hoặc checkout có thể ảnh hưởng đến doanh thu và trải nghiệm khách hàng. Một lỗi trong khu vực admin có thể làm sai dữ liệu sản phẩm hoặc đơn hàng. Vì vậy, kiểm tra chất lượng không chỉ là bước phụ trợ mà là một phần quan trọng của quy trình phát triển.
 
-### 1.11.2. Các mức kiểm thử phổ biến
+### 1.11.2. Các mức kiểm tra chất lượng phổ biến
 
-Trong phát triển ứng dụng web, có một số mức kiểm thử thường gặp:
+Trong phát triển ứng dụng web, có một số mức kiểm tra chất lượng thường gặp:
 
-- Unit test: kiểm tra một hàm, một class hoặc một thành phần nhỏ độc lập.
-- Feature test: kiểm tra một luồng chức năng từ request đến response, thường phù hợp với route và controller trong Laravel.
 - Integration test: kiểm tra sự phối hợp giữa nhiều thành phần như controller, service, database và external dependency.
-- Regression test: kiểm tra để bảo đảm lỗi đã sửa không tái xuất hiện khi hệ thống thay đổi.
+- Rà soát hồi quy: kiểm tra để bảo đảm lỗi đã sửa không tái xuất hiện khi hệ thống thay đổi.
 
-Laravel hỗ trợ tốt cho cả unit test và feature test. Dự án hiện tại có thư mục `tests/Unit` và `tests/Feature`, đồng thời `composer.json` khai báo `phpunit/phpunit`, cho thấy kiểm thử là một phần trong cấu trúc phát triển của hệ thống.
 
-### 1.11.3. Kiểm thử trong Laravel
+### 1.11.3. Kiểm tra chất lượng trong Laravel
 
-Laravel cung cấp nhiều tiện ích phục vụ kiểm thử như tạo request giả lập, kiểm tra response, kiểm tra view, kiểm tra redirect, kiểm tra database và tạo dữ liệu bằng factory. Feature test trong Laravel đặc biệt hữu ích với website bán hàng vì có thể kiểm tra các luồng như truy cập trang chủ, tìm kiếm sản phẩm, thêm giỏ hàng, checkout, đăng nhập, đăng ký, xem lịch sử đơn hàng và truy cập admin.
 
-Các test trong dự án hiện tại có tên liên quan trực tiếp đến nghiệp vụ như `CartFlowTest`, `CheckoutFlowTest`, `CustomerRegistrationTest`, `ProductDetailPageTest`, `HomepageTest`, `AdminAuthFlowTest` và nhiều test khác. Điều này cho thấy hệ thống có định hướng kiểm thử các luồng người dùng quan trọng.
+Các test trong dự án hiện tại có tên liên quan trực tiếp đến nghiệp vụ như `CartFlowTest`, `CheckoutFlowTest`, `CustomerRegistrationTest`, `ProductDetailPageTest`, `HomepageTest`, `AdminAuthFlowTest` và nhiều test khác. Điều này cho thấy hệ thống có định hướng kiểm tra chất lượng các luồng người dùng quan trọng.
 
-### 1.11.4. Vai trò của kiểm thử trong bảo trì
+### 1.11.4. Vai trò của kiểm tra chất lượng trong bảo trì
 
 Khi hệ thống phát triển, việc thay đổi một phần có thể ảnh hưởng đến nhiều phần khác. Ví dụ, thay đổi route giỏ hàng có thể ảnh hưởng đến header cart badge, trang giỏ hàng và checkout. Thay đổi middleware admin có thể ảnh hưởng đến quyền truy cập của nhiều nhóm quản trị viên.
 
-Kiểm thử giúp phát hiện sớm các lỗi hồi quy, tạo sự tự tin khi refactor và hỗ trợ bảo trì lâu dài. Đối với đồ án lập trình, việc có test cũng giúp chứng minh hệ thống không chỉ được xây dựng về mặt giao diện mà còn được kiểm tra ở các luồng nghiệp vụ chính.
+Kiểm tra chất lượng giúp phát hiện sớm các lỗi hồi quy, tạo sự tự tin khi refactor và hỗ trợ bảo trì lâu dài. Đối với đồ án lập trình, việc có test cũng giúp chứng minh hệ thống không chỉ được xây dựng về mặt giao diện mà còn được kiểm tra ở các luồng nghiệp vụ chính.
 
 ## 1.12. Bảo mật cơ bản cho website bán hàng
 
@@ -383,9 +377,8 @@ Khi trình bày trong báo cáo, cần phân biệt rõ công nghệ chính vớ
 
 ### 1.13.3. Quy trình phát triển và kiểm tra
 
-Quy trình phát triển một chức năng trong website bán hàng thường gồm các bước: xác định yêu cầu, khảo sát chức năng tương tự, thiết kế route và dữ liệu, xây dựng controller hoặc service, tạo view, kiểm tra validation, kiểm tra phân quyền, viết hoặc cập nhật test, sau đó kiểm tra thủ công các luồng quan trọng.
+Quy trình phát triển một chức năng trong website bán hàng thường gồm các bước: xác định yêu cầu, khảo sát chức năng tương tự, thiết kế route và dữ liệu, xây dựng controller hoặc service, tạo view, kiểm tra validation, kiểm tra phân quyền, sau đó kiểm tra thủ công các luồng quan trọng.
 
-Với Laravel, các lệnh thường dùng để kiểm tra gồm `php artisan test`, `vendor/bin/phpunit` và khi có thay đổi frontend thì có thể dùng `npm run build`. Trong phạm vi báo cáo, các lệnh này là cơ sở để mô tả cách xác minh hệ thống sau khi triển khai hoặc chỉnh sửa.
 
 ### 1.13.4. Nguyên tắc không mô tả sai công nghệ
 
@@ -415,7 +408,7 @@ Các HTTP method thường dùng gồm:
 - `PATCH`: cập nhật một phần tài nguyên.
 - `DELETE`: xóa tài nguyên.
 
-Đối với website bán hàng, tài nguyên có thể là sản phẩm, danh mục, thương hiệu, giỏ hàng, đơn hàng, đánh giá hoặc mã giảm giá. Thiết kế API theo REST giúp endpoint dễ hiểu hơn, thuận tiện cho kiểm thử, tài liệu hóa và mở rộng.
+Đối với website bán hàng, tài nguyên có thể là sản phẩm, danh mục, thương hiệu, giỏ hàng, đơn hàng, đánh giá hoặc mã giảm giá. Thiết kế API theo REST giúp endpoint dễ hiểu hơn, thuận tiện cho kiểm tra chất lượng, tài liệu hóa và mở rộng.
 
 ### 1.14.3. JSON và mã trạng thái HTTP
 
@@ -441,7 +434,7 @@ Request validation là quá trình kiểm tra dữ liệu đầu vào trước k
 
 Nếu không validation, hệ thống dễ gặp lỗi dữ liệu, lỗi bảo mật hoặc trạng thái nghiệp vụ không hợp lệ. Ví dụ, số lượng sản phẩm trong giỏ hàng không thể là số âm; email khách hàng cần đúng định dạng; mật khẩu cần đạt độ dài tối thiểu; mã giảm giá cần tồn tại và còn hiệu lực; quyền admin cần được kiểm tra trước khi cho phép cập nhật dữ liệu.
 
-Laravel hỗ trợ validation trực tiếp trong controller và thông qua Form Request class. Form Request giúp gom các quy tắc kiểm tra vào lớp riêng, làm controller gọn hơn và giúp quy tắc validation có thể tái sử dụng hoặc kiểm thử dễ hơn. Dự án hiện tại có nhiều lớp trong `app/Http/Requests`, thể hiện cách tiếp cận tách validation khỏi controller ở nhiều luồng nghiệp vụ.
+Laravel hỗ trợ validation trực tiếp trong controller và thông qua Form Request class. Form Request giúp gom các quy tắc kiểm tra vào lớp riêng, làm controller gọn hơn và giúp quy tắc validation có thể tái sử dụng hoặc kiểm tra chất lượng dễ hơn. Dự án hiện tại có nhiều lớp trong `app/Http/Requests`, thể hiện cách tiếp cận tách validation khỏi controller ở nhiều luồng nghiệp vụ.
 
 ### 1.15.2. Migration
 
@@ -453,11 +446,11 @@ Trong website bán hàng, migration thường dùng để định nghĩa các b�
 
 ### 1.15.3. Seeder và factory
 
-Seeder là công cụ dùng để tạo dữ liệu mẫu hoặc dữ liệu mặc định cho hệ thống. Factory là công cụ hỗ trợ tạo dữ liệu giả phục vụ kiểm thử. Trong Laravel, seeder và factory thường được sử dụng cùng nhau để chuẩn bị dữ liệu ban đầu hoặc dữ liệu test.
+Seeder là công cụ dùng để tạo dữ liệu mẫu hoặc dữ liệu mặc định cho hệ thống. Factory là công cụ hỗ trợ tạo dữ liệu giả phục vụ kiểm tra chất lượng. Trong Laravel, seeder và factory thường được sử dụng cùng nhau để chuẩn bị dữ liệu ban đầu hoặc dữ liệu test.
 
-Đối với website bán hàng, dữ liệu mẫu có thể bao gồm danh mục, thương hiệu, sản phẩm, khách hàng, mã giảm giá và tài khoản quản trị. Khi phát triển hoặc kiểm thử, dữ liệu mẫu giúp lập trình viên kiểm tra giao diện và luồng nghiệp vụ mà không phải nhập tay quá nhiều.
+Đối với website bán hàng, dữ liệu mẫu có thể bao gồm danh mục, thương hiệu, sản phẩm, khách hàng, mã giảm giá và tài khoản quản trị. Khi phát triển hoặc kiểm tra chất lượng, dữ liệu mẫu giúp lập trình viên kiểm tra giao diện và luồng nghiệp vụ mà không phải nhập tay quá nhiều.
 
-Factory đặc biệt hữu ích trong kiểm thử tự động. Ví dụ, test checkout có thể cần tạo khách hàng, sản phẩm, giỏ hàng và mã giảm giá. Nếu dùng factory, test có thể tạo dữ liệu cần thiết một cách lặp lại và độc lập hơn. Dự án hiện tại có `database/factories` và `database/seeders`, phù hợp với quy trình phát triển Laravel.
+Factory đặc biệt hữu ích trong kiểm tra chất lượng. Ví dụ, test checkout có thể cần tạo khách hàng, sản phẩm, giỏ hàng và mã giảm giá. Nếu dùng factory, test có thể tạo dữ liệu cần thiết một cách lặp lại và độc lập hơn. Dự án hiện tại có `database/factories` và `database/seeders`, phù hợp với quy trình phát triển Laravel.
 
 ### 1.15.4. Quản lý dữ liệu legacy và dữ liệu mới
 
@@ -571,6 +564,6 @@ Về mặt nghiệp vụ, xuất tài liệu giúp admin in đơn hàng, lưu ch
 
 ## 1.19. Kết chương
 
-Chương 1 đã trình bày các cơ sở lý thuyết nền tảng cho đề tài xây dựng website bán hàng bằng Laravel. Nội dung chương bao gồm khái niệm website thương mại điện tử, mô hình B2C, các thành phần nghiệp vụ của website bán hàng, mô hình MVC, framework `Laravel 11`, `Blade` template engine, cơ sở dữ liệu quan hệ và `MySQL`, `Eloquent ORM`, routing, controller, middleware, session, authentication, authorization, cart, checkout, frontend với `HTML`, `CSS`, `JavaScript`, `Vite`, kiểm thử phần mềm trong Laravel và các nguyên tắc bảo mật cơ bản.
+Chương 1 đã trình bày các cơ sở lý thuyết nền tảng cho đề tài xây dựng website bán hàng bằng Laravel. Nội dung chương bao gồm khái niệm website thương mại điện tử, mô hình B2C, các thành phần nghiệp vụ của website bán hàng, mô hình MVC, framework `Laravel 11`, `Blade` template engine, cơ sở dữ liệu quan hệ và `MySQL`, `Eloquent ORM`, routing, controller, middleware, session, authentication, authorization, cart, checkout, frontend với `HTML`, `CSS`, `JavaScript`, `Vite`, kiểm tra chất lượng phần mềm trong Laravel và các nguyên tắc bảo mật cơ bản.
 
 Các nội dung này tạo nền tảng để các chương tiếp theo đi vào phân tích yêu cầu, thiết kế hệ thống, mô tả cơ sở dữ liệu, trình bày quá trình triển khai chức năng và đánh giá kết quả. Việc bám sát công nghệ thực tế của dự án giúp chương cơ sở lý thuyết vừa đáp ứng yêu cầu học thuật của báo cáo đồ án tốt nghiệp, vừa giữ được tính nhất quán với sản phẩm phần mềm đã xây dựng.

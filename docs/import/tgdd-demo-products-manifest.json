@@ -21,7 +21,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -33,7 +37,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -45,7 +53,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -69,7 +81,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -81,7 +97,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -93,7 +113,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -117,7 +141,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -129,7 +157,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -141,7 +173,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -165,7 +201,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -177,7 +217,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -189,7 +233,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -213,7 +261,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -225,7 +277,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -237,7 +293,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -261,7 +321,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -273,7 +337,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -285,7 +353,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -309,7 +381,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -321,7 +397,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -333,7 +413,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -357,7 +441,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -369,7 +457,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -381,7 +473,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -405,7 +501,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -417,7 +517,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -429,7 +533,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -453,7 +561,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -465,7 +577,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -477,7 +593,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -501,7 +621,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -513,7 +637,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -525,7 +653,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -549,7 +681,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -561,7 +697,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -573,7 +713,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -597,7 +741,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -609,7 +757,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -621,7 +773,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -645,7 +801,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -657,7 +817,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -669,7 +833,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -693,7 +861,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -705,7 +877,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -717,7 +893,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -741,7 +921,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -753,7 +937,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -765,7 +953,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -789,7 +981,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -801,7 +997,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -813,7 +1013,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -837,7 +1041,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -849,7 +1057,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -861,7 +1073,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -885,7 +1101,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -897,7 +1117,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -909,7 +1133,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -933,7 +1161,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -945,7 +1177,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -957,7 +1193,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -981,7 +1221,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -993,7 +1237,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1005,7 +1253,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1029,7 +1281,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1041,7 +1297,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1053,7 +1313,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1077,7 +1341,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1089,7 +1357,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1101,7 +1373,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1125,7 +1401,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1137,7 +1417,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1149,7 +1433,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1173,7 +1461,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1185,7 +1477,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1197,7 +1493,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1221,7 +1521,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1233,7 +1537,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1245,7 +1553,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1269,7 +1581,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1281,7 +1597,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1293,7 +1613,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1317,7 +1641,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1329,7 +1657,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1341,7 +1673,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1365,7 +1701,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1377,7 +1717,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1389,7 +1733,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1413,7 +1761,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1425,7 +1777,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1437,7 +1793,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1461,7 +1821,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1473,7 +1837,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1485,7 +1853,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1509,7 +1881,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1521,7 +1897,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1533,7 +1913,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1557,7 +1941,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1569,7 +1957,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1581,7 +1973,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1605,7 +2001,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1617,7 +2017,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1629,7 +2033,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1653,7 +2061,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1665,7 +2077,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1677,7 +2093,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1701,7 +2121,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/sprite2025/sprite_dmx.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1713,7 +2137,11 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/ic-image.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     },
     {
         "source_domain": "thegioididong.com",
@@ -1725,6 +2153,10 @@
         "image_role": "gallery",
         "confidence": "high",
         "usage_note": "Dữ liệu/ảnh dùng cho học tập và local demo. Khi public hoặc kinh doanh thật cần thay bằng dữ liệu/ảnh được cấp quyền sử dụng.",
-        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png"
+        "image_source_url": "https://cdnv2.tgdd.vn/webmwg/2024/ContentMwg/images/bg-online-ontop-dt-min.png",
+        "result": "removed_wrong_image",
+        "reason": "TGDD sprite/logo/icon/placeholder/not product image",
+        "match_confidence": "high",
+        "review_decision": "REMOVE_WRONG_IMAGE"
     }
 ]

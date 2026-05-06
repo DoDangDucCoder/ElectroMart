@@ -213,7 +213,6 @@ Database đã được chuẩn hóa với:
 
 ## 🚀 Bước tiếp theo
 
-1. **Testing**: Tạo unit tests cho các Use Cases và Services
 2. **API**: Tạo API endpoints sử dụng kiến trúc mới
 3. **Caching**: Implement caching layer cho Repository
 4. **Events**: Implement event listeners cho các business events

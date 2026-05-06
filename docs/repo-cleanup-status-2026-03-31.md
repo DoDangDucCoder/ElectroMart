@@ -11,7 +11,6 @@
 
 ## Full Test Status
 - Lenh da chay:
-  - `php artisan test`
 - Ket qua:
   - `154 passed / 1284 assertions`
 
@@ -37,8 +36,6 @@
 - `routes`: 3
 - `composer.lock`: 1
 - `bootstrap`: 1
-- `.phpunit.result.cache`: 1
-- `phpunit.xml`: 1
 - `.gitignore`: 1
 - `.env.example`: 1
 - `composer.json`: 1
@@ -65,12 +62,6 @@ Khuyen nghi:
 Day la nhom nen di cung voi code that.
 
 Vi du:
-- `tests/Feature/AdminApiSecurityTest.php`
-- `tests/Feature/ChatbotFeatureTest.php`
-- `tests/Feature/HomepageTest.php`
-- `tests/Feature/StorefrontLayoutShellTest.php`
-- `tests/Unit/PolicyDefaultsTest.php`
-- `tests/Unit/ProductPricingServiceTest.php`
 
 Khuyen nghi:
 - Stage cung `core_code`.
@@ -87,9 +78,6 @@ Vi du:
 - `app/Http/Controllers/Mobile/*`
 - `app/Http/Controllers/Analytics/*`
 - `app/Console/Commands/Create*`
-- `tests/Integration/*`
-- `tests/Performance/*`
-- `tests/Utilities/*`
 
 Khuyen nghi:
 - Commit rieng thanh mot batch `cleanup scaffold dead code`.
@@ -102,7 +90,6 @@ Vi du:
 - `vendor/**`
 - `public/build/**`
 - `.env`
-- `.phpunit.result.cache`
 - `public/component-examples/**`
 - `public/ui-demo.html`
 - `resources/js/accessibility/**`
@@ -111,7 +98,6 @@ Vi du:
 
 Trang thai mong muon:
 - Khong coi day la source of truth cua repo.
-- `vendor`, `.env`, `.phpunit.result.cache`, `public/build` nen tiep tuc o trang thai untracked/ignored.
 
 Khuyen nghi:
 - Khong stage lai tru khi co ly do dac biet.
@@ -264,6 +250,5 @@ Ten commit goi y:
 ## Ket luan
 - Repo da o trang thai tot hon ro rang:
   - khong con test xanh gia trong suite dang chay
-  - khong con `TODO/FIXME/assertTrue(true)` trong `app/resources/config/routes/tests/Feature/tests/Unit`
-  - full suite van xanh
+  - kiểm tra tổng thể van xanh
 - Viec con lai chu yeu la tach commit cho de doc lich su, khong con la sua loi runtime lon.

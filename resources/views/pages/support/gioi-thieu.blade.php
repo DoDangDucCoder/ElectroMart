@@ -40,7 +40,7 @@ $meta_title=$meta_title??'Giới thiệu - DangDuc';
 @endpush
 @section('content')
 <div class="pp-wrap">
-    <nav class="pp-breadcrumb"><a href="{{ url('/') }}">Trang chủ</a> <i class="fa fa-angle-right"></i> Giới thiệu</nav>
+    @include('partials.storefront.breadcrumb', ['class' => 'pp-breadcrumb', 'separator' => '›', 'items' => [['label' => 'Giới thiệu', 'current' => true]]])
 
     {{-- Hero --}}
     <section class="about-hero">

@@ -99,9 +99,18 @@
 
     <section class="simple-history-page">
         <div class="simple-history-container">
+            @include('partials.storefront.page-header', [
+                'title' => 'Lịch sử đơn hàng',
+                'breadcrumbClass' => 'accp-crumb',
+                'separator' => '›',
+                'breadcrumbItems' => [
+                    ['label' => 'Tài khoản', 'url' => url('/account')],
+                    ['label' => 'Lịch sử đơn hàng', 'current' => true],
+                ],
+            ])
+
             <div class="history-card">
                 <div class="history-header">
-                    <h2>Lịch sử đơn hàng</h2>
                     <div class="shopw-history-support-strip">
                         <a href="{{ url('/') }}">Quay lại trang chủ để tiếp tục chọn hàng</a>
                     </div>

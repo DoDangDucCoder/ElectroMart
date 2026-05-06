@@ -50,11 +50,16 @@
 
     <main class="dd-contact">
         <div class="container">
-            <nav class="dd-contact__breadcrumb" aria-label="breadcrumb">
-                <a href="{{ url('/') }}">Trang chủ</a>
-                <i class="fa fa-angle-right"></i>
-                <span>Liên hệ</span>
-            </nav>
+            @include('partials.storefront.breadcrumb', [
+                'class' => 'dd-contact__breadcrumb',
+                'separator' => '›',
+                'items' => [
+                    [
+                        'label' => 'Liên hệ',
+                        'current' => true,
+                    ],
+                ],
+            ])
 
             <section class="dd-contact__hero">
                 <div class="dd-contact__hero-copy">

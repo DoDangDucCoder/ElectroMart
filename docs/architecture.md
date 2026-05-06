@@ -37,7 +37,7 @@ flowchart TB
     Repositories["Repositories<br/>app/Infrastructure/Persistence/Repositories"]
     NewModels["Eloquent models mới<br/>app/Infrastructure/Persistence/Eloquent"]
     LegacyModels["Legacy models<br/>app/Models"]
-    DB["MySQL/MariaDB<br/>migrations + shopbanhang.sql"]
+    DB["MySQL/MariaDB<br/>migrations + legacy archive dump"]
 
     Browser --> WebRoutes --> Middleware --> Controllers
     ApiClient --> ApiRoutes --> Middleware --> Controllers
@@ -66,9 +66,9 @@ flowchart TB
 | Checkout | `/dang-nhap`, `/checkout`, `/payment`, `/confirm-order` | `CheckoutController` | `CheckoutService`, `CartService`, `ShippingService`, `CouponService`, `Customer`, `Order` | `pages/checkout/*` |
 | Customer account/order history | `/account`, `/history`, `/view-history-order/{code}` | `CustomerAccountController`, `OrderController` | `StorefrontCustomerAuth`, `StorefrontOrder`, legacy `Order` | `pages/account/manager`, `pages/history/*` |
 | Admin auth/dashboard | `/admin`, `/auth-login`, `/dashboard` | `AuthController`, `AdminController` | `AdminAuthenticator`, `AdminAccess`, `AdminPermissions`, Spatie Permission | `admin/custom_auth/*`, `admin/dashboard` |
-| Admin product | `/all-product`, `/add-product`, `/edit-product/{id}` | `ProductController` | `ProductService`, category/brand repositories | `admin.add_product`, `admin.all_product`, `admin.edit_product` |
+| Admin product | `/admin/products-management`, `/add-product`, `/edit-product/{id}` (`/all-product` redirects for compatibility) | `Admin\AdminWorkspaceController`, `ProductController` | `products`, `brands`, `product_categories`, `ProductService`, category/brand repositories | `admin.product.admin_index`, `admin.add_product`, `admin.edit_product` |
 | Admin category/brand JSON | `/catalog/categories`, `/catalog/brands` | `Admin\Catalog\CategoryController`, `Admin\Catalog\BrandController` | `CategoryService`, `BrandService` | JSON |
-| Admin order | `/manage-order`, `/view-order/{code}`, `/update-order-qty` | `OrderController` | `LegacyOrderWorkflowService`, legacy `Order` | `admin.manage_order`, `admin.view_order` |
+| Admin order | `/admin/orders-management`, `/view-order/{code}`, `/update-order-qty` (`/manage-order` redirects for compatibility) | `Admin\AdminWorkspaceController`, `OrderController` | `orders`, `order_items`, `customers`, `payments`, `LegacyOrderWorkflowService` | `admin.order.index`, `admin.view_order` |
 | CMS/content | `/bai-viet/{slug}`, `/add-post`, `/manage-slider`, `/video-shop` | `PostController`, `CategoryPost`, `SliderController`, `VideoController` | `BlogPostService`, legacy CMS models | `pages/baiviet/*`, `admin/post/*` |
 | Chatbot | `/chatbot/*`, `/chat-inbox/*`, `/api/v1/chatbot/*` | `ChatController`, `Api\ChatController`, `Admin\ChatInboxController` | `Application/AI`, `ChatConversation`, `ChatMessage` | widget/admin/API |
 
@@ -122,16 +122,24 @@ Nằm trong `app/Infrastructure/Persistence/Eloquent`, ví dụ:
 - `Marketing\Coupon`, `CouponRedemption`
 - `Cms\BlogPost`, `BlogCategory`
 
-### Model legacy
+### Model legacy / compatibility
 
-Nằm trong `app/Models`, ví dụ:
+Một số class trong `app/Models` còn tồn tại để tương thích hoặc phục vụ dữ liệu archive cũ. Runtime storefront/admin mới nên ưu tiên model trong `app/Infrastructure/Persistence\Eloquent`.
+
+Ví dụ các model legacy không nên dùng cho feature mới:
 
 - `Product` dùng bảng `tbl_product`, primary key `product_id`
 - `CategoryProductModel` dùng danh mục legacy
-- `Order`, `OrderDetails` dùng order legacy/admin
-- `Coupon`, `Customer`, `Post`, `Slider`, `Video`, `Gallery`
+- `Order`, `OrderDetails` dùng order legacy
+- `Coupon`, `Customer`, `Slider`, `Video`, `Gallery`
 
-Không đổi tên bảng/cột nếu chưa biết controller đang dùng model mới hay legacy.
+Một số class trong `app/Models` không còn trỏ trực tiếp vào bảng legacy, ví dụ `Post` là wrapper quanh `Cms\BlogPost`, `News` dùng bảng `news`, `User` là model auth chuẩn.
+
+Không thêm code runtime mới phụ thuộc `tbl_*`. Nếu cần kiểm tra regression legacy, chạy:
+
+```bash
+php artisan legacy:audit-runtime --fail-on-issues
+```
 
 ## View Structure
 

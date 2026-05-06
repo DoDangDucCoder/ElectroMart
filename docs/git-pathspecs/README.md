@@ -8,11 +8,10 @@ Use these files with Git pathspec staging:
 
 Suggested commit messages:
 
-1. `refactor(core): stabilize runtime services and real regression tests`
+1. `refactor(core): stabilize runtime services and real rà soát hồi quys`
 2. `cleanup(database): normalize active migrations and archive legacy schema`
 3. `refactor(ui): consolidate legacy views and storefront/admin assets`
 
 Notes:
 
-- These helpers intentionally exclude `vendor`, `public/build`, `.env`, `.phpunit.result.cache`, and `public/uploads/**`.
 - The broad scaffold deletion batch is still separate from these 3 commit helpers.

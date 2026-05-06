@@ -100,16 +100,12 @@ Ngày: `2026-03-23`
 
 ## Test đã thêm hoặc mở rộng
 
-- [CheckoutFlowTest.php](C:/Users/Admin/Desktop/shop/Laravel11_Shop_Website_Full/tests/Feature/CheckoutFlowTest.php)
   - guest/stale session không được confirm order
   - empty cart redirect/failure path
-- [OrderHistoryPageTest.php](C:/Users/Admin/Desktop/shop/Laravel11_Shop_Website_Full/tests/Feature/OrderHistoryPageTest.php)
   - guest/stale session cancel
   - completed modern order không thể hủy
   - completed legacy order không thể hủy
-- [AdminPermissionHardeningTest.php](C:/Users/Admin/Desktop/shop/Laravel11_Shop_Website_Full/tests/Feature/AdminPermissionHardeningTest.php)
   - editor bị chặn với document download/delete
-- [AdminPanelTest.php](C:/Users/Admin/Desktop/shop/Laravel11_Shop_Website_Full/tests/Feature/AdminPanelTest.php)
   - document download/delete success path
   - document missing/traversal failure path
   - admin order legacy missing record failure path
@@ -119,26 +115,20 @@ Ngày: `2026-03-23`
   - admin order legacy multi-line failure path không mutate nửa chừng nếu một dòng không đủ tồn kho
   - admin print-order `404` khi mã đơn không tồn tại
   - admin printable HTML nhiều sản phẩm tính coupon/phí ship đúng tổng thanh toán
-- [OrderHistoryPageTest.php](C:/Users/Admin/Desktop/shop/Laravel11_Shop_Website_Full/tests/Feature/OrderHistoryPageTest.php)
   - legacy `view_history_order()` nhiều sản phẩm hiển thị đúng coupon/phí ship/tổng tiền
   - legacy `history()` nhiều sản phẩm với coupon cố định hiển thị đúng tổng tiền và payment method
-- [LegacyMailFlowTest.php](C:/Users/Admin/Desktop/shop/Laravel11_Shop_Website_Full/tests/Feature/LegacyMailFlowTest.php)
   - render an toàn cho `/quen-mat-khau` và `/update-new-pass`
   - recover password unknown/success path
   - reset password invalid token/success path
   - admin coupon campaign missing coupon/success path
-- [LegacyMailTemplateRenderTest.php](C:/Users/Admin/Desktop/shop/Laravel11_Shop_Website_Full/tests/Feature/LegacyMailTemplateRenderTest.php)
   - mail template markdown order/coupon vẫn render đúng sau refactor
-- [LegacyMailSnapshotTest.php](C:/Users/Admin/Desktop/shop/Laravel11_Shop_Website_Full/tests/Feature/LegacyMailSnapshotTest.php)
   - snapshot hash cho coupon thường, coupon VIP, password recovery, order confirmation COD và order confirmation ATM
   - hỗ trợ regenerate fixture qua `UPDATE_MAIL_SNAPSHOTS=1`
-- [AdminPanelTest.php](C:/Users/Admin/Desktop/shop/Laravel11_Shop_Website_Full/tests/Feature/AdminPanelTest.php)
   - có coverage cho route `mail-preview` và `mail-preview/render`
 
 ## Verify gần nhất
 
 ```powershell
-php artisan test tests/Feature/LegacyMailFlowTest.php tests/Feature/LegacyMailTemplateRenderTest.php tests/Feature/LegacyMailSnapshotTest.php tests/Feature/AdminPanelTest.php tests/Feature/OrderHistoryPageTest.php tests/Feature/AdminSecurityTest.php tests/Feature/AdminPermissionHardeningTest.php tests/Feature/CheckoutFlowTest.php
 ```
 
 Kết quả:
@@ -150,7 +140,7 @@ Kết quả:
 - `Checkout` vẫn là vùng lai giữa session cart storefront và schema order mới; nếu refactor tiếp cần soi kỹ contract JS ở storefront.
 - `OrderController` legacy không còn là điểm rủi ro chính cho history/totals/finalize.
 - `MailController` đã được harden phần coupon/password recovery và đã chuyển sang `Mailable + typed DTO`.
-- Mail legacy active đã chuyển sang markdown mail/theme chung, đã có snapshot hash test, có route preview nội bộ cho admin, và không còn giữ wrapper HTML preview cũ trong `resources/views/pages/...`.
+- Mail legacy active đã chuyển sang markdown mail/theme chung, đã có snapshot hash kiểm tra, có route preview nội bộ cho admin, và không còn giữ wrapper HTML preview cũ trong `resources/views/pages/...`.
 - `DocumentController` hiện đã an toàn hơn, nhưng vẫn là file manager rất mỏng; nếu muốn mở rộng tính năng upload/manage thực sự thì nên tách service/request riêng thay vì nhồi tiếp vào controller.
 - Repo vẫn còn một số controller/tooling ít dùng nhưng còn route active; các phần này không còn là dead rõ ràng, nên nếu muốn cắt tiếp phải audit theo usage thật chứ không xóa cơ học.
 

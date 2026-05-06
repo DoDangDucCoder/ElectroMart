@@ -1,0 +1,24 @@
+{
+    "transaction_used": true,
+    "transaction_final_action": "committed",
+    "wrong_rows": 108,
+    "wrong_main_rows": 0,
+    "product_media_deleted": 108,
+    "product_images_manifest_rows_changed": 0,
+    "tgdd_demo_manifest_rows_changed": 108,
+    "product_images_review_rows_added": 108,
+    "counts_before": {
+        "products": 141,
+        "product_media": 313,
+        "product_recommendation_impressions": 73,
+        "product_views": 16,
+        "sessions": 10
+    },
+    "counts_after": {
+        "products": 141,
+        "product_media": 205,
+        "product_recommendation_impressions": 73,
+        "product_views": 16,
+        "sessions": 10
+    }
+}

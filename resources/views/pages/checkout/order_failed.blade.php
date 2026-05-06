@@ -117,13 +117,20 @@ body.ors-page #header .header-bottom { display: none; }
 </style>
 
 <div class="ors-wrap">
-    <div class="ors-crumb">
-        <a href="{{ url('/') }}">Trang chủ</a>
-        <span class="sep">›</span>
-        <a href="{{ url('/checkout') }}">Thanh toán</a>
-        <span class="sep">›</span>
-        <span class="current">Đặt hàng thất bại</span>
-    </div>
+    @include('partials.storefront.breadcrumb', [
+        'class' => 'ors-crumb',
+        'separator' => '›',
+        'items' => [
+            [
+                'label' => 'Thanh toán',
+                'url' => url('/checkout'),
+            ],
+            [
+                'label' => 'Đặt hàng thất bại',
+                'current' => true,
+            ],
+        ],
+    ])
 
     {{-- Stepper with fail state --}}
     <div class="ors-stepper">

@@ -16,11 +16,17 @@
 
     <main class="cart-v2">
         <div class="cart-v2-container">
-            <nav class="cart-v2-breadcrumb" aria-label="Breadcrumb">
-                <a href="{{ url('/') }}">Trang chủ</a>
-                <span class="cart-v2-breadcrumb-sep">›</span>
-                <strong>Giỏ hàng</strong>
-            </nav>
+            @include('partials.storefront.breadcrumb', [
+                'class' => 'cart-v2-breadcrumb',
+                'separator' => '›',
+                'separatorClass' => 'cart-v2-breadcrumb-sep',
+                'items' => [
+                    [
+                        'label' => 'Giỏ hàng',
+                        'current' => true,
+                    ],
+                ],
+            ])
 
             @if (session('message'))
                 <div class="cart-v2-flash cart-v2-flash--success">

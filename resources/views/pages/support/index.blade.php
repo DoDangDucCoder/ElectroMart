@@ -114,11 +114,16 @@
 
     <main class="dd-support">
         <div class="container">
-            <nav class="dd-support__breadcrumb" aria-label="breadcrumb">
-                <a href="{{ url('/') }}">Trang chủ</a>
-                <i class="fa fa-angle-right"></i>
-                <span>Chăm sóc khách hàng</span>
-            </nav>
+            @include('partials.storefront.breadcrumb', [
+                'class' => 'dd-support__breadcrumb',
+                'separator' => '›',
+                'items' => [
+                    [
+                        'label' => 'Chăm sóc khách hàng',
+                        'current' => true,
+                    ],
+                ],
+            ])
 
             {{-- Hero --}}
             <section class="dd-support__hero">

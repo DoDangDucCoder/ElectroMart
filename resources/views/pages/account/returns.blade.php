@@ -34,7 +34,7 @@
 @endphp
 
 <div class="accp-wrap">
-    <div class="accp-crumb"><a href="{{ url('/') }}">Trang chủ</a><span class="sep">›</span><a href="{{ route('customer.account') }}">Tài khoản</a><span class="sep">›</span><span class="current">Trả hàng / Hoàn tiền</span></div>
+    @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Tài khoản', 'url' => route('customer.account')], ['label' => 'Trả hàng / Hoàn tiền', 'current' => true]]])
     <div class="accp-page-title"><h1>Trả hàng / hoàn tiền</h1><p>Quản lý và theo dõi các yêu cầu trả hàng và hoàn tiền của bạn.</p></div>
 
     <div class="accp-grid">

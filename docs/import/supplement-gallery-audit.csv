@@ -1,0 +1,21 @@
+product_id,product_name,brand,current_image_count,added_image_count,final_image_count,source_used,added_urls,skipped_urls,skip_reason,status
+1,"iPhone 15 Pro Max 256GB",Apple,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+2,"Samsung Galaxy S24 Ultra 512GB",Samsung,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+3,"MacBook Pro 14 inch M3",Apple,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+4,"AirPods Pro 2nd Gen",Apple,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+5,"Samsung Galaxy Buds2 Pro",Samsung,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+260,"MacBook Air 13 inch M3 8GB 256GB",Apple,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+262,"Apple AirPods Pro 2 USB-C",Apple,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+264,"Dell UltraSharp U2723QE 27 inch 4K",Dell,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+266,"Apple 20W USB-C Power Adapter",Apple,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+268,"Canon PIXMA G3770 WiFi",Canon,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+370,"OPPO Reno13 Pro 5G 512GB",Oppo,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+372,"Vivo V40 5G 256GB",Vivo,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+373,"Vivo Y28 256GB",Vivo,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+374,"realme 13 Plus 5G 256GB",realme,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+377,"ASUS ROG Phone 8 Pro 512GB",ASUS,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+378,"MacBook Air 15 inch M3 8GB 512GB",Apple,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+379,"MacBook Pro 14 inch M4 16GB 512GB",Apple,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+380,"Dell XPS 13 9340 Core Ultra 7",Dell,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+381,"Dell Inspiron 14 5440 Core 5",Dell,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE
+382,"HP Spectre x360 14 Core Ultra 7",HP,0,0,0,,,,missing_or_invalid_main_image,REVIEW_IMAGE

@@ -8,15 +8,17 @@
 
 @section('content')
 <main class="promo-main">
-    {{-- Breadcrumb --}}
-    <nav class="promo-breadcrumb" aria-label="Breadcrumb">
-        <div class="container">
-            <ol>
-                <li><a href="{{ url('/trang-chu') }}">Trang chủ</a></li>
-                <li class="active">Khuyến mãi</li>
-            </ol>
-        </div>
-    </nav>
+    <div class="container">
+        @include('partials.storefront.breadcrumb', [
+            'class' => 'promo-breadcrumb',
+            'items' => [
+                [
+                    'label' => 'Khuyến mãi',
+                    'current' => true,
+                ],
+            ],
+        ])
+    </div>
 
     {{-- Hero Banner --}}
     <section class="promo-hero" id="promo-hero">
@@ -59,7 +61,7 @@
                     </div>
                 </div>
                 <div class="promo-hero-visual">
-                    <img src="{{ asset('uploads/slider/banner342.jpg') }}" alt="Khuyến mãi HOT" class="promo-hero-img">
+                    <img src="{{ asset('assets/home/hero/hero-gaming-setup.svg') }}" alt="Khuyến mãi HOT" class="promo-hero-img">
                 </div>
             </div>
         </div>
@@ -71,22 +73,18 @@
             <div class="promo-cats-grid">
                 @php
                     $promoCategories = [
-                        ['name' => 'Laptop sinh viên', 'icon' => 'fa-graduation-cap', 'query' => 'laptop sinh viên', 'img' => 'uploads/post/smartphone12.jpg'],
-                        ['name' => 'Gaming setup', 'icon' => 'fa-gamepad', 'query' => 'gaming', 'img' => 'uploads/post/smartphone24.jpg'],
-                        ['name' => 'Phụ kiện hot', 'icon' => 'fa-headphones', 'query' => 'phụ kiện', 'img' => 'uploads/post/smartphone31.jpg'],
-                        ['name' => 'Văn phòng tối ưu', 'icon' => 'fa-briefcase', 'query' => 'laptop văn phòng', 'img' => 'uploads/post/smartphone12.jpg'],
-                        ['name' => 'Deal cuối tuần', 'icon' => 'fa-percent', 'query' => 'deal', 'img' => null],
-                        ['name' => 'Flash Sale', 'icon' => 'fa-bolt', 'query' => 'flash sale', 'img' => null],
+                        ['name' => 'Laptop sinh viên', 'icon' => 'fa-laptop', 'query' => 'laptop sinh viên'],
+                        ['name' => 'Gaming setup', 'icon' => 'fa-gamepad', 'query' => 'gaming'],
+                        ['name' => 'Phụ kiện hot', 'icon' => 'fa-headphones', 'query' => 'phụ kiện'],
+                        ['name' => 'Văn phòng tối ưu', 'icon' => 'fa-briefcase', 'query' => 'laptop văn phòng'],
+                        ['name' => 'Deal cuối tuần', 'icon' => 'fa-tags', 'query' => 'deal cuối tuần'],
+                        ['name' => 'Flash Sale', 'icon' => 'fa-bolt', 'query' => 'flash sale'],
                     ];
                 @endphp
                 @foreach ($promoCategories as $cat)
                     <a href="{{ url('/tim-kiem?keywords_submit=' . urlencode($cat['query'])) }}" class="promo-cat-item">
                         <span class="promo-cat-icon-wrap">
-                            @if (!empty($cat['img']))
-                                <img src="{{ asset($cat['img']) }}" alt="{{ $cat['name'] }}">
-                            @else
-                                <i class="fa {{ $cat['icon'] }}"></i>
-                            @endif
+                            <i class="fa {{ $cat['icon'] }}"></i>
                         </span>
                         <span class="promo-cat-name">{{ $cat['name'] }}</span>
                     </a>
@@ -166,7 +164,6 @@
                         <div class="tech-sale-item">
                             @include('partials.home.product-card', [
                                 'product' => $product,
-                                'compact' => true,
                             ])
                         </div>
                     @endforeach
@@ -255,7 +252,6 @@
                     <div class="promo-product-col">
                         @include('partials.home.product-card', [
                             'product' => $product,
-                            'compact' => true,
                         ])
                     </div>
                 @endforeach

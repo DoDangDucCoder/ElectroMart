@@ -91,7 +91,7 @@ Laravel là một framework web mã nguồn mở viết cho PHP, được xây d
 
 ### 2.5.1. Tổng quan về Laravel
 
-Laravel là một framework phát triển web mã nguồn mở sử dụng ngôn ngữ PHP, được thiết kế theo hướng hiện đại, dễ mở rộng và có hệ sinh thái phong phú. Laravel cung cấp sẵn nhiều thành phần quan trọng như routing, middleware, Eloquent ORM, Blade template, request validation, authentication, authorization, event, queue và testing.
+Laravel là một framework phát triển web mã nguồn mở sử dụng ngôn ngữ PHP, được thiết kế theo hướng hiện đại, dễ mở rộng và có hệ sinh thái phong phú. Laravel cung cấp sẵn nhiều thành phần quan trọng như routing, middleware, Eloquent ORM, Blade template, request validation, authentication, authorization, event và queue.
 
 Việc sử dụng Laravel giúp giảm thời gian xây dựng các thành phần nền tảng, từ đó người phát triển có thể tập trung nhiều hơn vào nghiệp vụ đặc thù của ứng dụng.
 
@@ -104,7 +104,6 @@ Laravel 11 là phiên bản hiện đại, ổn định và phù hợp với cá
 - có request validation giúp tách logic kiểm tra đầu vào
 - có Eloquent ORM hỗ trợ làm việc với cơ sở dữ liệu quan hệ
 - có Blade template phù hợp với mô hình website server-rendered
-- có hệ thống test thuận lợi cho feature test
 
 Những ưu điểm này rất phù hợp với yêu cầu của một hệ thống thương mại điện tử có cả storefront, admin và REST API.
 
@@ -148,7 +147,7 @@ Lợi ích của request validation bao gồm:
 
 - làm controller gọn hơn
 - tăng khả năng tái sử dụng quy tắc kiểm tra
-- dễ kiểm thử hơn
+- dễ kiểm tra chất lượng hơn
 - giảm lỗi do kiểm tra đầu vào không nhất quán
 
 Trong lý thuyết thiết kế hệ thống web, đây là một bước quan trọng để chuyển từ ứng dụng CRUD đơn giản sang ứng dụng có cấu trúc tốt hơn.
@@ -202,7 +201,7 @@ Lợi ích của service layer:
 
 - tách nghiệp vụ khỏi controller
 - tăng khả năng tái sử dụng logic
-- thuận tiện cho kiểm thử
+- thuận tiện cho kiểm tra chất lượng
 - giúp controller chỉ còn vai trò điều phối
 
 Đối với hệ thống có nhiều chức năng như đề tài này, service layer là một cơ sở lý thuyết quan trọng để giải thích việc tổ chức mã nguồn theo domain.
@@ -341,26 +340,23 @@ Trong lý thuyết phân tích hệ thống, ERD giúp:
 - hỗ trợ quá trình xây dựng schema
 - giảm nguy cơ thiếu hoặc chồng chéo dữ liệu
 
-## 2.16. Kiểm thử phần mềm
+## 2.16. Kiểm tra chất lượng phần mềm
 
-### 2.16.1. Vai trò của kiểm thử
+### 2.16.1. Vai trò của kiểm tra chất lượng
 
-Kiểm thử phần mềm là quá trình xác minh và đánh giá hệ thống nhằm phát hiện lỗi, kiểm tra sự phù hợp với yêu cầu và giảm nguy cơ phát sinh lỗi trong quá trình vận hành. Đối với một hệ thống có nhiều luồng như thương mại điện tử, kiểm thử có vai trò rất quan trọng vì nghiệp vụ liên quan trực tiếp tới dữ liệu khách hàng và doanh thu.
+Kiểm tra chất lượng phần mềm là quá trình xác minh và đánh giá hệ thống nhằm phát hiện lỗi, kiểm tra sự phù hợp với yêu cầu và giảm nguy cơ phát sinh lỗi trong quá trình vận hành. Đối với một hệ thống có nhiều luồng như thương mại điện tử, kiểm tra chất lượng có vai trò rất quan trọng vì nghiệp vụ liên quan trực tiếp tới dữ liệu khách hàng và doanh thu.
 
-### 2.16.2. Các mức kiểm thử phổ biến
+### 2.16.2. Các mức kiểm tra chất lượng phổ biến
 
-Một số mức kiểm thử thường gặp gồm:
+Một số mức kiểm tra chất lượng thường gặp gồm:
 
-- unit test để kiểm tra thành phần nhỏ
 - integration test để kiểm tra sự phối hợp giữa các thành phần
-- feature test để kiểm tra luồng chức năng từ request tới response
-- regression test để bảo đảm lỗi cũ không quay trở lại sau khi sửa mã nguồn
+- rà soát hồi quy để bảo đảm lỗi cũ không quay trở lại sau khi sửa mã nguồn
 
-Trong bối cảnh ứng dụng web Laravel, feature test đặc biệt có giá trị vì nó phản ánh khá sát cách người dùng và hệ thống thực sự tương tác.
 
-### 2.16.3. Kiểm thử trong hệ thống đang chuyển đổi từ legacy
+### 2.16.3. Kiểm tra chất lượng trong hệ thống đang chuyển đổi từ legacy
 
-Khi hệ thống ở trạng thái hybrid giữa legacy và kiến trúc mới, kiểm thử càng trở nên cần thiết. Bất kỳ thay đổi nào ở route, middleware, validation, support class hoặc service đều có thể ảnh hưởng tới nhiều luồng khác nhau. Do đó, về mặt lý thuyết, regression test là một thành phần gần như bắt buộc nếu muốn refactor an toàn.
+Khi hệ thống ở trạng thái hybrid giữa legacy và kiến trúc mới, kiểm tra chất lượng càng trở nên cần thiết. Bất kỳ thay đổi nào ở route, middleware, validation, support class hoặc service đều có thể ảnh hưởng tới nhiều luồng khác nhau. Do đó, về mặt lý thuyết, rà soát hồi quy là một thành phần gần như bắt buộc nếu muốn refactor an toàn.
 
 ## 2.17. Trải nghiệm người dùng trong thương mại điện tử
 
@@ -452,7 +448,7 @@ Khi liên hệ với đề tài, mô hình xử lý phía server là cơ sở đ
 
 ## 2.23. Ý nghĩa của framework trong phát triển ứng dụng PHP
 
-Nếu chỉ sử dụng PHP thuần, người phát triển vẫn có thể xây dựng website, nhưng khi hệ thống lớn dần thì mã nguồn rất dễ bị phân tán, lặp logic và khó bảo trì. Các bài toán như routing, validation, authentication, authorization, template rendering, database abstraction, error handling và testing nếu tự tổ chức hoàn toàn từ đầu sẽ tốn nhiều thời gian, đồng thời dễ thiếu nhất quán giữa các module. Chính vì vậy, khái niệm framework trở thành một phần quan trọng trong phát triển ứng dụng web bằng PHP.
+Nếu chỉ sử dụng PHP thuần, người phát triển vẫn có thể xây dựng website, nhưng khi hệ thống lớn dần thì mã nguồn rất dễ bị phân tán, lặp logic và khó bảo trì. Các bài toán như routing, validation, authentication, authorization, template rendering, database abstraction và error handling nếu tự tổ chức hoàn toàn từ đầu sẽ tốn nhiều thời gian, đồng thời dễ thiếu nhất quán giữa các module. Chính vì vậy, khái niệm framework trở thành một phần quan trọng trong phát triển ứng dụng web bằng PHP.
 
 Về mặt lý thuyết, framework có thể được hiểu là một bộ khung tổ chức phát triển phần mềm, cung cấp sẵn cấu trúc thư mục, quy tắc làm việc và các thành phần kỹ thuật phổ biến. Framework không thay thế tư duy thiết kế hệ thống, nhưng giúp chuẩn hóa cách cài đặt các thành phần lặp lại. Nhờ đó, người phát triển có thể tập trung nhiều hơn vào bài toán nghiệp vụ đặc thù như catalog, giỏ hàng, checkout, báo cáo hoặc phân quyền, thay vì tốn quá nhiều công sức cho hạ tầng cơ bản.
 
@@ -462,13 +458,11 @@ Nhìn từ góc độ báo cáo đồ án, đưa phần lý thuyết về framew
 
 ## 2.24. Hệ sinh thái Laravel trong phát triển website thương mại điện tử
 
-Ở mục trước, Laravel đã được giới thiệu như một framework hiện đại cho PHP. Tuy nhiên, để chương cơ sở lý thuyết đủ chiều sâu, cần nhìn Laravel không chỉ như một công cụ tạo route hay CRUD, mà như một hệ sinh thái hỗ trợ nhiều mặt của ứng dụng web. Trong phát triển website thương mại điện tử, hệ sinh thái này có ý nghĩa lớn vì hệ thống không chỉ cần hiển thị sản phẩm mà còn cần quản lý xác thực, phiên làm việc, phân quyền, dữ liệu quan hệ, API, queue, mail, console command và testing.
+Ở mục trước, Laravel đã được giới thiệu như một framework hiện đại cho PHP. Tuy nhiên, để chương cơ sở lý thuyết đủ chiều sâu, cần nhìn Laravel không chỉ như một công cụ tạo route hay CRUD, mà như một hệ sinh thái hỗ trợ nhiều mặt của ứng dụng web. Trong phát triển website thương mại điện tử, hệ sinh thái này có ý nghĩa lớn vì hệ thống không chỉ cần hiển thị sản phẩm mà còn cần quản lý xác thực, phiên làm việc, phân quyền, dữ liệu quan hệ, API, queue, mail và console command.
 
-Một điểm mạnh của Laravel là khả năng tích hợp các lớp chức năng này trong một mô hình thống nhất. Routing giúp định nghĩa rõ entry point của web và API. Middleware giúp kiểm soát truy cập. Request validation giúp chuẩn hóa kiểm tra dữ liệu đầu vào. Blade hỗ trợ dựng giao diện server-rendered. Eloquent hỗ trợ mô hình hóa quan hệ dữ liệu. Sanctum phục vụ xác thực API. Các package như `spatie/laravel-permission` mở rộng khả năng phân quyền. Artisan command hỗ trợ vận hành và tự động hóa. Testing framework giúp tạo feature test cho các luồng nghiệp vụ quan trọng. Khi nhìn chung lại, có thể thấy Laravel phù hợp với hệ thống thương mại điện tử không phải chỉ vì “dễ code”, mà vì nó cung cấp một nền tảng đồng bộ để nhiều lớp kỹ thuật hoạt động cùng nhau.
 
-Trong phạm vi đề tài, giá trị của hệ sinh thái Laravel còn thể hiện ở chỗ nó cho phép dự án phát triển theo hướng hybrid nhưng vẫn có trục chuẩn hóa. Mặc dù repo vẫn tồn tại một số thành phần legacy, các lớp mới như request validation, service, persistence, API authentication, permission và feature test đều có thể bám vào các công cụ mà Laravel và hệ sinh thái của nó cung cấp. Điều này có ý nghĩa thực tiễn lớn: hệ thống không cần viết lại toàn bộ từ đầu mà vẫn có thể nâng cấp dần kiến trúc theo từng bước.
 
-Về mặt học thuật, bổ sung nội dung này giúp chương cơ sở lý thuyết tránh bị ngắn ở phần Laravel. Thay vì chỉ dừng ở định nghĩa và vài ưu điểm tổng quát, báo cáo có thể trình bày Laravel như một nền tảng phát triển toàn diện cho website thương mại điện tử. Cách tiếp cận đó phù hợp hơn với chính hiện trạng của dự án, vì repo thực tế cũng đang sử dụng Laravel không chỉ để dựng web page mà còn để xây API, phân quyền, console command và kiểm thử tự động.
+Về mặt học thuật, bổ sung nội dung này giúp chương cơ sở lý thuyết tránh bị ngắn ở phần Laravel. Thay vì chỉ dừng ở định nghĩa và vài ưu điểm tổng quát, báo cáo có thể trình bày Laravel như một nền tảng phát triển toàn diện cho website thương mại điện tử. Cách tiếp cận đó phù hợp hơn với chính hiện trạng của dự án, vì repo thực tế cũng đang sử dụng Laravel không chỉ để dựng web page mà còn để xây API, phân quyền, console command và kiểm tra chất lượng.
 
 ## 2.25. Mối quan hệ giữa HTML, CSS, JavaScript, PHP và Laravel trong kiến trúc của website
 
@@ -574,17 +568,17 @@ Do đó, trong cơ sở lý thuyết cần nhìn JavaScript như một công ngh
 
 PHP có ưu điểm lớn ở tính thực dụng và mức độ phù hợp với môi trường phát triển web. Ngôn ngữ này hỗ trợ tốt xử lý form, session, cookie, truy cập cơ sở dữ liệu, upload file, gửi mail và phản hồi HTTP, tức là hầu hết các tác vụ nền tảng cần có trong một website thương mại điện tử. PHP cũng có cộng đồng lớn, tài liệu phong phú và hệ sinh thái công cụ trưởng thành, giúp việc xây dựng hệ thống trở nên khả thi trong phạm vi đồ án mà vẫn có chiều sâu kỹ thuật.
 
-Một ưu điểm nữa của PHP là khả năng kết hợp tốt với các framework mạnh như Laravel. Nhờ đó, PHP không chỉ phù hợp với các website nhỏ mà còn có thể là nền tảng cho các dự án có kiến trúc rõ ràng hơn, có service layer, API, phân quyền và kiểm thử tự động. Đối với hệ thống đang làm, đây là lợi thế quan trọng vì dự án không chỉ là web bán hàng đơn giản mà còn có admin, API, report và các công cụ vận hành.
+Một ưu điểm nữa của PHP là khả năng kết hợp tốt với các framework mạnh như Laravel. Nhờ đó, PHP không chỉ phù hợp với các website nhỏ mà còn có thể là nền tảng cho các dự án có kiến trúc rõ ràng hơn, có service layer, API, phân quyền và kiểm tra chất lượng. Đối với hệ thống đang làm, đây là lợi thế quan trọng vì dự án không chỉ là web bán hàng đơn giản mà còn có admin, API, report và các công cụ vận hành.
 
 Tuy nhiên, PHP cũng có hạn chế nếu bị sử dụng theo lối viết mã thủ công, không có chuẩn tổ chức. Nếu không có framework hoặc nguyên tắc kiến trúc, mã PHP rất dễ bị dồn logic vào controller hoặc trộn lẫn phần xử lý với phần hiển thị. Điều này làm hệ thống khó mở rộng và dễ phát sinh lỗi khi thêm chức năng mới. Do đó, đưa phần hạn chế này vào báo cáo sẽ giúp làm rõ vì sao việc dùng PHP cần đi cùng một kiến trúc hợp lý chứ không chỉ đơn giản là chọn ngôn ngữ.
 
 ## 2.35. Ưu điểm và hạn chế của Laravel trong phát triển hệ thống thương mại điện tử
 
-Laravel có ưu điểm rất rõ ở khả năng chuẩn hóa cách phát triển ứng dụng web trên nền PHP. Framework này cung cấp sẵn routing, middleware, request validation, Blade, Eloquent ORM, queue, mail, testing và nhiều công cụ khác, giúp rút ngắn thời gian xây dựng các thành phần nền tảng. Đối với website thương mại điện tử, đây là lợi thế lớn vì hệ thống thường phải triển khai đồng thời nhiều lớp như storefront, admin, API, xác thực, phân quyền, dữ liệu và kiểm thử.
+Laravel có ưu điểm rất rõ ở khả năng chuẩn hóa cách phát triển ứng dụng web trên nền PHP. Framework này cung cấp sẵn routing, middleware, request validation, Blade, Eloquent ORM, queue, mail và nhiều công cụ khác, giúp rút ngắn thời gian xây dựng các thành phần nền tảng. Đối với website thương mại điện tử, đây là lợi thế lớn vì hệ thống thường phải triển khai đồng thời nhiều lớp như storefront, admin, API, xác thực, phân quyền và dữ liệu.
 
 Một ưu điểm khác của Laravel là khả năng mở rộng theo hướng phân tầng. Dù bản thân framework thường được biết đến qua mô hình MVC, nhưng nó vẫn cho phép tổ chức thêm service layer, support classes, repository và domain objects khá thuận lợi. Điều này rất phù hợp với dự án hiện tại, vì repo không dừng ở mức controller gọi model trực tiếp mà đã có xu hướng chuẩn hóa sâu hơn.
 
-Tuy nhiên, Laravel cũng có hạn chế cần nhìn nhận thẳng. Nếu lạm dụng cơ chế tiện lợi sẵn có của framework mà không kiểm soát kiến trúc, dự án vẫn có thể trở nên cồng kềnh, controller phình to hoặc logic bị phân tán không nhất quán. Ngoài ra, với các hệ thống đang chuyển đổi từ legacy, việc đưa Laravel vào không tự động giải quyết toàn bộ vấn đề; vẫn cần chiến lược refactor và kiểm thử phù hợp. Vì vậy, trong báo cáo, Laravel nên được nhìn như một nền tảng mạnh, nhưng hiệu quả của nó vẫn phụ thuộc vào cách tổ chức mã nguồn và quyết định thiết kế của người phát triển.
+Tuy nhiên, Laravel cũng có hạn chế cần nhìn nhận thẳng. Nếu lạm dụng cơ chế tiện lợi sẵn có của framework mà không kiểm soát kiến trúc, dự án vẫn có thể trở nên cồng kềnh, controller phình to hoặc logic bị phân tán không nhất quán. Ngoài ra, với các hệ thống đang chuyển đổi từ legacy, việc đưa Laravel vào không tự động giải quyết toàn bộ vấn đề; vẫn cần chiến lược refactor và kiểm tra chất lượng phù hợp. Vì vậy, trong báo cáo, Laravel nên được nhìn như một nền tảng mạnh, nhưng hiệu quả của nó vẫn phụ thuộc vào cách tổ chức mã nguồn và quyết định thiết kế của người phát triển.
 
 ## 2.36. Vai trò của HTML, CSS, JavaScript, PHP và Laravel trong riêng dự án đang thực hiện
 
@@ -596,13 +590,12 @@ JavaScript trong dự án được sử dụng như lớp tăng cường tương
 
 PHP là lớp ngôn ngữ nền cho toàn bộ xử lý phía server của dự án. Các thao tác như nhận request, kiểm tra dữ liệu, duy trì session khách hàng, xử lý checkout, quản lý đơn hàng, phân quyền admin, xây API và chạy console command đều dựa trên PHP. Nói cách khác, PHP là lớp thực thi mà nếu bỏ đi thì toàn bộ hệ thống sẽ không còn khả năng vận hành nghiệp vụ.
 
-Laravel là bộ khung tổ chức tất cả các thành phần trên thành một ứng dụng thống nhất. Trong dự án này, Laravel không chỉ làm nhiệm vụ định tuyến mà còn cung cấp middleware, request validation, Blade, Eloquent, Sanctum, permission package, console command và nền tảng cho feature test. Nhờ đó, dự án có thể phát triển theo hướng nhiều lớp hơn thay vì dồn toàn bộ xử lý vào một số controller như mô hình CRUD đơn giản.
 
 Nhìn tổng thể, từng công nghệ có một vai trò khác nhau nhưng bổ sung cho nhau trong cùng một kiến trúc. HTML và CSS lo cấu trúc cùng trình bày, JavaScript tăng cường tương tác, PHP xử lý nghiệp vụ phía server và Laravel cung cấp bộ khung chuẩn hóa. Việc làm rõ vai trò này ngay trong Chương 2 giúp phần cơ sở lý thuyết bám sát dự án hơn, đồng thời tạo cầu nối thuận lợi sang Chương 4, nơi các công nghệ đó được nhìn dưới góc độ triển khai thực tế.
 
 ## 2.37. Kết luận chương
 
-Chương cơ sở lý thuyết đã trình bày các nền tảng quan trọng phục vụ cho việc phân tích, thiết kế và triển khai hệ thống website thương mại điện tử trên Laravel 11. Ngoài các nội dung cốt lõi như thương mại điện tử, kiến trúc web, MVC, kiến trúc phân lớp, Laravel 11, cơ sở dữ liệu quan hệ, ORM, service layer, REST API, xác thực, phân quyền, bảo mật, AJAX, UML, ERD và kiểm thử phần mềm, chương này còn mở rộng thêm các nền tảng liên quan tới HTML, CSS, JavaScript, PHP, hệ sinh thái Laravel, hình ảnh, media, khách vãng lai và các website tham chiếu trong cùng lĩnh vực.
+Chương cơ sở lý thuyết đã trình bày các nền tảng quan trọng phục vụ cho việc phân tích, thiết kế và triển khai hệ thống website thương mại điện tử trên Laravel 11. Ngoài các nội dung cốt lõi như thương mại điện tử, kiến trúc web, MVC, kiến trúc phân lớp, Laravel 11, cơ sở dữ liệu quan hệ, ORM, service layer, REST API, xác thực, phân quyền, bảo mật, AJAX, UML, ERD và kiểm tra chất lượng phần mềm, chương này còn mở rộng thêm các nền tảng liên quan tới HTML, CSS, JavaScript, PHP, hệ sinh thái Laravel, hình ảnh, media, khách vãng lai và các website tham chiếu trong cùng lĩnh vực.
 
 Việc bổ sung các nội dung này giúp chương cơ sở lý thuyết cân bằng hơn giữa ngôn ngữ nền, framework, frontend, backend, dữ liệu, trải nghiệm người dùng và hành vi mua sắm trực tuyến. Nhờ đó, Chương 2 có thể đạt độ dày tốt hơn theo đúng form đồ án tốt nghiệp mà vẫn không lạc đề, vì mọi phần lý thuyết đều được neo lại với bài toán website thương mại điện tử bán thiết bị công nghệ và với kiến trúc thực tế của dự án đang thực hiện.
 
@@ -616,7 +609,7 @@ Việc bổ sung các nội dung này giúp chương cơ sở lý thuyết cân 
 
 Điểm đặc thù của dự án là hệ thống không được xây dựng hoàn toàn theo mô hình greenfield ngay từ đầu, mà đang trong trạng thái hiện đại hóa dần từ một nền legacy. Vì vậy, trong quá trình phân tích và thiết kế, cần ghi nhận đồng thời hai lớp kiến trúc dữ liệu: lớp dữ liệu legacy đang phục vụ nhiều luồng storefront và admin hiện tại, và lớp schema chuẩn hóa mới được xây dựng qua migrations để phục vụ quá trình refactor, mở rộng API và chuẩn hóa nghiệp vụ.
 
-Do đó, việc phân tích hệ thống không chỉ dừng ở mức mô hình thương mại điện tử tổng quát, mà cần bám sát thực tế triển khai của mã nguồn, bao gồm các lớp controller legacy, các service nghiệp vụ mới, các route web và API, cũng như hệ thống kiểm thử đang tồn tại trong repo.
+Do đó, việc phân tích hệ thống không chỉ dừng ở mức mô hình thương mại điện tử tổng quát, mà cần bám sát thực tế triển khai của mã nguồn, bao gồm các lớp controller legacy, các service nghiệp vụ mới, các route web và API, cũng như quy trình kiểm soát chất lượng đang tồn tại trong repo.
 
 ## 3.2. Phân tích yêu cầu hệ thống
 
@@ -690,7 +683,7 @@ Hệ thống cần bảo đảm:
 - phân quyền rõ ràng cho khu vực quản trị
 - hạn chế lỗi runtime trong các luồng chính
 - có khả năng mở rộng theo service layer và API
-- có kiểm thử tự động cho các luồng quan trọng
+- có kiểm tra chất lượng cho các luồng quan trọng
 
 ### 3.2.3. Phân tích chi tiết yêu cầu phi chức năng
 
@@ -718,7 +711,6 @@ Hệ thống hướng tới trải nghiệm sử dụng gần với các website
 
 Quá trình phân tích hệ thống của đề tài được thực hiện theo hướng bám repo thay vì mô tả lý thuyết thuần túy. Trước hết, dự án được khảo sát từ ba mặt triển khai chính là storefront web, admin web và REST API. Song song với đó, lớp dữ liệu được nhận diện ở cả hai chiều: lớp bảng legacy đang phục vụ nhiều luồng vận hành hiện tại và lớp schema chuẩn hóa mới được hình thành qua migrations.
 
-Sau bước khảo sát, yêu cầu hệ thống được đối chiếu theo từng nhóm người dùng và từng nhóm nghiệp vụ thật đang tồn tại trong route, controller, service, migration và test suite. Cách tiếp cận này giúp phần phân tích không bị tách rời khỏi mã nguồn, đồng thời tránh mô tả hệ thống như một mô hình lý tưởng không còn ăn khớp với repo.
 
 Tiếp theo, hệ thống được mô hình hóa bằng use case, activity, sequence, ERD và kiến trúc phân tầng. Điểm quan trọng là các sơ đồ không chỉ bám chức năng ở mức tổng quát mà còn phải gắn với các route và luồng thật như POST /add-cart-ajax, GET /checkout, POST /login-customer, POST /update-product/{product_id}.
 
@@ -873,7 +865,7 @@ Biểu đồ này giữ nguyên bản chất của module workspace admin nhưng
 [Chèn hình tương ứng, xuất từ $source.]
 
 **Mô tả dưới hình:**  
-Module quản lý catalog bám các route `catalog/categories`, `catalog/brands`, `/add-product`, `/all-product`, `/update-product/{product_id}`, `/product-attribute`, `/add-gallery/{product_id}`, `/delete-document`, `/comment`. Đây là nhóm chức năng lớn nhất trong khu vực quản trị.
+Module quản lý catalog bám các route `catalog/categories`, `catalog/brands`, `/admin/products-management`, `/admin/categories-management`, `/add-product`, `/update-product/{product_id}`, `/product-attribute`, `/add-gallery/{product_id}`, `/delete-document`, `/comment`. Đây là nhóm chức năng lớn nhất trong khu vực quản trị.
 
 ### Hình 3.20. Biểu đồ use case module quản lý nội dung
 
@@ -887,7 +879,7 @@ Biểu đồ use case module quản lý nội dung tiếp tục chỉ dùng mộ
 [Chèn hình tương ứng, xuất từ $source.]
 
 **Mô tả dưới hình:**  
-Biểu đồ này mô tả phần vận hành hậu bán hàng trong admin, bám các route `/manage-order`, `/print-order/{checkout_code}`, `/view-order/{order_code}`, `/update-order-qty`, `/delivery`, `/insert-coupon`, `/send-coupon`, `/send-coupon-vip`.
+Biểu đồ này mô tả phần vận hành hậu bán hàng trong admin, bám các route `/admin/orders-management`, `/print-order/{checkout_code}`, `/view-order/{order_code}`, `/update-order-qty`, `/delivery`, `/insert-coupon`, `/send-coupon`, `/send-coupon-vip`.
 
 ### Hình 3.22. Biểu đồ use case module người dùng, phân quyền và báo cáo
 

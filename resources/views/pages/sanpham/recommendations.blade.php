@@ -4,6 +4,19 @@
 
 @section('content')
     <div class="shopw-search-page shopw-recommendation-page">
+        @include('partials.storefront.breadcrumb', [
+            'items' => [
+                [
+                    'label' => 'Sản phẩm',
+                    'url' => url('/san-pham'),
+                ],
+                [
+                    'label' => 'Gợi ý sản phẩm',
+                    'current' => true,
+                ],
+            ],
+        ])
+
         <section class="shopw-search-hero shopw-recommendation-page-head">
             <div class="shopw-search-hero-copy">
                 <span class="shopw-search-kicker">Gợi ý sản phẩm</span>

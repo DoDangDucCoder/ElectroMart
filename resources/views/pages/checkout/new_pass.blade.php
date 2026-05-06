@@ -576,13 +576,20 @@
 
 <section class="reset-page">
     <div class="reset-container">
-        <nav class="reset-breadcrumb" aria-label="breadcrumb">
-            <a href="{{ url('/') }}">Trang chủ</a>
-            <span class="sep"><i class="fa fa-angle-right"></i></span>
-            <a href="{{ url('/tai-khoan') }}">Tài khoản</a>
-            <span class="sep"><i class="fa fa-angle-right"></i></span>
-            <span class="current">Đặt lại mật khẩu</span>
-        </nav>
+        @include('partials.storefront.breadcrumb', [
+            'class' => 'reset-breadcrumb',
+            'separator' => '›',
+            'items' => [
+                [
+                    'label' => 'Tài khoản',
+                    'url' => url('/account'),
+                ],
+                [
+                    'label' => 'Đặt lại mật khẩu',
+                    'current' => true,
+                ],
+            ],
+        ])
 
         <div class="reset-grid">
             <div class="reset-card">

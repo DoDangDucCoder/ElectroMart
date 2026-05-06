@@ -117,11 +117,14 @@ body.inv-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
 </style>
 
 <div class="inv-wrap">
-    <div class="inv-crumb">
-        <a href="{{ url('/') }}">Trang chủ</a><span class="sep">›</span>
-        <a href="{{ route('customer.account') }}">Tài khoản</a><span class="sep">›</span>
-        <span class="current">Hóa đơn / xuất hóa đơn VAT</span>
-    </div>
+    @include('partials.storefront.breadcrumb', [
+        'class' => 'inv-crumb',
+        'separator' => '›',
+        'items' => [
+            ['label' => 'Tài khoản', 'url' => route('customer.account')],
+            ['label' => 'Hóa đơn / xuất hóa đơn VAT', 'current' => true],
+        ],
+    ])
 
     <div class="inv-grid">
         {{-- SIDEBAR --}}

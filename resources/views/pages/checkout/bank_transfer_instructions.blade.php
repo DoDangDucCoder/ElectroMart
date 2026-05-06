@@ -5,6 +5,16 @@
 @section('content')
     <section class="dd-bank-transfer-page">
         <div class="dd-bank-transfer-container">
+            @include('partials.storefront.breadcrumb', [
+                'class' => 'bt-crumb',
+                'separator' => '›',
+                'items' => [
+                    ['label' => 'Giỏ hàng', 'url' => url('/gio-hang')],
+                    ['label' => 'Thanh toán', 'url' => url('/payment')],
+                    ['label' => 'Hướng dẫn chuyển khoản', 'current' => true],
+                ],
+            ])
+
             <div class="dd-bank-transfer-card">
                 <div class="dd-bank-transfer-header">
                     <h1>

@@ -98,7 +98,7 @@ MVC là viết tắt của Model - View - Controller, một mô hình kiến tr�
 
 Đối với các hệ thống lớn hơn mức CRUD cơ bản, MVC thuần túy thường chưa đủ để kiểm soát tốt các nghiệp vụ phức tạp. Vì vậy, nhiều dự án hiện đại thường mở rộng thêm các lớp như request validation, service layer, support classes, domain layer và persistence layer.
 
-Cách tiếp cận phân lớp giúp controller gọn hơn, tách phần nghiệp vụ khỏi phần điều phối HTTP và làm cho mã nguồn thuận lợi hơn cho kiểm thử, mở rộng và bảo trì. Trong phạm vi đề tài này, việc hệ thống có thêm các lớp `Application`, `Domain`, `Infrastructure/Persistence` và `Support` là biểu hiện của hướng tổ chức phân lớp đó.
+Cách tiếp cận phân lớp giúp controller gọn hơn, tách phần nghiệp vụ khỏi phần điều phối HTTP và làm cho mã nguồn thuận lợi hơn cho kiểm tra chất lượng, mở rộng và bảo trì. Trong phạm vi đề tài này, việc hệ thống có thêm các lớp `Application`, `Domain`, `Infrastructure/Persistence` và `Support` là biểu hiện của hướng tổ chức phân lớp đó.
 
 ### 1.3.4. Giao diện lập trình ứng dụng RESTful API
 
@@ -112,11 +112,10 @@ Cơ sở dữ liệu quan hệ là mô hình tổ chức dữ liệu dưới d�
 
 Một khái niệm quan trọng khác là chuẩn hóa dữ liệu. Chuẩn hóa giúp giảm dư thừa dữ liệu, hạn chế bất nhất và làm cho cấu trúc dữ liệu dễ bảo trì hơn. Trong đề tài này, khái niệm chuẩn hóa đặc biệt có ý nghĩa vì hệ thống tồn tại song song dữ liệu legacy và lớp schema mới được chuẩn hóa dần.
 
-### 1.3.6. Kiểm thử phần mềm trong phát triển web
+### 1.3.6. Kiểm tra chất lượng phần mềm trong phát triển web
 
-Kiểm thử phần mềm là quá trình xác minh và đánh giá hệ thống nhằm phát hiện lỗi, kiểm tra sự phù hợp với yêu cầu và giảm nguy cơ phát sinh lỗi trong quá trình vận hành. Đối với hệ thống thương mại điện tử, kiểm thử có vai trò quan trọng vì nghiệp vụ liên quan trực tiếp đến dữ liệu khách hàng, đơn hàng và tính ổn định của vận hành.
+Kiểm tra chất lượng phần mềm là quá trình xác minh và đánh giá hệ thống nhằm phát hiện lỗi, kiểm tra sự phù hợp với yêu cầu và giảm nguy cơ phát sinh lỗi trong quá trình vận hành. Đối với hệ thống thương mại điện tử, kiểm tra chất lượng có vai trò quan trọng vì nghiệp vụ liên quan trực tiếp đến dữ liệu khách hàng, đơn hàng và tính ổn định của vận hành.
 
-Trong ứng dụng web Laravel, các mức kiểm thử thường gặp gồm unit test, integration test, feature test và regression test. Trong đó, feature test có giá trị cao vì phản ánh tương đối sát luồng mà người dùng và hệ thống thực sự tương tác.
 
 ### 1.3.7. Blade Template và tổ chức giao diện server-rendered
 
@@ -132,7 +131,7 @@ ORM (Object Relational Mapping) là kỹ thuật ánh xạ dữ liệu từ bả
 
 Tuy nhiên, về mặt lý thuyết cũng cần thấy rằng ORM không thay thế hoàn toàn cho tư duy thiết kế dữ liệu. Trong các hệ thống có nhiều nghiệp vụ như thương mại điện tử, người phát triển vẫn phải hiểu rõ quan hệ bảng, chỉ mục, transaction và ảnh hưởng của truy vấn đến hiệu năng. Vì vậy, Eloquent phù hợp cho việc tổ chức truy cập dữ liệu, nhưng nó chỉ phát huy tốt khi được đặt trên một thiết kế cơ sở dữ liệu hợp lý.
 
-Service Layer là lớp trung gian dùng để xử lý nghiệp vụ thay vì để toàn bộ logic nằm trong controller. Một service có thể phụ trách giỏ hàng, checkout, recommendation, báo cáo hoặc xử lý khuyến mãi. Lợi ích của service layer là tách nghiệp vụ khỏi lớp HTTP, tăng khả năng tái sử dụng logic và thuận lợi hơn cho kiểm thử.
+Service Layer là lớp trung gian dùng để xử lý nghiệp vụ thay vì để toàn bộ logic nằm trong controller. Một service có thể phụ trách giỏ hàng, checkout, recommendation, báo cáo hoặc xử lý khuyến mãi. Lợi ích của service layer là tách nghiệp vụ khỏi lớp HTTP, tăng khả năng tái sử dụng logic và thuận lợi hơn cho kiểm tra chất lượng.
 
 Repository Pattern là cách trừu tượng hóa thao tác truy cập dữ liệu, giúp business logic bớt phụ thuộc trực tiếp vào chi tiết lưu trữ. Trong thực tế, không phải mọi dự án Laravel đều bắt buộc dùng repository. Tuy nhiên, đối với hệ thống có xu hướng chuẩn hóa kiến trúc, repository là một lựa chọn có giá trị vì giúp tách biệt rõ hơn giữa tầng nghiệp vụ và tầng persistence.
 
@@ -274,7 +273,7 @@ PHP là ngôn ngữ lập trình phía server được sử dụng rộng rãi t
 
 ### 1.4.2. Framework Laravel 11
 
-Laravel là framework mã nguồn mở viết cho PHP, được thiết kế theo hướng hiện đại, rõ ràng và dễ mở rộng. Laravel cung cấp sẵn nhiều thành phần quan trọng như routing, middleware, request validation, Eloquent ORM, Blade template, queue, mail, authentication, authorization và testing.
+Laravel là framework mã nguồn mở viết cho PHP, được thiết kế theo hướng hiện đại, rõ ràng và dễ mở rộng. Laravel cung cấp sẵn nhiều thành phần quan trọng như routing, middleware, request validation, Eloquent ORM, Blade template, queue, mail, authentication và authorization.
 
 Laravel 11 được sử dụng trong đề tài vì phù hợp với việc phát triển cả web và API, đồng thời hỗ trợ tổ chức mã nguồn tốt hơn cho các hệ thống có nhiều phân hệ. Việc sử dụng Laravel giúp rút ngắn thời gian xây dựng các thành phần nền tảng và cho phép tập trung nhiều hơn vào nghiệp vụ của website thương mại điện tử.
 
@@ -336,7 +335,7 @@ Trong quá trình thực hiện đề tài, Visual Studio Code là công cụ th
 
 DBeaver là công cụ quản trị cơ sở dữ liệu hỗ trợ nhiều hệ quản trị khác nhau, trong đó có MySQL. Công cụ này giúp theo dõi cấu trúc bảng, thực hiện truy vấn SQL, kiểm tra dữ liệu và quản lý cơ sở dữ liệu thuận tiện hơn.
 
-Đối với đề tài này, DBeaver hỗ trợ tốt cho việc quan sát và kiểm tra dữ liệu trong quá trình thiết kế, cài đặt và kiểm thử hệ thống.
+Đối với đề tài này, DBeaver hỗ trợ tốt cho việc quan sát và kiểm tra dữ liệu trong quá trình thiết kế, cài đặt và kiểm tra chất lượng hệ thống.
 
 ### 1.4.13. HTML
 
@@ -364,7 +363,7 @@ GitHub là nền tảng lưu trữ mã nguồn và cộng tác dựa trên Git. 
 
 ### 1.4.17. Swagger và tài liệu hóa API
 
-Swagger là một công cụ hỗ trợ mô tả, kiểm thử và tài liệu hóa API. Trong các hệ thống hiện đại có REST API, tài liệu API giúp người phát triển và người tích hợp hiểu được endpoint, phương thức HTTP, dữ liệu đầu vào, dữ liệu đầu ra và các mã trạng thái liên quan.
+Swagger là một công cụ hỗ trợ mô tả, kiểm tra chất lượng và tài liệu hóa API. Trong các hệ thống hiện đại có REST API, tài liệu API giúp người phát triển và người tích hợp hiểu được endpoint, phương thức HTTP, dữ liệu đầu vào, dữ liệu đầu ra và các mã trạng thái liên quan.
 
 Đối với đề tài này, sự xuất hiện của tài liệu API cho thấy hệ thống không chỉ dừng ở web interface mà còn có định hướng mở rộng hoặc tích hợp với các client khác trong tương lai. Việc đưa Swagger vào phần công nghệ sử dụng giúp chương cơ sở lý thuyết bám sát hơn với thực trạng của dự án.
 
@@ -429,7 +428,7 @@ Bảng 1.1 dưới đây tóm tắt một số công nghệ và công cụ chín
 | Công nghệ / Công cụ | Nhóm | Vai trò chính trong hệ thống |
 |---|---|---|
 | PHP | Backend | Ngôn ngữ nền xử lý nghiệp vụ phía server |
-| Laravel 11 | Framework | Tổ chức ứng dụng web, routing, middleware, validation, ORM, testing |
+| Laravel 11 | Framework | Tổ chức ứng dụng web, routing, middleware, validation, ORM |
 | Blade | Template Engine | Render giao diện server-side theo layout và partial |
 | JavaScript | Frontend | Tạo tương tác động trên giao diện |
 | Vue.js | Frontend Library | Xây dựng component giao diện và các vùng tương tác |
@@ -530,17 +529,17 @@ Tuy nhiên, PHP cũng có hạn chế nếu bị sử dụng theo lối viết m
 
 ### 1.6.5. Ưu điểm và hạn chế của Laravel
 
-Laravel có ưu điểm rất rõ ở khả năng chuẩn hóa cách phát triển ứng dụng web trên nền PHP. Framework này cung cấp sẵn routing, middleware, request validation, Blade, Eloquent ORM, queue, mail, testing và nhiều công cụ khác, giúp rút ngắn thời gian xây dựng các thành phần nền tảng. Đối với website thương mại điện tử, đây là lợi thế lớn vì hệ thống thường phải triển khai đồng thời nhiều lớp như storefront, admin, API, xác thực, phân quyền, dữ liệu và kiểm thử.
+Laravel có ưu điểm rất rõ ở khả năng chuẩn hóa cách phát triển ứng dụng web trên nền PHP. Framework này cung cấp sẵn routing, middleware, request validation, Blade, Eloquent ORM, queue, mail và nhiều công cụ khác, giúp rút ngắn thời gian xây dựng các thành phần nền tảng. Đối với website thương mại điện tử, đây là lợi thế lớn vì hệ thống thường phải triển khai đồng thời nhiều lớp như storefront, admin, API, xác thực, phân quyền và dữ liệu.
 
 Một ưu điểm khác của Laravel là khả năng mở rộng theo hướng phân tầng. Dù bản thân framework thường được biết đến qua mô hình MVC, nhưng nó vẫn cho phép tổ chức thêm service layer, support classes, repository và domain objects khá thuận lợi. Điều này rất phù hợp với các hệ thống đang phát triển dần từ mức đơn giản lên mức phức tạp hơn.
 
-Tuy nhiên, Laravel cũng có hạn chế cần nhìn nhận thẳng. Nếu lạm dụng cơ chế tiện lợi sẵn có của framework mà không kiểm soát kiến trúc, dự án vẫn có thể trở nên cồng kềnh, controller phình to hoặc logic bị phân tán không nhất quán. Ngoài ra, với các hệ thống đang chuyển đổi từ legacy, việc đưa Laravel vào không tự động giải quyết toàn bộ vấn đề; vẫn cần chiến lược refactor và kiểm thử phù hợp.
+Tuy nhiên, Laravel cũng có hạn chế cần nhìn nhận thẳng. Nếu lạm dụng cơ chế tiện lợi sẵn có của framework mà không kiểm soát kiến trúc, dự án vẫn có thể trở nên cồng kềnh, controller phình to hoặc logic bị phân tán không nhất quán. Ngoài ra, với các hệ thống đang chuyển đổi từ legacy, việc đưa Laravel vào không tự động giải quyết toàn bộ vấn đề; vẫn cần chiến lược refactor và kiểm tra chất lượng phù hợp.
 
 ### 1.6.6. Ưu điểm và hạn chế của MySQL
 
 MySQL có ưu điểm ở sự ổn định, mức độ phổ biến và tính phù hợp với dữ liệu có cấu trúc rõ ràng. Các bài toán như quản lý sản phẩm, danh mục, thương hiệu, khách hàng, đơn hàng, thanh toán và bài viết đều có thể được biểu diễn tốt bằng mô hình quan hệ trên MySQL. Hệ quản trị này cũng hỗ trợ transaction, index và các thao tác truy vấn cần thiết cho phần lớn hệ thống thương mại điện tử quy mô vừa.
 
-Một lợi thế nữa của MySQL là dễ triển khai trong môi trường học tập và phát triển web phổ biến. Tài liệu, công cụ quản trị và kinh nghiệm cộng đồng đều rất sẵn có, giúp quá trình thiết kế, cài đặt và kiểm thử cơ sở dữ liệu thuận tiện hơn.
+Một lợi thế nữa của MySQL là dễ triển khai trong môi trường học tập và phát triển web phổ biến. Tài liệu, công cụ quản trị và kinh nghiệm cộng đồng đều rất sẵn có, giúp quá trình thiết kế, cài đặt và kiểm tra chất lượng cơ sở dữ liệu thuận tiện hơn.
 
 Tuy nhiên, MySQL cũng có hạn chế nếu thiết kế schema không tốt hoặc truy vấn không được tối ưu. Dữ liệu dư thừa, chỉ mục thiếu hợp lý hoặc transaction không được cân nhắc kỹ có thể ảnh hưởng đến hiệu năng và tính nhất quán của hệ thống. Vì vậy, chọn MySQL là bước đầu phù hợp, nhưng hiệu quả thực tế vẫn phụ thuộc lớn vào cách tổ chức dữ liệu.
 
@@ -600,7 +599,7 @@ Tuy nhiên, khi thêm Axios, Pinia và Vue Router vào frontend, mức độ ph�
 
 Event, queue và command-based operation có ưu điểm ở khả năng tách rời các bước xử lý và hỗ trợ mở rộng hệ thống theo hướng module hóa. Khi một hành động phát sinh trong hệ thống, event có thể được phát ra để các listener hoặc job khác tiếp nhận xử lý. Queue giúp đưa các tác vụ nặng ra xử lý nền, còn command cho phép đóng gói các thao tác vận hành hoặc migration thành các lệnh rõ ràng.
 
-Tuy nhiên, nhược điểm của nhóm công cụ này là làm kiến trúc trở nên phức tạp hơn so với mô hình xử lý đồng bộ trực tiếp. Nếu không có tài liệu, kiểm thử và quy ước tổ chức tốt, người mới tham gia dự án có thể gặp khó khăn trong việc lần theo luồng xử lý. Vì vậy, đây là nhóm công cụ mạnh nhưng đòi hỏi kỷ luật kiến trúc cao hơn.
+Tuy nhiên, nhược điểm của nhóm công cụ này là làm kiến trúc trở nên phức tạp hơn so với mô hình xử lý đồng bộ trực tiếp. Nếu không có tài liệu, kiểm tra chất lượng và quy ước tổ chức tốt, người mới tham gia dự án có thể gặp khó khăn trong việc lần theo luồng xử lý. Vì vậy, đây là nhóm công cụ mạnh nhưng đòi hỏi kỷ luật kiến trúc cao hơn.
 
 ## 1.7. Vai trò của nhóm công nghệ trong riêng dự án đang thực hiện
 
@@ -628,7 +627,6 @@ Vue.js được dùng trong một số component giao diện và hỗ trợ cho 
 
 PHP là lớp ngôn ngữ nền cho toàn bộ xử lý phía server của dự án. Các thao tác như nhận request, kiểm tra dữ liệu, duy trì session khách hàng, xử lý checkout, quản lý đơn hàng, phân quyền admin, xây API và chạy console command đều dựa trên PHP. Nói cách khác, PHP là lớp thực thi mà nếu bỏ đi thì toàn bộ hệ thống sẽ không còn khả năng vận hành nghiệp vụ.
 
-Laravel là bộ khung tổ chức tất cả các thành phần đó thành một ứng dụng thống nhất. Trong dự án này, Laravel không chỉ làm nhiệm vụ định tuyến mà còn cung cấp middleware, request validation, Blade, Eloquent, Sanctum, permission package, hệ thống console command và nền tảng cho feature test. Nhờ đó, dự án có thể phát triển theo hướng nhiều lớp hơn thay vì dồn toàn bộ xử lý vào một số controller như mô hình CRUD đơn giản.
 
 ### 1.7.5. Vai trò của MySQL và dữ liệu quan hệ trong dự án
 
@@ -642,11 +640,10 @@ Sanctum giữ vai trò hỗ trợ xác thực cho các endpoint API cần kiểm
 
 Spatie Laravel Permission giữ vai trò tổ chức quyền truy cập cho khu vực quản trị. Thay vì gộp toàn bộ quyền vào một vai trò admin duy nhất, hệ thống có thể tách quyền theo từng nhóm chức năng như sản phẩm, nội dung, đơn hàng, người dùng, vai trò hoặc hệ thống. Từ góc độ học thuật, điều này làm cho phần phân quyền của dự án bám thực tế hơn nhiều so với mô hình xác thực đơn giản.
 
-### 1.7.7. Vai trò của kiểm thử trong dự án
+### 1.7.7. Vai trò của kiểm tra chất lượng trong dự án
 
-Hệ thống kiểm thử trong dự án có vai trò như một lớp bảo vệ giúp giảm nguy cơ lỗi quay trở lại sau mỗi lần chỉnh sửa. Đối với một hệ thống có nhiều phân hệ như storefront, admin, API, report, mail và chatbot, chỉ một thay đổi nhỏ cũng có thể ảnh hưởng tới nhiều luồng khác nhau. Vì vậy, kiểm thử là yếu tố rất quan trọng để giữ hệ thống ổn định hơn trong quá trình phát triển.
+Quy trình kiểm soát chất lượng trong dự án có vai trò như một lớp bảo vệ giúp giảm nguy cơ lỗi quay trở lại sau mỗi lần chỉnh sửa. Đối với một hệ thống có nhiều phân hệ như storefront, admin, API, report, mail và chatbot, chỉ một thay đổi nhỏ cũng có thể ảnh hưởng tới nhiều luồng khác nhau. Vì vậy, kiểm tra chất lượng là yếu tố rất quan trọng để giữ hệ thống ổn định hơn trong quá trình phát triển.
 
-Từ góc nhìn của đồ án, việc có tổ chức test suite cho nhiều nhóm chức năng là một điểm có giá trị. Nó cho thấy hệ thống không chỉ dừng ở việc “làm cho chạy được”, mà còn có ý thức về chất lượng phần mềm và khả năng bảo trì lâu dài.
 
 ### 1.7.8. Vai trò của routes, controllers và requests trong dự án
 
@@ -658,7 +655,7 @@ Requests validation giữ vai trò chuẩn hóa dữ liệu đầu vào. Thay v�
 
 ### 1.7.9. Vai trò của services, persistence và support classes trong dự án
 
-Services trong dự án là nơi xử lý nhiều nghiệp vụ quan trọng như sản phẩm, giỏ hàng, checkout, báo cáo, chatbot hoặc hỗ trợ vận hành. Việc tách service ra khỏi controller làm cho kiến trúc trở nên hợp lý hơn, đồng thời giúp việc kiểm thử và tái sử dụng logic thuận tiện hơn.
+Services trong dự án là nơi xử lý nhiều nghiệp vụ quan trọng như sản phẩm, giỏ hàng, checkout, báo cáo, chatbot hoặc hỗ trợ vận hành. Việc tách service ra khỏi controller làm cho kiến trúc trở nên hợp lý hơn, đồng thời giúp việc kiểm tra chất lượng và tái sử dụng logic thuận tiện hơn.
 
 Persistence và các repository hoặc model chuẩn hóa mới giúp hệ thống tiến gần hơn tới kiến trúc nhiều tầng, nơi business logic không phụ thuộc quá trực tiếp vào cách lưu trữ dữ liệu. Điều này có giá trị lớn trong bối cảnh dự án đang tồn tại song song lớp legacy và lớp schema chuẩn hóa mới.
 
@@ -670,7 +667,7 @@ Cache trong dự án giúp tăng tốc độ phản hồi cho các dữ liệu �
 
 Health check giúp theo dõi trạng thái hoạt động của các thành phần cốt lõi như database, cache và storage. Đây là lớp hỗ trợ vận hành có giá trị thực tế cao vì nó giúp kiểm tra nhanh tình trạng hệ thống mà không cần đi sâu vào từng phần mã nguồn.
 
-Tài liệu API giúp mô tả endpoint, request và response một cách có hệ thống. Trong bối cảnh dự án có public API, protected API và admin API, tài liệu hóa API là thành phần quan trọng để hệ thống có thể được hiểu, kiểm thử và mở rộng dễ hơn trong tương lai.
+Tài liệu API giúp mô tả endpoint, request và response một cách có hệ thống. Trong bối cảnh dự án có public API, protected API và admin API, tài liệu hóa API là thành phần quan trọng để hệ thống có thể được hiểu, kiểm tra chất lượng và mở rộng dễ hơn trong tương lai.
 
 ### 1.7.11. Vai trò của mail workflow, chatbot và console commands trong dự án
 
@@ -696,7 +693,7 @@ Từ góc độ kỹ thuật, đây là một thách thức nhưng cũng là m�
 
 ### 1.8.1. Sự phù hợp với phạm vi đồ án
 
-Stack công nghệ được lựa chọn trong dự án có mức độ phù hợp khá cao với phạm vi của một đồ án tốt nghiệp. Laravel 11 cung cấp đủ nền tảng để triển khai routing, middleware, xác thực, phân quyền, Blade, ORM, API và testing trong cùng một hệ thống. Điều này giúp giảm bớt gánh nặng xây dựng hạ tầng cơ bản từ đầu và cho phép tập trung nhiều hơn vào nghiệp vụ thương mại điện tử.
+Stack công nghệ được lựa chọn trong dự án có mức độ phù hợp khá cao với phạm vi của một đồ án tốt nghiệp. Laravel 11 cung cấp đủ nền tảng để triển khai routing, middleware, xác thực, phân quyền, Blade, ORM và API trong cùng một hệ thống. Điều này giúp giảm bớt gánh nặng xây dựng hạ tầng cơ bản từ đầu và cho phép tập trung nhiều hơn vào nghiệp vụ thương mại điện tử.
 
 Việc kết hợp Blade với một số thành phần JavaScript và Vue.js cũng là lựa chọn hợp lý trong bối cảnh đồ án. Nếu đi theo mô hình SPA hoàn chỉnh, mức độ phức tạp của frontend, routing client-side, state management và tổ chức API sẽ tăng đáng kể. Trong khi đó, mô hình server-rendered kết hợp tương tác cục bộ vẫn đủ để thể hiện chiều sâu kỹ thuật mà không làm phạm vi phát triển bị vượt quá khả năng kiểm soát.
 
@@ -710,7 +707,7 @@ Ngoài ra, đặc thù của lĩnh vực công nghệ là người dùng thườ
 
 Một ưu điểm của stack công nghệ hiện tại là vẫn còn nhiều không gian để mở rộng. Từ nền Laravel hiện có, hệ thống có thể phát triển thêm API versioning rõ ràng hơn, mở rộng mobile client, tăng cường recommendation, hoàn thiện reporting hoặc tiếp tục chuẩn hóa lớp domain và persistence. Điều đó cho thấy lựa chọn công nghệ hiện tại không chỉ phù hợp cho hiện tại mà còn tạo nền cho giai đoạn mở rộng sau này.
 
-Tuy nhiên, cũng cần nhìn nhận rằng khi hệ thống ngày càng lớn, yêu cầu về tổ chức mã nguồn, chuẩn hóa dữ liệu, tách biệt trách nhiệm giữa các tầng và kiểm thử sẽ trở nên khắt khe hơn. Vì vậy, sự phù hợp của stack công nghệ không chỉ đến từ bản thân công cụ, mà còn phụ thuộc vào cách người phát triển áp dụng chúng một cách nhất quán.
+Tuy nhiên, cũng cần nhìn nhận rằng khi hệ thống ngày càng lớn, yêu cầu về tổ chức mã nguồn, chuẩn hóa dữ liệu, tách biệt trách nhiệm giữa các tầng và kiểm tra chất lượng sẽ trở nên khắt khe hơn. Vì vậy, sự phù hợp của stack công nghệ không chỉ đến từ bản thân công cụ, mà còn phụ thuộc vào cách người phát triển áp dụng chúng một cách nhất quán.
 
 ### 1.8.4. Những điểm cần tiếp tục cải thiện trong quá trình phát triển
 
@@ -718,7 +715,6 @@ Mặc dù stack công nghệ hiện tại có mức độ phù hợp cao với p
 
 Thứ hai là sự nhất quán của frontend. Khi một hệ thống sử dụng đồng thời Blade, JavaScript truyền thống, Bootstrap, Tailwind và Vue, lợi ích là linh hoạt, nhưng rủi ro là giao diện và cách tổ chức tài nguyên có thể bị phân tán nếu thiếu quy ước dài hạn. Vì vậy, cần tiếp tục chuẩn hóa cách dùng component, partial, assets và các vùng tương tác động để tránh tích lũy nợ kỹ thuật.
 
-Thứ ba là chiều sâu của kiểm thử và tài liệu hóa. Khi số lượng chức năng tăng lên, vai trò của feature test, tài liệu API, mô tả kiến trúc và tài liệu vận hành sẽ ngày càng lớn. Từ góc độ học thuật, đây cũng là hướng phát triển tốt vì giúp hệ thống không chỉ “đủ chức năng” mà còn đạt mức trưởng thành hơn về mặt quy trình phát triển phần mềm.
 
 ### 1.8.5. Rủi ro kỹ thuật khi phát triển hệ thống thương mại điện tử
 
@@ -726,13 +722,13 @@ Một hệ thống thương mại điện tử luôn tồn tại nhiều rủi r
 
 Thứ hai là rủi ro liên quan đến phân quyền và bảo mật. Khi hệ thống có cả storefront, admin và API, phạm vi truy cập trở nên phức tạp hơn. Nếu chỉ kiểm tra xác thực mà không kiểm tra quyền chi tiết, các endpoint nhạy cảm có thể bị truy cập sai phạm vi. Đây là lý do mà phần phân quyền, middleware và kiểm soát API cần được chú trọng.
 
-Thứ ba là rủi ro do thay đổi giao diện ảnh hưởng đến nghiệp vụ. Trong thương mại điện tử, nhiều phần giao diện như search suggest, quick cart, compare, checkout gate hoặc chatbot thực chất gắn trực tiếp với session, request, validation và route điều hướng. Vì vậy, thay đổi nhỏ ở UI cũng có thể tạo ra regression nếu không có kiểm thử phù hợp.
+Thứ ba là rủi ro do thay đổi giao diện ảnh hưởng đến nghiệp vụ. Trong thương mại điện tử, nhiều phần giao diện như search suggest, quick cart, compare, checkout gate hoặc chatbot thực chất gắn trực tiếp với session, request, validation và route điều hướng. Vì vậy, thay đổi nhỏ ở UI cũng có thể tạo ra regression nếu không có kiểm tra chất lượng phù hợp.
 
 Thứ tư là rủi ro do mở rộng hệ thống khi mã nguồn chưa được chuẩn hóa đầy đủ. Nếu logic bị dồn quá nhiều vào controller hoặc lẫn giữa legacy và lớp chuẩn hóa mới mà không có chiến lược refactor rõ ràng, chi phí bảo trì sẽ tăng lên nhanh chóng. Từ góc nhìn học thuật, việc nhận diện các rủi ro này giúp báo cáo có chiều sâu thực tiễn hơn và tránh cảm giác chỉ mô tả những gì hệ thống làm được.
 
 ### 1.8.6. Tính phù hợp của mô hình chuyển tiếp giữa hệ thống cũ và hiện đại
 
-Nếu chỉ nhìn theo tiêu chuẩn "sạch" về mặt kiến trúc, việc hệ thống tồn tại song song lớp dữ liệu cũ và lớp chuẩn hóa mới có thể bị xem là chưa lý tưởng. Tuy nhiên, từ góc nhìn thực tế phát triển phần mềm, mô hình chuyển tiếp này lại rất phù hợp với nhiều bài toán thực. Nó cho phép hệ thống tiếp tục vận hành các luồng cũ trong khi dần chuẩn hóa các vùng quan trọng như catalog, checkout, API, báo cáo, phân quyền và kiểm thử.
+Nếu chỉ nhìn theo tiêu chuẩn "sạch" về mặt kiến trúc, việc hệ thống tồn tại song song lớp dữ liệu cũ và lớp chuẩn hóa mới có thể bị xem là chưa lý tưởng. Tuy nhiên, từ góc nhìn thực tế phát triển phần mềm, mô hình chuyển tiếp này lại rất phù hợp với nhiều bài toán thực. Nó cho phép hệ thống tiếp tục vận hành các luồng cũ trong khi dần chuẩn hóa các vùng quan trọng như catalog, checkout, API, báo cáo, phân quyền và kiểm tra chất lượng.
 
 Trong phạm vi đồ án, mô hình chuyển tiếp này còn có một lợi thế học thuật đáng kể: nó tạo điều kiện để phân tích cả bài toán kế thừa lẫn bài toán cải tiến. Người thực hiện không chỉ học cách xây dựng chức năng mới, mà còn học cách làm việc với hệ thống đang tồn tại, đánh giá chỗ nào nên giữ, chỗ nào nên tái cấu trúc và chỗ nào cần chuẩn hóa từng bước.
 
@@ -808,7 +804,7 @@ Vấn đề thiết kế thứ ba là độ rộng của nhóm chức năng qu�
 
 Vấn đề thiết kế thứ tư là vai trò của dữ liệu phân tích trong hệ thống. Sự tồn tại của `analytics_events`, `product_views`, `product_search_queries`, `product_recommendation_impressions`, `metrics`, `alerts` cho thấy hệ thống không chỉ lưu dữ liệu giao dịch, mà còn theo dõi hành vi và sức khỏe vận hành. Điều này có ý nghĩa rất lớn trong một website thương mại điện tử, bởi quyết định về giao diện, chiến dịch khuyến mãi, recommendation và vận hành đơn hàng đều cần dựa trên dữ liệu thực tế.
 
-Từ những nhận xét trên, có thể thấy Chương 2 cần giải quyết đồng thời ba mục tiêu. Mục tiêu thứ nhất là mô tả trung thực phạm vi nghiệp vụ hiện có của hệ thống. Mục tiêu thứ hai là chuẩn hóa cách nhìn về kiến trúc, dữ liệu và luồng xử lý để người đọc có thể đối chiếu với mã nguồn. Mục tiêu thứ ba là tạo nền cho các chương xây dựng, kiểm thử và đánh giá ở phía sau, nơi các chức năng sẽ được giải thích theo mã nguồn và thành phần triển khai cụ thể.
+Từ những nhận xét trên, có thể thấy Chương 2 cần giải quyết đồng thời ba mục tiêu. Mục tiêu thứ nhất là mô tả trung thực phạm vi nghiệp vụ hiện có của hệ thống. Mục tiêu thứ hai là chuẩn hóa cách nhìn về kiến trúc, dữ liệu và luồng xử lý để người đọc có thể đối chiếu với mã nguồn. Mục tiêu thứ ba là tạo nền cho các chương xây dựng, kiểm tra chất lượng và đánh giá ở phía sau, nơi các chức năng sẽ được giải thích theo mã nguồn và thành phần triển khai cụ thể.
 
 ### 2.1.6. Kết luận khảo sát hiện trạng
 
@@ -872,7 +868,7 @@ Khả năng mở rộng được thể hiện ở việc dự án không chỉ t
 
 Do dự án có nhiều module và đang trong giai đoạn hiện đại hóa dần, khả năng bảo trì là yêu cầu rất quan trọng. Hệ thống cần có khả năng tiếp tục chạy ổn định trên nền hiện có, đồng thời cho phép chuẩn hóa dần từng module mà không làm hỏng các luồng đang vận hành.
 
-Điều này giải thích vì sao việc tách request validation, service layer, support classes, cache, testing và console command lại có ý nghĩa lớn hơn trong dự án này so với các đồ án CRUD nhỏ.
+Điều này giải thích vì sao việc tách request validation, service layer, support classes, cache và console command lại có ý nghĩa lớn hơn trong dự án này so với các đồ án CRUD nhỏ.
 
 #### e) Yêu cầu về trải nghiệm người dùng
 
@@ -1530,7 +1526,7 @@ Class diagram ở đây không nhằm tái hiện toàn bộ lớp PHP trong mã
 
 ### 2.8.1. Nguyên tắc thiết kế dữ liệu
 
-Thiết kế dữ liệu của hệ thống được xây dựng trên hai nguyên tắc. Nguyên tắc thứ nhất là vẫn phải duy trì được khả năng vận hành của các luồng legacy. Nguyên tắc thứ hai là từng bước chuẩn hóa schema để phục vụ API, báo cáo, analytics, testing và khả năng mở rộng sau này.
+Thiết kế dữ liệu của hệ thống được xây dựng trên hai nguyên tắc. Nguyên tắc thứ nhất là vẫn phải duy trì được khả năng vận hành của các luồng legacy. Nguyên tắc thứ hai là từng bước chuẩn hóa schema để phục vụ API, báo cáo, analytics và khả năng mở rộng sau này.
 
 ### 2.8.2. Hình 2.22. ERD tổng quát của hệ thống
 
@@ -1567,7 +1563,7 @@ Tuy nhiên, hệ thống vẫn chưa ở trạng thái “thuần chuẩn hóa�
 
 Một trong những khía cạnh quan trọng của thiết kế dữ liệu là chiến lược chuyển đổi. Với dự án này, phương án hợp lý không phải là thay thế đột ngột toàn bộ bảng `tbl_*` bằng schema mới, mà là xây dựng mapping rõ ràng giữa bảng cũ và bảng mới, tạo migration chuẩn, viết command hỗ trợ di trú dữ liệu theo lô và từng bước chuyển logic của ứng dụng sang bảng mới.
 
-Ví dụ, `tbl_product` cần được ánh xạ sang `products`; `tbl_category_product` sang `product_categories`; `tbl_order` sang `orders`; `tbl_order_details` sang `order_items`; `tbl_coupon` sang `coupons`; `tbl_shipping` sang `customer_addresses` hoặc `order_shipping` tùy ngữ cảnh snapshot. Chiến lược này vừa giữ cho hệ thống tiếp tục vận hành, vừa tạo tiền đề để testing và API bám vào schema mới nhất quán hơn.
+Ví dụ, `tbl_product` cần được ánh xạ sang `products`; `tbl_category_product` sang `product_categories`; `tbl_order` sang `orders`; `tbl_order_details` sang `order_items`; `tbl_coupon` sang `coupons`; `tbl_shipping` sang `customer_addresses` hoặc `order_shipping` tùy ngữ cảnh snapshot. Chiến lược này vừa giữ cho hệ thống tiếp tục vận hành, vừa tạo tiền đề để API bám vào schema mới nhất quán hơn.
 
 ### 2.8.8. Vai trò của dữ liệu phân tích trong ERD
 
@@ -2276,7 +2272,7 @@ Thiết kế bảng `orders` đáng chú ý ở chỗ tách ba lớp trạng th�
 
 Việc mô tả cơ sở dữ liệu theo từng bảng và từng cột làm cho phần thiết kế CSDL có tính học thuật cao hơn rõ rệt. Thay vì chỉ nêu tên bảng và vai trò chung, phần đặc tả chi tiết giúp người đọc hiểu được mục đích của từng cột, mối liên hệ giữa khóa ngoại với nghiệp vụ và cách mỗi bảng hỗ trợ một phần trong vòng đời dữ liệu của website thương mại điện tử.
 
-Đồng thời, bộ bảng đặc tả này cũng là cơ sở thuận lợi cho các bước tiếp theo như dựng ERD, viết migration, xây model, kiểm thử dữ liệu, chuẩn hóa query và mở rộng hệ thống. Với đồ án tốt nghiệp, đây là một thành phần rất nên có nếu muốn chương phân tích thiết kế đạt độ dày và độ tin cậy cao.
+Đồng thời, bộ bảng đặc tả này cũng là cơ sở thuận lợi cho các bước tiếp theo như dựng ERD, viết migration, xây model, kiểm tra chất lượng dữ liệu, chuẩn hóa query và mở rộng hệ thống. Với đồ án tốt nghiệp, đây là một thành phần rất nên có nếu muốn chương phân tích thiết kế đạt độ dày và độ tin cậy cao.
 
 ### 2.10.31. Bảng 2.29. Đặc tả chi tiết cho `brands` và `product_categories`
 

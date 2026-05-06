@@ -1,0 +1,358 @@
+/* Shared storefront layout rhythm loaded after page-specific styles. */
+:root {
+    --storefront-layout-container: 1240px;
+    --storefront-layout-gutter: 20px;
+    --storefront-layout-bg: #f4f6f8;
+    --storefront-layout-text: #0f172a;
+    --storefront-layout-muted: #64748b;
+    --storefront-layout-current: #0d9488;
+    --storefront-layout-separator: #cbd5e1;
+    --storefront-layout-page-bottom: 56px;
+    --storefront-layout-breadcrumb-top: 18px;
+    --storefront-layout-breadcrumb-bottom: 14px;
+    --storefront-layout-heading-bottom: 20px;
+}
+
+.storefront-page,
+.catalog-tech-main,
+.cat-x,
+.search-redesign .search-page,
+.dd-blog-archive,
+.bd-page,
+.dd-contact,
+.dd-support,
+.promo-main,
+.cart-v2,
+.pdx-main,
+.dd-auth-shell,
+.forgot-page,
+.reset-page,
+.otp-page,
+.simple-history-page,
+.dd-bank-transfer-page,
+body.cmp-page,
+body.auth-page,
+body.policy-page,
+body.warranty-page,
+body.g-checkout-redesign,
+body.g-cart,
+body.g-category,
+body.g-search,
+body.g-product-detail {
+    background: var(--storefront-layout-bg) !important;
+}
+
+.storefront-page,
+.catalog-tech-main,
+.cat-x,
+.search-redesign .search-page,
+.dd-blog-archive,
+.bd-page,
+.dd-contact,
+.dd-support,
+.promo-main,
+.cart-v2,
+.pdx-main,
+.dd-auth-shell,
+.forgot-page,
+.reset-page,
+.otp-page,
+.simple-history-page,
+.dd-bank-transfer-page {
+    padding-top: 0 !important;
+    padding-bottom: var(--storefront-layout-page-bottom) !important;
+}
+
+.storefront-page__container,
+.storefront-page .container,
+.catalog-tech-main .container,
+.cat-x .cat-x__container,
+.search-redesign .container,
+.bd-container,
+.dd-blog-shell,
+.dd-contact .container,
+.dd-support .container,
+.promo-main .container,
+.cart-v2-container,
+.simple-history-container,
+.ckq-wrap,
+.ors-wrap,
+.dd-auth-shell .container,
+.forgot-container,
+.reset-container,
+.otp-container,
+.cmp-wrap,
+.auth-wrap > .accp-crumb,
+.auth-container,
+.accp-wrap,
+.inv-wrap,
+.pmpage .container,
+.pp-wrap,
+.wr-wrap,
+.faq-wrap,
+.otr-wrap,
+.pdx-wrap {
+    width: 100% !important;
+    max-width: var(--storefront-layout-container) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: var(--storefront-layout-gutter) !important;
+    padding-right: var(--storefront-layout-gutter) !important;
+}
+
+.g-search .shopw-search-page,
+.g-video-page,
+.features_items.storefront-page {
+    width: 100% !important;
+    max-width: var(--storefront-layout-container) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding: 0 var(--storefront-layout-gutter) var(--storefront-layout-page-bottom) !important;
+}
+
+.ckq-wrap,
+.ors-wrap,
+.dd-auth-shell .container,
+.forgot-container,
+.reset-container,
+.otp-container,
+.cmp-wrap,
+.accp-wrap,
+.inv-wrap,
+.pp-wrap,
+.wr-wrap,
+.faq-wrap,
+.otr-wrap,
+.pdx-wrap {
+    padding-top: 0 !important;
+    padding-bottom: var(--storefront-layout-page-bottom) !important;
+}
+
+.storefront-breadcrumb,
+.catalog-breadcrumb,
+.cat-x__breadcrumb,
+.pdx-crumbs,
+.search-breadcrumb,
+.dd-blog-breadcrumb,
+.bd-breadcrumb,
+.promo-breadcrumb,
+.promo-breadcrumb ol,
+.dd-contact__breadcrumb,
+.dd-support__breadcrumb,
+.cart-v2-breadcrumb,
+.ckq-crumb,
+.ors-crumb,
+.accp-crumb,
+.acc-breadcrumb,
+.inv-crumb,
+.pmpage-breadcrumb,
+.cmp-crumb,
+.pp-breadcrumb,
+.wr-breadcrumb,
+.faq-breadcrumb,
+.otr-crumb,
+.dd-auth-crumbs,
+.forgot-breadcrumb,
+.reset-breadcrumb,
+.otp-breadcrumb {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    min-height: 56px !important;
+    margin: 0 !important;
+    padding-top: var(--storefront-layout-breadcrumb-top) !important;
+    padding-bottom: var(--storefront-layout-breadcrumb-bottom) !important;
+    font-size: 14px !important;
+    line-height: 1.35 !important;
+    color: var(--storefront-layout-muted) !important;
+}
+
+.bt-crumb {
+    max-width: 800px !important;
+}
+
+.promo-breadcrumb {
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+}
+
+.storefront-breadcrumb a,
+.catalog-breadcrumb a,
+.cat-x__breadcrumb a,
+.pdx-crumbs a,
+.search-breadcrumb a,
+.dd-blog-breadcrumb a,
+.bd-breadcrumb a,
+.promo-breadcrumb a,
+.dd-contact__breadcrumb a,
+.dd-support__breadcrumb a,
+.cart-v2-breadcrumb a,
+.ckq-crumb a,
+.ors-crumb a,
+.accp-crumb a,
+.acc-breadcrumb a,
+.inv-crumb a,
+.pmpage-breadcrumb a,
+.cmp-crumb a,
+.pp-breadcrumb a,
+.wr-breadcrumb a,
+.faq-breadcrumb a,
+.otr-crumb a,
+.dd-auth-crumbs a,
+.forgot-breadcrumb a,
+.reset-breadcrumb a,
+.otp-breadcrumb a {
+    color: var(--storefront-layout-muted) !important;
+    text-decoration: none !important;
+}
+
+.storefront-breadcrumb a:hover,
+.catalog-breadcrumb a:hover,
+.cat-x__breadcrumb a:hover,
+.pdx-crumbs a:hover,
+.search-breadcrumb a:hover,
+.dd-blog-breadcrumb a:hover,
+.bd-breadcrumb a:hover,
+.promo-breadcrumb a:hover,
+.dd-contact__breadcrumb a:hover,
+.dd-support__breadcrumb a:hover,
+.cart-v2-breadcrumb a:hover,
+.ckq-crumb a:hover,
+.ors-crumb a:hover,
+.accp-crumb a:hover,
+.acc-breadcrumb a:hover,
+.inv-crumb a:hover,
+.pmpage-breadcrumb a:hover,
+.cmp-crumb a:hover,
+.pp-breadcrumb a:hover,
+.wr-breadcrumb a:hover,
+.faq-breadcrumb a:hover,
+.otr-crumb a:hover,
+.dd-auth-crumbs a:hover,
+.forgot-breadcrumb a:hover,
+.reset-breadcrumb a:hover,
+.otp-breadcrumb a:hover {
+    color: var(--storefront-layout-current) !important;
+}
+
+.storefront-breadcrumb-sep,
+.catalog-breadcrumb-sep,
+.cat-x__breadcrumb .sep,
+.pdx-crumbs .sep,
+.search-breadcrumb .sep,
+.dd-blog-breadcrumb-sep,
+.bd-breadcrumb i,
+.promo-breadcrumb ol li + li::before,
+.dd-contact__breadcrumb i,
+.dd-support__breadcrumb i,
+.cart-v2-breadcrumb-sep,
+.ckq-crumb .sep,
+.ors-crumb .sep,
+.accp-crumb .sep,
+.acc-breadcrumb .sep,
+.inv-crumb .sep,
+.pmpage-breadcrumb .sep,
+.cmp-crumb .sep,
+.pp-breadcrumb i,
+.wr-breadcrumb i,
+.faq-breadcrumb i,
+.otr-crumb .sep,
+.dd-auth-crumbs .sep,
+.forgot-breadcrumb .sep,
+.reset-breadcrumb .sep,
+.otp-breadcrumb .sep {
+    color: var(--storefront-layout-separator) !important;
+}
+
+.storefront-breadcrumb-current,
+.catalog-breadcrumb-current,
+.cat-x__breadcrumb .current,
+.pdx-crumbs .current,
+.search-breadcrumb .current,
+.dd-blog-breadcrumb-current,
+.bd-breadcrumb [aria-current="page"],
+.promo-breadcrumb .active,
+.dd-contact__breadcrumb .current,
+.dd-support__breadcrumb .current,
+.cart-v2-breadcrumb strong,
+.ckq-crumb .current,
+.ors-crumb .current,
+.accp-crumb .current,
+.acc-breadcrumb .current,
+.inv-crumb .current,
+.pmpage-breadcrumb .current,
+.cmp-crumb .current,
+.pp-breadcrumb .current,
+.wr-breadcrumb .current,
+.faq-breadcrumb .current,
+.otr-crumb .current,
+.dd-auth-crumbs .current,
+.forgot-breadcrumb .current,
+.reset-breadcrumb .current,
+.otp-breadcrumb .current {
+    color: var(--storefront-layout-current) !important;
+    font-weight: 600 !important;
+}
+
+.storefront-page-header {
+    margin: 0 0 var(--storefront-layout-heading-bottom) !important;
+}
+
+.storefront-page-heading {
+    margin: 0 0 var(--storefront-layout-heading-bottom) !important;
+}
+
+.storefront-page-title {
+    margin: 0 0 6px;
+    color: var(--storefront-layout-text);
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.25;
+}
+
+.storefront-page-subtitle {
+    margin: 0;
+    color: var(--storefront-layout-muted);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.catalog-hero-head,
+.cat-x__title-block,
+.search-title-row,
+.dd-blog-archive-head,
+.bd-article-head,
+.cart-v2-pagehead,
+.ckq-head,
+.dd-auth-hero,
+.forgot-card,
+.reset-grid,
+.otp-card,
+.cmp-head,
+.accp-page-title {
+    margin-top: 0 !important;
+    margin-bottom: var(--storefront-layout-heading-bottom) !important;
+}
+
+.dd-contact__hero,
+.dd-support__hero,
+.promo-hero,
+.pp-hero,
+.wr-hero,
+.about-hero {
+    margin-top: 0 !important;
+}
+
+@media (max-width: 767px) {
+    :root {
+        --storefront-layout-gutter: 16px;
+        --storefront-layout-breadcrumb-top: 14px;
+        --storefront-layout-breadcrumb-bottom: 12px;
+    }
+
+    .storefront-page-title {
+        font-size: 24px;
+    }
+}

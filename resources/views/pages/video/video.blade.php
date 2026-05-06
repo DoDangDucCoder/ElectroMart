@@ -40,6 +40,19 @@
         ];
     @endphp
     <div class="g-video-page">
+        @include('partials.storefront.breadcrumb', [
+            'items' => [
+                [
+                    'label' => 'Bài viết',
+                    'url' => url('/bai-viet'),
+                ],
+                [
+                    'label' => 'Video cửa hàng',
+                    'current' => true,
+                ],
+            ],
+        ])
+
         <section class="shopw-video-hero">
             <div class="shopw-video-hero-copy">
                 <span class="shopw-video-kicker">Video / đánh giá / hướng dẫn</span>

@@ -4,11 +4,14 @@
 <link rel="stylesheet" href="{{ asset('frontend/css/account-shared.css') }}">
 
 <div class="accp-wrap">
-    <div class="accp-crumb">
-        <a href="{{ url('/') }}">Trang chủ</a><span class="sep">›</span>
-        <a href="{{ route('customer.account') }}">Tài khoản</a><span class="sep">›</span>
-        <span class="current">Đổi mật khẩu</span>
-    </div>
+    @include('partials.storefront.breadcrumb', [
+        'class' => 'accp-crumb',
+        'separator' => '›',
+        'items' => [
+            ['label' => 'Tài khoản', 'url' => route('customer.account')],
+            ['label' => 'Đổi mật khẩu', 'current' => true],
+        ],
+    ])
 
     <div class="accp-page-title">
         <h1>Đổi mật khẩu</h1>

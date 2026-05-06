@@ -107,15 +107,22 @@
 
     <main class="tech-home-main catalog-tech-main">
         <div class="container">
-            <nav class="catalog-breadcrumb" aria-label="breadcrumb">
-                <a href="{{ url('/') }}">Trang chủ</a>
-                <span class="catalog-breadcrumb-sep">/</span>
-                <a href="{{ url('/san-pham') }}">Sản phẩm</a>
-                @if ($activeCategory)
-                    <span class="catalog-breadcrumb-sep">/</span>
-                    <span class="catalog-breadcrumb-current">{{ $activeCategoryLabel }}</span>
-                @endif
-            </nav>
+            @include('partials.storefront.breadcrumb', [
+                'class' => 'catalog-breadcrumb',
+                'separatorClass' => 'catalog-breadcrumb-sep',
+                'currentClass' => 'catalog-breadcrumb-current',
+                'items' => array_filter([
+                    [
+                        'label' => 'Sản phẩm',
+                        'url' => $activeCategory ? url('/san-pham') : null,
+                        'current' => ! $activeCategory,
+                    ],
+                    $activeCategory ? [
+                        'label' => $activeCategoryLabel,
+                        'current' => true,
+                    ] : null,
+                ]),
+            ])
 
             <header class="catalog-hero-head">
                 <h1 class="catalog-title">{{ $catalogTitle }}</h1>
@@ -388,7 +395,7 @@
 
                         @if (method_exists($search_product, 'links'))
                             <nav class="catalog-pagination" aria-label="Phân trang">
-                                {{ $search_product->onEachSide(1)->links() }}
+                                {{ $search_product->onEachSide(1)->links('pagination::bootstrap-4') }}
                             </nav>
                         @endif
                     @endif

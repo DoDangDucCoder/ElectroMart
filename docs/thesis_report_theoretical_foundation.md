@@ -76,7 +76,7 @@ Cách tiếp cận này thường được gọi là layered architecture hoặc
 
 ### 2.5.1. Tổng quan về Laravel
 
-Laravel là một framework phát triển web mã nguồn mở sử dụng ngôn ngữ PHP, được thiết kế theo hướng hiện đại, dễ mở rộng và có hệ sinh thái phong phú. Laravel cung cấp sẵn nhiều thành phần quan trọng như routing, middleware, Eloquent ORM, Blade template, request validation, authentication, authorization, event, queue và testing.
+Laravel là một framework phát triển web mã nguồn mở sử dụng ngôn ngữ PHP, được thiết kế theo hướng hiện đại, dễ mở rộng và có hệ sinh thái phong phú. Laravel cung cấp sẵn nhiều thành phần quan trọng như routing, middleware, Eloquent ORM, Blade template, request validation, authentication, authorization, event và queue.
 
 Việc sử dụng Laravel giúp giảm thời gian xây dựng các thành phần nền tảng, từ đó người phát triển có thể tập trung nhiều hơn vào nghiệp vụ đặc thù của ứng dụng.
 
@@ -89,7 +89,6 @@ Laravel 11 là phiên bản hiện đại, ổn định và phù hợp với cá
 - có request validation giúp tách logic kiểm tra đầu vào
 - có Eloquent ORM hỗ trợ làm việc với cơ sở dữ liệu quan hệ
 - có Blade template phù hợp với mô hình website server-rendered
-- có hệ thống test thuận lợi cho feature test
 
 Những ưu điểm này rất phù hợp với yêu cầu của một hệ thống thương mại điện tử có cả storefront, admin và REST API.
 
@@ -133,7 +132,7 @@ Lợi ích của request validation bao gồm:
 
 - làm controller gọn hơn
 - tăng khả năng tái sử dụng quy tắc kiểm tra
-- dễ kiểm thử hơn
+- dễ kiểm tra chất lượng hơn
 - giảm lỗi do kiểm tra đầu vào không nhất quán
 
 Trong lý thuyết thiết kế hệ thống web, đây là một bước quan trọng để chuyển từ ứng dụng CRUD đơn giản sang ứng dụng có cấu trúc tốt hơn.
@@ -187,7 +186,7 @@ Lợi ích của service layer:
 
 - tách nghiệp vụ khỏi controller
 - tăng khả năng tái sử dụng logic
-- thuận tiện cho kiểm thử
+- thuận tiện cho kiểm tra chất lượng
 - giúp controller chỉ còn vai trò điều phối
 
 Đối với hệ thống có nhiều chức năng như đề tài này, service layer là một cơ sở lý thuyết quan trọng để giải thích việc tổ chức mã nguồn theo domain.
@@ -326,26 +325,23 @@ Trong lý thuyết phân tích hệ thống, ERD giúp:
 - hỗ trợ quá trình xây dựng schema
 - giảm nguy cơ thiếu hoặc chồng chéo dữ liệu
 
-## 2.16. Kiểm thử phần mềm
+## 2.16. Kiểm tra chất lượng phần mềm
 
-### 2.16.1. Vai trò của kiểm thử
+### 2.16.1. Vai trò của kiểm tra chất lượng
 
-Kiểm thử phần mềm là quá trình xác minh và đánh giá hệ thống nhằm phát hiện lỗi, kiểm tra sự phù hợp với yêu cầu và giảm nguy cơ phát sinh lỗi trong quá trình vận hành. Đối với một hệ thống có nhiều luồng như thương mại điện tử, kiểm thử có vai trò rất quan trọng vì nghiệp vụ liên quan trực tiếp tới dữ liệu khách hàng và doanh thu.
+Kiểm tra chất lượng phần mềm là quá trình xác minh và đánh giá hệ thống nhằm phát hiện lỗi, kiểm tra sự phù hợp với yêu cầu và giảm nguy cơ phát sinh lỗi trong quá trình vận hành. Đối với một hệ thống có nhiều luồng như thương mại điện tử, kiểm tra chất lượng có vai trò rất quan trọng vì nghiệp vụ liên quan trực tiếp tới dữ liệu khách hàng và doanh thu.
 
-### 2.16.2. Các mức kiểm thử phổ biến
+### 2.16.2. Các mức kiểm tra chất lượng phổ biến
 
-Một số mức kiểm thử thường gặp gồm:
+Một số mức kiểm tra chất lượng thường gặp gồm:
 
-- unit test để kiểm tra thành phần nhỏ
 - integration test để kiểm tra sự phối hợp giữa các thành phần
-- feature test để kiểm tra luồng chức năng từ request tới response
-- regression test để bảo đảm lỗi cũ không quay trở lại sau khi sửa mã nguồn
+- rà soát hồi quy để bảo đảm lỗi cũ không quay trở lại sau khi sửa mã nguồn
 
-Trong bối cảnh ứng dụng web Laravel, feature test đặc biệt có giá trị vì nó phản ánh khá sát cách người dùng và hệ thống thực sự tương tác.
 
-### 2.16.3. Kiểm thử trong hệ thống đang chuyển đổi từ legacy
+### 2.16.3. Kiểm tra chất lượng trong hệ thống đang chuyển đổi từ legacy
 
-Khi hệ thống ở trạng thái hybrid giữa legacy và kiến trúc mới, kiểm thử càng trở nên cần thiết. Bất kỳ thay đổi nào ở route, middleware, validation, support class hoặc service đều có thể ảnh hưởng tới nhiều luồng khác nhau. Do đó, về mặt lý thuyết, regression test là một thành phần gần như bắt buộc nếu muốn refactor an toàn.
+Khi hệ thống ở trạng thái hybrid giữa legacy và kiến trúc mới, kiểm tra chất lượng càng trở nên cần thiết. Bất kỳ thay đổi nào ở route, middleware, validation, support class hoặc service đều có thể ảnh hưởng tới nhiều luồng khác nhau. Do đó, về mặt lý thuyết, rà soát hồi quy là một thành phần gần như bắt buộc nếu muốn refactor an toàn.
 
 ## 2.17. Trải nghiệm người dùng trong thương mại điện tử
 
@@ -365,6 +361,6 @@ Một số nguyên tắc UX cơ bản trong thương mại điện tử gồm:
 
 ## 2.18. Kết luận chương
 
-Chương cơ sở lý thuyết đã trình bày các nền tảng quan trọng phục vụ cho việc phân tích, thiết kế và triển khai hệ thống website thương mại điện tử trên Laravel 11. Các nội dung được đề cập bao gồm thương mại điện tử, mô hình B2C, kiến trúc web, MVC và kiến trúc phân lớp, Laravel 11, Blade, middleware, request validation, cơ sở dữ liệu quan hệ, ORM, service layer, REST API, xác thực và phân quyền, bảo mật, AJAX, UML, ERD, kiểm thử phần mềm và trải nghiệm người dùng.
+Chương cơ sở lý thuyết đã trình bày các nền tảng quan trọng phục vụ cho việc phân tích, thiết kế và triển khai hệ thống website thương mại điện tử trên Laravel 11. Các nội dung được đề cập bao gồm thương mại điện tử, mô hình B2C, kiến trúc web, MVC và kiến trúc phân lớp, Laravel 11, Blade, middleware, request validation, cơ sở dữ liệu quan hệ, ORM, service layer, REST API, xác thực và phân quyền, bảo mật, AJAX, UML, ERD, kiểm tra chất lượng phần mềm và trải nghiệm người dùng.
 
 Những cơ sở lý thuyết này là nền tảng để các chương sau đi vào phân tích yêu cầu, thiết kế kiến trúc, triển khai chức năng và đánh giá hệ thống theo đúng hiện trạng của dự án.

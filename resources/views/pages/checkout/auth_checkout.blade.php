@@ -242,11 +242,16 @@
 
 <section class="dd-auth-shell">
     <div class="container">
-        <nav class="dd-auth-crumbs" aria-label="breadcrumb">
-            <a href="{{ url('/') }}">Trang chủ</a>
-            <span class="sep">›</span>
-            <span class="current">{{ $authPageMode === 'register' ? 'Đăng ký' : 'Đăng nhập' }}</span>
-        </nav>
+        @include('partials.storefront.breadcrumb', [
+            'class' => 'dd-auth-crumbs',
+            'separator' => '›',
+            'items' => [
+                [
+                    'label' => $authPageMode === 'register' ? 'Đăng ký' : 'Đăng nhập',
+                    'current' => true,
+                ],
+            ],
+        ])
 
         <header class="dd-auth-hero">
             <h1>{{ $authPageMode === 'register' ? 'TẠO TÀI KHOẢN MỚI' : 'ĐĂNG NHẬP TÀI KHOẢN' }}</h1>

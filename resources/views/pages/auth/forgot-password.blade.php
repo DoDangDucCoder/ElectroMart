@@ -8,7 +8,7 @@ $url_canonical=$url_canonical??url('/quen-mat-khau');
 @push('styles')<link href="{{ asset('frontend/css/account-shared.css') }}" rel="stylesheet">@endpush
 @section('content')
 <div class="auth-wrap">
-    <nav class="accp-crumb" style="max-width:1240px;margin:0 auto;padding:14px 16px"><a href="{{ url('/') }}">Trang chủ</a><span class="sep"><i class="fa fa-angle-right"></i></span><span class="current">Quên mật khẩu</span></nav>
+    @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Quên mật khẩu', 'current' => true]]])
     <div style="max-width:480px;margin:0 auto;padding:0 16px 40px">
         <div class="auth-card" style="text-align:center">
             <div style="width:64px;height:64px;border-radius:50%;background:#f0fdfa;color:#0d9488;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px"><i class="fa fa-lock"></i></div>

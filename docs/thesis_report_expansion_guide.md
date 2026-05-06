@@ -53,7 +53,6 @@ Ví dụ:
 - xây dựng được storefront, admin và API cùng tồn tại
 - tổ chức mã nguồn theo hướng service/domain/persistence
 - có cải tiến về trải nghiệm như flash sale, search suggest, chatbot
-- có test suite cho nhiều luồng quan trọng
 
 ## 2.2. Chương 2
 
@@ -78,7 +77,6 @@ Có thể bổ sung:
 - Blade template
 - Eloquent ORM
 - event và notifications
-- testing
 
 Mỗi ý nên có 1-2 câu gắn với repo thật.
 
@@ -175,7 +173,6 @@ Có thể tách từng mục nhỏ:
 - `routes/web/frontend.php`
 - `routes/web/admin.php`
 - `routes/api.php`
-- `tests/Feature`
 
 Mỗi mục 1-2 đoạn là báo cáo sẽ dài thêm rất tự nhiên.
 
@@ -240,11 +237,11 @@ API nên có riêng 1 mục tương đối dài:
 
 Chương này cũng có thể kéo dài mà vẫn hợp lý.
 
-### a) Tăng phần kiểm thử
+### a) Tăng phần kiểm tra chất lượng
 
-Không chỉ viết test case mẫu, mà thêm:
+Không chỉ viết kịch bản kiểm tra mẫu, mà thêm:
 
-- bằng chứng kiểm thử từ mã nguồn
+- bằng chứng kiểm tra chất lượng từ mã nguồn
 - nhóm test storefront
 - nhóm test admin
 - nhóm test API
@@ -258,7 +255,7 @@ Chia thành:
 
 - ưu điểm về chức năng
 - ưu điểm về kiến trúc
-- ưu điểm về kiểm thử
+- ưu điểm về kiểm tra chất lượng
 - ưu điểm về khả năng mở rộng
 - hạn chế về dữ liệu hybrid
 - hạn chế về mức độ production
@@ -291,7 +288,6 @@ Nên bổ sung:
 - bảng các controller chính
 - bảng các service chính
 - bảng mapping dữ liệu legacy và dữ liệu mới
-- bảng test suite theo nhóm
 - bảng quyền quản trị theo `AdminPermissions`
 
 ## 3.2. Mô tả dưới hình
@@ -311,7 +307,6 @@ Phụ lục là phần tăng số trang rất tốt và hợp lệ.
 Nên có:
 
 - phụ lục route
-- phụ lục test suite
 - phụ lục hình giao diện
 - phụ lục bảng dữ liệu chính
 - phụ lục một số class/service tiêu biểu
@@ -329,12 +324,11 @@ Có thể viết 1-2 trang về:
 - lợi ích của việc thêm dần service layer và schema mới
 - thách thức của việc song song nhiều lớp kiến trúc
 
-## 4.2. Mục “Phân tích vai trò của hệ thống kiểm thử”
+## 4.2. Mục “Phân tích vai trò của quy trình kiểm soát chất lượng”
 
 Có thể viết 1-2 trang về:
 
-- lý do repo cần nhiều feature test
-- regression test quan trọng thế nào trong hệ thống hybrid
+- rà soát hồi quy quan trọng thế nào trong hệ thống hybrid
 - test không chỉ kiểm tra chức năng mà còn giúp refactor an toàn
 
 ## 4.3. Mục “Phân tích vai trò của API trong hệ thống”
@@ -393,13 +387,13 @@ Chèn sau phần cấu trúc mã nguồn:
 - mục sâu hơn về admin
 - mục sâu hơn về API
 - mục sâu hơn về console commands
-- mục sâu hơn về kiểm thử
+- mục sâu hơn về kiểm tra chất lượng
 
 ## 5.3. Ghép vào Chương 5
 
 Chèn thêm:
 
-- bằng chứng kiểm thử từ mã nguồn
+- bằng chứng kiểm tra chất lượng từ mã nguồn
 - đánh giá ưu điểm theo từng nhóm
 - đánh giá hạn chế theo từng nhóm
 - hướng phát triển chi tiết hơn
@@ -409,7 +403,7 @@ Chèn thêm:
 Chèn:
 
 - bảng route
-- bảng test
+- bảng kiểm tra
 - bảng mapping dữ liệu
 - mô tả hình giao diện
 
@@ -435,7 +429,6 @@ Nếu chỉ chọn vài hướng hiệu quả nhất, tôi khuyên ưu tiên 5 p
 1. Viết sâu hơn về hệ thống hybrid `legacy + modernized`
 2. Viết sâu hơn về cấu trúc mã nguồn và service layer
 3. Viết riêng một mục dài cho API và phân quyền
-4. Viết riêng một mục dài cho test suite và regression
-5. Thêm phụ lục bảng route, bảng test, bảng mapping dữ liệu
+5. Thêm phụ lục bảng route và bảng mapping dữ liệu
 
 Đây là 5 hướng tăng trang hiệu quả nhất, ít rủi ro nhất, và giúp báo cáo thuyết phục hơn khi bảo vệ.

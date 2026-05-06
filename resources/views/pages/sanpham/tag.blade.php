@@ -9,6 +9,19 @@
     @endphp
 
     <div class="shopw-search-page">
+        @include('partials.storefront.breadcrumb', [
+            'items' => [
+                [
+                    'label' => 'Sản phẩm',
+                    'url' => url('/san-pham'),
+                ],
+                [
+                    'label' => $tagLabel,
+                    'current' => true,
+                ],
+            ],
+        ])
+
         <section class="shopw-search-hero">
             <div class="shopw-search-hero-copy">
                 <span class="shopw-search-kicker">Nhãn sản phẩm</span>

@@ -40,7 +40,7 @@
 @endphp
 
 <div class="accp-wrap">
-    <div class="accp-crumb"><a href="{{ url('/') }}">Trang chủ</a><span class="sep">›</span><a href="{{ route('customer.account') }}">Tài khoản</a><span class="sep">›</span><span class="current">Đơn hàng đã hủy</span></div>
+    @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Tài khoản', 'url' => route('customer.account')], ['label' => 'Đơn hàng đã hủy', 'current' => true]]])
     <div class="accp-page-title"><h1>Đơn hàng đã hủy</h1><p>Quản lý và xem lại các đơn hàng đã bị hủy của bạn</p></div>
 
     <div class="accp-grid">

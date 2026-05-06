@@ -68,7 +68,7 @@
 @endphp
 
 <div class="accp-wrap">
-    <div class="accp-crumb"><a href="{{ url('/') }}">Trang chủ</a><span class="sep">›</span><a href="{{ route('customer.account') }}">Tài khoản</a><span class="sep">›</span><span class="current">Kho voucher / mã giảm giá của tôi</span></div>
+    @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Tài khoản', 'url' => route('customer.account')], ['label' => 'Kho voucher / mã giảm giá của tôi', 'current' => true]]])
 
     <div class="accp-grid">
         @include('pages.account.partials.sidebar', ['currentSection' => 'vouchers'])

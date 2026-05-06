@@ -32,10 +32,10 @@ Khi sua code, dung bat dau tu service truoc. Hay lan theo request that:
 | `app/Application` | Service use-case moi: Catalog, Checkout, Order, CMS, Marketing, Shared. |
 | `app/Domain` | Interface repository, entity/value object thuoc domain moi. |
 | `app/Infrastructure/Persistence` | Eloquent model/repository theo schema moi. |
-| `app/Models` | Model legacy, nhieu controller cu van dung truc tiep. |
+| `app/Models` | Compatibility/auth models va legacy archive models. Runtime moi nen uu tien `app/Infrastructure/Persistence`. |
 | `resources/views` | Blade storefront/admin. |
 | `database/migrations` | Schema moi. Khong sua migration cu neu khong duoc yeu cau. |
-| `shopbanhang.sql` | Dump du lieu that/legacy de nap local. |
+| `shopbanhang.sql` | Dump legacy/archive cu, khong phai du lieu production hien hanh. |
 
 ## Cac module chinh
 
@@ -47,8 +47,8 @@ Khi sua code, dung bat dau tu service truoc. Hay lan theo request that:
 | Checkout | `/dang-nhap`, `/checkout`, `/payment`, `/confirm-order` | `CheckoutController`, `CheckoutService`, `ShippingService`, `CouponService` |
 | Customer account | `/account`, `/history`, `/view-history-order/{code}` | `CustomerAccountController`, `OrderController` |
 | Admin auth/dashboard | `/admin`, `/auth-login`, `/dashboard` | `AuthController`, `AdminController`, `AdminAuthenticator` |
-| Admin products | `/all-product`, `/add-product`, `/catalog/categories`, `/catalog/brands` | `ProductController`, `Admin\Catalog\CategoryController`, `Admin\Catalog\BrandController` |
-| Admin orders | `/manage-order`, `/view-order/{code}`, `/delivery` | `OrderController`, `DeliveryController`, `ProductProfitController` |
+| Admin products | `/admin/products-management`, `/admin/categories-management`, `/add-product`, `/catalog/categories`, `/catalog/brands` | `Admin\AdminWorkspaceController`, `ProductController`, `Admin\Catalog\CategoryController`, `Admin\Catalog\BrandController` |
+| Admin orders | `/admin/orders-management`, `/view-order/{code}`, `/delivery` | `Admin\AdminWorkspaceController`, `OrderController`, `DeliveryController`, `ProductProfitController` |
 | CMS/content | `/bai-viet/{slug}`, `/add-post`, `/manage-slider`, `/video-shop` | `PostController`, `SliderController`, `VideoController`, `Application/Cms` |
 | API | `/api/v1/*` | `app/Http/Controllers/Api`, `app/Http/Resources` |
 
@@ -76,7 +76,6 @@ Neu sua API:
 2. Xac dinh public, `auth:sanctum`, hay admin API.
 3. Doc controller trong `app/Http/Controllers/Api`.
 4. Doc `Http\Resources` va request validation.
-5. Test bang feature test neu co.
 
 ## Lenh hay dung
 
@@ -85,15 +84,19 @@ composer install
 npm install
 cp .env.example .env
 php artisan key:generate
-php artisan data:load-real --dump=shopbanhang.sql --force
+php artisan migrate
+php artisan db:seed
 php artisan serve
 npm run dev
 ```
 
+`CustomerAccountDemoSeeder` chỉ tự chạy trong môi trường local/demo hoặc khi `SEED_CUSTOMER_ACCOUNT_DEMO=true`. Trên DB đang dùng dữ liệu thật, chỉ gọi demo seeder khi chủ đích cần dữ liệu mẫu cho trang tài khoản khách hàng.
+
+Khong chay `legacy:load-archive` trong onboarding mac dinh. `shopbanhang.sql` la archive cu, chi dung khi can doi chieu/phuc hoi du lieu legacy sau khi backup DB.
+
 Kiem tra:
 
 ```bash
-php artisan test
 vendor/bin/pint --dirty
 npm run build
 git diff --check
@@ -117,5 +120,5 @@ Doc theo thu tu:
 3. `docs/request-flows.md`
 4. `docs/data-model.md`
 5. `docs/common-tasks.md`
-6. `docs/testing-debugging.md`
+6. `docs/common-tasks.md`
 7. `docs/deployment-vps.md`

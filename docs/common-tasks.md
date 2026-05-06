@@ -11,7 +11,6 @@ Tài liệu này là sổ tay thao tác cho những việc developer mới thư�
 3. Nếu input cần validate, tạo Form Request trong `app/Http/Requests/Storefront/<Module>`.
 4. Tạo Blade trong `resources/views/pages/<module>` hoặc partial trong `resources/views/partials/storefront`.
 5. Trả view với context cần thiết: SEO, category, brand, slider nếu page nằm trong layout storefront.
-6. Thêm feature test nếu route có logic hoặc form.
 
 Ví dụ khung route:
 
@@ -57,7 +56,6 @@ File cần kiểm tra:
 - `resources/views/admin/edit_product.blade.php`
 - `resources/views/admin/all_product.blade.php`
 - `resources/views/pages/sanpham/show_details.blade.php` nếu field hiển thị storefront
-- `tests/Feature/AdminProductCrudTest.php` hoặc test liên quan
 
 Các bước:
 
@@ -73,8 +71,6 @@ Các bước:
 Chạy:
 
 ```bash
-php artisan test --filter=AdminProductCrudTest
-php artisan test --filter=Product
 ```
 
 ## Sửa Giao Diện Storefront
@@ -149,13 +145,12 @@ Kiểm tra theo thứ tự:
 Lệnh/test:
 
 ```bash
-php artisan test --filter=CartFlow
 ```
 
 Lỗi thường gặp:
 
 - Thêm quá tồn kho trả JSON 422.
-- `id_attribute` được gửi nhưng bảng `tbl_product_attribute` không sẵn sàng.
+- `id_attribute` được gửi nhưng variant không còn tồn tại trong `product_variants`.
 - Cart session bị null hoặc stale, service sẽ trả collection rỗng.
 - Cart rỗng sẽ clear `coupon` và `fee`.
 
@@ -174,17 +169,13 @@ Kiểm tra theo thứ tự:
 Lệnh/test:
 
 ```bash
-php artisan test --filter=CheckoutFlow
 ```
 
 ## Thêm Test
 
-Project dùng PHPUnit qua `php artisan test`.
 
 Khi thêm test:
 
-- Feature test đặt trong `tests/Feature`.
-- Unit test đặt trong `tests/Unit`.
 - Dùng `RefreshDatabase` nếu test cần DB.
 - Dùng factory nếu đã có factory phù hợp.
 - Với cart/checkout, có thể xem `CartFlowTest` và `CheckoutFlowTest` làm mẫu.
@@ -193,7 +184,6 @@ Khi thêm test:
 Ví dụ chạy test mới:
 
 ```bash
-php artisan test --filter=TenTest
 ```
 
 ## Thêm API Endpoint
@@ -203,13 +193,11 @@ php artisan test --filter=TenTest
 3. Tạo controller trong `app/Http/Controllers/Api` hoặc `Api/Admin`.
 4. Dùng Form Request nếu payload có validation đáng kể.
 5. Dùng `app/Http/Resources` nếu trả model/list.
-6. Thêm feature test cho auth, validation và response shape.
 
 Kiểm tra:
 
 ```bash
 php artisan route:list --path=api/v1
-php artisan test --filter=Api
 ```
 
 ## Review Trước Khi Kết Thúc Task

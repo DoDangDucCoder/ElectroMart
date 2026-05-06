@@ -258,10 +258,6 @@ When the task targets the storefront header:
 
 Before finalizing PHP changes, prefer running available project commands:
 
-- php artisan test
-- php artisan test --filter=<TestName>
-- vendor/bin/pest
-- vendor/bin/phpunit
 - vendor/bin/pint --dirty
 - vendor/bin/phpstan analyse
 

@@ -529,13 +529,20 @@
 
 <section class="otp-page">
     <div class="otp-container">
-        <nav class="otp-breadcrumb" aria-label="breadcrumb">
-            <a href="{{ url('/') }}">Trang chủ</a>
-            <span class="sep"><i class="fa fa-angle-right"></i></span>
-            <a href="{{ url('/account') }}">Tài khoản</a>
-            <span class="sep"><i class="fa fa-angle-right"></i></span>
-            <span class="current">Xác thực OTP</span>
-        </nav>
+        @include('partials.storefront.breadcrumb', [
+            'class' => 'otp-breadcrumb',
+            'separator' => '›',
+            'items' => [
+                [
+                    'label' => 'Tài khoản',
+                    'url' => url('/account'),
+                ],
+                [
+                    'label' => 'Xác thực OTP',
+                    'current' => true,
+                ],
+            ],
+        ])
 
         <div class="otp-card">
             {{-- ============== LEFT: FORM ============== --}}

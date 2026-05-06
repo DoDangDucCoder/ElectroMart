@@ -3,7 +3,7 @@
 @push('styles')<link href="{{ asset('frontend/css/account-shared.css') }}" rel="stylesheet">@endpush
 @section('content')
 <div class="accp-wrap">
-    <nav class="accp-crumb"><a href="{{ url('/') }}">Trang chủ</a><span class="sep"><i class="fa fa-angle-right"></i></span><a href="{{ url('/account') }}">Tài khoản</a><span class="sep"><i class="fa fa-angle-right"></i></span><span class="current">Lịch sử mua hàng</span></nav>
+    @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Tài khoản', 'url' => url('/account')], ['label' => 'Lịch sử mua hàng', 'current' => true]]])
     <div class="accp-grid">
         @include('pages.account.partials.sidebar', ['currentSection' => 'history', 'customer' => $customer])
         <main>

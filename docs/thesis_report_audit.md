@@ -2,13 +2,13 @@
 
 ## 1. Kết luận nhanh
 
-Báo cáo hiện tại đã bám khá đúng ở mức định hướng đề tài, phạm vi chức năng và công nghệ chính. Các nội dung như Laravel 11, website thương mại điện tử, storefront, khu vực quản trị, flash sale, gợi ý tìm kiếm, chatbot, báo cáo và kiểm thử đều đi đúng hướng với dự án đang có trong repo.
+Báo cáo hiện tại đã bám khá đúng ở mức định hướng đề tài, phạm vi chức năng và công nghệ chính. Các nội dung như Laravel 11, website thương mại điện tử, storefront, khu vực quản trị, flash sale, gợi ý tìm kiếm, chatbot, báo cáo và kiểm tra chất lượng đều đi đúng hướng với dự án đang có trong repo.
 
 Tuy nhiên, nếu đối chiếu ở mức kiến trúc và mã nguồn thực tế, báo cáo mới bám khoảng 70%. Phần còn thiếu chủ yếu nằm ở ba nhóm nội dung:
 
 - mô tả dữ liệu chưa phản ánh đúng trạng thái hybrid legacy + modernized của dự án
 - Chương 4 còn viết theo kiểu khái quát, chưa bám đủ các file, controller, service, route và test đang tồn tại thật
-- Chương 5 mới dừng ở mức nói có kiểm thử, chưa chứng minh bằng suite test thực tế của repo
+- Chương 5 mới dừng ở mức nói có kiểm tra chất lượng, chưa chứng minh bằng suite test thực tế của repo
 
 ## 2. Những điểm báo cáo đã bám đúng
 
@@ -54,7 +54,6 @@ Báo cáo đã nhắc đúng một số thành phần thật trong repo:
 - `routes/web/frontend.php`
 - `routes/web/admin.php`
 - `routes/api.php`
-- `tests/Feature`
 
 Đây là điểm tốt vì không còn viết theo kiểu đồ án mẫu thuần lý thuyết.
 
@@ -186,9 +185,8 @@ Trong đó chia quyền theo nhóm:
 
 Các nội dung này nên có trong báo cáo để tăng độ bám sát kỹ thuật.
 
-### 3.6. Phần kiểm thử chưa bám suite thật
+### 3.6. Phần kiểm tra chất lượng chưa bám suite thật
 
-Repo hiện có nhiều feature test thực tế, không chỉ vài test minh họa.
 
 #### Storefront
 
@@ -249,8 +247,8 @@ Repo hiện có nhiều feature test thực tế, không chỉ vài test minh h�
 
 ### 4.3. Sửa Chương 5
 
-- giữ test case bảng biểu
-- bổ sung mục `Bằng chứng kiểm thử từ mã nguồn`
+- giữ kịch bản kiểm tra bảng biểu
+- bổ sung mục `Bằng chứng kiểm tra chất lượng từ mã nguồn`
 - liệt kê nhóm test theo storefront, admin, API, report, chatbot, mail
 - không chốt số lượng pass nếu chưa chạy verify ngay trước ngày nộp
 
@@ -274,7 +272,6 @@ Repo hiện có nhiều feature test thực tế, không chỉ vài test minh h�
 - bảng phân quyền admin theo `AdminPermissions`
 - bảng nhóm route storefront / admin / api
 - bảng mapping giữa legacy model và modern migration
-- bảng nhóm test thật trong `tests/Feature`
 
 ## 6. Kết luận cuối
 
@@ -285,6 +282,6 @@ Nếu chỉnh theo hướng:
 - mô tả hệ thống là Laravel 11 đang hiện đại hóa từ nền legacy
 - ERD phản ánh dữ liệu hybrid
 - Chương 4 bám file, thư mục, controller, service, route và test thật
-- Chương 5 chứng minh bằng suite kiểm thử có thật
+- Chương 5 chứng minh bằng suite kiểm tra chất lượng có thật
 
 thì báo cáo sẽ bám repo hiện tại tốt hơn rất nhiều và thuyết phục hơn khi bảo vệ.

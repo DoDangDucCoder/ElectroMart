@@ -11,7 +11,7 @@
                         <a href="{{ url('/lien-he') }}" aria-label="Facebook DangDuc"><i class="fa fa-facebook"></i></a>
                         <a href="{{ url('/lien-he') }}" aria-label="Instagram DangDuc"><i class="fa fa-instagram"></i></a>
                         <a href="{{ url('/video-shop') }}" aria-label="YouTube DangDuc"><i class="fa fa-youtube-play"></i></a>
-                        <a href="{{ url('/lien-he') }}" aria-label="TikTok DangDuc"><i class="fa fa-tiktok"></i></a>
+                        <a href="{{ url('/lien-he') }}" aria-label="LinkedIn DangDuc"><i class="fa fa-linkedin"></i></a>
                     </div>
                 </div>
             </div>

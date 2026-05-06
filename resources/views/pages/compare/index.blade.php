@@ -84,10 +84,16 @@ body.cmp-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
 </style>
 
 <div class="cmp-wrap">
-    <div class="cmp-crumb">
-        <a href="{{ url('/') }}">Trang chủ</a><span class="sep">›</span>
-        <span class="current">So sánh sản phẩm</span>
-    </div>
+    @include('partials.storefront.breadcrumb', [
+        'class' => 'cmp-crumb',
+        'separator' => '›',
+        'items' => [
+            [
+                'label' => 'So sánh sản phẩm',
+                'current' => true,
+            ],
+        ],
+    ])
 
     <div class="cmp-head">
         <h1>So sánh sản phẩm</h1>

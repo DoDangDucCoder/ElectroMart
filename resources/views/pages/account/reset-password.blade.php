@@ -30,11 +30,14 @@
 </style>
 
 <div class="accp-wrap">
-    <div class="accp-crumb">
-        <a href="{{ url('/') }}">Trang chủ</a><span class="sep">›</span>
-        <a href="{{ route('customer.account') }}">Tài khoản</a><span class="sep">›</span>
-        <span class="current">Đặt lại mật khẩu</span>
-    </div>
+    @include('partials.storefront.breadcrumb', [
+        'class' => 'accp-crumb',
+        'separator' => '›',
+        'items' => [
+            ['label' => 'Tài khoản', 'url' => route('customer.account')],
+            ['label' => 'Đặt lại mật khẩu', 'current' => true],
+        ],
+    ])
 
     <div class="rspw-grid">
         {{-- LEFT: Form --}}

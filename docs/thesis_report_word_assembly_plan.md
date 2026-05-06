@@ -33,7 +33,7 @@ Vì vậy, việc cần làm không phải là viết lại toàn bộ báo cáo
 |---|---|---|
 | Chương 2 cơ sở lý thuyết | `docs/thesis_report_theoretical_foundation.md` | Nguồn chính của Chương 2 |
 | Bổ sung Chương 2 | `docs/thesis_report_theory_expansion_web_tech_and_reference_sites.md` | Dùng để làm dày thêm Chương 2 |
-| Chương 3, 4, 5 nền chính | `docs/thesis_report_revised_sections.md` | Nguồn chính của phần phân tích, xây dựng, kiểm thử |
+| Chương 3, 4, 5 nền chính | `docs/thesis_report_revised_sections.md` | Nguồn chính của phần phân tích, xây dựng, kiểm tra chất lượng |
 | Bổ sung sâu Chương 3 | `docs/thesis_report_analysis_design_additions.md` | Dùng để tăng độ sát repo của Chương 3 |
 | Use case mới theo hướng khách vãng lai | `docs/thesis_report_usecase_plantuml_revised_guest.md` | Nên ưu tiên dùng thay bản use case cũ |
 
@@ -73,7 +73,6 @@ Những phần này có thể giữ làm nền, nhưng cần rà lại để b�
 - website bán thiết bị công nghệ
 - có storefront, admin, API
 - có dữ liệu legacy và phần chuẩn hóa mới
-- có test suite và nhóm service layer
 
 ### 3.2. Việc bắt buộc trước khi nộp
 
@@ -242,7 +241,7 @@ Chương 4 nên dùng gần như toàn bộ từ:
 - `4.5. Xây dựng khu vực quản trị`
 - `4.6. Xây dựng API, báo cáo và các dịch vụ dùng chung`
 - `4.7. Console commands và hỗ trợ vận hành`
-- `4.8. Tổ chức kiểm thử trong mã nguồn`
+- `4.8. Tổ chức kiểm tra chất lượng trong mã nguồn`
 - `4.9. Kết luận chương`
 
 ### 6.3. Điều chỉnh nên làm cho Chương 4
@@ -268,7 +267,7 @@ Chương 4 sẽ mạnh hơn nhiều nếu có bằng chứng trực quan thay v�
 Chương 5 nên lấy từ:
 
 - phần Chương 5 trong `docs/thesis_report_revised_sections.md`
-- phần bổ sung kiểm thử trong `docs/thesis_report_revised_sections.md`
+- phần bổ sung kiểm tra chất lượng trong `docs/thesis_report_revised_sections.md`
 - chọn lọc thêm từ `docs/thesis_report_alt_sections.md` nếu cần mở rộng đánh giá thực tiễn, bài học rút ra, định hướng nghiên cứu
 
 ### 7.2. Không nên làm
@@ -279,13 +278,13 @@ Không nên dán nguyên toàn bộ `thesis_report_alt_sections.md` vào Chươn
 
 Nên có:
 
-- bảng kịch bản kiểm thử tiêu biểu
+- bảng kịch bản kiểm tra chất lượng tiêu biểu
 - bảng nhóm suite test
 - phần đánh giá kết quả đạt được
 - phần hạn chế
 - phần hướng phát triển
 
-Repo hiện có `46` file test, nên khi viết bằng chứng kiểm thử có thể nêu điều này như một chỉ dấu về mức độ đầu tư cho chất lượng.
+Repo hiện có `46` file kiểm tra, nên khi viết bằng chứng kiểm tra chất lượng có thể nêu điều này như một chỉ dấu về mức độ đầu tư cho chất lượng.
 
 ---
 

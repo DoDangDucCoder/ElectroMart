@@ -706,18 +706,23 @@
             value="{{ number_format($finalPrice, 0, ',', '.') }}đ">
 
         <div class="pdx-wrap">
-            {{-- Breadcrumb --}}
-            <nav class="pdx-crumbs" aria-label="breadcrumb">
-                <a href="{{ url('/') }}">Trang chủ</a>
-                <span class="sep">/</span>
-                <a href="{{ url('/san-pham') }}">Sản phẩm</a>
-                @if ($categoryUrl)
-                    <span class="sep">/</span>
-                    <a href="{{ $categoryUrl }}">{{ $productCategoryLabel }}</a>
-                @endif
-                <span class="sep">/</span>
-                <span class="current">{{ $productName }}</span>
-            </nav>
+            @include('partials.storefront.breadcrumb', [
+                'class' => 'pdx-crumbs',
+                'items' => array_filter([
+                    [
+                        'label' => 'Sản phẩm',
+                        'url' => url('/san-pham'),
+                    ],
+                    $categoryUrl ? [
+                        'label' => $productCategoryLabel,
+                        'url' => $categoryUrl,
+                    ] : null,
+                    [
+                        'label' => $productName,
+                        'current' => true,
+                    ],
+                ]),
+            ])
 
             {{-- Main 3-column grid --}}
             <div class="pdx-grid">

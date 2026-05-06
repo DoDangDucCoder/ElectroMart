@@ -915,13 +915,14 @@
 
         {{-- ----- Main ----- --}}
         <main>
-            <nav class="acc-breadcrumb" aria-label="breadcrumb">
-                <a href="{{ url('/') }}">Trang chủ</a>
-                <span class="sep">›</span>
-                <a href="{{ route('customer.account') }}">Tài khoản</a>
-                <span class="sep">›</span>
-                <span class="current">Địa chỉ giao hàng</span>
-            </nav>
+            @include('partials.storefront.breadcrumb', [
+                'class' => 'acc-breadcrumb',
+                'separator' => '›',
+                'items' => [
+                    ['label' => 'Tài khoản', 'url' => route('customer.account')],
+                    ['label' => 'Địa chỉ giao hàng', 'current' => true],
+                ],
+            ])
 
             <div class="acc-page-head">
                 <div>

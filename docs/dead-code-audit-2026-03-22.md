@@ -254,20 +254,6 @@ Trạng thái:
 
 ## Test coverage liên quan trực tiếp tới audit
 
-- `tests/Feature/AdminPanelTest.php`
-- `tests/Feature/AdminSecurityTest.php`
-- `tests/Feature/AdminApiSecurityTest.php`
-- `tests/Feature/AdminPermissionHardeningTest.php`
-- `tests/Feature/AdminProductCrudTest.php`
-- `tests/Feature/LegacyMailTemplateRenderTest.php`
-- `tests/Feature/StorefrontLayoutShellTest.php`
-- `tests/Feature/HomepageTest.php`
-- `tests/Feature/CategoryPageTest.php`
-- `tests/Feature/ProductDetailPageTest.php`
-- `tests/Feature/CartFlowTest.php`
-- `tests/Feature/CheckoutFlowTest.php`
-- `tests/Feature/StorefrontComparePageTest.php`
-- `tests/Feature/StorefrontLoginAndSearchPageTest.php`
 
 ## Đề xuất xóa theo thứ tự an toàn
 

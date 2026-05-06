@@ -12,7 +12,7 @@
     $tierName = $customer->loyaltyTier?->name ?? 'Thành viên';
 @endphp
 <div class="accp-wrap">
-    <nav class="accp-crumb"><a href="{{ url('/') }}">Trang chủ</a><span class="sep"><i class="fa fa-angle-right"></i></span><a href="{{ url('/account') }}">Tài khoản</a><span class="sep"><i class="fa fa-angle-right"></i></span><span class="current">Thông tin tài khoản</span></nav>
+    @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Tài khoản', 'url' => url('/account')], ['label' => 'Thông tin tài khoản', 'current' => true]]])
     <div class="accp-grid">
         @include('pages.account.partials.sidebar', ['currentSection' => 'profile', 'customer' => $customer])
         <main>

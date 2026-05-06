@@ -8,7 +8,7 @@ $url_canonical=$url_canonical??url('/dang-ky');
 @push('styles')<link href="{{ asset('frontend/css/account-shared.css') }}" rel="stylesheet">@endpush
 @section('content')
 <div class="auth-wrap">
-    <nav class="accp-crumb" style="max-width:1240px;margin:0 auto;padding:14px 16px"><a href="{{ url('/') }}">Trang chủ</a><span class="sep"><i class="fa fa-angle-right"></i></span><span class="current">Đăng ký</span></nav>
+    @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Đăng ký', 'current' => true]]])
     <div class="auth-container">
         <div class="auth-left">
             <div class="auth-brand">

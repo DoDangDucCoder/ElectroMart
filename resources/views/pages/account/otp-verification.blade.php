@@ -63,7 +63,7 @@
 </style>
 
 <div class="accp-wrap">
-    <div class="accp-crumb"><a href="{{ url('/') }}">Trang chủ</a><span class="sep">›</span><a href="{{ route('customer.account') }}">Tài khoản</a><span class="sep">›</span><span class="current">Xác thực OTP</span></div>
+    @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Tài khoản', 'url' => route('customer.account')], ['label' => 'Xác thực OTP', 'current' => true]]])
 
     <div class="otp-grid">
         {{-- Left: OTP Form --}}

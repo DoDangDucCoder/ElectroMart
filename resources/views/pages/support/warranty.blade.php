@@ -98,7 +98,7 @@
 </style>
 
 <div class="wr-wrap">
-    <nav class="wr-breadcrumb"><a href="{{ url('/') }}">Trang chủ</a> <i class="fa fa-angle-right"></i> Chính sách bảo hành</nav>
+    @include('partials.storefront.breadcrumb', ['class' => 'wr-breadcrumb', 'separator' => '›', 'items' => [['label' => 'Chính sách bảo hành', 'current' => true]]])
 
     {{-- Hero --}}
     <section class="wr-hero">

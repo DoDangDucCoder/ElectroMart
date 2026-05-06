@@ -1,7 +1,7 @@
 # Chuẩn Hóa Dữ Liệu & Kế Hoạch Migration
 
 ## 1. Mục tiêu
-- Bỏ phụ thuộc `shopbanhang.sql`, thay bằng migration chuẩn của Laravel.
+- Bỏ phụ thuộc `shopbanhang.sql` vì đây chỉ là archive legacy cũ; dữ liệu hiện hành phải đi qua migration/import chuẩn của Laravel.
 - Chuẩn hóa naming (snake_case, không tiền tố `tbl_`), khóa chính auto-increment `id`, khóa ngoại đầy đủ.
 - Áp dụng timestamp, soft delete (khi phù hợp), enum trạng thái rõ ràng.
 - Chuẩn bị script di trú dữ liệu từ DB cũ sang schema mới, đảm bảo không mất dữ liệu.
@@ -61,6 +61,34 @@
 - `id`, `city_id`, `province_id`, `ward_id`, `amount`, `currency` (`VND`), timestamps.
 
 ## 4. Migration Strategy
+### 4.1 Pending migrations đã review
+
+Các migration sau đang `Pending` trên DB `shopbanhang` hiện tại và **không được chạy trực tiếp trước khi backup DB**:
+
+| Migration | Bảng tạo mới | Runtime đang dùng | Kết luận |
+|-----------|--------------|-------------------|----------|
+| `2026_05_01_000100_create_customer_payment_methods_table` | `customer_payment_methods` | `/account/payment-methods`, quan hệ `Customer::paymentMethods()` | Cần cho trang phương thức thanh toán của khách hàng. Có FK tới `customers`, bảng tiền điều kiện đã chạy. |
+| `2026_05_02_000100_create_vat_invoices_table` | `vat_invoices` | `/account/invoices`, quan hệ `Customer::vatInvoices()` | Cần cho trang hóa đơn VAT. Có FK tới `customers`, `orders`, các bảng tiền điều kiện đã chạy. |
+| `2026_05_02_000200_create_order_returns_table` | `order_returns` | `/account/returns`, quan hệ `Customer::orderReturns()` | Cần cho trang trả hàng/hoàn tiền. Có FK tới `customers`, `orders`, `order_items`, các bảng tiền điều kiện đã chạy. |
+
+Ghi chú vận hành:
+- `CustomerAccountController` đã có guard `Schema::hasTable(...)` cho 3 trang trên để tránh lỗi runtime trong giai đoạn migration chưa chạy.
+- Backup hiện tại: `storage/app/backups/shopbanhang_20260503_141843.sql`.
+- Vì `.env` hiện là `APP_ENV=production`, ngay cả `php artisan migrate --pretend` cũng bị Laravel chặn nếu không xác nhận. Không ép chạy migration trong trạng thái này.
+- Đã chạy 3 migration này sau backup bằng `php artisan migrate --force`.
+- Sau khi chạy migration, đã kiểm tra lại:
+  - `php artisan migrate:status --pending`
+  - `php artisan legacy:audit-runtime --fail-on-issues`
+- Cần truy cập thủ công các route `/account/payment-methods`, `/account/invoices`, `/account/returns` bằng tài khoản khách hàng để kiểm tra UI/session.
+- Rollback nếu cần: restore từ file backup ở trên thay vì dùng rollback migration trên DB đang có dữ liệu thật.
+
+Seeder liên quan:
+- `Database\Seeders\CustomerAccountDemoSeeder` tạo dữ liệu demo idempotent cho account pages: một đơn hàng demo, một order item, hai payment methods, một VAT invoice và một return request.
+- Seeder đã được kiểm bằng SQLite tạm với `migrate:fresh --seed --force` và chạy `db:seed --force` lần hai để xác nhận không nhân bản dữ liệu.
+- `DatabaseSeeder` chỉ tự gọi demo seeder trong môi trường local/demo hoặc khi bật `SEED_CUSTOMER_ACCOUNT_DEMO=true`.
+- Seeder này chưa được chạy trên DB `shopbanhang`. Nếu cần dữ liệu demo trên DB hiện tại, chạy có chủ đích: `php artisan db:seed --class=CustomerAccountDemoSeeder --force`.
+
+### 4.2 Chiến lược chung
 1. **Chuẩn bị migration mới**
    - Tạo migration theo thứ tự: taxonomy (brand/category) → catalog (products, attributes) → customer → order (orders, order_items, payments, shipping) → marketing (coupons, campaign nếu có) → cms → analytics.
    - Bổ sung seeder cho dữ liệu demo (brand, category, city...).
@@ -75,14 +103,14 @@
 3. **Giữ mapping trong bảng phụ**
    - Tạo bảng `legacy_migrations` với `legacy_table`, `legacy_id`, `new_table`, `new_id` để debug/truy vết.
 
-4. **Kiểm thử**
+4. **Kiểm tra chất lượng**
    - So sánh count bảng cũ vs mới.
    - Kiểm tra số liệu quan trọng (tổng doanh thu, số khách hàng, hàng tồn).
    - Viết test Feature đảm bảo CRUD hoạt động với schema mới.
 
 5. **Triển khai**
    - Chạy migration + data migration trong môi trường staging, so sánh UI → order detail, product list.
-   - Sau khi ổn định, gỡ bỏ dependency `shopbanhang.sql`.
+   - Sau khi ổn định, gỡ bỏ dependency runtime vào archive `shopbanhang.sql`.
 
 ## 5. Các quyết định mở
 - **Địa chỉ**: tách bảng `customer_addresses` cho khách (nhiều địa chỉ) vs `order_shipping` snapshot.
@@ -99,7 +127,7 @@
 5. Migration marketing (`coupons`), CMS (`blog_categories`, `blog_posts`), analytics (`analytics_daily`, `analytics_visitors`).
 6. Viết seeder mẫu & command `data:migrate-legacy`.
 7. Cập nhật model Eloquent tương ứng trong `App\Infrastructure\Persistence\Eloquent`.
-8. Kiểm thử + cập nhật controller/service sử dụng schema mới.
+8. Kiểm tra chất lượng + cập nhật controller/service sử dụng schema mới.
 
 ## 7. Ghi chú chuẩn hóa branding storefront
 - Brand storefront mặc định đã được gom về config trung tâm:

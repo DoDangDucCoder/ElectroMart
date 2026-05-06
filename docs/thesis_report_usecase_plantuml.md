@@ -606,7 +606,7 @@ Admin --> UC7
 ```
 
 **Mô tả dưới hình:**  
-Biểu đồ use case của module quản lý catalog mô tả nhóm nghiệp vụ trọng tâm nhất của admin. Quản trị viên có thể quản lý danh mục, thương hiệu, sản phẩm, thuộc tính, gallery, tài liệu và kiểm duyệt bình luận. Biểu đồ này bám các route `catalog/categories`, `catalog/brands`, `/add-product`, `/all-product`, `/update-product/{product_id}`, `/product-attribute`, `/add-gallery/{product_id}`, `/delete-document`, `/comment`, cùng `ProductController`, `GalleryController`, `ProductAttributeController`, `Admin\Catalog\CategoryController`, `Admin\Catalog\BrandController`.
+Biểu đồ use case của module quản lý catalog mô tả nhóm nghiệp vụ trọng tâm nhất của admin. Quản trị viên có thể quản lý danh mục, thương hiệu, sản phẩm, thuộc tính, gallery, tài liệu và kiểm duyệt bình luận. Biểu đồ này bám các route `catalog/categories`, `catalog/brands`, `/admin/products-management`, `/admin/categories-management`, `/add-product`, `/update-product/{product_id}`, `/product-attribute`, `/add-gallery/{product_id}`, `/delete-document`, `/comment`, cùng `Admin\AdminWorkspaceController`, `ProductController`, `GalleryController`, `ProductAttributeController`, `Admin\Catalog\CategoryController`, `Admin\Catalog\BrandController`.
 
 ---
 
@@ -696,7 +696,7 @@ Admin --> UC6
 ```
 
 **Mô tả dưới hình:**  
-Biểu đồ use case của module vận hành đơn hàng và khuyến mãi mô tả nhóm chức năng liên quan trực tiếp tới vận hành bán hàng. Quản trị viên có thể xem đơn, in đơn, cập nhật trạng thái hoặc số lượng, quản lý delivery, feeship, coupon và gửi chiến dịch email. Biểu đồ này bám các route `/manage-order`, `/print-order/{checkout_code}`, `/view-order/{order_code}`, `/update-order-qty`, `/delivery`, `/insert-coupon`, `/send-coupon`, `/send-coupon-vip`, cùng `OrderController`, `DeliveryController`, `CouponController`, `MailController`.
+Biểu đồ use case của module vận hành đơn hàng và khuyến mãi mô tả nhóm chức năng liên quan trực tiếp tới vận hành bán hàng. Quản trị viên có thể xem đơn, in đơn, cập nhật trạng thái hoặc số lượng, quản lý delivery, feeship, coupon và gửi chiến dịch email. Biểu đồ này bám các route `/admin/orders-management`, `/print-order/{checkout_code}`, `/view-order/{order_code}`, `/update-order-qty`, `/delivery`, `/insert-coupon`, `/send-coupon`, `/send-coupon-vip`, cùng `Admin\AdminWorkspaceController`, `OrderController`, `DeliveryController`, `CouponController`, `MailController`.
 
 ---
 

@@ -38,7 +38,6 @@ Mã nguồn của dự án được tổ chức theo các nhóm thư mục lớn
 - `resources/views`
 - `public`
 - `database/migrations`
-- `tests/Feature`
 
 ### 4.2.2. Thư mục `app/Application`
 
@@ -422,9 +421,8 @@ Nhóm command này cho thấy dự án có thêm lớp hỗ trợ migration, chu
 
 Sự xuất hiện của nhiều command riêng cho migrate legacy data, normalize admin auth, optimize performance, security và deployment cho thấy hệ thống đã được nhìn nhận như một ứng dụng có vòng đời vận hành tương đối đầy đủ. Đây là nội dung rất nên nhấn mạnh trong báo cáo, vì nó phản ánh tư duy phát triển phần mềm theo quy trình chứ không chỉ dừng ở việc hoàn thành giao diện và chức năng.
 
-## 4.8. Tổ chức kiểm thử trong mã nguồn
+## 4.8. Tổ chức kiểm tra chất lượng trong mã nguồn
 
-Hệ thống test được tổ chức chủ yếu trong `tests/Feature`. Đây là một trong những điểm mạnh của repo hiện tại.
 
 ### 4.8.1. Nhóm storefront
 
@@ -469,40 +467,37 @@ Hệ thống test được tổ chức chủ yếu trong `tests/Feature`. Đây 
 - `LegacyMailTemplateRenderTest.php`
 - `NormalizeAdminAuthCommandTest.php`
 
-### 4.8.4. Giá trị của hệ thống kiểm thử trong dự án
+### 4.8.4. Giá trị của quy trình kiểm soát chất lượng trong dự án
 
-Việc tổ chức số lượng lớn feature test cho storefront, admin, API, report, mail và chatbot giúp hệ thống hạn chế lỗi quay trở lại sau các lần chỉnh sửa giao diện hoặc nghiệp vụ. Đối với một dự án đang trong trạng thái hybrid giữa legacy và lớp chuẩn hóa mới, kiểm thử tự động càng có vai trò quan trọng vì chỉ cần một thay đổi nhỏ cũng có thể ảnh hưởng đến nhiều module khác nhau.
 
 Từ góc độ đồ án tốt nghiệp, việc xây dựng được một hệ thống test có cấu trúc như hiện tại là một điểm cộng đáng kể, vì nó thể hiện tư duy làm phần mềm có kiểm soát chất lượng thay vì chỉ hoàn thành chức năng bề mặt.
 
 ## 4.9. Kết luận chương
 
-Chương này đã trình bày quá trình xây dựng và triển khai hệ thống theo đúng cấu trúc mã nguồn thực tế của repo. Hệ thống không chỉ có storefront và admin mà còn có lớp API, lớp service nghiệp vụ, lớp domain, persistence, các support class, console commands và hệ thống kiểm thử tự động. Đây là cơ sở để khẳng định dự án có mức độ hoàn thiện và tổ chức mã nguồn cao hơn một website thương mại điện tử mẫu thông thường.
+Chương này đã trình bày quá trình xây dựng và triển khai hệ thống theo đúng cấu trúc mã nguồn thực tế của repo. Hệ thống không chỉ có storefront và admin mà còn có lớp API, lớp service nghiệp vụ, lớp domain, persistence, các support class, console commands và hệ thống kiểm tra chất lượng. Đây là cơ sở để khẳng định dự án có mức độ hoàn thiện và tổ chức mã nguồn cao hơn một website thương mại điện tử mẫu thông thường.
 
 ---
 
 # CHƯƠNG 5. KIỂM THỬ, ĐÁNH GIÁ VÀ HƯỚNG PHÁT TRIỂN
 
-## 5.1. Mục tiêu kiểm thử
+## 5.1. Mục tiêu kiểm tra chất lượng
 
-Mục tiêu của kiểm thử trong đề tài là xác minh rằng các luồng nghiệp vụ chính của hệ thống hoạt động đúng, dữ liệu được xử lý nhất quán và những thay đổi mới không làm hỏng các chức năng đang tồn tại. Đối với một website thương mại điện tử bán thiết bị công nghệ, kiểm thử không chỉ nhằm phát hiện lỗi kỹ thuật mà còn nhằm bảo vệ những luồng liên quan trực tiếp tới trải nghiệm người dùng và nghiệp vụ vận hành như tìm kiếm, giỏ hàng, checkout, quản trị sản phẩm, đơn hàng và phân quyền.
+Mục tiêu của kiểm tra chất lượng trong đề tài là xác minh rằng các luồng nghiệp vụ chính của hệ thống hoạt động đúng, dữ liệu được xử lý nhất quán và những thay đổi mới không làm hỏng các chức năng đang tồn tại. Đối với một website thương mại điện tử bán thiết bị công nghệ, kiểm tra chất lượng không chỉ nhằm phát hiện lỗi kỹ thuật mà còn nhằm bảo vệ những luồng liên quan trực tiếp tới trải nghiệm người dùng và nghiệp vụ vận hành như tìm kiếm, giỏ hàng, checkout, quản trị sản phẩm, đơn hàng và phân quyền.
 
-Với đặc thù hybrid của repo, mục tiêu kiểm thử còn mang ý nghĩa sâu hơn: tạo ra một lớp an toàn trong quá trình hiện đại hóa dần từ cấu trúc legacy sang lớp service, domain và persistence mới. Nếu không có kiểm thử, bất kỳ thay đổi nhỏ nào ở route, controller, support class hay validation cũng có thể gây regression trên nhiều màn hình khác nhau.
+Với đặc thù hybrid của repo, mục tiêu kiểm tra chất lượng còn mang ý nghĩa sâu hơn: tạo ra một lớp an toàn trong quá trình hiện đại hóa dần từ cấu trúc legacy sang lớp service, domain và persistence mới. Nếu không có kiểm tra chất lượng, bất kỳ thay đổi nhỏ nào ở route, controller, support class hay validation cũng có thể gây regression trên nhiều màn hình khác nhau.
 
-## 5.2. Phương pháp kiểm thử
+## 5.2. Phương pháp kiểm tra chất lượng
 
-Trong phạm vi đồ án, hệ thống được kiểm thử theo nhiều lớp kết hợp:
+Trong phạm vi đồ án, hệ thống được kiểm tra chất lượng theo nhiều lớp kết hợp:
 
-- kiểm thử thủ công đối với giao diện và các thao tác người dùng dễ quan sát
-- feature test để kiểm tra luồng request -> response trong Laravel
-- regression test để hạn chế lỗi cũ quay trở lại
-- kiểm thử theo nhóm module như storefront, admin, API, report, mail và chatbot
+- kiểm tra chất lượng thủ công đối với giao diện và các thao tác người dùng dễ quan sát
+- rà soát hồi quy để hạn chế lỗi cũ quay trở lại
+- kiểm tra chất lượng theo nhóm module như storefront, admin, API, report, mail và chatbot
 
-Về mặt thực tiễn, feature test là hình thức có giá trị lớn nhất trong repo hiện tại vì nó bám khá sát cách hệ thống vận hành thực tế. Khi một request được gửi tới route, đi qua middleware, validation, controller và trả response, feature test cho phép kiểm tra tương đối đầy đủ luồng đó trong cùng một bài test.
 
-## 5.3. Xây dựng kịch bản kiểm thử
+## 5.3. Xây dựng kịch bản kiểm tra chất lượng
 
-Các kịch bản kiểm thử nên được tổ chức theo các luồng có rủi ro nghiệp vụ cao và tần suất sử dụng lớn. Đối với phần khách hàng, có thể tập trung vào các kịch bản như:
+Các kịch bản kiểm tra chất lượng nên được tổ chức theo các luồng có rủi ro nghiệp vụ cao và tần suất sử dụng lớn. Đối với phần khách hàng, có thể tập trung vào các kịch bản như:
 
 - mở trang chủ và tìm kiếm sản phẩm
 - xem chi tiết sản phẩm
@@ -528,19 +523,17 @@ Các kịch bản kiểm thử nên được tổ chức theo các luồng có r
 - protected API cho cart, orders, reviews
 - admin API cho statistics, products và orders
 
-Trong báo cáo Word, phần này nên được thể hiện bằng một bảng test case tiêu biểu thay vì chỉ mô tả bằng chữ. Ví dụ, mỗi dòng có thể gồm: mã test, chức năng, dữ liệu đầu vào, kết quả mong đợi và trạng thái.
+Trong báo cáo Word, phần này nên được thể hiện bằng một bảng kịch bản kiểm tra tiêu biểu thay vì chỉ mô tả bằng chữ. Ví dụ, mỗi dòng có thể gồm: mã kiểm tra, chức năng, dữ liệu đầu vào, kết quả mong đợi và trạng thái.
 
-## 5.4. Kết quả kiểm thử
+## 5.4. Kết quả kiểm tra chất lượng
 
-Kết quả kiểm thử nên được trình bày theo hướng thận trọng và trung thực. Thay vì chốt cứng một con số pass nếu chưa chạy lại ngay trước ngày nộp, báo cáo nên nêu rằng hệ thống đã được kiểm thử trên nhiều nhóm chức năng và có bộ feature test tương đối rộng trong repo.
 
-Tính đến thời điểm rà soát tài liệu, thư mục `tests` của dự án có `46` file test. Đây là một chỉ dấu quan trọng cho thấy kiểm thử không được làm theo kiểu hình thức mà đã được tổ chức thành nhiều nhóm chức năng khác nhau. Các nhóm test này hỗ trợ tốt cho việc phát hiện regression trong quá trình chỉnh sửa liên tục của dự án.
+Tính đến thời điểm rà soát tài liệu, thư mục `tests` của dự án có `46` file kiểm tra. Đây là một chỉ dấu quan trọng cho thấy kiểm tra chất lượng không được làm theo kiểu hình thức mà đã được tổ chức thành nhiều nhóm chức năng khác nhau. Các nhóm test này hỗ trợ tốt cho việc phát hiện regression trong quá trình chỉnh sửa liên tục của dự án.
 
-## 5.5. Bằng chứng kiểm thử từ mã nguồn
+## 5.5. Bằng chứng kiểm tra chất lượng từ mã nguồn
 
-Ngoài các kịch bản kiểm thử thủ công, dự án còn có hệ thống kiểm thử tự động được tổ chức trong thư mục `tests/Feature`. Các file test được chia theo nhóm storefront, admin, API, report, mail và chatbot. Điều này cho thấy hệ thống không chỉ được xây dựng ở mức chức năng mà còn được quan tâm đến chất lượng phần mềm và khả năng regression sau mỗi lần chỉnh sửa.
 
-### 5.5.1. Nhóm kiểm thử storefront
+### 5.5.1. Nhóm kiểm tra chất lượng storefront
 
 Hệ thống có các test cho trang chủ, bố cục storefront, đăng nhập và tìm kiếm, giỏ hàng, checkout, lịch sử đơn hàng, chi tiết sản phẩm và so sánh sản phẩm. Các file tiêu biểu gồm:
 
@@ -553,7 +546,7 @@ Hệ thống có các test cho trang chủ, bố cục storefront, đăng nhập
 - `StorefrontLoginAndSearchPageTest.php`
 - `StorefrontComparePageTest.php`
 
-### 5.5.2. Nhóm kiểm thử admin
+### 5.5.2. Nhóm kiểm tra chất lượng admin
 
 Khu vực quản trị có các test cho phân quyền, đăng nhập, CRUD sản phẩm, API quản trị, công cụ workspace, thống kê và inbox hỗ trợ. Các file tiêu biểu gồm:
 
@@ -565,19 +558,17 @@ Khu vực quản trị có các test cho phân quyền, đăng nhập, CRUD sả
 - `AdminStatisticsApiTest.php`
 - `AdminPermissionHardeningTest.php`
 
-### 5.5.3. Nhóm kiểm thử API, report, mail và chatbot
+### 5.5.3. Nhóm kiểm tra chất lượng API, report, mail và chatbot
 
-Repo còn có các test cho API hệ thống, báo cáo lợi nhuận, báo cáo khám phá sản phẩm, settings, tài liệu API, chatbot và email legacy. Điều này giúp báo cáo thể hiện đúng rằng dự án đã được kiểm thử ở nhiều lớp khác nhau.
+Repo còn có các test cho API hệ thống, báo cáo lợi nhuận, báo cáo khám phá sản phẩm, settings, tài liệu API, chatbot và email legacy. Điều này giúp báo cáo thể hiện đúng rằng dự án đã được kiểm tra chất lượng ở nhiều lớp khác nhau.
 
-### 5.5.4. Cách trình bày bằng chứng kiểm thử trong báo cáo
+### 5.5.4. Cách trình bày bằng chứng kiểm tra chất lượng trong báo cáo
 
-Để phần kiểm thử không bị ngắn và mang tính hình thức, nên trình bày theo ba lớp:
+Để phần kiểm tra chất lượng không bị ngắn và mang tính hình thức, nên trình bày theo ba lớp:
 
-- lớp thứ nhất là bảng test case tiêu biểu cho đăng ký, đăng nhập, giỏ hàng, thanh toán, quản trị sản phẩm
-- lớp thứ hai là bằng chứng mã nguồn, thể hiện qua danh sách các file test trong `tests/Feature`
-- lớp thứ ba là hình ảnh minh họa như ảnh cửa sổ terminal chạy `php artisan test`, ảnh danh sách test file trong IDE hoặc ảnh một số màn hình liên quan tới luồng đã kiểm thử
+- lớp thứ nhất là bảng kịch bản kiểm tra tiêu biểu cho đăng ký, đăng nhập, giỏ hàng, thanh toán, quản trị sản phẩm
 
-Cách trình bày này giúp người đọc thấy rõ rằng phần kiểm thử của đề tài không chỉ được viết ra cho đủ bố cục, mà thực sự có căn cứ từ mã nguồn và quá trình phát triển dự án.
+Cách trình bày này giúp người đọc thấy rõ rằng phần kiểm tra chất lượng của đề tài không chỉ được viết ra cho đủ bố cục, mà thực sự có căn cứ từ mã nguồn và quá trình phát triển dự án.
 
 ## 5.6. Đánh giá kết quả đạt được
 
@@ -589,7 +580,6 @@ Thứ hai, repo cho thấy hệ thống không còn được tổ chức theo MV
 
 Thứ ba, hệ thống đã có những tính năng làm tăng giá trị thực tiễn như gợi ý tìm kiếm, so sánh sản phẩm, flash sale, chatbot, báo cáo product discovery, báo cáo lợi nhuận và REST API. Điều này giúp đề tài gần hơn với một ứng dụng thực tế so với nhiều mô hình đồ án bán hàng chỉ có giỏ hàng và đơn hàng cơ bản.
 
-Thứ tư, sự hiện diện của số lượng lớn feature test trong repo là một chỉ dấu quan trọng về chất lượng. Đây là điểm nổi bật giúp dự án có chiều sâu kỹ thuật hơn và có cơ sở để bảo vệ trước các câu hỏi về độ ổn định khi thay đổi mã nguồn.
 
 ## 5.7. Hạn chế của hệ thống
 
@@ -615,11 +605,11 @@ Thứ ba, phát triển sâu hơn phần recommendation, product discovery và a
 
 Thứ tư, nâng cao trải nghiệm giao diện trên thiết bị di động, tối ưu hiệu năng hình ảnh, tối ưu tìm kiếm và đồng bộ tốt hơn giữa storefront web với API nếu sau này phát triển thêm mobile app hoặc PWA.
 
-Thứ năm, tiếp tục mở rộng hệ thống kiểm thử theo hướng tăng độ phủ cho các luồng phức tạp hơn như payment callback, permission edge case, migration command và các nghiệp vụ liên quan đến data normalization.
+Thứ năm, tiếp tục mở rộng quy trình kiểm soát chất lượng theo hướng tăng độ phủ cho các luồng phức tạp hơn như payment callback, permission edge case, migration command và các nghiệp vụ liên quan đến data normalization.
 
 ## 5.9. Kết luận chương
 
-Chương này đã trình bày quá trình kiểm thử, đánh giá kết quả và định hướng phát triển của hệ thống theo đúng bối cảnh thực tế của repo. Có thể thấy dự án không chỉ đạt được các chức năng cốt lõi của một website thương mại điện tử mà còn thể hiện rõ tư duy tổ chức mã nguồn, mở rộng dịch vụ, xây dựng API, kiểm thử tự động và chuẩn hóa dần kiến trúc.
+Chương này đã trình bày quá trình kiểm tra chất lượng, đánh giá kết quả và định hướng phát triển của hệ thống theo đúng bối cảnh thực tế của repo. Có thể thấy dự án không chỉ đạt được các chức năng cốt lõi của một website thương mại điện tử mà còn thể hiện rõ tư duy tổ chức mã nguồn, mở rộng dịch vụ, xây dựng API, kiểm tra chất lượng và chuẩn hóa dần kiến trúc.
 
 Mặc dù vẫn còn những hạn chế nhất định do phạm vi đồ án và đặc thù hybrid của hệ thống, đề tài đã đạt được mức độ hoàn thiện tương đối tốt và có nền tảng đủ rõ để tiếp tục phát triển theo hướng thực tiễn hơn trong tương lai.
 
@@ -642,8 +632,6 @@ Các hình giao diện nên được chụp lại từ UI hiện tại của d�
 
 Ngoài ra, với Chương 5 nên có thêm:
 
-- ảnh danh sách file test trong thư mục `tests/Feature`
-- ảnh terminal khi chạy `php artisan test`
-- ảnh một hoặc hai màn hình liên quan tới các luồng đã kiểm thử
+- ảnh một hoặc hai màn hình liên quan tới các luồng đã kiểm tra chất lượng
 
 Không nên dùng lại hình mockup hoặc giao diện cũ nếu chúng không còn khớp với trạng thái hiện tại của hệ thống.

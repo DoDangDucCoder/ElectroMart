@@ -433,7 +433,7 @@ Customer --> UC8
 ```
 
 **Mô tả dưới hình:**  
-Biểu đồ này bám các route `/add-cart-ajax`, `/save-cart`, `/update-cart`, `/update-cart-quantity`, `/show_quick_cart`, `/hover-cart`, `/show-cart-menu`, `/gio-hang`, `/del-all-product`, `/check-coupon`, `/unset-coupon`.
+Biểu đồ này bám các route `/add-cart-ajax`, `/save-cart`, `/update-cart`, `/update-cart-quantity`, `/show_quick_cart`, `/hover-cart`, `/show-cart-menu`, `/gio-hang`, `POST/DELETE /del-all-product`, `/check-coupon`, `DELETE /unset-coupon`.
 
 ---
 
@@ -702,7 +702,7 @@ Admin --> UC8
 ```
 
 **Mô tả dưới hình:**  
-Đây là một trong các module lớn nhất của admin. Nó phủ các route `catalog/categories`, `catalog/brands`, `/add-product`, `/all-product`, `/product-attribute/{product_id}`, `/attribute`, `/add-gallery/{product_id}`, `download_document/{path}/{name}`, `delete_document/{path}`, `/comment`, `/reply-comment`, `/uploads-ckeditor`.
+Đây là một trong các module lớn nhất của admin. Nó phủ các route `catalog/categories`, `catalog/brands`, `/admin/products-management`, `/admin/categories-management`, `/add-product`, `/product-attribute/{product_id}`, `/attribute`, `/add-gallery/{product_id}`, `download_document/{path}/{name}`, `delete_document/{path}`, `/comment`, `/reply-comment`, `/uploads-ckeditor`.
 
 ---
 
@@ -792,7 +792,7 @@ Admin --> UC6
 ```
 
 **Mô tả dưới hình:**  
-Biểu đồ này bám các route `/manage-order`, `/print-order/{checkout_code}`, `/view-order/{order_code}`, `/update-order-qty`, `/update-qty`, `/delivery`, `/select-delivery`, `/insert-delivery`, `/select-feeship`, `/insert-coupon`, `/list-coupon`, `/send-coupon`, `/send-coupon-vip`.
+Biểu đồ này bám các route `/admin/orders-management`, `/print-order/{checkout_code}`, `/view-order/{order_code}`, `/update-order-qty`, `/update-qty`, `/delivery`, `/select-delivery`, `/insert-delivery`, `/select-feeship`, `/insert-coupon`, `/list-coupon`, `/send-coupon`, `/send-coupon-vip`.
 
 ---
 

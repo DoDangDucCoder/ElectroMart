@@ -2,12 +2,15 @@
 @section('content')
     <section id="cart_items">
         <div class="container">
-            <div class="breadcrumbs">
-                <ol class="breadcrumb">
-                    <li><a href="{{ url('/') }}">Trang chủ</a></li>
-                    <li class="active">Thanh toán giỏ hàng</li>
-                </ol>
-            </div>
+            @include('partials.storefront.breadcrumb', [
+                'class' => 'breadcrumbs',
+                'items' => [
+                    [
+                        'label' => 'Thanh toán giỏ hàng',
+                        'current' => true,
+                    ],
+                ],
+            ])
 
             <div class="review-payment">
                 <h2>Xem lại giỏ hàng</h2>

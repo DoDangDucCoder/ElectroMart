@@ -89,15 +89,14 @@
 
     <div class="pmpage">
         <div class="container">
-            <nav aria-label="breadcrumb" class="pmpage-breadcrumb">
-                <ol>
-                    <li><a href="{{ url('/') }}">Trang chủ</a></li>
-                    <li><i class="fa fa-angle-right"></i></li>
-                    <li><a href="{{ route('customer.account') }}">Tài khoản</a></li>
-                    <li><i class="fa fa-angle-right"></i></li>
-                    <li class="is-current">Phương thức thanh toán</li>
-                </ol>
-            </nav>
+            @include('partials.storefront.breadcrumb', [
+                'class' => 'pmpage-breadcrumb',
+                'separator' => '›',
+                'items' => [
+                    ['label' => 'Tài khoản', 'url' => route('customer.account')],
+                    ['label' => 'Phương thức thanh toán', 'current' => true],
+                ],
+            ])
 
             @if (session()->has('message'))
                 <div class="pmpage-alert is-success">{{ session('message') }}</div>

@@ -457,11 +457,16 @@
 
 <section class="forgot-page">
     <div class="forgot-container">
-        <nav class="forgot-breadcrumb" aria-label="breadcrumb">
-            <a href="{{ url('/') }}">Trang chủ</a>
-            <span class="sep"><i class="fa fa-angle-right"></i></span>
-            <span class="current">Quên mật khẩu</span>
-        </nav>
+        @include('partials.storefront.breadcrumb', [
+            'class' => 'forgot-breadcrumb',
+            'separator' => '›',
+            'items' => [
+                [
+                    'label' => 'Quên mật khẩu',
+                    'current' => true,
+                ],
+            ],
+        ])
 
         <div class="forgot-card">
             <aside class="forgot-card__visual">

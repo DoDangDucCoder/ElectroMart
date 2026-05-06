@@ -96,13 +96,9 @@ Nếu deploy schema mới:
 php artisan migrate --force
 ```
 
-Nếu cần nạp dump thật lần đầu:
+`shopbanhang.sql` là dữ liệu legacy/archive cũ, không phải dữ liệu production hiện hành. Không import dump này khi deploy production mới.
 
-```bash
-php artisan data:load-real --dump=shopbanhang.sql --force
-```
-
-Không chạy import dump lên production đã có dữ liệu thật nếu chưa backup và chưa hiểu command làm gì.
+Các command import legacy đã bị guard trong production. Chỉ dùng chúng cho tình huống phục hồi/đối chiếu archive cũ, sau khi backup DB và có kế hoạch rollback rõ ràng.
 
 ## Storage Permission
 
@@ -198,7 +194,6 @@ Mỗi lần deploy code mới nên clear trước rồi cache lại.
 
 ### Queue
 
-`phpunit.xml` dùng `QUEUE_CONNECTION=sync` cho test. Production có thể dùng Redis nếu có job nền. Nếu dùng queue, cấu hình Supervisor:
 
 ```ini
 [program:laravel-shop-worker]
@@ -258,6 +253,7 @@ Sau đó kiểm tra:
 ```bash
 php artisan route:list --path=api/v1
 php artisan catalog:audit-data
+php artisan legacy:audit-runtime --fail-on-issues
 curl -I https://your-domain.com
 curl https://your-domain.com/api/v1/health
 ```

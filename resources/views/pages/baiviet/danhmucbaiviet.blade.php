@@ -31,15 +31,43 @@
             }
             return (string) $value;
         };
+
+        $blogFallbackImages = [
+            'tin-tuc-cong-nghe' => 'assets/news/anker-735-review-1-year.svg',
+            'danh-gia-san-pham' => 'assets/news/anker-735-compare.svg',
+            'huong-dan-su-dung' => 'assets/news/macbook-battery-tips.svg',
+            'khuyen-mai' => 'assets/news/anker-735-compare.svg',
+            'default' => 'assets/news/anker-735-review-1-year.svg',
+        ];
+
+        $blogImage = function ($post) use ($blogFallbackImages) {
+            $imagePath = trim((string) ($post->featured_image_path ?? ''));
+
+            if ($imagePath !== '' && ! str_starts_with($imagePath, 'http')) {
+                $relativePath = ltrim($imagePath, '/');
+                if (file_exists(public_path($relativePath))) {
+                    return asset($relativePath);
+                }
+            }
+
+            $categorySlug = optional($post->category)->cate_post_slug ?? 'default';
+            return asset($blogFallbackImages[$categorySlug] ?? $blogFallbackImages['default']);
+        };
     @endphp
 
     <div class="dd-blog-archive">
         <div class="dd-blog-shell">
-            <nav class="dd-blog-breadcrumb" aria-label="breadcrumb">
-                <a href="{{ url('/') }}">Trang chủ</a>
-                <span class="dd-blog-breadcrumb-sep">/</span>
-                <span class="dd-blog-breadcrumb-current">Bài viết</span>
-            </nav>
+            @include('partials.storefront.breadcrumb', [
+                'class' => 'dd-blog-breadcrumb',
+                'separatorClass' => 'dd-blog-breadcrumb-sep',
+                'currentClass' => 'dd-blog-breadcrumb-current',
+                'items' => [
+                    [
+                        'label' => 'Bài viết',
+                        'current' => true,
+                    ],
+                ],
+            ])
 
             <header class="dd-blog-archive-head">
                 <h1>{{ mb_strtoupper($hero_title ?? 'Bài viết & Tin tức', 'UTF-8') }}</h1>
@@ -88,9 +116,7 @@
                             @foreach ($post_cate as $post)
                                 @php
                                     $postUrl = url('/bai-viet/' . $post->post_slug);
-                                    $imgSrc = $post->featured_image_path
-                                        ? asset($post->featured_image_path)
-                                        : asset('uploads/product/no-image.svg');
+                                    $imgSrc = $blogImage($post);
                                     $excerpt = \Illuminate\Support\Str::limit(strip_tags((string) $post->post_desc), 140);
                                 @endphp
                                 <article class="dd-blog-card">
@@ -178,9 +204,7 @@
                                 @foreach ($featuredPosts as $featured)
                                     @php
                                         $fUrl = url('/bai-viet/' . $featured->post_slug);
-                                        $fImg = $featured->featured_image_path
-                                            ? asset($featured->featured_image_path)
-                                            : asset('uploads/product/no-image.svg');
+                                        $fImg = $blogImage($featured);
                                     @endphp
                                     <li>
                                         <a href="{{ $fUrl }}" class="dd-blog-side-featured-item">

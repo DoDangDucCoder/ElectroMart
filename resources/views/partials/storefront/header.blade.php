@@ -11,13 +11,41 @@
     $storefrontCustomerAuth = \App\Support\StorefrontCustomerAuth::class;
     $currentPath = request()->path();
     $isHomeRoute = $currentPath === '/' || request()->is('trang-chu');
-    $isCategorySection = request()->is('san-pham') || request()->is('danh-muc/*');
-    $isBlogSection = request()->is('danh-muc-bai-viet/*') || request()->is('bai-viet/*') || request()->is('video') || request()->is('video-shop') || request()->is('xem-video/*');
-    $isCartSection = request()->is('gio-hang');
+    $isCategorySection = request()->is('san-pham')
+        || request()->is('san-pham-ban-chay')
+        || request()->is('danh-muc/*')
+        || request()->is('chi-tiet/*')
+        || request()->is('tim-kiem')
+        || request()->is('tag/*')
+        || request()->is('thuong-hieu/*')
+        || request()->is('goi-y-san-pham')
+        || request()->is('yeu-thich')
+        || request()->is('so-sanh');
+    $isBlogSection = request()->is('bai-viet')
+        || request()->is('danh-muc-bai-viet/*')
+        || request()->is('bai-viet/*')
+        || request()->is('video')
+        || request()->is('video-shop')
+        || request()->is('xem-video/*');
+    $isCartSection = request()->is('gio-hang')
+        || request()->is('checkout')
+        || request()->is('payment')
+        || request()->is('dat-hang-thanh-cong/*')
+        || request()->is('dat-hang-that-bai/*')
+        || request()->is('payment/bank-transfer/*');
     $isPromoSection = request()->is('khuyen-mai');
     $isContactSection = request()->is('lien-he');
-    $isHistorySection = request()->is('history') || request()->is('view-history-order/*');
-    $isLoginSection = request()->is('dang-nhap') || request()->is('dang-ky') || request()->is('quen-mat-khau') || request()->is('update-new-pass');
+    $isHistorySection = request()->is('history')
+        || request()->is('view-history-order/*')
+        || request()->is('account')
+        || request()->is('account/*')
+        || request()->is('kiem-tra-don-hang')
+        || request()->is('xac-thuc-otp')
+        || request()->is('dat-lai-mat-khau');
+    $isLoginSection = request()->is('dang-nhap')
+        || request()->is('dang-ky')
+        || request()->is('quen-mat-khau')
+        || request()->is('update-new-pass');
     $headerCustomer = null;
     $defaultStorefrontAvatar = asset('frontend/images/storefront-account-avatar.svg');
     if ($customer_id && \Illuminate\Support\Facades\Schema::hasTable('customers')) {
@@ -52,7 +80,7 @@
     $blogCategoryItems = collect($category_post ?? [])->filter(fn($item) => ! empty($item->cate_post_slug));
 
     $featuredBlogCategory = $blogCategoryItems->first();
-    $featuredBlogUrl = $featuredBlogCategory ? url('/danh-muc-bai-viet/' . $featuredBlogCategory->cate_post_slug) : url('/video-shop');
+    $featuredBlogUrl = url('/bai-viet');
 
     $mobileQuicklinks = [
         [
@@ -143,7 +171,9 @@
                         </li>
                         <li class="shopw-util">
                             @if ($isAuthenticatedCustomer)
-                                <a href="{{ url('/history') }}" class="shopw-account-summary--avatar-only {{ $isAccountSection ? 'is-current' : '' }}">
+                                <a href="{{ url('/history') }}"
+                                    @class(['shopw-account-summary--avatar-only', 'is-current' => $isAccountSection])
+                                    @if ($isAccountSection) aria-current="page" @endif>
                                     <img src="{{ $headerCustomerAvatar }}" alt="Avatar" style="display:none;">
                                     <i class="fa fa-user"></i>
                                     <span class="shopw-util-text">
@@ -161,7 +191,7 @@
                                     </form>
                                 </div>
                             @else
-                                <a href="{{ url('/dang-nhap') }}">
+                                <a href="{{ url('/dang-nhap') }}" @class(['is-current' => $isAccountSection]) @if ($isAccountSection) aria-current="page" @endif>
                                     <i class="fa fa-user"></i>
                                     <span class="shopw-util-text">
                                         <span class="shopw-util-label">Đăng nhập</span>
@@ -171,7 +201,7 @@
                             @endif
                         </li>
                         <li class="shopw-util">
-                            <a href="{{ url('/gio-hang') }}">
+                            <a href="{{ url('/gio-hang') }}" @class(['is-current' => $isCartSection]) @if ($isCartSection) aria-current="page" @endif>
                                 <i class="fa fa-shopping-cart"></i>
                                 <span class="shopw-util-label">Giỏ hàng</span>
                                 <span class="shopw-cart-count">{{ Session::has('cart') ? count(Session::get('cart')) : 0 }}</span>
@@ -210,9 +240,9 @@
 
                                 <li class="dropdown shopw-nav-group {{ $isBlogSection ? 'is-current' : '' }}" id="shopw-nav-group-blogs">
                                     <div class="shopw-nav-row">
-                                        <a href="{{ $featuredBlogUrl }}"
+                                        <a href="{{ url('/bai-viet') }}"
                                             data-storefront-nav-parent="blogs"
-                                            @class(['is-current' => $isBlogSection])
+                                            @class(['active' => $isBlogSection, 'is-current' => $isBlogSection])
                                             @if ($isBlogSection) aria-current="page" @endif>Bài viết</a>
                                     </div>
                                     <ul role="menu" class="sub-menu">

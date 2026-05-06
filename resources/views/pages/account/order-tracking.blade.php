@@ -31,7 +31,7 @@
     $firstItem = $order->items->first();
 @endphp
 <div class="accp-wrap">
-    <nav class="accp-crumb"><a href="{{ url('/') }}">Trang chủ</a><span class="sep"><i class="fa fa-angle-right"></i></span><a href="{{ url('/account') }}">Tài khoản</a><span class="sep"><i class="fa fa-angle-right"></i></span><a href="{{ url('/account/orders') }}">Đơn hàng</a><span class="sep"><i class="fa fa-angle-right"></i></span><span class="current">Theo dõi #{{ $orderCode }}</span></nav>
+    @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Tài khoản', 'url' => url('/account')], ['label' => 'Đơn hàng', 'url' => url('/account/orders')], ['label' => 'Theo dõi #' . $orderCode, 'current' => true]]])
     <div class="accp-grid">
         @include('pages.account.partials.sidebar', ['currentSection' => 'tracking', 'customer' => $customer])
         <main>

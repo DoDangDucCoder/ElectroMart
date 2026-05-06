@@ -12,7 +12,7 @@ Tài liệu này được viết theo hướng Word-ready để thay trực ti�
 
 Điểm đặc thù của dự án là hệ thống không được xây dựng hoàn toàn theo mô hình greenfield ngay từ đầu, mà đang trong trạng thái hiện đại hóa dần từ một nền legacy. Vì vậy, trong quá trình phân tích và thiết kế, cần ghi nhận đồng thời hai lớp kiến trúc dữ liệu: lớp dữ liệu legacy đang phục vụ nhiều luồng storefront và admin hiện tại, và lớp schema chuẩn hóa mới được xây dựng qua migrations để phục vụ quá trình refactor, mở rộng API và chuẩn hóa nghiệp vụ.
 
-Do đó, việc phân tích hệ thống không chỉ dừng ở mức mô hình thương mại điện tử tổng quát, mà cần bám sát thực tế triển khai của mã nguồn, bao gồm các lớp controller legacy, các service nghiệp vụ mới, các route web và API, cũng như hệ thống kiểm thử đang tồn tại trong repo.
+Do đó, việc phân tích hệ thống không chỉ dừng ở mức mô hình thương mại điện tử tổng quát, mà cần bám sát thực tế triển khai của mã nguồn, bao gồm các lớp controller legacy, các service nghiệp vụ mới, các route web và API, cũng như quy trình kiểm soát chất lượng đang tồn tại trong repo.
 
 ## 3.2. Phân tích yêu cầu hệ thống
 
@@ -86,7 +86,7 @@ Hệ thống cần bảo đảm:
 - phân quyền rõ ràng cho khu vực quản trị
 - hạn chế lỗi runtime trong các luồng chính
 - có khả năng mở rộng theo service layer và API
-- có kiểm thử tự động cho các luồng quan trọng
+- có kiểm tra chất lượng cho các luồng quan trọng
 
 ### 3.2.3. Phân tích chi tiết yêu cầu phi chức năng
 
@@ -449,7 +449,6 @@ Mã nguồn của dự án được tổ chức theo các nhóm thư mục lớn
 - `resources/views`
 - `public`
 - `database/migrations`
-- `tests/Feature`
 
 ### 4.2.2. Thư mục `app/Application`
 
@@ -833,9 +832,8 @@ Nhóm command này cho thấy dự án có thêm lớp hỗ trợ migration, chu
 
 Sự xuất hiện của nhiều command riêng cho migrate legacy data, normalize admin auth, optimize performance, security và deployment cho thấy hệ thống đã được nhìn nhận như một ứng dụng có vòng đời vận hành tương đối đầy đủ. Đây là nội dung rất nên nhấn mạnh trong báo cáo, vì nó phản ánh tư duy phát triển phần mềm theo quy trình chứ không chỉ dừng ở việc hoàn thành giao diện và chức năng.
 
-## 4.8. Tổ chức kiểm thử trong mã nguồn
+## 4.8. Tổ chức kiểm tra chất lượng trong mã nguồn
 
-Hệ thống test được tổ chức chủ yếu trong `tests/Feature`. Đây là một trong những điểm mạnh của repo hiện tại.
 
 ### 4.8.1. Nhóm storefront
 
@@ -880,27 +878,25 @@ Hệ thống test được tổ chức chủ yếu trong `tests/Feature`. Đây 
 - `LegacyMailTemplateRenderTest.php`
 - `NormalizeAdminAuthCommandTest.php`
 
-### 4.8.4. Giá trị của hệ thống kiểm thử trong dự án
+### 4.8.4. Giá trị của quy trình kiểm soát chất lượng trong dự án
 
-Việc tổ chức số lượng lớn feature test cho storefront, admin, API, report, mail và chatbot giúp hệ thống hạn chế lỗi quay trở lại sau các lần chỉnh sửa giao diện hoặc nghiệp vụ. Đối với một dự án đang trong trạng thái hybrid giữa legacy và lớp chuẩn hóa mới, kiểm thử tự động càng có vai trò quan trọng vì chỉ cần một thay đổi nhỏ cũng có thể ảnh hưởng đến nhiều module khác nhau.
 
 Từ góc độ đồ án tốt nghiệp, việc xây dựng được một hệ thống test có cấu trúc như hiện tại là một điểm cộng đáng kể, vì nó thể hiện tư duy làm phần mềm có kiểm soát chất lượng thay vì chỉ hoàn thành chức năng bề mặt.
 
 ## 4.9. Kết luận chương
 
-Chương này đã trình bày quá trình xây dựng và triển khai hệ thống theo đúng cấu trúc mã nguồn thực tế của repo. Hệ thống không chỉ có storefront và admin mà còn có lớp API, lớp service nghiệp vụ, lớp domain, persistence, các support class, console commands và hệ thống kiểm thử tự động. Đây là cơ sở để khẳng định dự án có mức độ hoàn thiện và tổ chức mã nguồn cao hơn một website thương mại điện tử mẫu thông thường.
+Chương này đã trình bày quá trình xây dựng và triển khai hệ thống theo đúng cấu trúc mã nguồn thực tế của repo. Hệ thống không chỉ có storefront và admin mà còn có lớp API, lớp service nghiệp vụ, lớp domain, persistence, các support class, console commands và hệ thống kiểm tra chất lượng. Đây là cơ sở để khẳng định dự án có mức độ hoàn thiện và tổ chức mã nguồn cao hơn một website thương mại điện tử mẫu thông thường.
 
 ---
 
 # PHẦN BỔ SUNG CHO CHƯƠNG 5
 
-## 5.x. Bằng chứng kiểm thử từ mã nguồn
+## 5.x. Bằng chứng kiểm tra chất lượng từ mã nguồn
 
-### 5.x.1. Bằng chứng kiểm thử tự động
+### 5.x.1. Bằng chứng kiểm tra chất lượng
 
-Ngoài các kịch bản kiểm thử thủ công, dự án còn có hệ thống kiểm thử tự động được tổ chức trong thư mục `tests/Feature`. Các file test được chia theo nhóm storefront, admin, API, report, mail và chatbot. Điều này cho thấy hệ thống không chỉ được xây dựng ở mức chức năng mà còn được quan tâm đến chất lượng phần mềm và khả năng regression sau mỗi lần chỉnh sửa.
 
-### 5.x.2. Nhóm kiểm thử storefront
+### 5.x.2. Nhóm kiểm tra chất lượng storefront
 
 Hệ thống có các test cho trang chủ, bố cục storefront, đăng nhập và tìm kiếm, giỏ hàng, checkout, lịch sử đơn hàng, chi tiết sản phẩm và so sánh sản phẩm. Các file tiêu biểu gồm:
 
@@ -913,7 +909,7 @@ Hệ thống có các test cho trang chủ, bố cục storefront, đăng nhập
 - `StorefrontLoginAndSearchPageTest.php`
 - `StorefrontComparePageTest.php`
 
-### 5.x.3. Nhóm kiểm thử admin
+### 5.x.3. Nhóm kiểm tra chất lượng admin
 
 Khu vực quản trị có các test cho phân quyền, đăng nhập, CRUD sản phẩm, API quản trị, công cụ workspace, thống kê và inbox hỗ trợ. Các file tiêu biểu gồm:
 
@@ -925,27 +921,24 @@ Khu vực quản trị có các test cho phân quyền, đăng nhập, CRUD sả
 - `AdminStatisticsApiTest.php`
 - `AdminPermissionHardeningTest.php`
 
-### 5.x.4. Nhóm kiểm thử API, report và mail
+### 5.x.4. Nhóm kiểm tra chất lượng API, report và mail
 
-Repo còn có các test cho API hệ thống, báo cáo lợi nhuận, báo cáo khám phá sản phẩm, settings, tài liệu API, chatbot và email legacy. Điều này giúp báo cáo thể hiện đúng rằng dự án đã được kiểm thử ở nhiều lớp khác nhau.
+Repo còn có các test cho API hệ thống, báo cáo lợi nhuận, báo cáo khám phá sản phẩm, settings, tài liệu API, chatbot và email legacy. Điều này giúp báo cáo thể hiện đúng rằng dự án đã được kiểm tra chất lượng ở nhiều lớp khác nhau.
 
 ### 5.x.5. Lưu ý khi ghi số liệu test
 
-Trong báo cáo chính thức không nên chốt cứng số lượng test pass nếu chưa chạy xác minh ngay trước ngày nộp. Thay vào đó, nên ghi theo hướng: hệ thống có bộ kiểm thử tự động theo nhiều nhóm chức năng và các suite đã được sử dụng để kiểm tra regression trong quá trình hoàn thiện dự án.
+Trong báo cáo chính thức không nên chốt cứng số lượng test pass nếu chưa chạy xác minh ngay trước ngày nộp. Thay vào đó, nên ghi theo hướng: hệ thống có bộ kiểm tra chất lượng theo nhiều nhóm chức năng và các suite đã được sử dụng để kiểm tra regression trong quá trình hoàn thiện dự án.
 
-### 5.x.6. Cách trình bày phần kiểm thử trong báo cáo để tăng tính thuyết phục
+### 5.x.6. Cách trình bày phần kiểm tra chất lượng trong báo cáo để tăng tính thuyết phục
 
-Để phần kiểm thử của đồ án không bị ngắn và mang tính hình thức, nên trình bày theo ba lớp:
+Để phần kiểm tra chất lượng của đồ án không bị ngắn và mang tính hình thức, nên trình bày theo ba lớp:
 
-- lớp thứ nhất là các bảng test case tiêu biểu cho đăng ký, đăng nhập, giỏ hàng, thanh toán, quản trị sản phẩm
-- lớp thứ hai là bằng chứng mã nguồn, thể hiện qua danh sách các file test trong `tests/Feature`
-- lớp thứ ba là hình ảnh minh họa, ví dụ ảnh cửa sổ terminal chạy `php artisan test`, ảnh danh sách test file trong IDE hoặc ảnh một số màn hình liên quan đến luồng đã kiểm thử
+- lớp thứ nhất là các bảng kịch bản kiểm tra tiêu biểu cho đăng ký, đăng nhập, giỏ hàng, thanh toán, quản trị sản phẩm
 
-Cách trình bày này giúp người đọc thấy rõ rằng phần kiểm thử của đề tài không chỉ được viết ra cho đủ bố cục, mà thực sự có căn cứ từ mã nguồn và quá trình phát triển dự án.
+Cách trình bày này giúp người đọc thấy rõ rằng phần kiểm tra chất lượng của đề tài không chỉ được viết ra cho đủ bố cục, mà thực sự có căn cứ từ mã nguồn và quá trình phát triển dự án.
 
-### 5.x.7. Đánh giá mức độ hoàn thiện của hệ thống từ góc độ kiểm thử
+### 5.x.7. Đánh giá mức độ hoàn thiện của hệ thống từ góc độ kiểm tra chất lượng
 
-Xét trên phạm vi một đồ án tốt nghiệp đại học, việc hệ thống có nhiều nhóm feature test cho storefront, admin, API, báo cáo, mail và chatbot cho thấy mức độ hoàn thiện của dự án ở mức khá tốt. Dù chưa thể xem là một sản phẩm production hoàn chỉnh, hệ thống đã có cơ sở đủ rõ để minh chứng tính ổn định tương đối của các luồng nghiệp vụ chính.
 
 Đây là điểm có thể nhấn mạnh trong phần nhận xét và đánh giá kết quả, giúp báo cáo có chiều sâu hơn và tránh cảm giác kết luận quá chung chung.
 

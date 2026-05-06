@@ -59,17 +59,24 @@
 
     <main class="bd-page">
         <div class="bd-container">
-            <nav class="bd-breadcrumb" aria-label="breadcrumb">
-                <a href="{{ url('/') }}">Trang chủ</a>
-                <i class="fa fa-angle-right" aria-hidden="true"></i>
-                <a href="{{ url('/danh-muc-bai-viet') }}">Bài viết</a>
-                @if ($postCategoryName)
-                    <i class="fa fa-angle-right" aria-hidden="true"></i>
-                    <a href="{{ $postCategoryUrl }}">{{ $postCategoryName }}</a>
-                @endif
-                <i class="fa fa-angle-right" aria-hidden="true"></i>
-                <span aria-current="page">{{ Str::limit($post->post_title, 60) }}</span>
-            </nav>
+            @include('partials.storefront.breadcrumb', [
+                'class' => 'bd-breadcrumb',
+                'separator' => '›',
+                'items' => array_filter([
+                    [
+                        'label' => 'Bài viết',
+                        'url' => url('/bai-viet'),
+                    ],
+                    $postCategoryName ? [
+                        'label' => $postCategoryName,
+                        'url' => $postCategoryUrl,
+                    ] : null,
+                    [
+                        'label' => Str::limit($post->post_title, 60),
+                        'current' => true,
+                    ],
+                ]),
+            ])
 
             <div class="bd-layout">
                 <article class="bd-article">

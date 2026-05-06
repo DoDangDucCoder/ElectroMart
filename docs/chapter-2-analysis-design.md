@@ -110,7 +110,7 @@ Các chức năng chưa xác định từ code hoặc chỉ thấy route bị co
 | SF-09 | So sánh sản phẩm | Người dùng truy cập trang so sánh. | `GET /so-sanh`, `CompareController@index` |
 | SF-10 | Yêu thích | Người dùng truy cập trang yêu thích. | `GET /yeu-thich`, `HomeController@yeu_thich` |
 | SF-11 | Giỏ hàng | Khách vãng lai và khách hàng có thể thêm, cập nhật, xóa sản phẩm trong giỏ hàng. Luồng storefront web lưu giỏ hàng trong session. | `CartController`, `CartService`, các route `/add-cart-ajax`, `/gio-hang`, `/update-cart`, `/remove-item` |
-| SF-12 | Áp dụng coupon | Người dùng nhập mã giảm giá và hệ thống kiểm tra điều kiện. | `POST /check-coupon`, `GET /unset-coupon`, `CouponService` |
+| SF-12 | Áp dụng coupon | Người dùng nhập mã giảm giá và hệ thống kiểm tra điều kiện. | `POST /check-coupon`, `DELETE /unset-coupon`, `CouponService` |
 | SF-13 | Checkout | Khách vãng lai có thể checkout theo luồng guest nếu có giỏ hàng và thông tin giao hàng hợp lệ; khách hàng đăng nhập có thể checkout gắn với tài khoản. | `GET /checkout`, `GET /payment`, `POST /confirm-order`, `CheckoutController`, `CheckoutService` |
 | SF-14 | Tính phí giao hàng | Người dùng chọn địa chỉ để tính phí vận chuyển. | `POST /calculate-fee`, `POST /select-delivery-home`, `ShippingService`, `locations`, `shipping_fees` |
 | SF-15 | Lịch sử đơn hàng | Khách hàng đăng nhập xem danh sách và chi tiết đơn hàng; khách vãng lai chỉ có thể xem hướng dẫn/đơn vừa đặt nếu session còn lưu `guest_order_code`. | `GET /history`, `GET /view-history-order/{order_code}`, `OrderController` |
@@ -164,7 +164,6 @@ API không phải giao diện chính của báo cáo nhưng có tồn tại tron
 | Hiệu năng | Danh sách sản phẩm, tìm kiếm, trang chủ và admin cần phân trang/tối ưu truy vấn. | Có paginate trong nhiều service/controller; có migration index; có service tối ưu database/performance |
 | Khả dụng | Trang chủ có fallback demo data khi bảng chưa sẵn sàng trong một số đoạn code. | `HomeController` có các fallback nếu thiếu dữ liệu |
 | Giao diện | Giao diện cần responsive, có storefront và admin layout riêng. | `resources/views/partials/storefront`, `resources/views/partials/admin`, `resources/css`, `package.json` |
-| Kiểm thử | Hệ thống cần có test cho luồng chính. | `tests/Feature`, `tests/Unit`, `phpunit/phpunit` |
 | Bảo trì | Mã nguồn cần dễ theo dõi theo module. | Tách route `frontend.php`, `admin.php`, có service layer |
 | Tương thích dữ liệu legacy | Một số luồng cần tương thích bảng legacy nếu còn tồn tại. | Nhiều controller kiểm tra `Schema::hasTable` cho bảng legacy |
 
@@ -198,8 +197,8 @@ Các chức năng chính của `Khách vãng lai` gồm:
 - Tìm kiếm sản phẩm qua `GET/POST /tim-kiem` và gợi ý qua `POST /autocomplete-ajax`.
 - Xem danh sách sản phẩm qua `GET/POST /san-pham`, xem sản phẩm theo danh mục qua `GET /danh-muc/{slug_category_product}` và theo thương hiệu qua `GET /thuong-hieu/{brandSlug}`.
 - Xem chi tiết sản phẩm qua `GET /chi-tiet/{product_slug}` và xem nhanh sản phẩm qua `POST /quickview`.
-- Thêm, cập nhật hoặc xóa sản phẩm trong giỏ hàng thông qua các route như `POST /add-cart-ajax`, `GET /gio-hang`, `POST /update-cart` và `POST /remove-item`.
-- Áp dụng hoặc bỏ mã giảm giá qua `POST /check-coupon` và `GET /unset-coupon`.
+- Thêm, cập nhật hoặc xóa sản phẩm trong giỏ hàng thông qua các route như `POST /add-cart-ajax`, `GET /gio-hang`, `POST /update-cart` và `POST/DELETE /remove-item`.
+- Áp dụng hoặc bỏ mã giảm giá qua `POST /check-coupon` và `DELETE /unset-coupon`.
 - Truy cập luồng checkout qua `GET /checkout`, nhập thông tin giao hàng, tính phí vận chuyển và gửi xác nhận đơn qua `POST /confirm-order` nếu giỏ hàng hợp lệ.
 - Xem blog, video, liên hệ và chatbot qua các route public tương ứng.
 
@@ -372,7 +371,7 @@ flowchart LR
 |---|---|
 | Actor | Khách vãng lai, khách hàng |
 | Mục tiêu | Giảm tổng tiền đơn hàng theo coupon hợp lệ. |
-| Route liên quan | `POST /check-coupon`, `GET /unset-coupon`, `/api/v1/coupons/validate` |
+| Route liên quan | `POST /check-coupon`, `DELETE /unset-coupon`, `/api/v1/coupons/validate` |
 | Controller/service | `CartController@check_coupon`, `CouponController@unset_coupon`, `CouponService` |
 | Bảng dữ liệu | `coupons`, `coupon_redemptions` |
 | Tiền điều kiện | Giỏ hàng có subtotal; mã coupon tồn tại và còn hiệu lực. |
@@ -416,7 +415,7 @@ flowchart LR
 |---|---|
 | Actor | Quản trị viên có quyền `manage products` |
 | Mục tiêu | Quản lý catalog sản phẩm. |
-| Route liên quan | `GET /add-product`, `POST /save-product`, `GET /all-product`, `GET /edit-product/{product_id}`, `POST /update-product/{product_id}`, `DELETE /delete-product/{product_id}`, `PATCH /active-product/{product_id}`, `PATCH /unactive-product/{product_id}` |
+| Route liên quan | `GET /admin/products-management`, `GET /add-product`, `POST /save-product`, `GET /edit-product/{product_id}`, `POST /update-product/{product_id}`, `DELETE /delete-product/{product_id}`, `PATCH /active-product/{product_id}`, `PATCH /unactive-product/{product_id}` |
 | Controller | `ProductController` |
 | Service/model | `ProductService`, `ProductPricingService`, `Product`, `Brand`, `ProductCategory` |
 | Tiền điều kiện | Admin đã đăng nhập và có quyền phù hợp. |
@@ -430,7 +429,7 @@ flowchart LR
 |---|---|
 | Actor | Quản trị viên có quyền `manage orders` |
 | Mục tiêu | Theo dõi và xử lý đơn hàng. |
-| Route liên quan | `GET /manage-order`, `GET /view-order/{order_code}`, `POST /update-order-qty`, `POST /update-qty`, `GET /print-order/{checkout_code}`, `DELETE /delete-order/{order_code}` |
+| Route liên quan | `GET /admin/orders-management`, `GET /view-order/{order_code}`, `POST /update-order-qty`, `POST /update-qty`, `GET /print-order/{checkout_code}`, `DELETE /delete-order/{order_code}` |
 | Controller | `OrderController` |
 | Service | `LegacyOrderWorkflowService`, `LegacyOrderPresentationService` |
 | Tiền điều kiện | Admin đã đăng nhập và có quyền phù hợp. |
@@ -1083,7 +1082,7 @@ Trong `CheckoutService@confirmOrder`, hệ thống tạo `orders`, `order_items`
 | Phân quyền | `users`, `roles`, `permissions`, `model_has_roles`, `model_has_permissions`, `role_has_permissions` | Quản lý tài khoản admin, vai trò và quyền. |
 | API token | `personal_access_tokens` | Phục vụ `Laravel Sanctum`. |
 
-Một số bảng legacy như `tbl_slider`, `tbl_icons`, `tbl_product_attribute` được code kiểm tra bằng `Schema::hasTable`. Các bảng này không nằm trong nhóm migration chuẩn hóa chính hoặc có thể được tạo bởi script legacy. Vì vậy, khi viết báo cáo chính thức, nếu cần mô tả chi tiết bảng legacy thì cần đối chiếu thêm với `database/import_legacy_tables.sql` hoặc script setup legacy.
+Một số bảng legacy như `tbl_slider`, `tbl_icons`, `tbl_product_attribute` chỉ còn nên được xem như archive để đối chiếu dữ liệu cũ. Các bảng này không nằm trong nhóm migration chuẩn hóa chính và không nên dùng làm dependency runtime mới. Vì vậy, khi viết báo cáo chính thức, nếu cần mô tả chi tiết bảng legacy thì cần đối chiếu thêm với `database/import_legacy_tables.sql` hoặc tooling setup legacy đã được guard.
 
 ## 2.15. Thiết kế giao diện người dùng
 
@@ -1189,4 +1188,4 @@ Chương 2 đã trình bày quá trình phân tích và thiết kế hệ thốn
 
 Các phân tích trong chương được xây dựng dựa trên mã nguồn thực tế của dự án, đặc biệt là `routes/web/frontend.php`, `routes/web/admin.php`, `routes/api.php`, các controller trong `app/Http/Controllers`, các service trong `app/Application`, các model trong `app/Infrastructure/Persistence/Eloquent`, migration trong `database/migrations` và view trong `resources/views`. Hệ thống được xác định là một website bán hàng có storefront, admin, API, phân quyền, giỏ hàng, checkout, quản lý đơn hàng, catalog, nội dung và một số module hỗ trợ như chatbot, báo cáo, analytics.
 
-Chương tiếp theo có thể tiếp tục trình bày kết quả cài đặt, môi trường phát triển, các chức năng đã triển khai, giao diện thực tế, kiểm thử và đánh giá hệ thống.
+Chương tiếp theo có thể tiếp tục trình bày kết quả cài đặt, môi trường phát triển, các chức năng đã triển khai, giao diện thực tế, kiểm tra chất lượng và đánh giá hệ thống.

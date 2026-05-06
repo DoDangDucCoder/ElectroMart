@@ -1,7 +1,20 @@
 @extends('layouts.home-tech')
+@section('body_class', 'g-search')
 @section('content')
-    <div class="features_items"><!--features_items-->
-        <h2 class="title text-center">{{ $selected_brand->brand_name ?? $meta_title }}</h2>
+    <div class="features_items storefront-page"><!--features_items-->
+        @include('partials.storefront.page-header', [
+            'title' => $selected_brand->brand_name ?? $meta_title,
+            'breadcrumbItems' => [
+                [
+                    'label' => 'Sản phẩm',
+                    'url' => url('/san-pham'),
+                ],
+                [
+                    'label' => $selected_brand->brand_name ?? $meta_title,
+                    'current' => true,
+                ],
+            ],
+        ])
 
         @include('pages.category.partials.product_grid', [
             'products' => $brand_by_id,

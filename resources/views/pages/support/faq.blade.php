@@ -90,7 +90,7 @@
 </style>
 
 <div class="faq-wrap">
-    <nav class="faq-breadcrumb"><a href="{{ url('/') }}">Trang chủ</a> <i class="fa fa-angle-right"></i> Câu hỏi thường gặp</nav>
+    @include('partials.storefront.breadcrumb', ['class' => 'faq-breadcrumb', 'separator' => '›', 'items' => [['label' => 'Câu hỏi thường gặp', 'current' => true]]])
 
     {{-- Hero --}}
     <section class="faq-hero">

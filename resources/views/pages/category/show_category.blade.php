@@ -114,14 +114,19 @@
     <section class="cat-x">
         <div class="cat-x__container">
 
-            {{-- Breadcrumb --}}
-            <nav class="cat-x__breadcrumb" aria-label="breadcrumb">
-                <a href="{{ url('/') }}">Trang chủ</a>
-                <span class="sep">/</span>
-                <a href="{{ url('/san-pham') }}">Sản phẩm</a>
-                <span class="sep">/</span>
-                <span class="current">{{ $activeCategoryLabel }}</span>
-            </nav>
+            @include('partials.storefront.breadcrumb', [
+                'class' => 'cat-x__breadcrumb',
+                'items' => [
+                    [
+                        'label' => 'Sản phẩm',
+                        'url' => url('/san-pham'),
+                    ],
+                    [
+                        'label' => $activeCategoryLabel,
+                        'current' => true,
+                    ],
+                ],
+            ])
 
             {{-- Title --}}
             <header class="cat-x__title-block">

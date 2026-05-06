@@ -30,9 +30,7 @@
 - Route name dạng `module.action` (vd: `catalog.products.index`).
 - Queue job đặt tại `app/Application/<Module>/Jobs`.
 
-## Testing
-- Viết Feature test cho từng endpoint mới (đặt trong `tests/Feature/<Module>`).
-- Unit test cho service/repository.
+## Quality review
 - Dùng factory + seeder cho dữ liệu mẫu.
 
 ## Commit & Review Checklist

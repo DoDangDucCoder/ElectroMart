@@ -94,12 +94,15 @@
 
     <main class="search-page">
         <div class="container">
-            <!-- Breadcrumb -->
-            <nav class="search-breadcrumb">
-                <a href="{{ url('/') }}">Trang chủ</a>
-                <span class="sep">/</span>
-                <span class="current">Tìm kiếm</span>
-            </nav>
+            @include('partials.storefront.breadcrumb', [
+                'class' => 'search-breadcrumb',
+                'items' => [
+                    [
+                        'label' => 'Tìm kiếm',
+                        'current' => true,
+                    ],
+                ],
+            ])
 
             @if ($errors->has('keywords_submit'))
                 <div class="alert alert-danger">{{ $errors->first('keywords_submit') }}</div>

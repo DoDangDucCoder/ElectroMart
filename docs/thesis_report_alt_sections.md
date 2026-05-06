@@ -22,9 +22,9 @@ Nội dung bên dưới tập trung vào các góc nhìn mà báo cáo đồ án
 
 ## 3.x. Phân tích quyết định kiến trúc của đề tài
 
-Trong quá trình xây dựng một hệ thống website thương mại điện tử, lựa chọn kiến trúc là một quyết định có ảnh hưởng lâu dài đến khả năng bảo trì, mở rộng và kiểm thử. Đối với đề tài này, hệ thống không được tổ chức theo mô hình MVC thuần túy ở mức cơ bản, mà đã từng bước chuyển sang hướng phân lớp rõ hơn gồm controller, request validation, service nghiệp vụ, support classes, domain layer và persistence layer.
+Trong quá trình xây dựng một hệ thống website thương mại điện tử, lựa chọn kiến trúc là một quyết định có ảnh hưởng lâu dài đến khả năng bảo trì, mở rộng và kiểm tra chất lượng. Đối với đề tài này, hệ thống không được tổ chức theo mô hình MVC thuần túy ở mức cơ bản, mà đã từng bước chuyển sang hướng phân lớp rõ hơn gồm controller, request validation, service nghiệp vụ, support classes, domain layer và persistence layer.
 
-Quyết định này không chỉ mang tính kỹ thuật mà còn mang tính thực tiễn. Trong các dự án nhỏ, việc đặt hầu hết logic trong controller có thể giúp phát triển nhanh ở giai đoạn đầu. Tuy nhiên, khi hệ thống tăng số lượng chức năng như giỏ hàng, thanh toán, flash sale, search suggest, so sánh sản phẩm, chatbot, báo cáo, phân quyền và API, cách tổ chức đó sẽ bộc lộ hạn chế rất rõ. Controller trở nên dài, khó đọc, khó kiểm thử và khó tái sử dụng.
+Quyết định này không chỉ mang tính kỹ thuật mà còn mang tính thực tiễn. Trong các dự án nhỏ, việc đặt hầu hết logic trong controller có thể giúp phát triển nhanh ở giai đoạn đầu. Tuy nhiên, khi hệ thống tăng số lượng chức năng như giỏ hàng, thanh toán, flash sale, search suggest, so sánh sản phẩm, chatbot, báo cáo, phân quyền và API, cách tổ chức đó sẽ bộc lộ hạn chế rất rõ. Controller trở nên dài, khó đọc, khó kiểm tra chất lượng và khó tái sử dụng.
 
 Vì vậy, dự án đã chọn hướng tách dần nghiệp vụ sang các lớp `Service`, các request validation, các support classes và các repository/persistence layer. Đây là một quyết định hợp lý đối với một hệ thống đang phát triển theo hướng ngày càng phức tạp hơn.
 
@@ -49,9 +49,9 @@ Hệ thống legacy thường có ưu điểm là đã có dữ liệu và có l
 - validation phân tán và khó kiểm soát
 - cấu trúc dữ liệu thiếu nhất quán
 - khó thêm API hoặc mở rộng chức năng mới
-- khó kiểm thử một cách có hệ thống
+- khó kiểm tra chất lượng một cách có hệ thống
 
-Chính vì vậy, việc hiện đại hóa dần hệ thống là một hướng đi phù hợp. Thay vì viết lại toàn bộ từ đầu, dự án lựa chọn cách tiếp cận an toàn hơn: giữ cho các luồng cũ tiếp tục vận hành, đồng thời chuẩn hóa dần kiến trúc ở những vùng có tác động lớn như search, checkout, admin permissions, reports, API và testing.
+Chính vì vậy, việc hiện đại hóa dần hệ thống là một hướng đi phù hợp. Thay vì viết lại toàn bộ từ đầu, dự án lựa chọn cách tiếp cận an toàn hơn: giữ cho các luồng cũ tiếp tục vận hành, đồng thời chuẩn hóa dần kiến trúc ở những vùng có tác động lớn như search, checkout, admin permissions, reports và API.
 
 ## 3.x. Rủi ro kỹ thuật trong dự án
 
@@ -72,7 +72,7 @@ Trong dự án hiện tại, có những phần đã được chuẩn hóa tốt
 
 ### 3.x.3. Rủi ro do thay đổi giao diện ảnh hưởng tới nghiệp vụ
 
-Đối với storefront, những phần như search suggest, quick cart, header account state, checkout gate, compare state hay recommendation panel không chỉ là giao diện. Chúng gắn trực tiếp với session, request, validation và route điều hướng. Vì vậy, một thay đổi nhỏ về UI cũng có thể làm phát sinh lỗi nghiệp vụ nếu không có kiểm thử đủ tốt.
+Đối với storefront, những phần như search suggest, quick cart, header account state, checkout gate, compare state hay recommendation panel không chỉ là giao diện. Chúng gắn trực tiếp với session, request, validation và route điều hướng. Vì vậy, một thay đổi nhỏ về UI cũng có thể làm phát sinh lỗi nghiệp vụ nếu không có kiểm tra chất lượng đủ tốt.
 
 ### 3.x.4. Rủi ro do quyền truy cập và API
 
@@ -85,7 +85,6 @@ Khi hệ thống có cả admin web và admin API, việc phân quyền cần đ
 - tách validation ra khỏi controller
 - gom nghiệp vụ phức tạp vào service layer
 - dùng support classes để thống nhất điều hướng và phân quyền
-- mở rộng feature test cho các luồng nhạy cảm
 - harden các màn legacy thay vì bỏ mặc chúng
 - duy trì cách đặt tên và tổ chức route có logic theo nhóm
 
@@ -167,7 +166,7 @@ Một điểm có thể viết rất tốt trong báo cáo là chiến lược h
 - thêm validation ở request layer
 - thay raw error bằng fallback hoặc thông báo rõ nghĩa
 - chỉnh các fail-state admin cho dễ hiểu hơn
-- thêm regression test cho lỗi đã phát hiện
+- thêm rà soát hồi quy cho lỗi đã phát hiện
 
 Chiến lược này thể hiện tư duy thực tiễn, bởi trong môi trường phát triển thật, không phải lúc nào cũng có thể viết lại mọi thứ từ đầu.
 
@@ -231,11 +230,11 @@ Thanh tìm kiếm của dự án không còn là một ô nhập tĩnh đơn gi�
 
 # PHẦN KHÁC CHO CHƯƠNG 5
 
-## 5.x. Phân tích ý nghĩa của kiểm thử trong đồ án
+## 5.x. Phân tích ý nghĩa của kiểm soát chất lượng trong đồ án
 
-Một trong những điểm giúp dự án nổi bật hơn so với nhiều đồ án cùng loại là hệ thống kiểm thử tự động khá rộng. Tuy nhiên, thay vì chỉ liệt kê danh sách file test, báo cáo có thể viết thêm về ý nghĩa của kiểm thử trong chính bối cảnh của dự án.
+Một trong những điểm giúp dự án nổi bật hơn so với nhiều đồ án cùng loại là quá trình rà soát chất lượng và kiểm tra luồng nghiệp vụ. Báo cáo có thể viết thêm về ý nghĩa của hoạt động kiểm soát chất lượng trong chính bối cảnh của dự án.
 
-Đối với một hệ thống hybrid, kiểm thử không chỉ giúp phát hiện lỗi mới, mà còn đóng vai trò như một “lưới an toàn” khi refactor các phần legacy. Chỉ cần một thay đổi nhỏ ở route, controller, support class hoặc view fragment cũng có thể gây ảnh hưởng tới luồng mua hàng, admin hoặc API. Vì vậy, giá trị của test trong dự án này nằm ở cả khía cạnh kỹ thuật lẫn khía cạnh tổ chức phát triển.
+Đối với một hệ thống hybrid, kiểm soát chất lượng không chỉ giúp phát hiện lỗi mới, mà còn hỗ trợ đánh giá rủi ro khi refactor các phần legacy. Chỉ cần một thay đổi nhỏ ở route, controller, support class hoặc view fragment cũng có thể gây ảnh hưởng tới luồng mua hàng, admin hoặc API.
 
 ## 5.x. Đánh giá đề tài từ góc nhìn thực tiễn
 
@@ -260,7 +259,7 @@ Quá trình phát triển cho thấy việc tách request validation, service, s
 
 Trong thực tế, chuyển từ dữ liệu cũ sang mô hình mới không thể làm trong một bước. Việc giữ tương thích ngược nhưng vẫn chuẩn hóa dần là một kỹ năng quan trọng trong phát triển phần mềm thực tế.
 
-### 5.x.3. Bài học về kiểm thử và chất lượng
+### 5.x.3. Bài học về kiểm tra chất lượng và chất lượng
 
 Việc thêm test cho những lỗi đã gặp giúp giảm đáng kể khả năng lỗi quay lại. Đây là một kinh nghiệm rất quan trọng khi làm dự án có nhiều chỉnh sửa liên tục.
 
@@ -295,7 +294,6 @@ Mục này giúp đồ án trông giống một công trình nghiên cứu ứng
 |---|---|---|
 | Dữ liệu legacy và mới không đồng nhất | Sai lệch nghiệp vụ | Chuẩn hóa dần, thêm test |
 | Controller legacy khó bảo trì | Tăng lỗi runtime | Tách validation và service |
-| UI thay đổi làm hỏng nghiệp vụ | Regression | Tăng feature test |
 | API thiếu phân quyền chặt | Rủi ro bảo mật | Sanctum + middleware + permissions |
 
 ## Phụ lục F. Bảng gợi ý mô tả giá trị của từng nhóm test

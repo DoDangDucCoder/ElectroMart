@@ -6,7 +6,6 @@ Các phần được viết theo nguyên tắc:
 
 - không thêm chữ vô nghĩa
 - không mô tả dự án như một hệ thống lý tưởng không có trong repo
-- ưu tiên bám sát route, controller, service, support class, migration và test suite đang tồn tại
 - giữ giọng văn học thuật kiểu đồ án CNTT Việt Nam
 
 ---
@@ -38,11 +37,11 @@ Nhiều phần storefront và admin đã được cải tiến nhưng vẫn ph�
 
 ### 3.x.3. Ràng buộc về phạm vi đồ án
 
-Mặc dù hệ thống có nhiều thành phần khá rộng như API, chatbot, báo cáo, document, delivery, statistics, nhưng trong phạm vi đồ án, không phải mọi module đều có thể được trình bày sâu như nhau. Vì vậy, cần ưu tiên trình bày kỹ các phần có ảnh hưởng trực tiếp đến giá trị kỹ thuật của đề tài, như kiến trúc hybrid, luồng mua hàng, quản trị, API và kiểm thử.
+Mặc dù hệ thống có nhiều thành phần khá rộng như API, chatbot, báo cáo, document, delivery, statistics, nhưng trong phạm vi đồ án, không phải mọi module đều có thể được trình bày sâu như nhau. Vì vậy, cần ưu tiên trình bày kỹ các phần có ảnh hưởng trực tiếp đến giá trị kỹ thuật của đề tài, như kiến trúc hybrid, luồng mua hàng, quản trị, API và kiểm tra chất lượng.
 
 ### 3.x.4. Ràng buộc về khả năng triển khai thực tế
 
-Một số phần của hệ thống đã có route, controller hoặc service nhưng ở mức độ tích hợp thực tế có thể vẫn đang được hoàn thiện dần. Do đó, báo cáo nên mô tả hệ thống theo hướng “đã xây dựng, đã kiểm thử, có khả năng mở rộng”, thay vì khẳng định toàn bộ hệ thống đã sẵn sàng ở mức production đầy đủ.
+Một số phần của hệ thống đã có route, controller hoặc service nhưng ở mức độ tích hợp thực tế có thể vẫn đang được hoàn thiện dần. Do đó, báo cáo nên mô tả hệ thống theo hướng “đã xây dựng, đã kiểm tra chất lượng, có khả năng mở rộng”, thay vì khẳng định toàn bộ hệ thống đã sẵn sàng ở mức production đầy đủ.
 
 ## 3.x. Phân tích mối quan hệ giữa các tác nhân
 
@@ -58,7 +57,7 @@ Quản trị viên làm việc trong admin shell và các màn quản lý theo m
 
 ### 3.x.3. Quan hệ giữa các tác nhân và API
 
-Mặc dù người dùng cuối không trực tiếp thao tác với API ở mức hiển thị, nhưng API đóng vai trò như một giao diện dịch vụ để phục vụ client, kiểm thử, tích hợp hoặc mở rộng trong tương lai. Do đó, API có thể được xem là “lớp giao tiếp kỹ thuật” giữa hệ thống với các tác nhân hoặc hệ thống bên ngoài.
+Mặc dù người dùng cuối không trực tiếp thao tác với API ở mức hiển thị, nhưng API đóng vai trò như một giao diện dịch vụ để phục vụ client, kiểm tra chất lượng, tích hợp hoặc mở rộng trong tương lai. Do đó, API có thể được xem là “lớp giao tiếp kỹ thuật” giữa hệ thống với các tác nhân hoặc hệ thống bên ngoài.
 
 ### 3.x.4. Quan hệ giữa hệ thống và các tác nhân hỗ trợ
 
@@ -102,7 +101,7 @@ Quản trị vận hành bao gồm các tác vụ như theo dõi đơn hàng, de
 
 ### 3.x.1. Lý do tồn tại song song hai lớp dữ liệu
 
-Trong thực tế, nhiều hệ thống phần mềm không thể chuyển đổi toàn bộ cơ sở dữ liệu và mã nguồn sang một kiến trúc mới trong một lần. Dự án này cũng nằm trong bối cảnh đó. Lớp dữ liệu legacy tồn tại vì nó đang phục vụ các chức năng cũ nhưng vẫn có giá trị vận hành. Lớp schema mới được tạo ra để chuẩn hóa cấu trúc, làm nền cho API, testing, analytics và các domain/service mới.
+Trong thực tế, nhiều hệ thống phần mềm không thể chuyển đổi toàn bộ cơ sở dữ liệu và mã nguồn sang một kiến trúc mới trong một lần. Dự án này cũng nằm trong bối cảnh đó. Lớp dữ liệu legacy tồn tại vì nó đang phục vụ các chức năng cũ nhưng vẫn có giá trị vận hành. Lớp schema mới được tạo ra để chuẩn hóa cấu trúc, làm nền cho API, analytics và các domain/service mới.
 
 ### 3.x.2. Lợi ích của cách tiếp cận hybrid
 
@@ -119,7 +118,7 @@ Bên cạnh lợi ích, cách tiếp cận này cũng tạo ra một số thách
 
 - tài liệu phân tích dễ bị lệch nếu chỉ nhìn vào một lớp dữ liệu
 - codebase có thể trông phức tạp hơn do tồn tại song song nhiều mô hình
-- việc kiểm thử cần kỹ hơn để tránh đụng chéo giữa luồng cũ và luồng mới
+- việc kiểm tra chất lượng cần kỹ hơn để tránh đụng chéo giữa luồng cũ và luồng mới
 - việc thuyết minh trong đồ án cần rõ ràng để giảng viên hiểu đúng bối cảnh
 
 ## 3.x. Gợi ý phần có thể bổ sung vào bảng biểu
@@ -152,7 +151,7 @@ Bên cạnh lợi ích, cách tiếp cận này cũng tạo ra một số thách
 
 ### 4.x.1. Ý nghĩa của Laravel 11 trong dự án
 
-Việc lựa chọn Laravel 11 mang lại nhiều lợi ích cho dự án. Framework này giúp hệ thống có routing rõ ràng, middleware linh hoạt, request validation, ORM Eloquent, Blade template, event, notification và testing framework tích hợp sẵn. Với một dự án đang cần vừa duy trì luồng cũ vừa chuẩn hóa dần kiến trúc, Laravel 11 đóng vai trò như nền tảng giúp tổ chức mã nguồn mạch lạc hơn.
+Việc lựa chọn Laravel 11 mang lại nhiều lợi ích cho dự án. Framework này giúp hệ thống có routing rõ ràng, middleware linh hoạt, request validation, ORM Eloquent, Blade template, event và notification. Với một dự án đang cần vừa duy trì luồng cũ vừa chuẩn hóa dần kiến trúc, Laravel 11 đóng vai trò như nền tảng giúp tổ chức mã nguồn mạch lạc hơn.
 
 ### 4.x.2. Ý nghĩa của Sanctum
 
@@ -172,7 +171,7 @@ Ví dụ, các nghiệp vụ về giỏ hàng, checkout, recommendation, reporti
 
 ### 4.x.2. Vai trò của request validation trong repo
 
-`app/Http/Requests` là một trong những thư mục giúp hệ thống sạch hơn rõ rệt. Khi các request như `RegisterCustomerRequest`, `LoginCustomerRequest`, `ConfirmOrderRequest`, `AddCartAjaxRequest`, `StoreVideoRequest` được tách riêng, controller không còn phải ôm quá nhiều điều kiện kiểm tra đầu vào. Điều này làm cho luồng mã dễ đọc, dễ kiểm thử và ít lỗi hơn.
+`app/Http/Requests` là một trong những thư mục giúp hệ thống sạch hơn rõ rệt. Khi các request như `RegisterCustomerRequest`, `LoginCustomerRequest`, `ConfirmOrderRequest`, `AddCartAjaxRequest`, `StoreVideoRequest` được tách riêng, controller không còn phải ôm quá nhiều điều kiện kiểm tra đầu vào. Điều này làm cho luồng mã dễ đọc, dễ kiểm tra chất lượng và ít lỗi hơn.
 
 ### 4.x.3. Vai trò của support classes
 
@@ -258,19 +257,16 @@ Các command như `NormalizeAdminAuthCommand`, `OptimizeApplicationCommand`, `Op
 
 Đối với một đồ án tốt nghiệp, việc có thêm lớp console commands là một điểm cộng rõ ràng vì nó cho thấy hệ thống không chỉ phục vụ thao tác qua giao diện mà còn có các công cụ kỹ thuật nội bộ để hỗ trợ triển khai, chuẩn hóa và tối ưu hệ thống.
 
-## 4.x. Phân tích sâu hơn về kiểm thử
+## 4.x. Phân tích sâu hơn về kiểm tra chất lượng
 
-### 4.x.1. Tại sao feature test quan trọng trong repo này
 
-Dự án hiện có rất nhiều feature test vì đây là loại kiểm thử phù hợp nhất với một hệ thống web nhiều luồng nghiệp vụ như storefront, admin và API. Feature test giúp xác minh toàn bộ luồng từ request, middleware, controller, service tới response.
 
-### 4.x.2. Vai trò của regression test trong hệ thống hybrid
+### 4.x.2. Vai trò của rà soát hồi quy trong hệ thống hybrid
 
-Trong một hệ thống hybrid, thay đổi ở một vùng code có thể làm ảnh hưởng tới nhiều vùng khác mà người phát triển không dự đoán hết. Vì vậy, regression test có vai trò đặc biệt quan trọng. Đây là lý do báo cáo nên dành thêm dung lượng cho phần test, thay vì chỉ liệt kê vài test case mẫu.
+Trong một hệ thống hybrid, thay đổi ở một vùng code có thể làm ảnh hưởng tới nhiều vùng khác mà người phát triển không dự đoán hết. Vì vậy, quá trình rà soát hồi quy và kiểm tra thủ công các luồng quan trọng có vai trò đặc biệt quan trọng.
 
-### 4.x.3. Kiểm thử như một minh chứng cho độ trưởng thành của dự án
+### 4.x.3. Kiểm tra chất lượng như một minh chứng cho độ trưởng thành của dự án
 
-Một điểm mà anh có thể nhấn mạnh khi bảo vệ là: việc dự án có nhiều nhóm feature test không chỉ giúp bắt lỗi, mà còn phản ánh mức độ trưởng thành của mã nguồn. Nói cách khác, chất lượng của dự án không chỉ được thể hiện qua số lượng chức năng, mà còn qua khả năng kiểm soát chất lượng trong quá trình phát triển.
 
 ---
 
@@ -287,7 +283,7 @@ Phần này có thể viết sâu hơn về:
 - cấu trúc mã nguồn rõ ràng
 - có sự phân tách nghiệp vụ tốt hơn MVC cơ bản
 - có API, chatbot, reports, commands
-- có kiểm thử ở nhiều nhóm chức năng
+- có kiểm tra chất lượng ở nhiều nhóm chức năng
 - storefront và admin đều đã được đầu tư
 
 ### 5.x.2. Đánh giá hạn chế của hệ thống
@@ -328,16 +324,15 @@ Có thể viết thành các hướng riêng:
 | Route | Controller | Chức năng |
 |---|---|---|
 | `/dashboard` | `AdminController@show_dashboard` | Dashboard admin |
-| `/all-product` | `ProductController@all_product` | Quản lý sản phẩm |
-| `/manage-order` | `OrderController@manage_order` | Quản lý đơn hàng |
+| `/admin/products-management` | `Admin\AdminWorkspaceController@productsManagement` | Quản lý sản phẩm |
+| `/admin/orders-management` | `Admin\AdminWorkspaceController@ordersManagement` | Quản lý đơn hàng |
 | `/product-profit` | `ProductProfitController@index` | Báo cáo lợi nhuận |
 | `/product-discovery-report` | `ProductDiscoveryReportController@index` | Báo cáo khám phá sản phẩm |
 
-## Phụ lục B. Gợi ý bảng test suite để đưa vào báo cáo
 
 ### Bảng phụ lục B.1. Nhóm test storefront
 
-| File test | Nhóm chức năng |
+| File kiểm tra | Nhóm chức năng |
 |---|---|
 | `HomepageTest.php` | Trang chủ |
 | `CartFlowTest.php` | Giỏ hàng |
@@ -348,7 +343,7 @@ Có thể viết thành các hướng riêng:
 
 ### Bảng phụ lục B.2. Nhóm test admin
 
-| File test | Nhóm chức năng |
+| File kiểm tra | Nhóm chức năng |
 |---|---|
 | `AdminPanelTest.php` | Dashboard admin |
 | `AdminProductCrudTest.php` | CRUD sản phẩm |
@@ -377,7 +372,6 @@ Nếu anh muốn báo cáo dài thêm mà vẫn giữ được chất lượng, 
 
 - phân tích sâu hơn bối cảnh hybrid legacy + modernized
 - mô tả kỹ hơn kiến trúc mã nguồn theo repo thật
-- viết đầy đủ hơn về kiểm thử, API, reports, commands
-- thêm phụ lục bảng route, bảng test suite, bảng mapping dữ liệu và mô tả dưới hình
+- viết đầy đủ hơn về kiểm tra chất lượng, API, reports, commands
 
 Đây là các phần tăng được số trang nhưng vẫn làm báo cáo thuyết phục hơn khi bảo vệ.

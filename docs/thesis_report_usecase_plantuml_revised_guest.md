@@ -644,7 +644,7 @@ Admin --> UC7
 ```
 
 **Mô tả dưới hình:**  
-Module quản lý catalog bám các route `catalog/categories`, `catalog/brands`, `/add-product`, `/all-product`, `/update-product/{product_id}`, `/product-attribute`, `/add-gallery/{product_id}`, `/delete-document`, `/comment`. Đây là nhóm chức năng lớn nhất trong khu vực quản trị.
+Module quản lý catalog bám các route `catalog/categories`, `catalog/brands`, `/admin/products-management`, `/admin/categories-management`, `/add-product`, `/update-product/{product_id}`, `/product-attribute`, `/add-gallery/{product_id}`, `/delete-document`, `/comment`. Đây là nhóm chức năng lớn nhất trong khu vực quản trị.
 
 ---
 
@@ -734,7 +734,7 @@ Admin --> UC6
 ```
 
 **Mô tả dưới hình:**  
-Biểu đồ này mô tả phần vận hành hậu bán hàng trong admin, bám các route `/manage-order`, `/print-order/{checkout_code}`, `/view-order/{order_code}`, `/update-order-qty`, `/delivery`, `/insert-coupon`, `/send-coupon`, `/send-coupon-vip`.
+Biểu đồ này mô tả phần vận hành hậu bán hàng trong admin, bám các route `/admin/orders-management`, `/print-order/{checkout_code}`, `/view-order/{order_code}`, `/update-order-qty`, `/delivery`, `/insert-coupon`, `/send-coupon`, `/send-coupon-vip`.
 
 ---
 

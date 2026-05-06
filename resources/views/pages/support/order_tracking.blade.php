@@ -92,10 +92,16 @@ body.ors-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
 </style>
 
 <div class="otr-wrap">
-    <div class="otr-crumb">
-        <a href="{{ url('/') }}">Trang chủ</a><span class="sep">›</span>
-        <span class="current">Kiểm tra đơn hàng</span>
-    </div>
+    @include('partials.storefront.breadcrumb', [
+        'class' => 'otr-crumb',
+        'separator' => '›',
+        'items' => [
+            [
+                'label' => 'Kiểm tra đơn hàng',
+                'current' => true,
+            ],
+        ],
+    ])
 
     <div class="otr-title">
         <h1>Kiểm tra đơn hàng</h1>
