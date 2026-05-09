@@ -128,6 +128,7 @@ class CustomerAccountController extends Controller
             $products = Product::query()
                 ->whereIn('id', $wishlistIds)
                 ->where('is_active', true)
+                ->withCompleteStorefrontMedia()
                 ->with('brand')
                 ->get();
         }
@@ -402,6 +403,7 @@ class CustomerAccountController extends Controller
 
         $recommendedProducts = Product::query()
             ->where('is_active', true)
+            ->withCompleteStorefrontMedia()
             ->inRandomOrder()
             ->limit(6)
             ->get();
@@ -518,6 +520,7 @@ class CustomerAccountController extends Controller
             })
             ->whereNotIn('id', $reviewedProductIds)
             ->where('is_active', true)
+            ->withCompleteStorefrontMedia()
             ->limit(5)
             ->get();
 
@@ -560,6 +563,7 @@ class CustomerAccountController extends Controller
         $productIds = collect($latestViews->items())->pluck('product_id');
         $products = Product::query()
             ->whereIn('id', $productIds)
+            ->withCompleteStorefrontMedia()
             ->with('brand')
             ->get()
             ->keyBy('id');
@@ -708,6 +712,7 @@ class CustomerAccountController extends Controller
 
         $recommendedProducts = Product::query()
             ->where('is_active', true)
+            ->withCompleteStorefrontMedia()
             ->inRandomOrder()
             ->limit(6)
             ->get();

@@ -215,7 +215,7 @@
 
         // ========== Sidebar promo & deal data ==========
         $promoCards = [
-            ['icon' => 'fa-credit-card-alt', 'title' => 'Trả góp 0%', 'sub' => 'Duyệt nhanh online'],
+            ['icon' => 'fa-credit-card', 'title' => 'Trả góp 0%', 'sub' => 'Duyệt nhanh online'],
             ['icon' => 'fa-shield', 'title' => 'Bảo hành chính hãng', 'sub' => '12 tháng tại ' . $productBrandLabel . ' Việt Nam'],
             ['icon' => 'fa-refresh', 'title' => '1 đổi 1 trong 30 ngày', 'sub' => 'Lỗi kỹ thuật'],
             ['icon' => 'fa-truck', 'title' => 'Giao hàng nhanh', 'sub' => 'Nội thành Hà Nội'],
@@ -238,21 +238,21 @@
         $newsItems = collect([
             [
                 'title' => 'Đánh giá ' . $productName . ' sau 1 năm sử dụng: Vẫn là lựa chọn đáng giá?',
-                'url' => url('/video-shop'),
+                'url' => url('/bai-viet/sony-ht-s40r-600w-trai-nghiem-am-thanh-tai-gia'),
                 'summary' => 'Trải nghiệm thực tế sau thời gian dài sử dụng và những điểm cộng còn lại.',
                 'published_at' => now()->subDays(2),
                 'thumbnail' => asset('assets/news/anker-735-review-1-year.svg'),
             ],
             [
                 'title' => 'So sánh ' . $productName . ' với phiên bản trước: Nên chọn máy nào?',
-                'url' => url('/video-shop'),
+                'url' => url('/bai-viet/kinh-nghiem-chon-man-hinh-gaming-choi-game-muot'),
                 'summary' => 'So sánh chi tiết SSD và HDD: ưu nhược điểm và lời khuyên cho từng nhu cầu sử dụng.',
                 'published_at' => now()->subDays(5),
                 'thumbnail' => asset('assets/news/anker-735-compare.svg'),
             ],
             [
                 'title' => '7 mẹo tối ưu pin MacBook giúp tăng thời lượng sử dụng',
-                'url' => url('/video-shop'),
+                'url' => url('/bai-viet/meo-toi-uu-pin-macbook-khi-lam-viec-di-dong'),
                 'summary' => 'Cấu hình macOS hợp lý và thói quen sạc đúng cách giúp pin bền lâu.',
                 'published_at' => now()->subDays(8),
                 'thumbnail' => asset('assets/news/macbook-battery-tips.svg'),
@@ -438,8 +438,13 @@
         .pdx-features i { color: #14b8a6; font-size: 14px; margin-top: 3px; flex-shrink: 0; }
 
         /* Variant groups */
-        .shopw-pdp-purchase { margin-top: 6px !important; gap: 18px !important; }
-        .pdx-variant { display: flex; flex-direction: column; align-items: flex-start; gap: 9px; }
+        .shopw-pdp-purchase {
+            width: 100% !important;
+            margin-top: 6px !important;
+            gap: 18px !important;
+            align-items: stretch !important;
+        }
+        .pdx-variant { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 9px; }
         .pdx-variant-label {
             font-size: 13px; font-weight: 600; color: #475569;
         }
@@ -478,6 +483,7 @@
             border: 1.5px solid #e2e8f0; border-radius: 8px;
             overflow: hidden; width: fit-content;
             background: #fff;
+            align-self: flex-start;
         }
         .pdx-qty button {
             width: 42px; height: 42px; background: #fff; border: 0;
@@ -495,14 +501,16 @@
 
         /* CTA buttons */
         .pdx-actions {
+            width: 100%;
             display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px;
+            justify-items: stretch;
         }
         @media (max-width: 480px) { .pdx-actions { grid-template-columns: 1fr; } }
         .pdx-btn {
             width: 100%;
-            min-height: 60px;
+            min-height: 64px;
             border-radius: 12px; padding: 12px 18px;
-            font-size: 14px; font-weight: 600; cursor: pointer;
+            font-size: 15px; font-weight: 700; cursor: pointer;
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
             line-height: 1.2; text-align: center;
             transition: background .15s, border-color .15s, transform .15s;
@@ -555,12 +563,19 @@
         }
         .pdx-side-row { display: flex; align-items: flex-start; gap: 12px; }
         .pdx-side-icon {
-            flex: 0 0 40px; width: 40px; height: 40px; border-radius: 10px;
+            flex: 0 0 46px; width: 46px; height: 46px; border-radius: 12px;
             background: #f0fdfa; color: #0d9488;
             display: inline-flex; align-items: center; justify-content: center;
-            font-size: 18px;
+            font-size: 22px;
         }
-        .pdx-side-icon .fa { line-height: 1; }
+        .pdx-side-icon .fa {
+            display: block !important;
+            width: auto !important;
+            height: auto !important;
+            margin: 0 !important;
+            font-size: inherit !important;
+            line-height: 1 !important;
+        }
         .pdx-side-text strong {
             display: block; font-size: 13px; font-weight: 600; color: #0f172a; margin-bottom: 2px;
         }
@@ -582,12 +597,24 @@
             display: flex; align-items: center; gap: 16px;
         }
         .pdx-policy-icon {
-            flex: 0 0 60px; width: 60px; height: 60px; border-radius: 14px;
+            flex: 0 0 66px; width: 66px; height: 66px; border-radius: 16px;
             background: #f0fdfa; color: #0d9488;
             display: inline-flex; align-items: center; justify-content: center;
-            font-size: 26px;
+            font-size: 30px;
+            position: relative;
         }
-        .pdx-policy-icon .fa { line-height: 1; }
+        .pdx-policy-icon .fa {
+            display: block !important;
+            width: auto !important;
+            height: auto !important;
+            margin: 0 !important;
+            font-size: 30px !important;
+            line-height: 1 !important;
+            position: absolute !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
+        }
         .pdx-policy strong { display: block; font-size: 14px; color: #0f172a; margin-bottom: 4px; }
         .pdx-policy span { font-size: 12.5px; color: #64748b; line-height: 1.45; display: block; }
 

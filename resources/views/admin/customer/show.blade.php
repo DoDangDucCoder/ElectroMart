@@ -238,7 +238,7 @@
                                 <strong>{{ $return->code }}</strong>
                                 <span class="label label-{{ $return->statusClass() }}" style="margin-left:6px;">{{ $return->statusLabel() }}</span>
                                 <div style="margin-top:6px;">
-                                    {{ \Illuminate\Support\Str::limit($return->reason, 120) }}<br>
+                                    {{ \Illuminate\Support\Str::limit((string) ($return->reason ?? ''), 120) }}<br>
                                     Hoàn tiền: {{ $formatMoney($return->refund_amount) }}
                                 </div>
                             </div>

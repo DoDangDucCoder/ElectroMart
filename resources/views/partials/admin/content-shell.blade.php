@@ -3,6 +3,18 @@
         <!--main content start-->
         <section id="main-content">
             <section class="wrapper">
+                @php
+                    $adminCreateLocked = (bool) config('admin_features.create_locked', false);
+                    $adminCreateLockedNotice = (string) config('admin_features.create_locked_notice', 'Chức năng thêm mới đang tạm khóa để ổn định dữ liệu. Vui lòng chỉ xem tham khảo.');
+                    $adminCreateLockedPaths = (array) config('admin_features.create_form_paths', []);
+                    $adminCurrentPath = trim(request()->path(), '/');
+                    $adminCreateFormLocked = $adminCreateLocked && \Illuminate\Support\Str::is($adminCreateLockedPaths, $adminCurrentPath);
+                @endphp
+                @if ($adminCreateFormLocked)
+                    <div class="alert alert-warning" data-admin-create-lock-notice>
+                        {{ $adminCreateLockedNotice }}
+                    </div>
+                @endif
                 @yield('admin_content')
             </section>
             <!-- footer -->

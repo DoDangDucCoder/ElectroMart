@@ -87,29 +87,30 @@ class CartService
         });
 
         if ($existingKey !== false) {
-            $nextQuantity = (int) ($cart[$existingKey]['product_qty'] ?? 0) + $quantity;
+            $item = $cart->get($existingKey);
+            $nextQuantity = (int) ($item['product_qty'] ?? 0) + $quantity;
             $this->ensureAvailableQuantity($availableStock, $nextQuantity, $attributeData['label'] ?? $product->product_name);
 
-            $cart[$existingKey]['product_qty'] += $quantity;
-            $cart[$existingKey]['product_qty'] = max(1, $cart[$existingKey]['product_qty']);
-            $cart[$existingKey]['product_quantity'] = $availableStock;
-            $cart[$existingKey]['product_price'] = $pricingData['product_price'];
-            $cart[$existingKey]['product_original_price'] = $pricingData['product_original_price'];
-            $cart[$existingKey]['product_cost_price'] = $pricingData['product_cost_price'];
-            $cart[$existingKey]['product_sale_price'] = $pricingData['product_sale_price'];
-            $cart[$existingKey]['product_sale_type'] = $pricingData['product_sale_type'];
-            $cart[$existingKey]['product_sale_value'] = $pricingData['product_sale_value'];
-            $cart[$existingKey]['product_sale_amount'] = $pricingData['product_sale_amount'];
+            $item['product_qty'] = max(1, $nextQuantity);
+            $item['product_quantity'] = $availableStock;
+            $item['product_price'] = $pricingData['product_price'];
+            $item['product_original_price'] = $pricingData['product_original_price'];
+            $item['product_cost_price'] = $pricingData['product_cost_price'];
+            $item['product_sale_price'] = $pricingData['product_sale_price'];
+            $item['product_sale_type'] = $pricingData['product_sale_type'];
+            $item['product_sale_value'] = $pricingData['product_sale_value'];
+            $item['product_sale_amount'] = $pricingData['product_sale_amount'];
             if (! empty($attributeData['image'])) {
-                $cart[$existingKey]['product_image'] = $attributeData['image'];
+                $item['product_image'] = $attributeData['image'];
             }
             if (! empty($attributeData['label'])) {
-                $cart[$existingKey]['product_attribute'] = $attributeData['label'];
-                $cart[$existingKey]['attribute_label'] = $attributeData['label'];
+                $item['product_attribute'] = $attributeData['label'];
+                $item['attribute_label'] = $attributeData['label'];
             }
+            $cart->put($existingKey, $item);
             $this->persist($cart);
 
-            return $cart[$existingKey];
+            return $item;
         }
 
         $sessionId = Str::random(10);

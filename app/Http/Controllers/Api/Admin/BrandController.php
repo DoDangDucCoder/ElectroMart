@@ -8,6 +8,8 @@ use App\Http\Resources\BrandResource;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class BrandController extends Controller
 {
@@ -37,9 +39,15 @@ class BrandController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (! $request->filled('slug') && $request->filled('name')) {
+            $request->merge([
+                'slug' => Str::slug((string) $request->input('name')),
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255',
+            'slug' => ['required', 'string', 'max:255', Rule::unique((new Brand())->getTable(), 'slug')],
             'code' => 'nullable|string|max:100',
             'description' => 'nullable|string',
             'logo_path' => 'nullable|string|max:255',

@@ -4,6 +4,8 @@ namespace App\Infrastructure\Persistence\Eloquent\Catalog;
 
 use App\Application\Catalog\Services\ProductPricingService;
 use App\Infrastructure\Persistence\Eloquent\BaseModel;
+use App\Support\ProductMediaQuality;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -196,6 +198,17 @@ class Product extends BaseModel
     public function primaryImage(): HasOne
     {
         return $this->hasOne(ProductMedia::class)->where('collection', 'thumbnail');
+    }
+
+    public function scopeWithCompleteStorefrontMedia(Builder $query, int $minGalleryImages = 4): Builder
+    {
+        $ids = ProductMediaQuality::completeProductIds($minGalleryImages);
+
+        if ($ids === []) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereIn($this->qualifyColumn('id'), $ids);
     }
 
     protected function pricing(): ProductPricingService

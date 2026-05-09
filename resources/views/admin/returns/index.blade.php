@@ -112,7 +112,7 @@
                                 <small style="display:block;color:var(--adm-muted)">SKU: {{ $return->orderItem->sku }}</small>
                             @endif
                         </td>
-                        <td style="min-width:240px;max-width:360px;color:var(--adm-muted)">{{ \Illuminate\Support\Str::limit($return->reason, 160) }}</td>
+                        <td style="min-width:240px;max-width:360px;color:var(--adm-muted)">{{ \Illuminate\Support\Str::limit((string) ($return->reason ?? ''), 160) }}</td>
                         <td>{{ number_format($return->quantity) }}</td>
                         <td>
                             <strong>{{ number_format((float) $return->refund_amount, 0, ',', '.') }}đ</strong>

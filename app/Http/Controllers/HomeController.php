@@ -14,6 +14,7 @@ use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Cms\BlogPost;
 use App\Infrastructure\Persistence\Eloquent\Cms\SiteLink;
+use App\Infrastructure\Persistence\Eloquent\Marketing\Coupon;
 use App\Models\News;
 use App\Support\AssetUrl;
 use App\Support\ProductPriceSql;
@@ -97,6 +98,27 @@ class HomeController extends Controller
 
     public function khuyenMai(Request $request)
     {
+        $availableCoupons = collect();
+        $now = Carbon::now();
+
+        if (Schema::hasTable((new Coupon)->getTable())) {
+            try {
+                $availableCoupons = Coupon::query()
+                    ->where('is_active', true)
+                    ->where(function ($query) use ($now) {
+                        $query->whereNull('starts_at')->orWhere('starts_at', '<=', $now);
+                    })
+                    ->where(function ($query) use ($now) {
+                        $query->whereNull('expires_at')->orWhere('expires_at', '>=', $now);
+                    })
+                    ->orderByDesc('id')
+                    ->limit(8)
+                    ->get();
+            } catch (\Throwable) {
+                $availableCoupons = collect();
+            }
+        }
+
         return view('pages.khuyenmai.index', [
             'category' => $this->categoryService->listActive(),
             'brand' => $this->brandService->listAll(['is_active' => true]),
@@ -105,6 +127,7 @@ class HomeController extends Controller
             'meta_keywords' => 'khuyen mai, bo suu tap, flash sale, giam gia, laptop, phu kien, coupon',
             'meta_title' => 'Bộ sưu tập & Khuyến mãi HOT - DangDuc',
             'url_canonical' => $request->url(),
+            'availableCoupons' => $availableCoupons,
             'flashSaleProducts' => $this->resolveTechHomeProducts(10, preferHot: true, onlyDiscounted: true),
             'promoProducts' => $this->resolveTechHomeProducts(7, preferHot: true, onlyDiscounted: true),
             'policyItems' => $this->resolveTechHomePolicyItems(),
@@ -175,6 +198,7 @@ class HomeController extends Controller
 
                 $query = Product::query()
                     ->with('brand')
+                    ->withCompleteStorefrontMedia()
                     ->whereNotNull('thumbnail_path')
                     ->where('thumbnail_path', '!=', '');
 
@@ -364,6 +388,19 @@ class HomeController extends Controller
 
     private function resolveTechHomeNews(int $limit = 3): Collection
     {
+        $blogPosts = $this->resolveHomepageNewsPosts($limit)
+            ->map(fn (BlogPost $post) => [
+                'title' => $post->title,
+                'url' => url('/bai-viet/'.$post->slug),
+                'summary' => $post->excerpt,
+                'published_at' => $post->published_at,
+                'thumbnail' => $this->resolveTechHomeAssetUrl($post->featured_image_path, 'assets/news/anker-735-review-1-year.svg'),
+            ]);
+
+        if ($blogPosts->isNotEmpty()) {
+            return $blogPosts;
+        }
+
         if (Schema::hasTable('news')) {
             try {
                 $newsItems = News::query()
@@ -380,7 +417,7 @@ class HomeController extends Controller
                     ->take($limit)
                     ->map(fn (News $news) => [
                         'title' => $news->title,
-                        'url' => '#',
+                        'url' => url('/bai-viet'),
                         'summary' => $news->summary,
                         'published_at' => $news->published_at,
                         'thumbnail' => $this->resolveTechHomeAssetUrl($news->thumbnail_path),
@@ -401,21 +438,21 @@ class HomeController extends Controller
         return collect([
             [
                 'title' => '5 mẫu laptop mỏng nhẹ đáng mua cho sinh viên và dân văn phòng',
-                'url' => '#',
+                'url' => url('/bai-viet/kinh-nghiem-chon-laptop-gaming-theo-ngan-sach'),
                 'summary' => 'Gợi ý cấu hình cân bằng giữa hiệu năng, pin và mức giá cho nhu cầu học tập, làm việc hằng ngày.',
                 'published_at' => now()->subDays(1),
                 'thumbnail' => $this->resolveTechHomeAssetUrl('uploads/post/smartphone12.jpg', 'uploads/contact/blog-three41.jpg'),
             ],
             [
                 'title' => 'So sánh iPhone và Galaxy: chọn flagship nào trong năm nay?',
-                'url' => '#',
+                'url' => url('/bai-viet/iphone-15-pro-max-danh-gia-chi-tiet'),
                 'summary' => 'Những khác biệt quan trọng về camera, màn hình, pin và hệ sinh thái trước khi nâng cấp điện thoại.',
                 'published_at' => now()->subDays(3),
                 'thumbnail' => $this->resolveTechHomeAssetUrl('uploads/post/smartphone24.jpg', 'uploads/contact/blog-three41.jpg'),
             ],
             [
                 'title' => 'Cách săn ưu đãi công nghệ an toàn trong mùa khuyến mãi',
-                'url' => '#',
+                'url' => url('/bai-viet/chuong-trinh-khuyen-mai-black-friday-2024'),
                 'summary' => 'Kiểm tra giá gốc, bảo hành và phương thức thanh toán để mua đúng sản phẩm cần thiết.',
                 'published_at' => now()->subDays(5),
                 'thumbnail' => $this->resolveTechHomeAssetUrl('uploads/post/smartphone31.jpg', 'uploads/contact/blog-three41.jpg'),
@@ -1004,6 +1041,7 @@ class HomeController extends Controller
             ? Product::query()
                 ->with(['brand', 'primaryCategory'])
                 ->where('is_active', true)
+                ->withCompleteStorefrontMedia()
                 ->whereIn('slug', $productSlugs->all())
                 ->get()
                 ->keyBy('slug')
@@ -1365,6 +1403,7 @@ class HomeController extends Controller
     {
         return Product::query()
             ->with(['brand', 'primaryCategory'])
+            ->withCompleteStorefrontMedia()
             ->where('is_active', true);
     }
 
@@ -1397,7 +1436,7 @@ class HomeController extends Controller
             'utility_links' => [
                 [
                     'label' => 'Xem bài viết công nghệ',
-                    'url' => url('/video-shop'),
+                    'url' => url('/bai-viet'),
                     'icon' => 'fa-newspaper-o',
                 ],
                 [

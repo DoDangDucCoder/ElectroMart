@@ -7,6 +7,8 @@ use App\Http\Requests\Admin\Legacy\Delivery\SelectDeliveryRequest;
 use App\Http\Requests\Admin\Legacy\Delivery\StoreDeliveryRequest;
 use App\Http\Requests\Admin\Legacy\Delivery\UpdateDeliveryRequest;
 use App\Infrastructure\Persistence\Eloquent\Geo\Location;
+use App\Infrastructure\Persistence\Eloquent\Geo\VietnamProvince;
+use App\Infrastructure\Persistence\Eloquent\Geo\VietnamWard;
 use App\Infrastructure\Persistence\Eloquent\Shipping\ShippingFee;
 use Illuminate\Support\Facades\Schema;
 
@@ -47,7 +49,7 @@ class DeliveryController extends Controller
 		}
 
 		$feeship = ShippingFee::query()
-			->with(['city', 'province', 'ward'])
+			->with(['city', 'province', 'ward', 'vietnamProvince', 'vietnamWard'])
 			->orderByDesc('id')
 			->get()
 			->map(fn (ShippingFee $fee) => $this->mapShippingFeeToLegacyShape($fee));
@@ -63,10 +65,12 @@ class DeliveryController extends Controller
 		$data = $request->validated();
 
 		$fee_ship = ShippingFee::firstOrNew([
-			'city_id' => $data['city'],
-			'province_id' => $data['province'],
-			'ward_id' => $data['wards'],
+			'vietnam_province_code' => $data['province_code'],
+			'vietnam_ward_code' => $data['ward_code'],
 		]);
+		$fee_ship->city_id = null;
+		$fee_ship->province_id = null;
+		$fee_ship->ward_id = null;
 		$fee_ship->amount = $this->numericInputNormalizer->digitsOnly($data['fee_ship']);
 		$fee_ship->currency = 'VND';
 		$fee_ship->save();
@@ -75,68 +79,37 @@ class DeliveryController extends Controller
 	}
 	public function delivery()
 	{
-		$city = $this->locationsTableExists()
-			? Location::query()
-				->where('type', 'city')
-				->where('is_active', true)
-				->orderBy('display_order')
-				->orderBy('id')
+		$provinces = $this->vietnamProvincesTableExists()
+			? VietnamProvince::query()
+				->orderBy('name')
 				->get()
-				->map(fn (Location $location) => $this->mapLocationToLegacyCityShape($location))
+				->map(fn (VietnamProvince $province) => $this->mapVietnamProvinceToOptionShape($province))
 			: collect();
 
-		return view('admin.delivery.add_delivery')->with(compact('city'));
+		return view('admin.delivery.add_delivery')->with(compact('provinces'));
 	}
 	public function select_delivery(SelectDeliveryRequest $request)
 	{
 		$data = $request->validated();
 
-		if ($data['action'] === 'city') {
-			if (! $this->locationsTableExists()) {
-				return response()->view('admin.delivery.partials.select_options', [
-					'placeholder' => '---Không có dữ liệu quận huyện---',
-					'options' => collect(),
-					'valueField' => 'maqh',
-					'labelField' => 'name_quanhuyen',
-				]);
-			}
-
+		if (! $this->vietnamWardsTableExists()) {
 			return response()->view('admin.delivery.partials.select_options', [
-				'placeholder' => '---Chọn quận huyện---',
-				'options' => Location::query()
-					->where('type', 'province')
-					->where('is_active', true)
-					->where('parent_id', $data['ma_id'])
-					->orderBy('display_order')
-					->orderBy('id')
-					->get()
-					->map(fn (Location $location) => $this->mapLocationToLegacyProvinceShape($location)),
-				'valueField' => 'maqh',
-				'labelField' => 'name_quanhuyen',
-			]);
-		}
-
-		if (! $this->locationsTableExists()) {
-			return response()->view('admin.delivery.partials.select_options', [
-				'placeholder' => '---Không có dữ liệu xã phường---',
+				'placeholder' => '---Không có dữ liệu xã/phường/đặc khu---',
 				'options' => collect(),
-				'valueField' => 'xaid',
-				'labelField' => 'name_xaphuong',
+				'valueField' => 'code',
+				'labelField' => 'name',
 			]);
 		}
 
 		return response()->view('admin.delivery.partials.select_options', [
-			'placeholder' => '---Chọn xã phường---',
-			'options' => Location::query()
-				->where('type', 'ward')
-				->where('is_active', true)
-				->where('parent_id', $data['ma_id'])
-				->orderBy('display_order')
-				->orderBy('id')
+			'placeholder' => '---Chọn xã/phường/đặc khu---',
+			'options' => VietnamWard::query()
+				->where('province_code', $data['ma_id'])
+				->orderBy('name')
 				->get()
-				->map(fn (Location $location) => $this->mapLocationToLegacyWardShape($location)),
-			'valueField' => 'xaid',
-			'labelField' => 'name_xaphuong',
+				->map(fn (VietnamWard $ward) => $this->mapVietnamWardToOptionShape($ward)),
+			'valueField' => 'code',
+			'labelField' => 'name',
 		]);
 	}
 
@@ -150,6 +123,16 @@ class DeliveryController extends Controller
 		return Schema::hasTable((new ShippingFee())->getTable());
 	}
 
+	private function vietnamProvincesTableExists(): bool
+	{
+		return Schema::hasTable((new VietnamProvince())->getTable());
+	}
+
+	private function vietnamWardsTableExists(): bool
+	{
+		return Schema::hasTable((new VietnamWard())->getTable());
+	}
+
 	private function mapShippingFeeToLegacyShape(ShippingFee $fee): object
 	{
 		return (object) [
@@ -158,9 +141,9 @@ class DeliveryController extends Controller
 			'fee_maqh' => $fee->province_id,
 			'fee_xaid' => $fee->ward_id,
 			'fee_feeship' => (float) $fee->amount,
-			'city_name' => $fee->city?->name,
+			'city_name' => $fee->vietnamProvince?->name ?? $fee->city?->name,
 			'province_name' => $fee->province?->name,
-			'ward_name' => $fee->ward?->name,
+			'ward_name' => $fee->vietnamWard?->name ?? $fee->ward?->name,
 		];
 	}
 
@@ -185,6 +168,22 @@ class DeliveryController extends Controller
 		return (object) [
 			'xaid' => $location->id,
 			'name_xaphuong' => $location->name,
+		];
+	}
+
+	private function mapVietnamProvinceToOptionShape(VietnamProvince $province): object
+	{
+		return (object) [
+			'code' => $province->code,
+			'name' => $province->name,
+		];
+	}
+
+	private function mapVietnamWardToOptionShape(VietnamWard $ward): object
+	{
+		return (object) [
+			'code' => $ward->code,
+			'name' => $ward->name,
 		];
 	}
 }

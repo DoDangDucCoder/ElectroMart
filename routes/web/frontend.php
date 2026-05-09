@@ -150,7 +150,7 @@ Route::get('/login-customer-google', [AdminController::class, 'login_customer_go
 Route::get('/customer/google/callback', [AdminController::class, 'callback_customer_google']);
 
 // Video for storefront
-Route::get('video-shop', [VideoController::class, 'video_shop']);
+Route::redirect('video-shop', '/bai-viet', 302);
 Route::post('watch-video', [VideoController::class, 'watch_video']);
 
 // Forgot password flow

@@ -148,7 +148,7 @@
                                         <td>{{ $message->subject ?: 'Không có chủ đề' }}</td>
                                         <td>
                                             <div style="max-width:360px;">
-                                                {{ \Illuminate\Support\Str::limit($message->message, 140) }}
+                                                {{ \Illuminate\Support\Str::limit((string) ($message->message ?? ''), 140) }}
                                             </div>
                                             <details style="margin-top:6px;">
                                                 <summary>Xem đầy đủ</summary>

@@ -4,6 +4,7 @@
    ========================================================================== */
 
 body.g-admin-shell-modern {
+    --g-admin-sidebar-width: 280px;
     background: #f4f6fb;
     color: #0f172a;
     font-family: 'Inter', 'Roboto', system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -33,7 +34,7 @@ body.g-admin-shell-modern .g-admin-shell {
     background: #0f172a;
     border-right: 1px solid rgba(255, 255, 255, 0.08);
     min-height: 64px;
-    padding: 0 18px;
+    padding: 0 20px;
     grid-template-columns: minmax(0, 1fr);
 }
 
@@ -42,44 +43,49 @@ body.g-admin-shell-modern .g-admin-shell {
 }
 
 .g-admin-shell-modern .header .g-admin-shell-logo {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
     color: #ffffff;
     text-transform: none;
     line-height: 1.1;
-    gap: 0;
+    gap: 12px;
     width: 100%;
+    min-height: 64px;
+    justify-content: flex-start;
+    position: relative;
+    padding-left: 0;
+    overflow: hidden;
 }
 
 .g-admin-shell-modern .header .g-admin-shell-logo::before {
     content: "";
     display: block;
-    width: 32px;
-    height: 32px;
-    margin-bottom: 0;
+    flex: 0 0 44px;
+    width: 44px;
+    height: 44px;
+    margin: 0;
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    border-radius: 8px;
+    border-radius: 10px;
     box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
-    position: absolute;
-    left: 18px;
-    top: 50%;
-    transform: translateY(-50%);
+    position: static;
+    transform: none;
     background-image:
         linear-gradient(135deg, #3b82f6 0%, #2563eb 100%),
         url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'><path d='M3 7l9-4 9 4v10l-9 4-9-4V7z' opacity='0.85'/></svg>");
-}
-
-.g-admin-shell-modern .header .g-admin-shell-logo {
-    padding-left: 44px;
-    min-height: 64px;
-    justify-content: center;
-    position: relative;
+    background-repeat: no-repeat, no-repeat;
+    background-position: center, center;
+    background-size: cover, 24px 24px;
 }
 
 .g-admin-shell-modern .header .g-admin-shell-logo-copy {
+    display: block;
+    min-width: 0;
     font-size: 16px;
     font-weight: 800;
     letter-spacing: 0.2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .g-admin-shell-modern .header .g-admin-shell-logo-copy::after {
@@ -310,28 +316,42 @@ body.g-admin-shell-modern .g-admin-shell {
     color: #cbd5e1;
     top: 64px;
     bottom: 0;
-    padding-top: 12px;
-    padding-bottom: 80px;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
     height: auto;
     min-height: calc(100vh - 64px);
-    overflow-y: auto;
+    overflow: hidden;
 }
 
-.g-admin-shell-modern #sidebar::-webkit-scrollbar {
+.g-admin-shell-modern .leftside-navigation::-webkit-scrollbar {
     width: 6px;
 }
-.g-admin-shell-modern #sidebar::-webkit-scrollbar-thumb {
+.g-admin-shell-modern .leftside-navigation::-webkit-scrollbar-thumb {
     background: rgba(148, 163, 184, 0.2);
     border-radius: 3px;
 }
 
-.g-admin-shell-modern .leftside-navigation,
+.g-admin-shell-modern .leftside-navigation {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    height: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 12px 0 28px;
+    background: transparent !important;
+}
+
 .g-admin-shell-modern .sidebar-menu {
+    flex: 1 1 auto;
+    min-height: 0;
     background: transparent !important;
 }
 
 .g-admin-shell-modern #nav-accordion {
-    padding: 8px 12px;
+    padding: 8px 12px 24px;
     margin: 0;
 }
 
@@ -347,6 +367,8 @@ body.g-admin-shell-modern .g-admin-shell {
     align-items: center;
     gap: 12px;
     padding: 10px 14px;
+    min-height: 50px;
+    box-sizing: border-box;
     border-radius: 10px;
     color: #cbd5e1 !important;
     font-size: 14px;
@@ -369,7 +391,8 @@ body.g-admin-shell-modern .g-admin-shell {
 .g-admin-shell-modern #nav-accordion > li > a > i,
 .g-admin-shell-modern #nav-accordion > li > button.g-admin-sidebar-link > i {
     font-size: 16px;
-    width: 20px;
+    flex: 0 0 22px;
+    width: 22px;
     text-align: center;
     color: inherit;
     margin: 0;
@@ -378,6 +401,7 @@ body.g-admin-shell-modern .g-admin-shell {
 .g-admin-shell-modern #nav-accordion > li > a > span:not(.g-admin-sidebar-badge),
 .g-admin-shell-modern #nav-accordion > li > button.g-admin-sidebar-link > span:not(.g-admin-sidebar-badge) {
     flex: 1;
+    min-width: 0;
     color: inherit;
     font-size: 14px;
     font-weight: inherit;
@@ -401,6 +425,8 @@ body.g-admin-shell-modern .g-admin-shell {
 }
 
 .g-admin-shell-modern #nav-accordion .g-admin-sidebar-badge {
+    flex: 0 0 auto;
+    min-width: 22px;
     background: #ef4444;
     color: #ffffff;
     font-size: 10px;

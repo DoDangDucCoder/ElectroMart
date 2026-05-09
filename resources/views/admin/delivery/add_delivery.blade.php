@@ -6,12 +6,12 @@
             <div>
                 <span class="g-admin-page-eyebrow">Vận chuyển</span>
                 <h1>Cấu hình phí vận chuyển</h1>
-                <p>Thiết lập phí vận chuyển theo tỉnh, quận huyện và xã phường để phục vụ checkout.</p>
+                <p>Thiết lập phí vận chuyển theo tỉnh/thành phố và xã/phường/đặc khu.</p>
             </div>
 
             <div class="g-admin-page-stats">
                 <article>
-                    <strong>{{ number_format($city->count()) }}</strong>
+                    <strong>{{ number_format($provinces->count()) }}</strong>
                     <span>Tỉnh thành sẵn có</span>
                 </article>
                 <article>
@@ -26,7 +26,7 @@
                 <div class="g-admin-panel-head">
                     <div>
                         <div>Thêm phí vận chuyển</div>
-                        <p>Chọn đủ 3 cấp địa giới trước khi lưu giá trị phí ship.</p>
+                        <p>Chọn đủ 2 cấp địa giới trước khi lưu giá trị phí ship.</p>
                     </div>
                 </div>
                 <div class="g-admin-panel-body">
@@ -38,26 +38,19 @@
                         @csrf
 
                         <div class="form-group">
-                            <label for="city">Chọn thành phố</label>
-                            <select name="city" id="city" class="form-control input-sm m-bot15 choose city">
+                            <label for="province">Chọn tỉnh/thành phố</label>
+                            <select name="province_code" id="province" class="form-control input-sm m-bot15 choose province">
                                 <option value="">--Chọn tỉnh thành phố--</option>
-                                @foreach ($city as $ci)
-                                    <option value="{{ $ci->matp }}">{{ $ci->name_city }}</option>
+                                @foreach ($provinces as $province)
+                                    <option value="{{ $province->code }}">{{ $province->name }}</option>
                                 @endforeach
                             </select>
                         </div>
 
                         <div class="form-group">
-                            <label for="province">Chọn quận huyện</label>
-                            <select name="province" id="province" class="form-control input-sm m-bot15 province choose">
-                                <option value="">--Chọn quận huyện--</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="wards">Chọn xã phường</label>
-                            <select name="wards" id="wards" class="form-control input-sm m-bot15 wards">
-                                <option value="">--Chọn xã phường--</option>
+                            <label for="wards">Chọn xã/phường/đặc khu</label>
+                            <select name="ward_code" id="wards" class="form-control input-sm m-bot15 wards">
+                                <option value="">--Chọn xã/phường/đặc khu--</option>
                             </select>
                         </div>
 
@@ -73,7 +66,7 @@
 
                     <div id="delivery_notify" style="margin-top:16px;"></div>
 
-                    @if ($city->isEmpty())
+                    @if ($provinces->isEmpty())
                         <div class="g-admin-empty-state">
                             Chưa có dữ liệu tỉnh thành để cấu hình phí vận chuyển trên môi trường này.
                         </div>

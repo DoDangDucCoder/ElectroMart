@@ -49,6 +49,7 @@
                     </tbody>
                 </table>
             </div>
+        </div>
             <div class="modal-footer" style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 16px 24px;">
                 <button type="button" class="btn btn-primary" onclick="openCompareDetail()" style="border-radius: 10px; font-weight: 800; padding: 10px 25px; background: #00bcd4; border: none; box-shadow: 0 4px 12px rgba(0, 188, 212, 0.25);">So sánh chi tiết</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal" style="border-radius: 10px; font-weight: 700; padding: 10px 20px; background: #fff; border: 1px solid #e2e8f0; color: #64748b;">Đóng</button>

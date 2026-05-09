@@ -20,9 +20,11 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
 use RuntimeException;
+use Throwable;
 
 class CartController extends Controller
 {
@@ -95,14 +97,36 @@ class CartController extends Controller
         try {
             $item = $this->cartService->addItem($productId, $quantity, $attributeId);
         } catch (RuntimeException $e) {
-            return response()->json(['error' => $e->getMessage()], 422);
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'cart_count' => $this->safeCartCount(),
+                'cart_total_items' => $this->safeCartCount(),
+            ], 422);
+        } catch (Throwable $e) {
+            Log::error('Storefront add-to-cart failed.', [
+                'product_id' => $productId,
+                'attribute_id' => $attributeId,
+                'quantity' => $quantity,
+                'exception' => $e,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Không thể thêm sản phẩm vào giỏ hàng. Vui lòng thử lại sau.',
+                'cart_count' => $this->safeCartCount(),
+                'cart_total_items' => $this->safeCartCount(),
+            ], 500);
         }
 
         $cartItems = $this->safeCartItems();
+        $cartCount = $this->safeCartCount($cartItems);
 
         return response()->json([
+            'success' => true,
             'message' => 'Đã thêm sản phẩm vào giỏ hàng.',
-            'cart_count' => $this->safeCartCount($cartItems),
+            'cart_count' => $cartCount,
+            'cart_total_items' => $cartCount,
             'cart_items' => $cartItems->values(),
             'cart_totals' => $this->cartService->totals(
                 $this->couponService->current(),

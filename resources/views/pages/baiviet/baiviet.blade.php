@@ -4,10 +4,10 @@
     @php
         use Illuminate\Support\Str;
 
+        $assetUrl = \App\Support\AssetUrl::class;
         $storefrontLabel = \App\Support\StorefrontLabel::class;
         $defaultPostCover = asset('frontend/images/share_news.png');
         $defaultAuthorAvatar = asset('frontend/images/storefront-account-avatar.svg');
-        $defaultProductImage = asset('frontend/images/share_news.png');
 
         $postCategoryName = optional($post->category)->cate_post_name;
         $postCategorySlug = optional($post->category)->cate_post_slug;
@@ -179,14 +179,14 @@
                             </div>
                             <p class="bd-author-bio">{{ $authorBio }}</p>
                         </div>
-                        <a href="{{ url('/danh-muc-bai-viet') }}" class="bd-author-cta">Xem tất cả bài viết</a>
+                        <a href="{{ url('/bai-viet') }}" class="bd-author-cta">Xem tất cả bài viết</a>
                     </section>
 
                     @if ($relatedPosts->isNotEmpty())
                         <section class="bd-related">
                             <header class="bd-related-head">
                                 <h2>Bài viết liên quan</h2>
-                                <a href="{{ url('/danh-muc-bai-viet') }}" class="bd-related-all">
+                                <a href="{{ url('/bai-viet') }}" class="bd-related-all">
                                     Xem tất cả <i class="fa fa-arrow-right" aria-hidden="true"></i>
                                 </a>
                             </header>
@@ -277,7 +277,7 @@
                         <h3>Danh mục bài viết</h3>
                         <ul class="bd-side-cat-list">
                             <li>
-                                <a href="{{ url('/danh-muc-bai-viet') }}" class="is-active">
+                                <a href="{{ url('/bai-viet') }}" class="is-active">
                                     <span>Tất cả bài viết</span>
                                     <span class="bd-side-cat-count">({{ $totalPublishedPosts }})</span>
                                 </a>
@@ -334,9 +334,7 @@
                             <ul class="bd-side-product-list">
                                 @foreach ($suggestedProducts as $sugProduct)
                                     @php
-                                        $productImage = $sugProduct->product_image
-                                            ? asset('uploads/product/' . $sugProduct->product_image)
-                                            : $defaultProductImage;
+                                        $productImage = $assetUrl::resolve($sugProduct->product_image);
                                         $price = (float) ($sugProduct->final_price ?? $sugProduct->product_price ?? 0);
                                         $originalPrice = (float) ($sugProduct->price ?? 0);
                                         $discount = 0;
@@ -344,6 +342,7 @@
                                             $discount = (int) round(100 - ($price / $originalPrice * 100));
                                         }
                                     @endphp
+                                    @continue(! $productImage)
                                     <li>
                                         <a href="{{ url('/chi-tiet/' . ($sugProduct->product_slug ?? $sugProduct->slug)) }}">
                                             @if ($discount > 0)

@@ -1,8 +1,7 @@
 <script type="text/javascript">
     $(document).on('click', '.add_delivery', function() {
-        var city = $('.city').val();
-        var province = $('.province').val();
-        var wards = $('.wards').val();
+        var province_code = $('.province').val();
+        var ward_code = $('.wards').val();
         var fee_ship = $('.fee_ship').val();
         var _token = $('input[name="_token"]').val();
 
@@ -10,17 +9,14 @@
             url: '{{ url('/insert-delivery') }}',
             method: 'POST',
             data: {
-                city: city,
-                province: province,
+                province_code: province_code,
+                ward_code: ward_code,
                 _token: _token,
-                wards: wards,
                 fee_ship: fee_ship
             },
             success: function() {
-                $('.city').val('');
                 $('.province').val('');
-                $('#province').html('<option value="">--Chọn quận huyện--</option>');
-                $('#wards').html('<option value="">--Chọn xã phường--</option>');
+                $('#wards').html('<option value="">--Chọn xã/phường/đặc khu--</option>');
                 $('.fee_ship').val('');
                 fetch_delivery();
                 renderDeliveryNotice('success', 'Đã lưu phí vận chuyển cho khu vực đã chọn.');
@@ -35,7 +31,6 @@
         var action = $(this).attr('id');
         var ma_id = $(this).val();
         var _token = $('input[name="_token"]').val();
-        var result = action === 'city' ? 'province' : 'wards';
 
         $.ajax({
             url: '{{ url('/select-delivery') }}',
@@ -46,14 +41,10 @@
                 _token: _token
             },
             success: function(data) {
-                $('#' + result).html(data);
+                $('#wards').html(data);
             },
             error: function(xhr) {
-                $('#' + result).html(
-                    result === 'province'
-                        ? '<option value="">--Chọn quận huyện--</option>'
-                        : '<option value="">--Chọn xã phường--</option>'
-                );
+                $('#wards').html('<option value="">--Chọn xã/phường/đặc khu--</option>');
                 renderDeliveryNotice('error', resolveDeliveryError(xhr, 'Không thể tải danh sách địa giới trên môi trường này.'));
             }
         });

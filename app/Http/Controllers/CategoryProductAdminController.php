@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
+use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class CategoryProductAdminController extends Controller
 {
@@ -16,109 +20,53 @@ class CategoryProductAdminController extends Controller
         ]);
     }
 
-    public function all_category_product(Request $request): View
+    public function save_category_product(Request $request)
     {
-        $perPage = max(1, min((int) $request->integer('per_page', 10), 50));
-
-        $search = trim((string) $request->input('q', ''));
-        $statusFilter = (string) $request->input('status', 'all');
-        $levelFilter = (string) $request->input('level', 'all');
-        $menuFilter = (string) $request->input('menu', 'all');
-
-        $allCategoriesRaw = ProductCategory::query()
-            ->withCount('products')
-            ->orderBy('display_order')
-            ->orderBy('name')
-            ->get();
-
-        $totalAll = $allCategoriesRaw->count();
-        $totalActive = $allCategoriesRaw->where('is_active', true)->count();
-        $totalHidden = $totalAll - $totalActive;
-        $totalParents = $allCategoriesRaw->whereNull('parent_id')->count();
-        $totalChildren = $totalAll - $totalParents;
-
-        $stats = [
-            'total' => $totalAll,
-            'active' => $totalActive,
-            'hidden' => $totalHidden,
-            'parents' => $totalParents,
-            'children' => $totalChildren,
-            'active_pct' => $totalAll > 0 ? round($totalActive / $totalAll * 100, 1) : 0,
-            'parent_pct' => $totalAll > 0 ? round($totalParents / $totalAll * 100, 1) : 0,
-            'children_pct' => $totalAll > 0 ? round($totalChildren / $totalAll * 100, 1) : 0,
-            'hidden_pct' => $totalAll > 0 ? round($totalHidden / $totalAll * 100, 1) : 0,
-        ];
-
-        $tree = $this->buildCategoryTree($allCategoriesRaw);
-
-        $levelMap = [];
-        $this->computeLevels($tree, 1, $levelMap);
-
-        $query = ProductCategory::query()
-            ->withCount('products')
-            ->orderBy('display_order')
-            ->orderBy('name');
-
-        if ($search !== '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('slug', 'like', '%' . $search . '%');
-            });
-        }
-
-        if ($statusFilter === 'active') {
-            $query->where('is_active', true);
-        } elseif ($statusFilter === 'hidden') {
-            $query->where('is_active', false);
-        }
-
-        if ($levelFilter === 'parent') {
-            $query->whereNull('parent_id');
-        } elseif ($levelFilter === 'child') {
-            $query->whereNotNull('parent_id');
-        }
-
-        $categories = $query->paginate($perPage)->withQueryString();
-
-        $rows = $categories->getCollection()->map(function (ProductCategory $cat) use ($levelMap, $allCategoriesRaw) {
-            $level = $levelMap[$cat->id] ?? 1;
-            $isMenu = (bool) ($cat->meta['show_in_menu'] ?? true);
-            $isFeatured = (bool) ($cat->meta['is_featured'] ?? false);
-
-            return (object) [
-                'id' => $cat->id,
-                'name' => $cat->name,
-                'slug' => $cat->slug,
-                'level' => $level,
-                'parent_id' => $cat->parent_id,
-                'product_count' => $cat->products_count ?? 0,
-                'is_active' => (bool) $cat->is_active,
-                'is_menu' => $isMenu,
-                'is_featured' => $isFeatured,
-                'thumbnail' => $cat->thumbnail_path,
-                'updated_at' => $cat->updated_at,
-                'description' => $cat->description,
-                'parent_name' => $cat->parent_id
-                    ? optional($allCategoriesRaw->firstWhere('id', $cat->parent_id))->name
-                    : null,
-            ];
-        });
-
-        $categories->setCollection($rows);
-
-        return view('admin.category.index', [
-            'categories' => $categories,
-            'stats' => $stats,
-            'tree' => $tree,
-            'filters' => [
-                'q' => $search,
-                'status' => $statusFilter,
-                'level' => $levelFilter,
-                'menu' => $menuFilter,
-                'per_page' => $perPage,
-            ],
-            'rawCategoryCount' => $totalAll,
+        $request->merge([
+            'slug_category_product' => $request->input('slug_category_product')
+                ?: Str::slug((string) $request->input('category_product_name')),
         ]);
+
+        $validated = Validator::make($request->all(), [
+            'category_product_name' => ['required', 'string', 'max:255'],
+            'slug_category_product' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::unique('product_categories', 'slug'),
+            ],
+            'category_product_desc' => ['nullable', 'string'],
+            'category_product_keywords' => ['nullable', 'string'],
+            'category_parent' => [
+                'nullable',
+                'integer',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $parentId = (int) $value;
+
+                    if ($parentId > 0 && ! ProductCategory::query()->whereKey($parentId)->exists()) {
+                        $fail('Danh mục cha không hợp lệ.');
+                    }
+                },
+            ],
+            'category_product_status' => ['required', 'in:0,1'],
+        ])->validate();
+
+        $parentId = (int) ($validated['category_parent'] ?? 0);
+        $nextOrder = ((int) ProductCategory::query()->max('display_order')) + 1;
+
+        ProductCategory::query()->create([
+            'name' => $validated['category_product_name'],
+            'slug' => $validated['slug_category_product'] ?: Str::slug($validated['category_product_name']),
+            'parent_id' => $parentId > 0 ? $parentId : null,
+            'description' => $validated['category_product_desc'] ?? null,
+            'is_active' => (int) $validated['category_product_status'] === 0,
+            'display_order' => $nextOrder,
+            'meta' => [
+                'meta_keywords' => $validated['category_product_keywords'] ?? null,
+            ],
+        ]);
+
+        return redirect('/admin/categories-management')->with('message', 'Thêm danh mục sản phẩm thành công.');
     }
 
     public function edit_category_product(int $category_id): View
@@ -133,39 +81,103 @@ class CategoryProductAdminController extends Controller
         ]);
     }
 
-    protected function buildCategoryTree(Collection $categories): array
+    public function update_category_product(Request $request, int $category_id): RedirectResponse
     {
-        $grouped = $categories->groupBy(fn (ProductCategory $c) => $c->parent_id ?? 0);
+        $category = ProductCategory::query()->find($category_id);
 
-        $build = function ($parentId) use (&$build, $grouped) {
-            return $grouped->get($parentId, collect())->map(function (ProductCategory $cat) use (&$build) {
-                $childCount = ($cat->products_count ?? 0);
+        if (! $category) {
+            return redirect('/admin/categories-management')->with('error', 'Không tìm thấy danh mục cần cập nhật.');
+        }
 
-                return [
-                    'id' => $cat->id,
-                    'name' => $cat->name,
-                    'slug' => $cat->slug,
-                    'is_active' => (bool) $cat->is_active,
-                    'thumbnail' => $cat->thumbnail_path,
-                    'description' => $cat->description,
-                    'product_count' => $childCount,
-                    'updated_at' => $cat->updated_at,
-                    'children' => $build($cat->id),
-                ];
-            })->values()->all();
-        };
+        $name = trim((string) $request->input('category_product_name'));
+        $submittedSlug = trim((string) $request->input('slug_category_product'));
+        $nameChanged = $name !== '' && $name !== (string) $category->name;
 
-        return $build(0);
+        if ($submittedSlug === '' || ($nameChanged && $submittedSlug === (string) $category->slug)) {
+            $submittedSlug = Str::slug($name);
+        }
+
+        $request->merge(['slug_category_product' => $submittedSlug]);
+
+        $validated = Validator::make($request->all(), [
+            'category_product_name' => ['required', 'string', 'max:255'],
+            'slug_category_product' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('product_categories', 'slug')->ignore($category->id),
+            ],
+            'category_product_desc' => ['nullable', 'string'],
+            'category_product_keywords' => ['nullable', 'string'],
+            'category_parent' => [
+                'nullable',
+                'integer',
+                Rule::notIn([$category->id]),
+            ],
+        ])->validate();
+
+        $parentId = (int) ($validated['category_parent'] ?? 0);
+        if ($parentId > 0 && ! ProductCategory::query()->whereKey($parentId)->exists()) {
+            return redirect()->back()
+                ->withErrors(['category_parent' => 'Danh mục cha không hợp lệ.'])
+                ->withInput();
+        }
+
+        $meta = $category->meta ?? [];
+        $meta['meta_keywords'] = $validated['category_product_keywords'] ?? null;
+
+        $category->update([
+            'name' => $validated['category_product_name'],
+            'slug' => $validated['slug_category_product'],
+            'parent_id' => $parentId > 0 ? $parentId : null,
+            'description' => $validated['category_product_desc'] ?? null,
+            'meta' => $meta,
+        ]);
+
+        return redirect('/admin/categories-management')->with('message', 'Cập nhật danh mục sản phẩm thành công.');
     }
 
-    protected function computeLevels(array $tree, int $level, array &$map): void
+    public function delete_category_product(int $category_id): RedirectResponse
     {
-        foreach ($tree as $node) {
-            $map[$node['id']] = $level;
-            if (!empty($node['children'])) {
-                $this->computeLevels($node['children'], $level + 1, $map);
-            }
+        $category = ProductCategory::query()->find($category_id);
+
+        if (! $category) {
+            return redirect()->back()->with('error', 'Không tìm thấy danh mục cần xóa.');
         }
+
+        $hasProducts = Product::query()->where('primary_category_id', $category->id)->exists()
+            || $category->products()->exists();
+
+        if ($hasProducts) {
+            return redirect()->back()->with('error', 'Không thể xóa danh mục đang có sản phẩm.');
+        }
+
+        $category->delete();
+
+        return redirect('/admin/categories-management')->with('message', 'Xóa danh mục sản phẩm thành công.');
+    }
+
+    public function active_category_product(int $category_id): RedirectResponse
+    {
+        return $this->setCategoryStatus($category_id, true, 'Đã kích hoạt danh mục sản phẩm.');
+    }
+
+    public function unactive_category_product(int $category_id): RedirectResponse
+    {
+        return $this->setCategoryStatus($category_id, false, 'Đã ẩn danh mục sản phẩm.');
+    }
+
+    protected function setCategoryStatus(int $categoryId, bool $isActive, string $message): RedirectResponse
+    {
+        $category = ProductCategory::query()->find($categoryId);
+
+        if (! $category) {
+            return redirect()->back()->with('error', 'Không tìm thấy danh mục cần cập nhật trạng thái.');
+        }
+
+        $category->update(['is_active' => $isActive]);
+
+        return redirect()->back()->with('message', $message);
     }
 
     protected function rootLegacyCategories()

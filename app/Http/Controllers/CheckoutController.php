@@ -16,6 +16,8 @@ use App\Http\Requests\Storefront\Checkout\RegisterCustomerRequest;
 use App\Http\Requests\Storefront\Checkout\SelectDeliveryHomeRequest;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use App\Infrastructure\Persistence\Eloquent\Geo\Location;
+use App\Infrastructure\Persistence\Eloquent\Geo\VietnamProvince;
+use App\Infrastructure\Persistence\Eloquent\Geo\VietnamWard;
 use App\Support\StorefrontCustomerAuth;
 use App\Support\StorefrontCustomerPassword;
 use Illuminate\Database\QueryException;
@@ -145,14 +147,14 @@ class CheckoutController extends Controller
             $this->clearCustomerSession();
         }
         // Allow guests to proceed
-        $cities = Location::where('type', 'city')->orderBy('name')->get();
+        $vietnamProvinces = VietnamProvince::query()->orderBy('name')->get();
 
         return view('pages.checkout.show_checkout', array_merge(
             $this->seoContext($request, 'Thanh toán', 'thanh toán'),
             $this->catalogContext(),
             $this->cartContext(),
             [
-                'cities' => $cities,
+                'vietnamProvinces' => $vietnamProvinces,
                 'currentCustomer' => $currentCustomer,
                 'storefrontCustomerPicture' => Session::get(StorefrontCustomerAuth::SESSION_PICTURE_KEY),
             ]
@@ -178,15 +180,22 @@ class CheckoutController extends Controller
     {
         $validated = $request->validated();
 
-        $cityId = $validated['city_id'] ?? null;
-        $provinceId = $validated['province_id'] ?? null;
-        $wardId = $validated['ward_id'] ?? null;
+        $provinceCode = $validated['vietnam_province_code'] ?? null;
+        $wardCode = $validated['vietnam_ward_code'] ?? null;
 
-        $fee = $this->shippingService->calculateFee(
-            $cityId ? (int) $cityId : null,
-            $provinceId ? (int) $provinceId : null,
-            $wardId ? (int) $wardId : null
-        );
+        if ($provinceCode && $wardCode) {
+            $fee = $this->shippingService->calculateVietnam2025Fee($provinceCode, $wardCode);
+        } else {
+            $cityId = $validated['city_id'] ?? null;
+            $provinceId = $validated['province_id'] ?? null;
+            $wardId = $validated['ward_id'] ?? null;
+
+            $fee = $this->shippingService->calculateFee(
+                $cityId ? (int) $cityId : null,
+                $provinceId ? (int) $provinceId : null,
+                $wardId ? (int) $wardId : null
+            );
+        }
 
         $this->shippingService->storeFee($fee);
 
@@ -197,27 +206,34 @@ class CheckoutController extends Controller
     {
         $validated = $request->validated();
         $action = $validated['action'];
-        $parentId = (int) $validated['ma_id'];
+        $parentId = $validated['ma_id'];
 
         $options = '<option value="">--- Chọn ---</option>';
         $locations = collect();
 
-        if ($action === 'city') {
+        if ($action === 'vietnam_province') {
+            $options = '<option value="">--- Chọn xã / phường / đặc khu ---</option>';
+            $locations = VietnamWard::query()
+                ->where('province_code', (string) $parentId)
+                ->orderBy('name')
+                ->get();
+        } elseif ($action === 'city') {
             $options = '<option value="">--- Chọn quận / huyện ---</option>';
             $locations = Location::where('type', 'province')
-                ->where('parent_id', $parentId)
+                ->where('parent_id', (int) $parentId)
                 ->orderBy('name')
                 ->get();
         } elseif ($action === 'province') {
             $options = '<option value="">--- Chọn phường / xã ---</option>';
             $locations = Location::where('type', 'ward')
-                ->where('parent_id', $parentId)
+                ->where('parent_id', (int) $parentId)
                 ->orderBy('name')
                 ->get();
         }
 
         foreach ($locations as $location) {
-            $options .= '<option value="'.$location->id.'">'.e($location->name).'</option>';
+            $value = $action === 'vietnam_province' ? $location->code : $location->id;
+            $options .= '<option value="'.$value.'">'.e($location->name).'</option>';
         }
 
         return response($options);
@@ -360,7 +376,7 @@ class CheckoutController extends Controller
         $orderView = $this->buildOrderViewData($order);
 
         $recommendedProducts = \App\Infrastructure\Persistence\Eloquent\Catalog\Product::query()
-            ->where('is_active', true)->inRandomOrder()->limit(5)->get();
+            ->where('is_active', true)->withCompleteStorefrontMedia()->inRandomOrder()->limit(5)->get();
 
         return view('pages.checkout.order_success', array_merge(
             $this->seoContext($request, 'Đặt hàng thành công', 'đặt hàng thành công'),
@@ -387,7 +403,7 @@ class CheckoutController extends Controller
         $orderView['status'] = 'failed';
 
         $recommendedProducts = \App\Infrastructure\Persistence\Eloquent\Catalog\Product::query()
-            ->where('is_active', true)->inRandomOrder()->limit(5)->get();
+            ->where('is_active', true)->withCompleteStorefrontMedia()->inRandomOrder()->limit(5)->get();
 
         return view('pages.checkout.order_failed', array_merge(
             $this->seoContext($request, 'Đặt hàng thất bại', 'đặt hàng thất bại'),
@@ -448,8 +464,8 @@ class CheckoutController extends Controller
         return implode(', ', array_filter([
             $shipping->address_line1,
             $shipping->address_line2,
-            $shipping->ward?->name,
-            $shipping->province?->name,
+            data_get($shipping->meta, 'vietnam_2025.ward_name') ?? $shipping->ward?->name,
+            data_get($shipping->meta, 'vietnam_2025.province_name') ?? $shipping->province?->name,
             $shipping->city?->name,
             $shipping->country,
         ]));

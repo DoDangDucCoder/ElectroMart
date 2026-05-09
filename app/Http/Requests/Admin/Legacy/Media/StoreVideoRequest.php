@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Admin\Legacy\Media;
 
 use App\Http\Requests\BaseFormRequest;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class StoreVideoRequest extends BaseFormRequest
 {
@@ -10,7 +12,7 @@ class StoreVideoRequest extends BaseFormRequest
     {
         return [
             'video_title' => ['required', 'string', 'max:255'],
-            'video_slug' => ['nullable', 'string', 'max:255'],
+            'video_slug' => ['required', 'string', 'max:255', Rule::unique('videos', 'slug')],
             'video_desc' => ['nullable', 'string'],
             'video_link' => ['required', 'string', 'max:2048'],
             'file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
@@ -30,5 +32,14 @@ class StoreVideoRequest extends BaseFormRequest
             'file.mimes' => 'Hình ảnh video phải có định dạng jpg, jpeg, png, gif hoặc webp.',
             'file.max' => 'Hình ảnh video không được lớn hơn 5MB.',
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (! $this->filled('video_slug') && $this->filled('video_title')) {
+            $this->merge([
+                'video_slug' => Str::slug((string) $this->input('video_title')),
+            ]);
+        }
     }
 }

@@ -8,7 +8,12 @@
                     <p>Danh sách sản phẩm giảm giá chạy ngang, tối ưu cho laptop và điện thoại đang có mức giá tốt.</p>
                 </div>
 
-                <div class="tech-countdown" data-tech-countdown aria-label="Đồng hồ đếm ngược khuyến mãi">
+                <div class="tech-countdown"
+                    data-tech-countdown
+                    data-countdown-type="daily"
+                    data-countdown-cycle-hours="24"
+                    data-countdown-storage-key="home-flash-sale"
+                    aria-label="Đồng hồ đếm ngược khuyến mãi">
                     <span><strong data-countdown-unit="hours">06</strong><small>Giờ</small></span>
                     <span><strong data-countdown-unit="minutes">24</strong><small>Phút</small></span>
                     <span><strong data-countdown-unit="seconds">12</strong><small>Giây</small></span>

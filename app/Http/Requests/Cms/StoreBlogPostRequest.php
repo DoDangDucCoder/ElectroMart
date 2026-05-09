@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Cms;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class StoreBlogPostRequest extends FormRequest
@@ -26,5 +27,14 @@ class StoreBlogPostRequest extends FormRequest
             'post_image' => ['nullable', 'image', 'max:4096'],
             'is_featured' => ['nullable', 'boolean'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (! $this->filled('post_slug') && $this->filled('post_title')) {
+            $this->merge([
+                'post_slug' => Str::slug((string) $this->input('post_title')),
+            ]);
+        }
     }
 }

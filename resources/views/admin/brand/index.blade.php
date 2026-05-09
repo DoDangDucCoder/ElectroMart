@@ -78,7 +78,7 @@
                                     </td>
                                     <td>{{ $brand->brand_name }}</td>
                                     <td>{{ $brand->brand_slug }}</td>
-                                    <td>{{ Str::limit($brand->brand_desc, 120) }}</td>
+                                    <td>{{ Str::limit((string) ($brand->brand_desc ?? ''), 120) }}</td>
                                     <td>{{ $brand->display_order }}</td>
                                     <td>
                                         @if ($brand->brand_status === 0)

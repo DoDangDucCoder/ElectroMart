@@ -11,7 +11,17 @@
                 ],
             ],
         ])
-        <div id="output"></div>
+        <div id="output">
+            <div id="row_wishlist">
+                @include('partials.storefront.empty-state', [
+                    'title' => 'Chưa có sản phẩm yêu thích',
+                    'message' => 'Bạn có thể lưu các sản phẩm quan tâm để quay lại xem nhanh hơn.',
+                    'icon' => 'fa fa-heart-o',
+                    'actionText' => 'Khám phá sản phẩm',
+                    'actionUrl' => url('/san-pham'),
+                ])
+            </div>
+        </div>
 
     </div>
 @endsection

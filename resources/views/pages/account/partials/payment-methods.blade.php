@@ -4,17 +4,24 @@
         <h1>Phương thức thanh toán của tôi</h1>
         <p>Quản lý các phương thức thanh toán đã lưu để thanh toán nhanh hơn và an toàn hơn.</p>
     </div>
-    <button type="button" class="pmpage-btn pmpage-btn--primary pmpage-btn--lg">
+    <button type="button" class="pmpage-btn pmpage-btn--primary pmpage-btn--lg" disabled title="Tính năng thêm phương thức thanh toán chưa khả dụng">
         <i class="fa fa-plus"></i> Thêm phương thức mới
     </button>
 </div>
 
 {{-- Stats --}}
 <div class="pmpage-stats">
+    @php
+        $savedMethods = collect($savedMethods ?? []);
+        $linkedMethods = $savedMethods->count();
+        $defaultMethods = $savedMethods->where('is_default', true)->count();
+        $walletMethods = $savedMethods->whereIn('type', ['momo', 'zalopay', 'wallet'])->count();
+        $cardMethods = $savedMethods->whereIn('type', ['visa', 'mastercard', 'vietcombank', 'card', 'bank_account'])->count();
+    @endphp
     <div class="pmpage-stat">
         <div class="pmpage-stat-icon pmpage-stat-icon--blue"><i class="fa fa-credit-card"></i></div>
         <div class="pmpage-stat-body">
-            <strong>6</strong>
+            <strong>{{ $linkedMethods }}</strong>
             <span class="pmpage-stat-label">Đã liên kết</span>
             <span class="pmpage-stat-sub">Tổng phương thức đã lưu</span>
         </div>
@@ -22,7 +29,7 @@
     <div class="pmpage-stat">
         <div class="pmpage-stat-icon pmpage-stat-icon--orange"><i class="fa fa-star"></i></div>
         <div class="pmpage-stat-body">
-            <strong>1</strong>
+            <strong>{{ $defaultMethods }}</strong>
             <span class="pmpage-stat-label">Phương thức mặc định</span>
             <span class="pmpage-stat-sub">Đang sử dụng</span>
         </div>
@@ -30,7 +37,7 @@
     <div class="pmpage-stat">
         <div class="pmpage-stat-icon pmpage-stat-icon--cyan"><i class="fa fa-mobile"></i></div>
         <div class="pmpage-stat-body">
-            <strong>2</strong>
+            <strong>{{ $walletMethods }}</strong>
             <span class="pmpage-stat-label">Ví điện tử</span>
             <span class="pmpage-stat-sub">Đã liên kết</span>
         </div>
@@ -38,7 +45,7 @@
     <div class="pmpage-stat">
         <div class="pmpage-stat-icon pmpage-stat-icon--navy"><i class="fa fa-credit-card-alt"></i></div>
         <div class="pmpage-stat-body">
-            <strong>3</strong>
+            <strong>{{ $cardMethods }}</strong>
             <span class="pmpage-stat-label">Thẻ ngân hàng</span>
             <span class="pmpage-stat-sub">Đã liên kết</span>
         </div>
@@ -50,7 +57,7 @@
     <h3 class="pmpage-methods-title">Phương thức thanh toán đã lưu</h3>
 
     <div class="pmpage-method-list">
-        @foreach ($savedMethods as $method)
+        @forelse ($savedMethods as $method)
             <div class="pmpage-method">
                 <div class="pmpage-method-logo pmpage-method-logo--{{ $method['logo'] }}">
                     @include('pages.account.partials.brand-mark', ['brand' => $method['logo']])
@@ -81,7 +88,14 @@
                     <button type="button" class="pmpage-btn pmpage-btn--danger-ghost">Xóa</button>
                 </div>
             </div>
-        @endforeach
+        @empty
+            @include('partials.storefront.empty-state', [
+                'class' => 'shopw-empty-state--compact',
+                'icon' => 'fa fa-credit-card',
+                'title' => 'Bạn chưa lưu phương thức thanh toán nào',
+                'message' => 'Có thể chọn COD hoặc phương thức thanh toán khác tại bước thanh toán.',
+            ])
+        @endforelse
 
         {{-- COD row --}}
         <div class="pmpage-method pmpage-method--cod">

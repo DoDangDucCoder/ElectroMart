@@ -12,7 +12,7 @@
             ?? $blogCategoryItems->first();
         $featuredBlogUrl = $featuredBlogCategory
             ? url('/danh-muc-bai-viet/' . $featuredBlogCategory->cate_post_slug)
-            : url('/video-shop');
+            : url('/bai-viet');
         $featuredBlogLabel = $storefrontLabel::blogCategory(
             $featuredBlogCategory?->cate_post_name,
             $featuredBlogCategory?->cate_post_slug,

@@ -8,6 +8,7 @@
 .pm-header p{font-size:13px;color:#6b7280;margin:2px 0 0}
 .pm-add-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:#0d9488;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;text-decoration:none}
 .pm-add-btn:hover{background:#0f766e;color:#fff;text-decoration:none}
+.pm-add-btn.is-disabled{background:#e5e7eb;color:#6b7280;cursor:not-allowed;pointer-events:none}
 .pm-add-btn i{font-size:14px}
 /* Method list */
 .pm-list{margin-bottom:16px}
@@ -93,7 +94,7 @@
         <main>
             <div class="pm-header">
                 <div><h2>Phương thức thanh toán của tôi</h2><p>Quản lý các phương thức thanh toán đã lưu để thanh toán nhanh hơn và an toàn hơn.</p></div>
-                <a href="#" class="pm-add-btn"><i class="fa fa-plus"></i> Thêm phương thức mới</a>
+                <span class="pm-add-btn is-disabled" aria-disabled="true" title="Tính năng thêm phương thức thanh toán chưa khả dụng"><i class="fa fa-plus"></i> Thêm phương thức mới</span>
             </div>
 
             <div class="accp-stats">
@@ -150,8 +151,8 @@
                 <h4>Xác thực 2 lớp (2FA)</h4>
                 <p style="font-size:12px;color:#6b7280;margin:0 0 8px">Tăng cường bảo mật cho tài khoản của bạn bằng mã xác thực.</p>
                 <div style="display:flex;align-items:center;justify-content:space-between">
-                    <span style="font-size:12px;font-weight:600;color:#111827">Đã bật</span>
-                    <label class="pm-toggle"><input type="checkbox" checked><span class="slider"></span></label>
+                    <span style="font-size:12px;font-weight:600;color:#6b7280">Chưa hỗ trợ</span>
+                    <label class="pm-toggle"><input type="checkbox" disabled><span class="slider"></span></label>
                 </div>
             </div>
             <div class="accp-aside-card">
@@ -161,7 +162,7 @@
                     <li><i class="fa fa-check"></i>Không chia sẻ thông tin thẻ với người khác.</li>
                     <li><i class="fa fa-check"></i>Bật xác thực 2 lớp để bảo vệ tài khoản.</li>
                 </ul>
-                <a href="#" style="font-size:12px;color:#0d9488;text-decoration:none;font-weight:600">Xem thêm mẹo bảo mật →</a>
+                <a href="{{ url('/chinh-sach-bao-mat') }}" style="font-size:12px;color:#0d9488;text-decoration:none;font-weight:600">Xem thêm mẹo bảo mật →</a>
             </div>
             <div class="accp-aside-card accp-contact-card">
                 <h4>Liên hệ hỗ trợ</h4>
@@ -169,7 +170,7 @@
                 <div style="padding:4px 0"><i class="fa fa-phone" style="color:#0d9488;margin-right:6px"></i><strong style="font-size:13px">Hotline: 1900 1234</strong></div>
                 <div style="padding:4px 0"><i class="fa fa-envelope" style="color:#0d9488;margin-right:6px"></i><span style="font-size:13px">Email: support@dangduc.vn</span></div>
                 <div style="padding:4px 0"><i class="fa fa-clock-o" style="color:#9ca3af;margin-right:6px"></i><span style="font-size:12px;color:#9ca3af">Thời gian: 8:00 - 21:00 (T2 - CN)</span></div>
-                <button class="accp-chat-btn-outline" style="margin-top:8px"><i class="fa fa-comments"></i> Chat với chúng tôi</button>
+                <a href="{{ url('/lien-he') }}" class="accp-chat-btn-outline" style="margin-top:8px;text-decoration:none"><i class="fa fa-comments"></i> Liên hệ hỗ trợ</a>
             </div>
         </aside>
     </div>

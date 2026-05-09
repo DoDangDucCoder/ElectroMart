@@ -33,9 +33,27 @@
                     <span class="shopw-search-suggest-group-title">Đi nhanh theo danh mục</span>
                     <div class="shopw-search-suggest-links">
                         @foreach ($shortcutLinks as $link)
+                            @php
+                                $shortcutSubtitles = [
+                                    'fa-gamepad' => 'Hiệu năng đỉnh cao',
+                                    'fa-laptop' => 'Văn phòng & học tập',
+                                    'fa-briefcase' => 'Làm việc mỗi ngày',
+                                    'fa-mobile' => 'Smartphone chính hãng',
+                                    'fa-apple' => 'Thiết bị Apple',
+                                    'fa-android' => 'Android đa lựa chọn',
+                                    'fa-headphones' => 'Chuột, bàn phím, tai nghe...',
+                                    'fa-plug' => 'Sạc, cáp và phụ kiện',
+                                    'fa-shield' => 'Bảo vệ thiết bị',
+                                ];
+                                $shortcutSubtitle = $link['subtitle'] ?? ($shortcutSubtitles[$link['icon'] ?? ''] ?? 'Khám phá sản phẩm');
+                            @endphp
                             <a href="{{ $link['url'] }}" class="shopw-search-suggest-shortcut">
                                 <i class="fa {{ $link['icon'] }}"></i>
-                                <span>{{ $link['label'] }}</span>
+                                <span>
+                                    <strong>{{ $link['label'] }}</strong>
+                                    <small>{{ $shortcutSubtitle }}</small>
+                                </span>
+                                <i class="fa fa-angle-right" aria-hidden="true"></i>
                             </a>
                         @endforeach
                     </div>
@@ -49,7 +67,11 @@
                         @foreach ($utilityLinks as $link)
                             <a href="{{ $link['url'] }}" class="shopw-search-suggest-shortcut">
                                 <i class="fa {{ $link['icon'] }}"></i>
-                                <span>{{ $link['label'] }}</span>
+                                <span>
+                                    <strong>{{ $link['label'] }}</strong>
+                                    <small>Đi tới trang liên quan</small>
+                                </span>
+                                <i class="fa fa-angle-right" aria-hidden="true"></i>
                             </a>
                         @endforeach
                     </div>

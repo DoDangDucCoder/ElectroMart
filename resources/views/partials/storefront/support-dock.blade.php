@@ -78,7 +78,7 @@
                     </span>
                     <span class="shopw-hero-support-cta-copy">
                         <strong>{{ config('storefront.labels.chat_assistant', 'Trợ lý bán hàng') }}</strong>
-                        <small>{{ $heroSupportCta }}</small>
+                        <small>Chat mua hàng trực tuyến</small>
                     </span>
                 </span>
                 <span class="shopw-hero-support-cta-tail" aria-hidden="true">

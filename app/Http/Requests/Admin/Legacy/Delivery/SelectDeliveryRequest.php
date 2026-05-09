@@ -9,8 +9,8 @@ class SelectDeliveryRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'action' => ['required', 'in:city,province'],
-            'ma_id' => ['required', 'integer'],
+            'action' => ['required', 'in:province'],
+            'ma_id' => ['required', 'string', 'max:20'],
         ];
     }
 }

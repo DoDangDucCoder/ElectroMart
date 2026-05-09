@@ -124,7 +124,7 @@
                             @if ($review->title)
                                 <strong style="display:block;margin-bottom:4px">{{ $review->title }}</strong>
                             @endif
-                            <span style="color:var(--adm-muted)">{{ \Illuminate\Support\Str::limit($review->content, 180) }}</span>
+                            <span style="color:var(--adm-muted)">{{ \Illuminate\Support\Str::limit((string) ($review->content ?? ''), 180) }}</span>
                         </td>
                         <td><span class="adm-badge {{ $status['class'] }}">{{ $status['label'] }}</span></td>
                         <td style="white-space:nowrap">{{ $review->created_at?->format('d/m/Y H:i') }}</td>

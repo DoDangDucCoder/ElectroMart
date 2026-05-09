@@ -11,6 +11,7 @@ use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use App\Http\Requests\Cms\StoreBlogPostRequest;
 use App\Http\Requests\Cms\UpdateBlogPostRequest;
 use App\Infrastructure\Persistence\Eloquent\Cms\BlogPost;
+use App\Support\AssetUrl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -260,7 +261,10 @@ class PostController extends Controller
         }
         $featuredPosts = $featuredPosts->reject(fn ($item) => (int) $item->id === (int) $post->id)->take(4);
 
-        $suggestedProducts = $this->productService->getLatestProducts(3);
+        $suggestedProducts = $this->productService->getLatestProducts(8)
+            ->filter(fn ($product) => AssetUrl::resolve($product->product_image) !== null)
+            ->take(3)
+            ->values();
 
         return view('pages.baiviet.baiviet', [
             'category' => $productCategories,

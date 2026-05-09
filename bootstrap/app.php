@@ -19,6 +19,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SecurityHeadersMiddleware::class,
         ]);
 
+        $middleware->web(prepend: [
+            \App\Http\Middleware\BlockAdminCreateActions::class,
+        ]);
+
         $middleware->web(append: [
             \App\Http\Middleware\XSSProtectionMiddleware::class,
             \App\Http\Middleware\SQLInjectionProtectionMiddleware::class,
@@ -34,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth' => \App\Http\Middleware\Authenticate::class,
             'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
             'admin.access' => \App\Http\Middleware\EnsureAdminAccess::class,
+            'admin.create.locked' => \App\Http\Middleware\BlockAdminCreateActions::class,
             'admin.permission' => \App\Http\Middleware\EnsureAdminPermission::class,
             'customer.api' => \App\Http\Middleware\EnsureCustomerApiToken::class,
             'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,

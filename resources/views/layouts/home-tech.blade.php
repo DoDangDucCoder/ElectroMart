@@ -36,66 +36,6 @@
 
     <script>
         (function () {
-            const counters = document.querySelectorAll('[data-tech-countdown]');
-            const flashSaleDeadlineKey = 'dangduc_flash_sale_deadline_v1';
-            const flashSaleDefaultDuration = 24 * 60 * 60 * 1000;
-
-            function readFlashSaleDeadline(counter) {
-                const configuredDeadline = counter.getAttribute('data-deadline');
-
-                if (configuredDeadline) {
-                    const configuredTime = new Date(configuredDeadline).getTime();
-
-                    if (!Number.isNaN(configuredTime)) {
-                        return configuredTime;
-                    }
-                }
-
-                try {
-                    const storedDeadline = Number(localStorage.getItem(flashSaleDeadlineKey));
-
-                    if (storedDeadline > Date.now()) {
-                        return storedDeadline;
-                    }
-
-                    if (storedDeadline && storedDeadline <= Date.now()) {
-                        return storedDeadline;
-                    }
-
-                    const nextDeadline = Date.now() + flashSaleDefaultDuration;
-                    localStorage.setItem(flashSaleDeadlineKey, String(nextDeadline));
-
-                    return nextDeadline;
-                } catch (error) {
-                    return Date.now() + flashSaleDefaultDuration;
-                }
-            }
-
-            counters.forEach((counter) => {
-                // Reset demo campaigns by deleting localStorage key dangduc_flash_sale_deadline_v1 or bumping the key version.
-                const endTime = readFlashSaleDeadline(counter);
-                const boxes = counter.querySelectorAll('[data-countdown-unit]');
-
-                const render = () => {
-                    const distance = Math.max(0, endTime - Date.now());
-                    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-                    const hours = Math.floor((distance / (1000 * 60 * 60)) % 24);
-                    const minutes = Math.floor((distance / (1000 * 60)) % 60);
-                    const seconds = Math.floor((distance / 1000) % 60);
-                    const values = { days, hours, minutes, seconds };
-
-                    boxes.forEach((box) => {
-                        const unit = box.getAttribute('data-countdown-unit');
-                        box.textContent = String(values[unit] || 0).padStart(2, '0');
-                    });
-
-                    counter.classList.toggle('is-ended', distance <= 0);
-                };
-
-                render();
-                window.setInterval(render, 1000);
-            });
-
             function readWishlist() {
                 if (typeof window.readStorefrontStorage === 'function') {
                     return window.readStorefrontStorage('data');

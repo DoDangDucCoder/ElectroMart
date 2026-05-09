@@ -66,6 +66,7 @@
                             <th>Danh mục con</th>
                             <th>Thứ tự</th>
                             <th>Trạng thái</th>
+                            <th>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -85,10 +86,32 @@
                                     <span class="adm-badge gray">Tạm ẩn</span>
                                 @endif
                             </td>
+                            <td>
+                                <div class="adm-actions" style="display:flex;gap:6px;flex-wrap:wrap">
+                                    <a href="{{ url('/edit-category-product/' . $category->id) }}" class="adm-btn outline" title="Sửa danh mục">
+                                        <i class="fa fa-pencil"></i> Sửa
+                                    </a>
+                                    @if ($category->is_active)
+                                        <a href="{{ url('/unactive-category-product/' . $category->id) }}" class="adm-btn outline" title="Tắt trạng thái danh mục">
+                                            <i class="fa fa-eye-slash"></i> Tắt
+                                        </a>
+                                    @else
+                                        <a href="{{ url('/active-category-product/' . $category->id) }}" class="adm-btn outline" title="Bật trạng thái danh mục">
+                                            <i class="fa fa-eye"></i> Bật
+                                        </a>
+                                    @endif
+                                    <a href="{{ url('/delete-category-product/' . $category->id) }}"
+                                        class="adm-btn danger"
+                                        title="Xóa danh mục"
+                                        onclick="return confirm('Bạn có chắc muốn xóa danh mục này? Danh mục đang có sản phẩm sẽ không được xóa.');">
+                                        <i class="fa fa-trash-o"></i> Xóa
+                                    </a>
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8">
+                            <td colspan="9">
                                 <div class="g-admin-empty-state">Chưa có danh mục nào phù hợp với bộ lọc hiện tại.</div>
                             </td>
                         </tr>

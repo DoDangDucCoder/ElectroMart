@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class ProductRequest extends FormRequest
@@ -82,6 +83,12 @@ class ProductRequest extends FormRequest
         if ($this->has('tags') && is_string($this->tags)) {
             $this->merge([
                 'tags' => array_filter(array_map('trim', explode(',', $this->tags))),
+            ]);
+        }
+
+        if (! $this->filled('slug') && $this->filled('name')) {
+            $this->merge([
+                'slug' => Str::slug((string) $this->input('name')),
             ]);
         }
 

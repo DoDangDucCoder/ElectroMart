@@ -10,7 +10,7 @@
                     <div class="tech-footer-social">
                         <a href="{{ url('/lien-he') }}" aria-label="Facebook DangDuc"><i class="fa fa-facebook"></i></a>
                         <a href="{{ url('/lien-he') }}" aria-label="Instagram DangDuc"><i class="fa fa-instagram"></i></a>
-                        <a href="{{ url('/video-shop') }}" aria-label="YouTube DangDuc"><i class="fa fa-youtube-play"></i></a>
+                        <a href="{{ url('/bai-viet') }}" aria-label="YouTube DangDuc"><i class="fa fa-youtube-play"></i></a>
                         <a href="{{ url('/lien-he') }}" aria-label="LinkedIn DangDuc"><i class="fa fa-linkedin"></i></a>
                     </div>
                 </div>
@@ -20,7 +20,7 @@
                 <h3>VỀ CHÚNG TÔI</h3>
                 <nav class="tech-footer-nav">
                     <a href="{{ url('/gioi-thieu') }}">Giới thiệu</a>
-                    <a href="{{ url('/video-shop') }}">Tin tức</a>
+                    <a href="{{ url('/bai-viet') }}">Tin tức</a>
                     <a href="{{ url('/lien-he') }}">Tuyển dụng</a>
                     <a href="{{ url('/lien-he') }}">Liên hệ</a>
                 </nav>

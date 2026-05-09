@@ -8,6 +8,8 @@ use App\Http\Resources\CategoryResource;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
@@ -37,9 +39,15 @@ class CategoryController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (! $request->filled('slug') && $request->filled('name')) {
+            $request->merge([
+                'slug' => Str::slug((string) $request->input('name')),
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'slug' => 'nullable|string|max:255',
+            'slug' => ['required', 'string', 'max:255', Rule::unique((new ProductCategory())->getTable(), 'slug')],
             'code' => 'nullable|string|max:100',
             'parent_id' => 'nullable|integer',
             'thumbnail_path' => 'nullable|string|max:255',

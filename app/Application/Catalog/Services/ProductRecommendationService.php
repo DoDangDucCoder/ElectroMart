@@ -79,6 +79,7 @@ class ProductRecommendationService
         $purchasedIds = $purchasedProductIds->pluck('product_id')->map(fn ($id) => (int) $id)->all();
         $purchasedProducts = Product::query()
             ->with(['categories'])
+            ->withCompleteStorefrontMedia()
             ->whereIn('id', $purchasedIds)
             ->get();
 
@@ -160,6 +161,7 @@ class ProductRecommendationService
 
         $viewedProducts = Product::query()
             ->with(['categories'])
+            ->withCompleteStorefrontMedia()
             ->whereIn('id', $viewedIds)
             ->get();
 
@@ -220,6 +222,7 @@ class ProductRecommendationService
         return Product::query()
             ->with(['brand', 'categories', 'primaryCategory'])
             ->where('is_active', true)
+            ->withCompleteStorefrontMedia()
             ->where(function ($q) {
                 $q->where('stock_quantity', '>', 0)
                     ->orWhereNull('stock_quantity');

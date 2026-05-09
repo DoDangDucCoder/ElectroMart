@@ -5,7 +5,7 @@
                 <span class="tech-eyebrow"><i class="fa fa-newspaper-o"></i> TIN TỨC MỚI</span>
                 <h2>Tin tức & Hướng dẫn</h2>
             </div>
-            <a href="{{ url('/video-shop') }}" class="tech-section-link">Xem tất cả bài viết <i class="fa fa-angle-right"></i></a>
+            <a href="{{ url('/bai-viet') }}" class="tech-section-link">Xem tất cả bài viết <i class="fa fa-angle-right"></i></a>
         </div>
 
         <div class="row tech-news-grid">

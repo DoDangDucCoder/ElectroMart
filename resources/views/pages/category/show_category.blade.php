@@ -36,6 +36,9 @@
                 ->filter(fn($c) => (int) ($c->category_parent ?? 0) === 0)
                 ->values();
         }
+        $sidebarFilterCategories = $sidebarCategories
+            ->reject(fn($c) => (int) $c->category_id === $activeId)
+            ->values();
 
         $categoryIcons = [
             'gaming' => 'fa-gamepad',
@@ -211,12 +214,12 @@
                                     <span class="cnt">{{ number_format($productCount) }}</span>
                                 </a>
                             </li>
-                            @foreach ($sidebarCategories->take(6) as $cat)
-                                @continue((int) $cat->category_id === $activeId)
+                            @foreach ($sidebarFilterCategories as $cat)
                                 @php
                                     $catLabel = $storefrontLabel::category($cat->category_name, $cat->slug_category_product);
+                                    $isExtraCategory = $loop->index >= 6;
                                 @endphp
-                                <li>
+                                <li @if ($isExtraCategory) hidden data-cat-filter-extra="category" @endif>
                                     <a href="{{ url('/danh-muc/' . $cat->slug_category_product) }}"
                                         class="cat-x__filter-item">
                                         <span class="ck"></span>
@@ -225,8 +228,10 @@
                                     </a>
                                 </li>
                             @endforeach
-                            @if ($sidebarCategories->count() > 6)
-                                <li><a href="#" class="cat-x__see-more">Xem thêm</a></li>
+                            @if ($sidebarFilterCategories->count() > 6)
+                                <li>
+                                    <button type="button" class="cat-x__see-more" data-cat-filter-toggle="category" aria-expanded="false">Xem thêm</button>
+                                </li>
                             @endif
                         </ul>
                     </div>
@@ -275,12 +280,13 @@
                         <div class="cat-x__panel">
                             <h4>Thương hiệu</h4>
                             <ul class="cat-x__filter-list">
-                                @foreach ($brandCollection->take(7) as $brandItem)
+                                @foreach ($brandCollection as $brandItem)
                                     @php
                                         $brandSlug = $brandItem->brand_slug ?? \Illuminate\Support\Str::slug($brandItem->brand_name);
                                         $brandActive = request('brand') === $brandSlug;
+                                        $isExtraBrand = $loop->index >= 7;
                                     @endphp
-                                    <li>
+                                    <li @if ($isExtraBrand && ! $brandActive) hidden data-cat-filter-extra="brand" @endif>
                                         <a href="{{ request()->fullUrlWithQuery(['brand' => $brandActive ? null : $brandSlug]) }}"
                                             class="cat-x__filter-item {{ $brandActive ? 'is-active' : '' }}">
                                             <span class="ck"></span>
@@ -290,7 +296,9 @@
                                     </li>
                                 @endforeach
                                 @if ($brandCollection->count() > 7)
-                                    <li><a href="#" class="cat-x__see-more">Xem thêm</a></li>
+                                    <li>
+                                        <button type="button" class="cat-x__see-more" data-cat-filter-toggle="brand" aria-expanded="false">Xem thêm</button>
+                                    </li>
                                 @endif
                             </ul>
                         </div>
@@ -486,6 +494,23 @@
                     } else {
                         grid.classList.remove('is-list');
                     }
+                });
+            });
+
+            document.querySelectorAll('[data-cat-filter-toggle]').forEach((toggle) => {
+                toggle.addEventListener('click', () => {
+                    const target = toggle.getAttribute('data-cat-filter-toggle');
+                    const expanded = toggle.getAttribute('aria-expanded') === 'true';
+                    const panel = toggle.closest('.cat-x__panel');
+
+                    if (!panel || !target) return;
+
+                    panel.querySelectorAll(`[data-cat-filter-extra="${target}"]`).forEach((item) => {
+                        item.hidden = expanded;
+                    });
+
+                    toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                    toggle.textContent = expanded ? 'Xem thêm' : 'Thu gọn';
                 });
             });
 

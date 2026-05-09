@@ -291,8 +291,8 @@
     }
 
     function renderSearchSuggestErrorState(message) {
-        $('#search_ajax').fadeIn();
-        renderAjaxHtml('#search_ajax',
+        $('.shopw-search-hints').fadeIn();
+        renderAjaxHtml('.shopw-search-hints',
             "<div class='shopw-search-suggest-panel'>" +
             buildStorefrontStatePanel(message, 'error', {
                 title: 'Chưa thể tải gợi ý tìm kiếm',
@@ -393,6 +393,12 @@
         return image;
     }
 
+    function hasCompleteStorefrontImageSnapshot(item) {
+        var image = String((item && item.image) || '');
+
+        return image !== '' && image.indexOf('/uploads/product/no-image.svg') === -1 && image.indexOf('uploads/product/no-image.svg') === -1;
+    }
+
     function renderCompareRow(item) {
         var image = normalizeStorefrontImage(item.image);
         var url = item.url || "#";
@@ -427,19 +433,54 @@
     function renderViewedCard(item, ctaText) {
         var image = normalizeStorefrontImage(item.image);
         var url = item.url || "{{ url('/') }}";
+        var name = normalizeStorefrontLabel(item.name);
+        var productId = item.id || name || 'viewed-product';
         var price = item.price
-            ? `<p class="shopw-cart-viewed-price">${escapeHtml(item.price)}</p>`
+            ? `<div class="tech-sale-price">${escapeHtml(item.price)}</div>`
             : '';
 
         return `
-            <article class="shopw-cart-viewed-card">
-                <a class="shopw-cart-viewed-media" href="${escapeHtml(url)}">
-                    <img src="${escapeHtml(image)}" alt="${escapeHtml(item.name)}">
+            <article class="tech-product-card tech-product-card-compact shopw-cart-viewed-card" data-product-url="${escapeHtml(url)}">
+                <button type="button"
+                    class="tech-wishlist-btn"
+                    aria-label="Yêu thích ${escapeHtml(name)}"
+                    aria-pressed="false"
+                    data-tech-wishlist
+                    data-product-id="${escapeHtml(productId)}"
+                    data-product-name="${escapeHtml(name)}"
+                    data-product-price="${escapeHtml(item.price || '')}"
+                    data-product-image="${escapeHtml(image)}"
+                    data-product-url="${escapeHtml(url)}">
+                    <i class="fa fa-heart-o"></i>
+                </button>
+
+                <a class="tech-product-media shopw-cart-viewed-media" href="${escapeHtml(url)}">
+                    <img src="${escapeHtml(image)}" alt="${escapeHtml(name)}">
                 </a>
-                <div class="shopw-cart-viewed-copy">
-                    <h3><a href="${escapeHtml(url)}">${escapeHtml(normalizeStorefrontLabel(item.name))}</a></h3>
-                    ${price}
-                    <a class="shopw-cart-viewed-link" href="${escapeHtml(url)}">${escapeHtml(ctaText)}</a>
+
+                <div class="tech-product-body shopw-cart-viewed-copy">
+                    <div class="tech-product-brand-row">
+                        <span class="tech-brand-chip"><span>DD</span></span>
+                        <strong>DangDuc</strong>
+                    </div>
+
+                    <h3><a href="${escapeHtml(url)}">${escapeHtml(name)}</a></h3>
+
+                    <div class="tech-product-rating">
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star-o"></i>
+                        <span>(128)</span>
+                    </div>
+
+                    <div class="tech-product-footer">
+                        <div class="tech-price-block">${price}</div>
+                        <a class="tech-add-cart-btn" href="${escapeHtml(url)}" aria-label="Xem ${escapeHtml(name)}">
+                            <i class="fa fa-shopping-cart"></i>
+                        </a>
+                    </div>
                 </div>
             </article>
         `;
@@ -680,7 +721,7 @@
             return;
         }
 
-        var data = readStorefrontStorage('viewed').slice().reverse();
+        var data = readStorefrontStorage('viewed').filter(hasCompleteStorefrontImageSnapshot).slice().reverse();
 
         if (rowViewed) {
             rowViewed.innerHTML = '';
@@ -809,7 +850,6 @@
         }
 
         var openGroupStorageKey = 'shopw.storefront.open-group';
-        var desktopCategoryCloseTimer = null;
 
         function isMobileNav() {
             return window.matchMedia('(max-width: 991px)').matches;
@@ -856,13 +896,6 @@
                 .toggleClass('is-active', expanded);
         }
 
-        function clearDesktopCategoryCloseTimer() {
-            if (desktopCategoryCloseTimer) {
-                window.clearTimeout(desktopCategoryCloseTimer);
-                desktopCategoryCloseTimer = null;
-            }
-        }
-
         function syncAccountMenuState($menu) {
             if (!$menu || !$menu.length) {
                 return;
@@ -876,6 +909,22 @@
         function syncAllAccountMenus() {
             $('.shopw-account-menu').each(function() {
                 syncAccountMenuState($(this));
+            });
+        }
+
+        function syncLocationMenuState($menu) {
+            if (!$menu || !$menu.length) {
+                return;
+            }
+
+            var expanded = $menu.prop('open');
+
+            $menu.find('> summary').attr('aria-expanded', expanded ? 'true' : 'false');
+        }
+
+        function syncAllLocationMenus() {
+            $('.shopw-location-menu').each(function() {
+                syncLocationMenuState($(this));
             });
         }
 
@@ -894,6 +943,21 @@
             });
         }
 
+        function closeLocationMenus(exceptMenuElement) {
+            $('.shopw-location-menu').each(function() {
+                if (exceptMenuElement && this === exceptMenuElement) {
+                    syncLocationMenuState($(this));
+                    return;
+                }
+
+                if (this.open) {
+                    this.open = false;
+                }
+
+                syncLocationMenuState($(this));
+            });
+        }
+
         function toggleAccountMenu(menuElement, forceOpen) {
             if (!menuElement) {
                 return;
@@ -902,114 +966,22 @@
             var shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : !menuElement.open;
 
             closeAccountMenus(shouldOpen ? menuElement : null);
+            closeLocationMenus();
             menuElement.open = shouldOpen;
             syncAccountMenuState($(menuElement));
         }
 
-        function categoryDesktopPanelSelector() {
-            var selector = $('.shopw-mobile-nav-toggle[data-nav-intent="categories"]').first().data('desktopPanel');
-
-            return selector || '#shopw-desktop-category-panel';
-        }
-
-        function closeDesktopCategoryPanel() {
-            if (isMobileNav()) {
+        function toggleLocationMenu(menuElement, forceOpen) {
+            if (!menuElement) {
                 return;
             }
 
-            clearDesktopCategoryCloseTimer();
+            var shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : !menuElement.open;
 
-            var $panel = $(categoryDesktopPanelSelector());
-
-            if (!$panel.length) {
-                setCategoryTriggerExpanded(false);
-                return;
-            }
-
-            $panel.attr('hidden', true);
-            setCategoryTriggerExpanded(false);
-        }
-
-        function toggleDesktopCategoryPanel(forceOpen) {
-            if (isMobileNav()) {
-                return;
-            }
-
-            clearDesktopCategoryCloseTimer();
-
-            var $panel = $(categoryDesktopPanelSelector());
-
-            if (!$panel.length) {
-                return;
-            }
-
-            var shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : $panel.is('[hidden]');
-
-            $panel.attr('hidden', !shouldOpen);
-            setCategoryTriggerExpanded(shouldOpen);
-        }
-
-        function openDesktopCategoryPanel() {
-            if (isMobileNav()) {
-                return;
-            }
-
-            closeDesktopGroups();
-            toggleDesktopCategoryPanel(true);
-            activateFirstDesktopCategoryPane();
-        }
-
-        function queueDesktopCategoryClose() {
-            if (isMobileNav()) {
-                return;
-            }
-
-            clearDesktopCategoryCloseTimer();
-
-            desktopCategoryCloseTimer = window.setTimeout(function() {
-                closeDesktopCategoryPanel();
-            }, 120);
-        }
-
-        function setDesktopCategoryPane(selector) {
-            var $panel = $(categoryDesktopPanelSelector());
-
-            if (!$panel.length || !selector) {
-                return;
-            }
-
-            var $triggers = $panel.find('.shopw-desktop-category-trigger');
-            var $panes = $panel.find('.shopw-desktop-category-pane');
-            var $target = $panel.find(selector).first();
-
-            if (!$target.length) {
-                return;
-            }
-
-            $triggers.removeClass('is-active').attr('aria-selected', 'false');
-            $panes.removeClass('is-active').attr('hidden', true);
-
-            $panel.find('.shopw-desktop-category-trigger[data-category-pane="' + selector + '"]')
-                .addClass('is-active')
-                .attr('aria-selected', 'true');
-
-            $target.addClass('is-active').attr('hidden', false);
-        }
-
-        function activateFirstDesktopCategoryPane() {
-            var $panel = $(categoryDesktopPanelSelector());
-
-            if (!$panel.length) {
-                return;
-            }
-
-            var $activeTrigger = $panel.find('.shopw-desktop-category-trigger.is-active').first();
-            var selector = $activeTrigger.data('categoryPane')
-                || $panel.find('.shopw-desktop-category-trigger').first().data('categoryPane');
-
-            if (selector) {
-                setDesktopCategoryPane(selector);
-            }
+            closeLocationMenus(shouldOpen ? menuElement : null);
+            closeAccountMenus();
+            menuElement.open = shouldOpen;
+            syncLocationMenuState($(menuElement));
         }
 
         function closeDesktopGroups(exceptGroupId) {
@@ -1071,12 +1043,9 @@
         function collapseMobileGroups(resetStyles) {
             $('#shopw-mobile-drawer .shopw-nav-group').removeClass('is-open');
             $('#shopw-mobile-drawer .shopw-submenu-toggle').attr('aria-expanded', 'false');
-            $('#shopw-mobile-drawer .menu-item.has-children').removeClass('is-open');
-            $('#shopw-mobile-drawer .shopw-childmenu-toggle').attr('aria-expanded', 'false');
 
             if (resetStyles) {
                 $('#shopw-mobile-drawer .sub-menu').removeAttr('style');
-                $('#shopw-mobile-drawer .cate_sub').removeAttr('style');
             }
         }
 
@@ -1096,27 +1065,11 @@
             var intent = $(this).data('navIntent');
 
             if (!isMobileNav()) {
-                if (intent !== 'categories') {
-                    return;
-                }
-
-                e.preventDefault();
-                closeAccountMenus();
-                openDesktopCategoryPanel();
                 return;
             }
 
             e.preventDefault();
-            setMobileNav(true, intent === 'categories' ? '#shopw-nav-group-categories' : null);
-        });
-
-        $(document).on('mouseenter focusin', '.shopw-header-category-shell', function() {
-            if (isMobileNav()) {
-                return;
-            }
-
-            closeAccountMenus();
-            openDesktopCategoryPanel();
+            setMobileNav(true, null);
         });
 
         $(document).on('click', '.shopw-account-menu > summary', function(e) {
@@ -1128,35 +1081,25 @@
 
             var menuElement = $(this).parent('.shopw-account-menu').get(0);
 
-            closeDesktopCategoryPanel();
             closeDesktopGroups();
             toggleAccountMenu(menuElement);
         });
 
+        $(document).on('click', '.shopw-location-menu > summary', function(e) {
+            if (isMobileNav()) {
+                return;
+            }
+
+            e.preventDefault();
+
+            var menuElement = $(this).parent('.shopw-location-menu').get(0);
+
+            closeDesktopGroups();
+            toggleLocationMenu(menuElement);
+        });
+
         $(document).on('click', '.shopw-account-dropdown a', function() {
             closeAccountMenus();
-        });
-
-        $(document).on('mouseleave', '.shopw-header-category-shell', function() {
-            if (isMobileNav()) {
-                return;
-            }
-
-            queueDesktopCategoryClose();
-        });
-
-        $(document).on('focusout', '.shopw-header-category-shell', function() {
-            if (isMobileNav()) {
-                return;
-            }
-
-            var $shell = $(this);
-
-            window.setTimeout(function() {
-                if (!$shell.find(document.activeElement).length) {
-                    closeDesktopCategoryPanel();
-                }
-            }, 0);
         });
 
         $(document).on('click', '.shopw-mobile-drawer-close, .shopw-mobile-nav-overlay', function(e) {
@@ -1185,7 +1128,6 @@
             }
 
             closeAccountMenus();
-            closeDesktopCategoryPanel();
 
             if (isOpen) {
                 closeDesktopGroups();
@@ -1193,37 +1135,6 @@
                 closeDesktopGroups($group.attr('id'));
                 setGroupExpanded($group, true, false);
             }
-        });
-
-        $(document).on('mouseenter focusin click', '.shopw-desktop-category-trigger', function(e) {
-            if (isMobileNav()) {
-                return;
-            }
-
-            closeAccountMenus();
-            clearDesktopCategoryCloseTimer();
-
-            if (e.type === 'click') {
-                e.preventDefault();
-            }
-
-            setDesktopCategoryPane($(this).data('categoryPane'));
-        });
-
-        $(document).on('click', '#shopw-mobile-drawer .shopw-childmenu-toggle', function(e) {
-            if (!isMobileNav()) {
-                return;
-            }
-
-            e.preventDefault();
-
-            var $item = $(this).closest('.menu-item.has-children');
-            var $submenu = $item.children('.cate_sub');
-            var isOpen = $item.hasClass('is-open');
-
-            $item.toggleClass('is-open', !isOpen);
-            $(this).attr('aria-expanded', !isOpen ? 'true' : 'false');
-            $submenu.stop(true, true).slideToggle(180);
         });
 
         $(document).on('click', '#shopw-mobile-drawer a', function() {
@@ -1242,7 +1153,7 @@
             if (e.key === 'Escape') {
                 setMobileNav(false);
                 closeAccountMenus();
-                closeDesktopCategoryPanel();
+                closeLocationMenus();
                 closeDesktopGroups();
             }
         });
@@ -1271,22 +1182,23 @@
                 return;
             }
 
-            if ($target.closest(categoryDesktopPanelSelector()).length) {
-                closeAccountMenus();
-                return;
-            }
-
             if ($target.closest('#navbar .shopw-nav-group').length) {
                 closeAccountMenus();
                 return;
             }
 
             if ($target.closest('.shopw-account-menu').length) {
+                closeLocationMenus();
+                return;
+            }
+
+            if ($target.closest('.shopw-location-menu').length) {
+                closeAccountMenus();
                 return;
             }
 
             closeAccountMenus();
-            closeDesktopCategoryPanel();
+            closeLocationMenus();
             closeDesktopGroups();
         });
 
@@ -1295,16 +1207,17 @@
                 setMobileNav(false);
                 collapseMobileGroups(true);
                 closeAccountMenus();
-                closeDesktopCategoryPanel();
+                closeLocationMenus();
                 closeDesktopGroups();
             } else {
                 closeAccountMenus();
-                closeDesktopCategoryPanel();
+                closeLocationMenus();
                 closeDesktopGroups();
             }
         });
 
         syncAllAccountMenus();
+        syncAllLocationMenus();
     })(window.jQuery);
 </script>
 
@@ -1850,6 +1763,7 @@
     var searchSuggestTimer = null;
     var activeSearchSuggestRequest = null;
     var searchPlaceholderTimer = null;
+    var searchSuggestSelector = '.shopw-search-hints';
 
     function initSearchPlaceholderRotation() {
         var $searchInput = $('#keywords');
@@ -1958,7 +1872,7 @@
             searchSuggestTimer = null;
         }
 
-        $('#search_ajax').stop(true, true).fadeOut(120, function() {
+        $(searchSuggestSelector).stop(true, true).fadeOut(120, function() {
             $(this).html('');
         });
     }
@@ -1969,8 +1883,8 @@
             return;
         }
 
-        $('#search_ajax').stop(true, true).fadeIn(120);
-        renderAjaxHtml('#search_ajax', html);
+        $(searchSuggestSelector).stop(true, true).fadeIn(120);
+        renderAjaxHtml(searchSuggestSelector, html);
     }
 
     function requestSearchSuggest(query) {
@@ -2034,6 +1948,10 @@
         }
     });
 
+    $('.shopw-search').on('submit', function() {
+        closeSearchSuggest();
+    });
+
     $(document).on('click', '.shopw-search-suggest-chip.li_search_ajax', function(event) {
         event.preventDefault();
 
@@ -2056,18 +1974,31 @@
     initSearchPlaceholderRotation();
 
     function initFlashSaleCountdown($countdown) {
-        var targetValue = $countdown.data('flashSaleCountdown');
-        if (!targetValue) {
+        var countdown = $countdown.get(0);
+
+        if (!countdown) {
             return;
         }
 
-        var targetTime = new Date(targetValue);
-        if (Number.isNaN(targetTime.getTime())) {
+        if (window.StorefrontCountdown && typeof window.StorefrontCountdown.init === 'function') {
+            window.StorefrontCountdown.init(countdown, $('[data-flash-sale-countdown]').index(countdown));
             return;
+        }
+
+        var targetValue = $countdown.data('flashSaleCountdown');
+        var cycleMs = 24 * 60 * 60 * 1000;
+        var targetTime = new Date(targetValue).getTime();
+
+        if (!targetValue || Number.isNaN(targetTime)) {
+            targetTime = Date.now() + cycleMs - 1000;
         }
 
         var render = function() {
-            var diff = Math.max(0, targetTime.getTime() - Date.now());
+            if (targetTime <= Date.now()) {
+                targetTime = Date.now() + cycleMs - 1000;
+            }
+
+            var diff = Math.max(0, targetTime - Date.now());
             var totalSeconds = Math.floor(diff / 1000);
             var days = Math.floor(totalSeconds / 86400);
             var hours = Math.floor((totalSeconds % 86400) / 3600);
@@ -2081,12 +2012,8 @@
         };
 
         render();
-        var timer = setInterval(function() {
+        setInterval(function() {
             render();
-
-            if (targetTime.getTime() <= Date.now()) {
-                clearInterval(timer);
-            }
         }, 1000);
     }
 
@@ -2454,6 +2381,18 @@
         syncHomeCartButtons();
     }
 
+    function updateStorefrontCartBadges(count) {
+        var normalizedCount = parseInt(count, 10);
+
+        if (isNaN(normalizedCount) || normalizedCount < 0) {
+            return;
+        }
+
+        $('.shopw-cart-count').text(normalizedCount);
+        $('.show-cart').html('<span class="badges">' + normalizedCount + '</span>');
+        $('.show-cart .badges, span.badges').text(normalizedCount);
+    }
+
     function removeSessionCartItem(session_id, options) {
         var settings = $.extend({
             successMessage: 'Đã xóa sản phẩm khỏi giỏ hàng.',
@@ -2539,6 +2478,12 @@
             fallbackMessage: settings.fallbackMessage,
             beforeSend: settings.beforeSend,
             onSuccess: function(response) {
+                if (response && (response.cart_count !== undefined || response.cart_total_items !== undefined)) {
+                    updateStorefrontCartBadges(response.cart_count !== undefined
+                        ? response.cart_count
+                        : response.cart_total_items);
+                }
+
                 if (typeof settings.onSuccess === 'function') {
                     settings.onSuccess(response);
                 }
@@ -2672,6 +2617,13 @@
             }
         });
     }
+
+    $(document).on('click', '.tech-add-cart-btn[data-cart-product-id]', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        Addtocart($(this).data('cartProductId'));
+    });
 </script>
 <!--add to  cart quickview-->
 <script type="text/javascript">
@@ -2742,6 +2694,20 @@
         $('#checkout_delivery_notice').html('<div class="alert ' + cssClass + '">' + message + '</div>');
     }
 
+    function renderCheckoutOrderNotice(message, type) {
+        var cssClass = 'alert-info';
+
+        if (type === 'success') {
+            cssClass = 'alert-success';
+        } else if (type === 'error') {
+            cssClass = 'alert-danger';
+        } else if (type === 'warning') {
+            cssClass = 'alert-warning';
+        }
+
+        $('#checkout_order_notice').html('<div class="alert ' + cssClass + '" style="margin:12px 0 0;padding:10px 12px;border-radius:8px;font-size:13px;">' + escapeHtml(message) + '</div>');
+    }
+
     function syncCheckoutDeliveryTotals(fee) {
         var numericFee = Math.max(0, parseFloat(fee || 0));
         var baseTotal = Math.max(0, parseFloat($('.checkout_base_total').val() || 0));
@@ -2773,18 +2739,23 @@
 
         $('.send_order').click(function() {
             var $button = $(this);
+            if ($button.data('submitting')) {
+                return;
+            }
+
+            var originalHtml = $button.data('originalHtml') || $button.html();
             var shipping_email = $('.shipping_email').val();
             var shipping_name = $('.shipping_name').val();
             var shipping_address = $('.shipping_address').val();
             var shipping_phone = $('.shipping_phone').val();
             var shipping_notes = $('.shipping_notes').val();
             var shipping_method = $('.payment_select').val() || 'cod';
-            var city_id = $('.city').val();
-            var province_id = $('.province').val();
-            var ward_id = $('.wards').val();
+            var vietnam_province_code = $('.province').val();
+            var vietnam_ward_code = $('.wards').val();
             var _token = $('input[name="_token"]').val();
 
             if (shipping_email == '' || shipping_name == '' || shipping_address == '' || shipping_phone == '') {
+                renderCheckoutOrderNotice('Vui lòng điền đầy đủ tên, email, số điện thoại và địa chỉ nhận hàng.', 'error');
                 swal("Thiếu thông tin", "Vui lòng điền đầy đủ tên, email, số điện thoại và địa chỉ nhận hàng.", "error");
                 return;
             }
@@ -2793,6 +2764,9 @@
                 url: '{{ url('/confirm-order') }}',
                 method: 'POST',
                 beforeSend: function() {
+                    $('#checkout_order_notice').html('');
+                    $button.data('submitting', true);
+                    $button.data('originalHtml', originalHtml);
                     $button.prop('disabled', true);
                     $button.html('<i class="fa fa-spinner fa-spin"></i> Đang xử lý...');
                 },
@@ -2803,9 +2777,8 @@
                     shipping_phone: shipping_phone,
                     shipping_notes: shipping_notes,
                     shipping_method: shipping_method,
-                    city_id: city_id,
-                    province_id: province_id,
-                    ward_id: ward_id,
+                    vietnam_province_code: vietnam_province_code,
+                    vietnam_ward_code: vietnam_ward_code,
                     _token: _token
                 },
                 onSuccess: function(data) {
@@ -2813,9 +2786,11 @@
                     location.href = "{{ url('/view-history-order') }}/" + orderCode + "?just_placed=1";
                 },
                 onError: function(xhr) {
+                    $button.data('submitting', false);
                     $button.prop('disabled', false);
-                    $button.html('Đặt hàng');
+                    $button.html($button.data('originalHtml') || originalHtml);
                     var message = getAjaxErrorMessage(xhr, 'Không thể gửi đơn hàng lúc này.');
+                    renderCheckoutOrderNotice(message, 'error');
                     swal("Lỗi đặt hàng", message, "error");
                 }
             });
@@ -2825,13 +2800,7 @@
             var action = $(this).attr('id');
             var ma_id = $(this).val();
             var _token = $('input[name="_token"]').val();
-            var result = '';
-
-            if (action == 'city') {
-                result = 'province';
-            } else {
-                result = 'wards';
-            }
+            var result = 'wards';
             loadStorefrontFragment({
                 url: '{{ url('/select-delivery-home') }}',
                 method: 'POST',
@@ -2843,9 +2812,6 @@
                 target: '#' + result,
                 fallbackMessage: 'Không thể tải danh sách địa chỉ.',
                 onSuccess: function() {
-                    if (result === 'province') {
-                        $('#wards').html('<option value="">--- Chọn phường / xã ---</option>').trigger('change');
-                    }
                     initSelect2Interactions();
                 }
             });
@@ -2856,11 +2822,10 @@
     $(document).ready(function() {
         $('.calculate_delivery').click(function() {
             var $button = $(this);
-            var matp = $('.city').val();
-            var maqh = $('.province').val();
-            var xaid = $('.wards').val();
+            var vietnam_province_code = $('.province').val();
+            var vietnam_ward_code = $('.wards').val();
             var _token = $('input[name="_token"]').val();
-            if (matp == '' || maqh == '' || xaid == '') {
+            if (vietnam_province_code == '' || vietnam_ward_code == '') {
                 renderCheckoutDeliveryNotice('Chưa có đủ dữ liệu địa chỉ để tính phí vận chuyển theo khu vực. Hệ thống sẽ dùng phí mặc định khi đặt hàng.', 'warning');
                 showStorefrontStatus('Thiếu thông tin giao hàng',
                     'Chưa có đủ dữ liệu địa chỉ để tính phí vận chuyển theo khu vực.', 'warning');
@@ -2874,12 +2839,8 @@
                     $button.html('<i class="fa fa-spinner fa-spin"></i>Đang tính phí');
                 },
                 data: {
-                    matp: matp,
-                    maqh: maqh,
-                    xaid: xaid,
-                    city_id: matp,
-                    province_id: maqh,
-                    ward_id: xaid,
+                    vietnam_province_code: vietnam_province_code,
+                    vietnam_ward_code: vietnam_ward_code,
                     _token: _token
                 },
                 fallbackMessage: 'Không thể tính phí vận chuyển.',
@@ -3015,153 +2976,13 @@
         const closeButton = widget.querySelector('[data-chatbot-close]');
         const form = widget.querySelector('[data-chatbot-form]');
         const input = widget.querySelector('[data-chatbot-input]');
+        const submitButton = form ? form.querySelector('button[type="submit"]') : null;
         const messagesContainer = widget.querySelector('[data-chatbot-messages]');
         const quickActions = widget.querySelectorAll('[data-chatbot-prompt]');
         const launchers = document.querySelectorAll('[data-chatbot-launch]');
-        let demoMessageId = 1;
-
-        const demoSetExpanded = function (isExpanded) {
-            if (toggle) {
-                toggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-            }
-
-            launchers.forEach((launcher) => {
-                launcher.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
-            });
-        };
-
-        const demoScrollToBottom = function () {
-            if (messagesContainer) {
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-        };
-
-        const demoAppendMessage = function (sender, message) {
-            const cleanMessage = (message || '').trim();
-
-            if (!messagesContainer || !cleanMessage) {
-                return;
-            }
-
-            const wrapper = document.createElement('article');
-            wrapper.className = `shopw-chatbot-message shopw-chatbot-message-${sender}`;
-            wrapper.setAttribute('data-message-id', String(++demoMessageId));
-            wrapper.innerHTML = `
-                <div class="shopw-chatbot-bubble">
-                    <p>${escapeHtml(cleanMessage)}</p>
-                </div>
-            `;
-
-            messagesContainer.appendChild(wrapper);
-            demoScrollToBottom();
-        };
-
-        const demoOpenPanel = function () {
-            if (!panel) {
-                return;
-            }
-
-            panel.removeAttribute('hidden');
-            widget.classList.add('is-open');
-            demoSetExpanded(true);
-            demoScrollToBottom();
-
-            if (input) {
-                window.setTimeout(() => input.focus(), 30);
-            }
-        };
-
-        const demoClosePanel = function () {
-            if (!panel) {
-                return;
-            }
-
-            panel.setAttribute('hidden', 'hidden');
-            widget.classList.remove('is-open');
-            demoSetExpanded(false);
-        };
-
-        const demoSendMessage = function (message) {
-            const cleanMessage = (message || '').trim();
-
-            if (!cleanMessage) {
-                return;
-            }
-
-            demoAppendMessage('user', cleanMessage);
-
-            window.setTimeout(() => {
-                demoAppendMessage(
-                    'bot',
-                    'Cảm ơn bạn! Hiện đây là trợ lý demo. Vui lòng để lại nhu cầu, nhân viên sẽ hỗ trợ bạn sau.'
-                );
-            }, 240);
-        };
-
-        if (toggle) {
-            toggle.addEventListener('click', function () {
-                if (panel.hasAttribute('hidden')) {
-                    demoOpenPanel();
-                } else {
-                    demoClosePanel();
-                }
-            });
-        }
-
-        launchers.forEach((launcher) => {
-            launcher.setAttribute('role', 'button');
-            launcher.setAttribute('aria-controls', 'shopw-chatbot-panel');
-            launcher.setAttribute('aria-expanded', 'false');
-
-            launcher.addEventListener('click', function (event) {
-                event.preventDefault();
-                demoOpenPanel();
-            });
-        });
-
-        if (closeButton) {
-            closeButton.addEventListener('click', function () {
-                demoClosePanel();
-            });
-        }
-
-        if (form) {
-            form.addEventListener('submit', function (event) {
-                event.preventDefault();
-
-                if (!input || !input.value.trim()) {
-                    return;
-                }
-
-                const value = input.value;
-                input.value = '';
-                demoSendMessage(value);
-                input.focus();
-            });
-        }
-
-        quickActions.forEach((button) => {
-            button.addEventListener('click', function () {
-                const prompt = button.getAttribute('data-chatbot-prompt') || '';
-
-                if (!prompt) {
-                    return;
-                }
-
-                demoOpenPanel();
-                demoSendMessage(prompt);
-            });
-        });
-
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape' && panel && !panel.hasAttribute('hidden')) {
-                demoClosePanel();
-            }
-        });
-
-        return;
 
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+        const fallbackErrorMessage = 'Hiện chưa thể kết nối tư vấn viên, vui lòng thử lại sau.';
 
         let loaded = false;
         let isSending = false;
@@ -3169,9 +2990,51 @@
         let pollTimer = null;
 
         function setExpanded(isExpanded) {
+            document.body.classList.toggle('shopw-chatbot-open', isExpanded);
+
             if (toggle) {
                 toggle.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
             }
+
+            launchers.forEach((launcher) => {
+                launcher.setAttribute('role', 'button');
+                launcher.setAttribute('aria-controls', 'shopw-chatbot-panel');
+                launcher.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+                launcher.classList.toggle('is-open', isExpanded);
+            });
+        }
+
+        function openPanel() {
+            if (!panel) {
+                return;
+            }
+
+            panel.removeAttribute('hidden');
+            panel.hidden = false;
+            panel.style.display = 'flex';
+            panel.style.opacity = '1';
+            panel.style.visibility = 'visible';
+            panel.style.pointerEvents = 'auto';
+            panel.setAttribute('aria-hidden', 'false');
+            widget.classList.add('is-open');
+            setExpanded(true);
+        }
+
+        function closePanel() {
+            if (!panel) {
+                return;
+            }
+
+            panel.setAttribute('hidden', 'hidden');
+            panel.hidden = true;
+            panel.style.removeProperty('display');
+            panel.style.removeProperty('opacity');
+            panel.style.removeProperty('visibility');
+            panel.style.removeProperty('pointer-events');
+            panel.setAttribute('aria-hidden', 'true');
+            widget.classList.remove('is-open');
+            setExpanded(false);
+            stopPolling();
         }
 
         function renderProducts(products) {
@@ -3232,6 +3095,10 @@
         }
 
         function setMessages(messages) {
+            if (!messagesContainer) {
+                return;
+            }
+
             messagesContainer.innerHTML = '';
 
             messages.forEach((message) => {
@@ -3254,12 +3121,20 @@
         }
 
         function getLastMessageId() {
+            if (!messagesContainer) {
+                return 0;
+            }
+
             const lastMessage = messagesContainer.querySelector('[data-message-id]:last-child');
 
             return lastMessage ? Number(lastMessage.getAttribute('data-message-id')) : 0;
         }
 
         function showTypingState() {
+            if (!messagesContainer) {
+                return;
+            }
+
             const typing = document.createElement('article');
             typing.className = 'shopw-chatbot-message shopw-chatbot-message-bot';
             typing.setAttribute('data-chatbot-typing', 'true');
@@ -3274,10 +3149,46 @@
         }
 
         function clearTypingState() {
+            if (!messagesContainer) {
+                return;
+            }
+
             const typing = messagesContainer.querySelector('[data-chatbot-typing="true"]');
 
             if (typing) {
                 typing.remove();
+            }
+        }
+
+        function appendErrorMessage(message) {
+            if (!messagesContainer) {
+                return;
+            }
+
+            messagesContainer.appendChild(renderMessage({
+                sender: 'bot',
+                message: message || fallbackErrorMessage,
+                products: [],
+                actions: []
+            }));
+            scrollToBottom();
+        }
+
+        function setSendingState(sending) {
+            isSending = sending;
+            widget.classList.toggle('is-sending', sending);
+
+            if (input) {
+                input.disabled = sending;
+            }
+
+            if (submitButton) {
+                submitButton.disabled = sending;
+                submitButton.setAttribute('aria-busy', sending ? 'true' : 'false');
+                const submitLabel = submitButton.querySelector('span');
+                if (submitLabel) {
+                    submitLabel.textContent = sending ? 'Đang gửi...' : 'Gửi';
+                }
             }
         }
 
@@ -3293,9 +3204,13 @@
                 }
             });
 
+            if (!response.ok) {
+                throw new Error('Chatbot conversation request failed');
+            }
+
             const payload = await response.json();
-            conversationId = Number(payload.data.id || 0);
-            setMessages(payload.data.messages || []);
+            conversationId = Number(payload.data?.id || 0);
+            setMessages(payload.data?.messages || []);
             loaded = true;
         }
 
@@ -3311,8 +3226,13 @@
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             });
+
+            if (!response.ok) {
+                return;
+            }
+
             const payload = await response.json();
-            appendMessages(payload.data.messages || []);
+            appendMessages(payload.data?.messages || []);
         }
 
         function startPolling() {
@@ -3332,7 +3252,7 @@
                 return;
             }
 
-            isSending = true;
+            setSendingState(true);
             showTypingState();
 
             try {
@@ -3349,68 +3269,107 @@
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error('Chatbot message request failed');
+                }
+
                 const payload = await response.json();
                 clearTypingState();
-                conversationId = Number(payload.data.conversation.id || conversationId);
-                setMessages(payload.data.conversation.messages || []);
+                conversationId = Number(payload.data?.conversation?.id || conversationId);
+                setMessages(payload.data?.conversation?.messages || []);
             } catch (error) {
                 clearTypingState();
-                messagesContainer.appendChild(renderMessage({
-                    sender: 'bot',
-                    message: 'Có lỗi khi gửi tin nhắn. Bạn vui lòng thử lại sau ít phút.',
-                    products: [],
-                    actions: []
-                }));
-                scrollToBottom();
+                appendErrorMessage(fallbackErrorMessage);
             } finally {
-                isSending = false;
+                setSendingState(false);
             }
         }
 
         if (toggle) {
-            toggle.addEventListener('click', async function () {
+            toggle.addEventListener('mouseenter', function () {
+                widget.classList.add('is-hovered');
+            });
+
+            toggle.addEventListener('mouseleave', function () {
+                widget.classList.remove('is-hovered');
+            });
+
+            toggle.addEventListener('focus', function () {
+                widget.classList.add('is-hovered');
+            });
+
+            toggle.addEventListener('blur', function () {
+                widget.classList.remove('is-hovered');
+            });
+
+            toggle.addEventListener('click', async function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+
                 const isOpen = !panel.hasAttribute('hidden');
 
                 if (isOpen) {
-                    panel.setAttribute('hidden', 'hidden');
-                    setExpanded(false);
+                    closePanel();
                     return;
                 }
 
-                panel.removeAttribute('hidden');
-                setExpanded(true);
-                await bootstrapConversation();
-                startPolling();
-                input.focus();
+                openPanel();
+                toggle.blur();
+                try {
+                    await bootstrapConversation();
+                    startPolling();
+                } catch (error) {
+                    appendErrorMessage(fallbackErrorMessage);
+                }
+                if (input) input.focus();
             });
         }
 
         launchers.forEach((launcher) => {
+            launcher.setAttribute('role', 'button');
+            launcher.setAttribute('aria-controls', 'shopw-chatbot-panel');
+            launcher.setAttribute('aria-expanded', 'false');
+
             launcher.addEventListener('click', async function (event) {
                 event.preventDefault();
+                event.stopPropagation();
 
-                if (panel.hasAttribute('hidden')) {
-                    panel.removeAttribute('hidden');
-                    setExpanded(true);
-                    await bootstrapConversation();
-                    startPolling();
+                const isOpen = !panel.hasAttribute('hidden');
+
+                if (isOpen) {
+                    closePanel();
+                    launcher.blur();
+                    return;
                 }
 
-                input.focus();
+                openPanel();
+                launcher.blur();
+                try {
+                    await bootstrapConversation();
+                    startPolling();
+                } catch (error) {
+                    appendErrorMessage(fallbackErrorMessage);
+                }
+
+                if (input) input.focus();
             });
         });
 
         if (closeButton) {
-            closeButton.addEventListener('click', function () {
-                panel.setAttribute('hidden', 'hidden');
-                setExpanded(false);
-                stopPolling();
+            closeButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                closePanel();
             });
         }
 
         if (form) {
             form.addEventListener('submit', async function (event) {
                 event.preventDefault();
+
+                if (!input) {
+                    return;
+                }
 
                 const value = input.value;
 
@@ -3420,7 +3379,7 @@
 
                 input.value = '';
                 await sendMessage(value);
-                input.focus();
+                if (input) input.focus();
             });
         }
 
@@ -3433,14 +3392,33 @@
                 }
 
                 if (panel.hasAttribute('hidden')) {
-                    panel.removeAttribute('hidden');
-                    setExpanded(true);
-                    await bootstrapConversation();
-                    startPolling();
+                    openPanel();
+                    try {
+                        await bootstrapConversation();
+                        startPolling();
+                    } catch (error) {
+                        appendErrorMessage(fallbackErrorMessage);
+                    }
                 }
 
                 await sendMessage(prompt);
             });
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && panel && !panel.hasAttribute('hidden')) {
+                closePanel();
+            }
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!panel || panel.hasAttribute('hidden')) {
+                return;
+            }
+
+            if (!widget.contains(event.target) && !event.target.closest('[data-chatbot-launch]')) {
+                closePanel();
+            }
         });
 
         if (window.Echo && typeof window.Echo.channel === 'function') {

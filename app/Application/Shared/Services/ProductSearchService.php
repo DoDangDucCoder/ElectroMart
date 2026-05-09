@@ -22,6 +22,7 @@ class ProductSearchService
     public function filter(Builder $query, array $filters): Builder
     {
         $query->where('is_active', true)
+            ->withCompleteStorefrontMedia()
             ->with(['brand', 'categories', 'primaryCategory']);
 
         $this->applyLocalDemoImageSafety($query);
@@ -78,6 +79,7 @@ class ProductSearchService
         $query = Product::query()
             ->with(['brand', 'primaryCategory'])
             ->where('is_active', true)
+            ->withCompleteStorefrontMedia()
             ->where(function (Builder $builder) use ($keyword) {
                 $builder->where('name', 'like', '%' . $keyword . '%')
                     ->orWhere('sku', 'like', '%' . $keyword . '%')

@@ -1,8 +1,8 @@
 {{-- Shared account sidebar partial --}}
 @php
     $currentSection = $currentSection ?? '';
-    $customerName = $customer->name ?? 'Nguyễn Văn An';
-    $customerEmail = $customer->email ?? 'nguyenvanan@gmail.com';
+    $customerName = filled($customer->name ?? null) ? $customer->name : 'Khách hàng';
+    $customerEmail = filled($customer->email ?? null) ? $customer->email : 'Chưa cập nhật';
     $customerInitial = strtoupper(mb_substr($customerName, 0, 1, 'UTF-8'));
 
     $sidebarMenu = [

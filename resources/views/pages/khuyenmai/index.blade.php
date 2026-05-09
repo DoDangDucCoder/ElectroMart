@@ -21,49 +21,14 @@
     </div>
 
     {{-- Hero Banner --}}
-    <section class="promo-hero" id="promo-hero">
-        <div class="promo-hero-bg"></div>
+    <section class="promo-banner-hero" id="promo-hero">
         <div class="container">
-            <div class="promo-hero-inner">
-                <div class="promo-hero-content">
-                    <h1 class="promo-hero-title">
-                        <span>BỘ SƯU TẬP &</span>
-                        <span>KHUYẾN MÃI HOT</span>
-                    </h1>
-                    <p class="promo-hero-desc">Laptop, PC & Phụ kiện chính hãng<br>giá tốt – ưu đãi mỗi ngày!</p>
-                    <div class="promo-hero-countdown" data-tech-countdown aria-label="Đếm ngược">
-                        <span class="promo-hero-countdown-label">Kết thúc sau:</span>
-                        <div class="promo-hero-countdown-boxes">
-                            <div class="promo-countdown-box">
-                                <strong data-countdown-unit="days">06</strong>
-                                <small>NGÀY</small>
-                            </div>
-                            <span class="promo-countdown-sep">:</span>
-                            <div class="promo-countdown-box">
-                                <strong data-countdown-unit="hours">23</strong>
-                                <small>GIỜ</small>
-                            </div>
-                            <span class="promo-countdown-sep">:</span>
-                            <div class="promo-countdown-box">
-                                <strong data-countdown-unit="minutes">41</strong>
-                                <small>PHÚT</small>
-                            </div>
-                            <span class="promo-countdown-sep">:</span>
-                            <div class="promo-countdown-box">
-                                <strong data-countdown-unit="seconds">58</strong>
-                                <small>GIÂY</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="promo-hero-actions">
-                        <a href="{{ url('/san-pham') }}" class="promo-btn promo-btn--primary">Mua ngay</a>
-                        <a href="#promo-collections" class="promo-btn promo-btn--outline">Xem bộ sưu tập</a>
-                    </div>
-                </div>
-                <div class="promo-hero-visual">
-                    <img src="{{ asset('assets/home/hero/hero-gaming-setup.svg') }}" alt="Khuyến mãi HOT" class="promo-hero-img">
-                </div>
-            </div>
+            <a href="{{ url('/san-pham') }}" class="promo-banner-hero-link" aria-label="Xem sản phẩm khuyến mãi">
+                <img
+                    src="{{ asset('frontend/images/banners/hero-student-promo.png') }}"
+                    alt="Bộ sưu tập khuyến mãi"
+                    class="promo-banner-hero-img">
+            </a>
         </div>
     </section>
 
@@ -143,7 +108,11 @@
             <div class="promo-section-head">
                 <div class="promo-flash-header">
                     <h2><i class="fa fa-bolt"></i> Flash Sale</h2>
-                    <div class="promo-flash-timer" data-tech-countdown>
+                    <div class="promo-flash-timer"
+                        data-tech-countdown
+                        data-countdown-type="daily"
+                        data-countdown-cycle-hours="24"
+                        data-countdown-storage-key="promo-flash-sale">
                         <span class="promo-flash-timer-label"><i class="fa fa-clock-o"></i> Kết thúc sau:</span>
                         <strong data-countdown-unit="hours">02</strong>
                         <span>:</span>
@@ -212,31 +181,51 @@
                 <h2>Mã giảm giá dành cho bạn</h2>
                 <a href="{{ url('/san-pham') }}" class="promo-see-all">Xem tất cả <i class="fa fa-arrow-right"></i></a>
             </div>
-            <div class="promo-coupon-grid">
-                @php
-                    $coupons = [
-                        ['code' => 'STUDY10', 'title' => 'Giảm 10% tối đa 300K', 'desc' => 'Đơn từ 2.000.000đ', 'exp' => 'HSD: 25/05/2025', 'color' => 'blue'],
-                        ['code' => 'GAMER 300K', 'title' => 'Giảm 300K cho đơn từ 10 triệu', 'desc' => '', 'exp' => 'HSD: 20/05/2025', 'color' => 'dark'],
-                        ['code' => 'FREESHIP', 'title' => 'Miễn phí vận chuyển', 'desc' => 'Đơn từ 500.000đ', 'exp' => 'HSD: 31/05/2025', 'color' => 'teal'],
-                        ['code' => 'ACCESS5', 'title' => 'Giảm 5% cho phụ kiện', 'desc' => 'Đơn từ 250.000đ', 'exp' => 'HSD: 31/05/2025', 'color' => 'orange'],
-                    ];
-                @endphp
-                @foreach ($coupons as $coupon)
-                    <div class="promo-coupon-card promo-coupon--{{ $coupon['color'] }}">
-                        <div class="promo-coupon-left">
-                            <strong class="promo-coupon-code">{{ $coupon['code'] }}</strong>
-                            <p class="promo-coupon-title">{{ $coupon['title'] }}</p>
-                            @if ($coupon['desc'])
-                                <span class="promo-coupon-desc">{{ $coupon['desc'] }}</span>
-                            @endif
+            @php
+                $coupons = collect($availableCoupons ?? []);
+                $couponColors = ['blue', 'dark', 'teal', 'orange'];
+                $formatCouponValue = function ($coupon) {
+                    return match ($coupon->type) {
+                        'percent' => 'Giảm ' . rtrim(rtrim(number_format((float) $coupon->value, 2, '.', ''), '0'), '.') . '%',
+                        'shipping' => 'Miễn phí vận chuyển',
+                        default => 'Giảm ' . number_format((float) $coupon->value, 0, ',', '.') . 'đ',
+                    };
+                };
+            @endphp
+            @if ($coupons->isNotEmpty())
+                <div class="promo-coupon-grid">
+                    @foreach ($coupons as $coupon)
+                        @php
+                            $couponDesc = $coupon->min_order_total
+                                ? 'Đơn từ ' . number_format((float) $coupon->min_order_total, 0, ',', '.') . 'đ'
+                                : 'Áp dụng theo điều kiện mã';
+                            $couponExp = $coupon->expires_at
+                                ? 'HSD: ' . $coupon->expires_at->format('d/m/Y')
+                                : 'Không giới hạn thời hạn';
+                        @endphp
+                        <div class="promo-coupon-card promo-coupon--{{ $couponColors[$loop->index % count($couponColors)] }}">
+                            <div class="promo-coupon-left">
+                                <strong class="promo-coupon-code">{{ $coupon->code }}</strong>
+                                <p class="promo-coupon-title">{{ $coupon->name ?: $formatCouponValue($coupon) }}</p>
+                                <span class="promo-coupon-desc">{{ $couponDesc }}</span>
+                            </div>
+                            <div class="promo-coupon-right">
+                                <button type="button" class="promo-coupon-copy" data-coupon="{{ $coupon->code }}">Sao chép</button>
+                                <span class="promo-coupon-exp">{{ $couponExp }}</span>
+                            </div>
                         </div>
-                        <div class="promo-coupon-right">
-                            <button type="button" class="promo-coupon-copy" data-coupon="{{ $coupon['code'] }}">Sao chép</button>
-                            <span class="promo-coupon-exp">{{ $coupon['exp'] }}</span>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
+                    @endforeach
+                </div>
+            @else
+                @include('partials.storefront.empty-state', [
+                    'class' => 'promo-coupon-empty',
+                    'icon' => 'fa fa-ticket',
+                    'title' => 'Hiện chưa có mã khuyến mãi khả dụng',
+                    'message' => 'Các ưu đãi sản phẩm vẫn được cập nhật trong danh sách bên dưới.',
+                    'actionText' => 'Xem sản phẩm',
+                    'actionUrl' => url('/san-pham'),
+                ])
+            @endif
         </div>
     </section>
 

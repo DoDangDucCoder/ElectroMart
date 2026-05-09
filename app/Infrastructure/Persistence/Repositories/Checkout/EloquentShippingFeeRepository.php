@@ -7,6 +7,18 @@ use App\Infrastructure\Persistence\Eloquent\Shipping\ShippingFee;
 
 class EloquentShippingFeeRepository implements ShippingFeeRepositoryInterface
 {
+    public function findVietnam2025Fee(?string $provinceCode, ?string $wardCode): ?ShippingFee
+    {
+        if (! $provinceCode || ! $wardCode) {
+            return null;
+        }
+
+        return ShippingFee::query()
+            ->where('vietnam_province_code', $provinceCode)
+            ->where('vietnam_ward_code', $wardCode)
+            ->first();
+    }
+
     public function findFee(?int $cityId, ?int $provinceId, ?int $wardId): ?ShippingFee
     {
         $query = ShippingFee::query();

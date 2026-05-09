@@ -7,8 +7,11 @@ use App\Application\Catalog\Services\CategoryService;
 use App\Application\Catalog\Services\ProductService;
 use App\Application\Cms\Services\BlogCategoryService;
 use App\Http\Controllers\Concerns\LegacyStorefrontContext;
+use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class BrandProduct extends Controller
@@ -48,9 +51,14 @@ class BrandProduct extends Controller
 
     public function save_brand_product(Request $request): RedirectResponse
     {
+        $request->merge([
+            'brand_slug' => $request->input('brand_slug')
+                ?: Str::slug((string) $request->input('brand_product_name')),
+        ]);
+
         $validated = $request->validate([
             'brand_product_name' => ['required', 'string', 'max:255'],
-            'brand_slug' => ['nullable', 'string', 'max:255'],
+            'brand_slug' => ['required', 'string', 'max:255', Rule::unique((new Brand())->getTable(), 'slug')],
             'brand_product_desc' => ['nullable', 'string'],
             'brand_product_status' => ['nullable', 'in:0,1'],
             'display_order' => ['nullable', 'integer', 'min:0'],

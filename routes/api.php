@@ -1,19 +1,19 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\ProductController;
-use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BlogController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CartController;
-use App\Http\Controllers\Api\OrderController;
-use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\ProductReviewController;
-use App\Http\Controllers\Api\CouponController;
-use App\Http\Controllers\Api\BlogController;
-use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ChatController as ChatbotController;
-use App\Http\Controllers\Api\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProductReviewController;
+use App\Http\Controllers\Api\SettingsController;
 use App\Support\AdminPermissions;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -28,7 +28,7 @@ use App\Support\AdminPermissions;
 
 // Public API routes
 Route::prefix('v1')->group(function () {
-    
+
     // Products
     Route::get('/products', [ProductController::class, 'index']);
     Route::get('/products/latest', [ProductController::class, 'latest']);
@@ -56,7 +56,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/health', [\App\Http\Controllers\Api\HealthController::class, 'check']);
     Route::get('/health/cache', [\App\Http\Controllers\Api\HealthController::class, 'cache']);
     Route::get('/health/performance', [\App\Http\Controllers\Api\HealthController::class, 'performance']);
-    
+
     // API Documentation
     Route::get('/docs', [\App\Http\Controllers\Api\ApiDocumentationController::class, 'index']);
 
@@ -68,7 +68,6 @@ Route::prefix('v1')->group(function () {
     Route::get('/coupons', [CouponController::class, 'index']);
     Route::get('/coupons/{code}', [CouponController::class, 'show']);
     Route::post('/coupons/validate', [CouponController::class, 'validate_coupon']);
-
 
     // Blog
     Route::get('/blog', [BlogController::class, 'index']);
@@ -95,7 +94,7 @@ Route::prefix('v1')->group(function () {
 
 // Protected customer API routes
 Route::prefix('v1')->middleware(['auth:sanctum', 'customer.api'])->group(function () {
-    
+
     // User profile
     Route::get('/user', [AuthController::class, 'user']);
     Route::put('/user', [AuthController::class, 'updateProfile']);
@@ -126,19 +125,28 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin.access:sanctum'])-
     Route::get('auth/me', [AdminAuthController::class, 'me']);
     Route::post('auth/logout', [AdminAuthController::class, 'logout']);
 
-    Route::middleware('admin.permission:' . AdminPermissions::MANAGE_PRODUCTS)->group(function () {
+    Route::middleware('admin.permission:'.AdminPermissions::MANAGE_PRODUCTS)->group(function () {
         // Admin products
-        Route::apiResource('products', \App\Http\Controllers\Api\Admin\ProductController::class);
+        Route::post('products', [\App\Http\Controllers\Api\Admin\ProductController::class, 'store'])
+            ->middleware('admin.create.locked')
+            ->name('products.store');
+        Route::apiResource('products', \App\Http\Controllers\Api\Admin\ProductController::class)->except(['store']);
         Route::post('products/{id}/toggle-status', [\App\Http\Controllers\Api\Admin\ProductController::class, 'toggleStatus']);
 
         // Admin categories
-        Route::apiResource('categories', \App\Http\Controllers\Api\Admin\CategoryController::class);
+        Route::post('categories', [\App\Http\Controllers\Api\Admin\CategoryController::class, 'store'])
+            ->middleware('admin.create.locked')
+            ->name('categories.store');
+        Route::apiResource('categories', \App\Http\Controllers\Api\Admin\CategoryController::class)->except(['store']);
 
         // Admin brands
-        Route::apiResource('brands', \App\Http\Controllers\Api\Admin\BrandController::class);
+        Route::post('brands', [\App\Http\Controllers\Api\Admin\BrandController::class, 'store'])
+            ->middleware('admin.create.locked')
+            ->name('brands.store');
+        Route::apiResource('brands', \App\Http\Controllers\Api\Admin\BrandController::class)->except(['store']);
     });
 
-    Route::middleware('admin.permission:' . AdminPermissions::MANAGE_ORDERS)->group(function () {
+    Route::middleware('admin.permission:'.AdminPermissions::MANAGE_ORDERS)->group(function () {
         // Admin orders
         Route::get('orders', [\App\Http\Controllers\Api\Admin\OrderController::class, 'index']);
         Route::get('orders/{id}', [\App\Http\Controllers\Api\Admin\OrderController::class, 'show']);
@@ -146,7 +154,7 @@ Route::prefix('v1/admin')->middleware(['auth:sanctum', 'admin.access:sanctum'])-
         Route::get('statistics/products-profit', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'productsProfit']);
     });
 
-    Route::middleware('admin.permission:' . AdminPermissions::MANAGE_SYSTEM)->group(function () {
+    Route::middleware('admin.permission:'.AdminPermissions::MANAGE_SYSTEM)->group(function () {
         // Admin statistics
         Route::get('statistics', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'index']);
         Route::get('statistics/sales', [\App\Http\Controllers\Api\Admin\StatisticsController::class, 'sales']);

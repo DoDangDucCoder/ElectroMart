@@ -1,0 +1,12 @@
+{
+    "total_products": 1570,
+    "products_with_main_image": 1478,
+    "products_with_4_gallery_images": 1474,
+    "products_with_5_gallery_images": 0,
+    "products_missing_main_image": 92,
+    "products_missing_gallery": 96,
+    "products_with_broken_image_file": 41,
+    "products_visible_after_filter": 1473,
+    "products_hidden_by_media_filter": 97,
+    "min_gallery_images_required": 4
+}

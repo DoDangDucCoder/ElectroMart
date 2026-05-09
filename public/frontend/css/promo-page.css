@@ -94,6 +94,28 @@
 /* ----------------------------------------------------------------
    HERO BANNER
    ---------------------------------------------------------------- */
+.promo-banner-hero {
+  padding: 22px 0 28px;
+}
+
+.promo-banner-hero-link {
+  display: block;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 28px;
+  background: #fff;
+  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.1);
+}
+
+.promo-banner-hero-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
 .promo-hero {
   position: relative;
   background: linear-gradient(135deg, #0c1e35 0%, #0f2e4d 40%, #134e6f 70%, #0d9488 100%);

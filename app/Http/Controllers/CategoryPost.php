@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class CategoryPost extends Controller
 {
@@ -22,9 +23,14 @@ class CategoryPost extends Controller
 
     public function save_category_post(Request $request)
     {
+        $request->merge([
+            'cate_post_slug' => $request->input('cate_post_slug')
+                ?: Str::slug((string) $request->input('cate_post_name')),
+        ]);
+
         $data = $request->validate([
             'cate_post_name' => ['required', 'string', 'max:255'],
-            'cate_post_slug' => ['nullable', 'string', 'max:255'],
+            'cate_post_slug' => ['required', 'string', 'max:255', Rule::unique('blog_categories', 'slug')],
             'cate_post_desc' => ['nullable', 'string'],
             'cate_post_status' => ['required', 'in:0,1'],
         ]);

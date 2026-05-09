@@ -330,6 +330,12 @@ class ProductController extends Controller
 
     protected function validateProductRequest(Request $request, ?int $productId = null): array
     {
+        if (! $request->filled('product_slug') && $request->filled('product_name')) {
+            $request->merge([
+                'product_slug' => Str::slug((string) $request->input('product_name')),
+            ]);
+        }
+
         $validator = validator($request->all(), [
             'product_name' => ['required', 'string', 'max:255'],
             'product_slug' => ['nullable', 'string', 'max:255', Rule::unique('products', 'slug')->ignore($productId)],
@@ -511,6 +517,7 @@ class ProductController extends Controller
                 'media' => fn ($query) => $query->orderBy('display_order')->orderBy('id'),
                 'variants.attributeValues.attribute',
             ])
+                ->withCompleteStorefrontMedia()
                 ->where('slug', $product_slug)
                 ->first();
         }
@@ -554,6 +561,7 @@ class ProductController extends Controller
         $related_product = $this->productService->getRelatedProducts($product, 12);
         if ($this->allowsLocalPreviewCatalog() && $related_product->count() < 6) {
             $fallbackRelated = Product::with(['brand', 'categories'])
+                ->withCompleteStorefrontMedia()
                 ->where('id', '!=', $product->id)
                 ->whereNotNull('thumbnail_path')
                 ->where('thumbnail_path', '!=', '')

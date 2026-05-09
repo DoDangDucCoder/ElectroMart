@@ -2,9 +2,8 @@
     <section id="shopw-chatbot-panel" class="shopw-chatbot-panel" data-chatbot-panel hidden>
         <header class="shopw-chatbot-header">
             <div>
-                <p class="shopw-chatbot-kicker">{{ config('services.storefront_brand.name', 'DangDuc') }}</p>
                 <h3>{{ config('storefront.labels.chat_assistant', 'Trợ lý bán hàng') }}</h3>
-                <span class="shopw-chatbot-subtitle">Chat mua hàng trực tuyến từ 8h - 24h</span>
+                <span class="shopw-chatbot-subtitle">Tư vấn mua hàng trực tuyến</span>
             </div>
             <button type="button" class="shopw-chatbot-close" data-chatbot-close aria-label="Đóng hộp chat">
                 <span aria-hidden="true">&times;</span>
@@ -26,7 +25,7 @@
         </div>
 
         <form class="shopw-chatbot-form" data-chatbot-form>
-            <input type="text" name="message" data-chatbot-input placeholder="Nhập tin nhắn..." maxlength="1000"
+            <input type="text" name="message" data-chatbot-input placeholder="Nhập tin nhắn..." maxlength="500"
                 autocomplete="off">
             <button type="submit">
                 <i class="fa fa-paper-plane"></i>
@@ -34,21 +33,5 @@
             </button>
         </form>
     </section>
-
-    <button type="button" class="shopw-chatbot-toggle" data-chatbot-toggle aria-controls="shopw-chatbot-panel"
-        aria-expanded="false" aria-label="Mở trợ lý bán hàng">
-        <span class="shopw-chatbot-toggle-main">
-            <span class="shopw-chatbot-toggle-icon" aria-hidden="true">
-                <i class="fa fa-comments-o"></i>
-            </span>
-            <span class="shopw-chatbot-toggle-copy">
-                <strong>{{ config('storefront.labels.chat_assistant', 'Trợ lý bán hàng') }}</strong>
-                <span>Chat mua hàng trực tuyến từ 8h - 24h</span>
-            </span>
-        </span>
-        <span class="shopw-chatbot-toggle-tail" aria-hidden="true">
-            <i class="fa fa-angle-up"></i>
-        </span>
-    </button>
 </div>
 

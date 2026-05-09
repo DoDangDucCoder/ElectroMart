@@ -21,6 +21,7 @@ body.cmp-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
 .cmp-search input{width:100%;height:42px;border:1px solid #e5e7eb;border-radius:8px;padding:0 14px 0 38px;font-size:13px;color:#111827}
 .cmp-search input:focus{outline:none;border-color:#0d9488;box-shadow:0 0 0 3px rgba(13,148,136,.12)}
 .cmp-search i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:14px}
+.cmp-search button{position:absolute;right:5px;top:5px;height:32px;padding:0 12px;border:0;border-radius:6px;background:#0d9488;color:#fff;font-size:12px;font-weight:600}
 .cmp-select{height:42px;border:1px solid #e5e7eb;border-radius:8px;padding:0 32px 0 14px;font-size:13px;color:#111827;background:#fff;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");background-repeat:no-repeat;background-position:right 10px center}
 .cmp-clear-btn{height:42px;padding:0 18px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s}
 .cmp-clear-btn:hover{background:#dc2626;color:#fff;border-color:#dc2626}
@@ -101,10 +102,11 @@ body.cmp-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
     </div>
 
     <div class="cmp-toolbar">
-        <div class="cmp-search">
+        <form class="cmp-search" action="{{ url('/san-pham') }}" method="GET">
             <i class="fa fa-search"></i>
-            <input type="text" placeholder="Thêm sản phẩm để so sánh" id="cmpSearchInput">
-        </div>
+            <input type="text" name="keywords_submit" placeholder="Tìm sản phẩm để so sánh" id="cmpSearchInput">
+            <button type="submit">Tìm</button>
+        </form>
         <select class="cmp-select"><option>Tất cả danh mục</option></select>
         <select class="cmp-select"><option>Sắp xếp: Mặc định</option></select>
         @if ($productCount > 0)
@@ -118,7 +120,7 @@ body.cmp-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
                 <i class="fa fa-balance-scale"></i>
                 <h3>Chưa có sản phẩm để so sánh</h3>
                 <p>Thêm sản phẩm vào danh sách so sánh để xem bảng thông số chi tiết.</p>
-                <a href="{{ url('/') }}"><i class="fa fa-home"></i> Về trang chủ</a>
+                <a href="{{ url('/san-pham') }}"><i class="fa fa-search"></i> Tìm sản phẩm</a>
             </div>
         </div>
     @else
@@ -138,6 +140,7 @@ body.cmp-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
                                     $salePrice = (float)($product->product_price_sale ?? $product->sale_price ?? $price);
                                     $hasDiscount = $salePrice < $price && $salePrice > 0;
                                     $discountPct = $hasDiscount ? round(($price - $salePrice) / $price * 100) : 0;
+                                    $compareProductId = $product->product_id ?? $product->id ?? null;
                                 @endphp
                                 <th class="cmp-prod-cell">
                                     <button type="button" class="cmp-prod-remove" title="Xóa"><i class="fa fa-times"></i></button>
@@ -154,7 +157,15 @@ body.cmp-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
                                     <div class="cmp-prod-stock"><i class="fa fa-check-circle"></i> Còn hàng</div>
                                     <div class="cmp-prod-actions">
                                         <a href="{{ url('chi-tiet/' . $product->product_slug) }}" class="cmp-btn cmp-btn--outline"><i class="fa fa-eye"></i> Xem chi tiết</a>
-                                        <button class="cmp-btn cmp-btn--primary"><i class="fa fa-cart-plus"></i> Thêm vào giỏ</button>
+                                        @if ($compareProductId)
+                                            <button type="button" class="cmp-btn cmp-btn--primary" onclick="if(typeof Addtocart==='function'){Addtocart({{ $compareProductId }});}">
+                                                <i class="fa fa-cart-plus"></i> Thêm vào giỏ
+                                            </button>
+                                        @else
+                                            <a href="{{ url('chi-tiet/' . $product->product_slug) }}" class="cmp-btn cmp-btn--primary">
+                                                <i class="fa fa-eye"></i> Xem sản phẩm
+                                            </a>
+                                        @endif
                                     </div>
                                 </th>
                             @endforeach

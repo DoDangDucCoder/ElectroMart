@@ -356,3 +356,901 @@ body.g-product-detail {
         font-size: 24px;
     }
 }
+
+/* Shared header: keep desktop utility actions readable on every storefront body. */
+@media (min-width: 992px) {
+    #header .shopw-header-actions {
+        min-width: 380px !important;
+    }
+
+    #header .shopw-utilities--desktop {
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        overflow: visible !important;
+    }
+
+    #header .shopw-utilities--desktop > li {
+        flex: 0 0 auto !important;
+        overflow: visible !important;
+    }
+
+    #header .shopw-util a,
+    #header .shopw-util-link {
+        min-height: 38px !important;
+        min-width: 104px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 7px !important;
+        padding: 4px 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        color: #0f172a !important;
+        box-shadow: none !important;
+        white-space: nowrap !important;
+        cursor: pointer;
+    }
+
+    #header .shopw-util a i,
+    #header .shopw-util-link > i {
+        width: 18px !important;
+        height: 18px !important;
+        color: #0891b2 !important;
+        font-size: 15px !important;
+        flex: 0 0 auto !important;
+    }
+
+    #header .shopw-util-text,
+    #header .shopw-util-label,
+    #header .shopw-util-sub {
+        min-width: 0 !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        white-space: nowrap !important;
+    }
+}
+
+#header .shopw-location-menu,
+#header .shopw-account-menu {
+    position: relative;
+    display: block;
+    width: auto;
+}
+
+#header .shopw-location-menu > summary,
+#header .shopw-account-menu > summary {
+    list-style: none;
+}
+
+#header .shopw-location-menu > summary::-webkit-details-marker,
+#header .shopw-account-menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+#header .shopw-location-dropdown,
+#header .shopw-account-dropdown {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 10020;
+    width: min(280px, calc(100vw - 32px));
+    padding: 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 22px 44px rgba(15, 23, 42, 0.18);
+}
+
+#header .shopw-location-dropdown {
+    display: grid;
+    gap: 8px;
+}
+
+#header .shopw-location-dropdown strong {
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+#header .shopw-location-dropdown small {
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+#header .shopw-location-dropdown a,
+#header .shopw-account-dropdown-link,
+#header .shopw-account-dropdown-link[type="submit"] {
+    width: 100%;
+    min-height: 38px !important;
+    justify-content: flex-start !important;
+    padding: 0 12px !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 10px !important;
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    text-decoration: none !important;
+}
+
+#header .shopw-account-dropdown-link[type="submit"] {
+    display: inline-flex;
+    cursor: pointer;
+}
+
+#header .shopw-account-dropdown-links form {
+    margin: 0;
+}
+
+/* Keep product catalog pagination backgrounds on the clickable control, not the li. */
+.catalog-pagination .pagination > li,
+.catalog-pagination .pagination > .page-item,
+.catalog-pagination .pagination > [aria-current="page"] {
+    background: transparent !important;
+    border-radius: 999px !important;
+}
+
+.catalog-pagination .pagination > li > a,
+.catalog-pagination .pagination > li > span,
+.catalog-pagination .pagination > .page-item > .page-link {
+    border-radius: 999px !important;
+    background-clip: padding-box;
+}
+
+.catalog-pagination .pagination > li > a:hover,
+.catalog-pagination .pagination > li > span:hover,
+.catalog-pagination .pagination > li > a:focus,
+.catalog-pagination .pagination > li > span:focus,
+.catalog-pagination .pagination > li > a:active,
+.catalog-pagination .pagination > li > span:active,
+.catalog-pagination .pagination > li > a:focus-visible,
+.catalog-pagination .pagination > li > span:focus-visible,
+.catalog-pagination .pagination > .active > a,
+.catalog-pagination .pagination > .active > span,
+.catalog-pagination .pagination > .active > a:hover,
+.catalog-pagination .pagination > .active > span:hover,
+.catalog-pagination .pagination > .active > a:focus,
+.catalog-pagination .pagination > .active > span:focus,
+.catalog-pagination .pagination > .active > a:active,
+.catalog-pagination .pagination > .active > span:active,
+.catalog-pagination .pagination > .page-item.active > .page-link {
+    border-radius: 999px !important;
+}
+
+/* Cart rows: normalize product thumbnails without changing cart behavior. */
+.cart-v2 .cart-v2-thumb {
+    width: 82px !important;
+    height: 82px !important;
+    aspect-ratio: 1 / 1;
+    flex: 0 0 82px !important;
+    padding: 6px !important;
+}
+
+.cart-v2 .cart-v2-thumb img {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain !important;
+    object-position: center;
+}
+
+/* Blog filter bar: keep category chips and sort control balanced on desktop. */
+.dd-blog-toolbar {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: start !important;
+    gap: 14px !important;
+}
+
+.dd-blog-tabs {
+    min-width: 0;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+}
+
+.dd-blog-sort {
+    justify-self: end;
+    flex: 0 0 auto;
+    width: max-content !important;
+    margin-left: 0 !important;
+}
+
+.dd-blog-tab {
+    flex: 0 0 auto;
+    min-height: 38px !important;
+    padding: 0 14px !important;
+}
+
+/* Cart recommendations: reuse the storefront product-card scale from catalog recently viewed. */
+.cart-v2 .cart-v2-recommend-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+    align-items: stretch;
+    padding: 16px;
+    border: 1px solid #eef2f7;
+    border-radius: 14px;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.cart-v2 .cart-v2-recommend-grid .shopw-empty-state {
+    grid-column: 1 / -1;
+}
+
+.cart-v2 .cart-v2-recommend-grid .tech-product-card {
+    height: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.cart-v2 .cart-v2-recommend-grid .tech-product-media {
+    flex: 0 0 180px !important;
+    height: 180px !important;
+    min-height: 180px !important;
+    max-height: 180px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 12px 10px !important;
+}
+
+.cart-v2 .cart-v2-recommend-grid .tech-product-media img {
+    width: auto !important;
+    max-width: 90% !important;
+    height: 150px !important;
+    max-height: 150px !important;
+    object-fit: contain !important;
+}
+
+.cart-v2 .cart-v2-recommend-grid .tech-product-body {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 160px;
+    padding: 12px 14px 14px !important;
+}
+
+.cart-v2 .cart-v2-recommend-grid .tech-product-body h3 {
+    min-height: 38px !important;
+    max-height: 38px !important;
+    margin-bottom: 8px !important;
+    overflow: hidden;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.cart-v2 .cart-v2-recommend-grid .tech-product-brand-row {
+    margin-bottom: 6px !important;
+}
+
+.cart-v2 .cart-v2-recommend-grid .tech-brand-chip {
+    width: 24px !important;
+    height: 24px !important;
+    border-radius: 6px !important;
+    font-size: 9px !important;
+}
+
+.cart-v2 .cart-v2-recommend-grid .tech-product-rating {
+    margin-bottom: 6px;
+}
+
+.cart-v2 .cart-v2-recommend-grid .tech-product-rating .fa,
+.cart-v2 .cart-v2-recommend-grid .tech-product-rating span {
+    font-size: 11px !important;
+}
+
+.cart-v2 .cart-v2-recommend-grid .tech-product-footer {
+    margin-top: auto;
+}
+
+.cart-v2 .cart-v2-recommend-grid .tech-sale-price {
+    font-size: 16px !important;
+}
+
+.cart-v2 .cart-v2-recommend-grid .tech-add-cart-btn {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 14px !important;
+}
+
+.cart-v2 .cart-v2-recommend-grid .tech-wishlist-btn {
+    width: 30px !important;
+    height: 30px !important;
+    top: 10px !important;
+    right: 10px !important;
+}
+
+@media (max-width: 767px) {
+    .cart-v2 .cart-v2-thumb {
+        width: 64px !important;
+        height: 64px !important;
+        flex-basis: 64px !important;
+        padding: 5px !important;
+    }
+
+    .dd-blog-toolbar {
+        grid-template-columns: 1fr;
+        gap: 12px !important;
+    }
+
+    .dd-blog-sort {
+        justify-self: stretch;
+        width: 100% !important;
+    }
+
+    .cart-v2 .cart-v2-recommend-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+        padding: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .cart-v2 .cart-v2-recommend-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* Storefront header final normalization: one shared header across all public pages. */
+#header,
+#header .header-middle,
+#header .header-bottom,
+#header .shopw-header,
+#header .shopw-header-actions,
+#header .shopw-utilities--desktop,
+#header .shopw-location-menu,
+#header .shopw-account-menu {
+    overflow: visible !important;
+}
+
+#header .shopw-location-menu,
+#header .shopw-account-menu {
+    position: relative !important;
+    display: block !important;
+    width: 100% !important;
+}
+
+#header .shopw-header,
+#header .shopw-header-center,
+#header .shopw-search-shell {
+    overflow: visible !important;
+}
+
+#header .shopw-search-shell {
+    position: relative !important;
+    z-index: 10030 !important;
+}
+
+#header .shopw-search-hints {
+    position: absolute !important;
+    top: calc(100% + 10px) !important;
+    left: 50% !important;
+    right: auto !important;
+    z-index: 10040 !important;
+    width: min(920px, calc(100vw - 32px)) !important;
+    max-height: min(460px, calc(100vh - 150px)) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    transform: translateX(-50%) !important;
+}
+
+#header .shopw-search-hints:empty {
+    display: none !important;
+}
+
+#header .shopw-search-suggest-panel {
+    max-height: inherit !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+#header .shopw-location-menu > summary,
+#header .shopw-account-menu > summary {
+    list-style: none !important;
+}
+
+#header .shopw-location-menu > summary::-webkit-details-marker,
+#header .shopw-account-menu > summary::-webkit-details-marker {
+    display: none !important;
+}
+
+#header .shopw-account-dropdown,
+#header .shopw-location-dropdown {
+    position: absolute !important;
+    top: calc(100% + 10px) !important;
+    right: 0 !important;
+    z-index: 10020 !important;
+    width: min(340px, calc(100vw - 32px)) !important;
+    max-width: calc(100vw - 32px) !important;
+    padding: 14px !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 14px !important;
+    background: #fff !important;
+    box-shadow: 0 22px 44px rgba(15, 23, 42, 0.18) !important;
+}
+
+#header .shopw-location-dropdown {
+    display: grid !important;
+    left: 0 !important;
+    right: auto !important;
+    width: 360px !important;
+    max-width: calc(100vw - 24px) !important;
+    height: auto !important;
+    min-height: 0 !important;
+    gap: 12px !important;
+    padding: 20px !important;
+    border-radius: 18px !important;
+    background: #fff !important;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12) !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+}
+
+#header .shopw-location-dropdown strong,
+#header .shopw-location-dropdown small {
+    display: block !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+}
+
+#header .shopw-location-dropdown strong {
+    color: #0f172a !important;
+    font-size: 15px !important;
+    font-weight: 800 !important;
+    line-height: 1.35 !important;
+}
+
+#header .shopw-location-dropdown small {
+    color: #64748b !important;
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+}
+
+#header .shopw-account-dropdown-head {
+    display: grid !important;
+    gap: 4px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 1px solid #e5e7eb !important;
+}
+
+#header .shopw-account-dropdown-head strong,
+#header .shopw-account-dropdown-head small {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-wrap: anywhere !important;
+}
+
+#header .shopw-account-dropdown-head small {
+    color: #64748b !important;
+    font-size: 12px !important;
+    line-height: 1.45 !important;
+}
+
+#header .shopw-account-dropdown-links {
+    display: grid !important;
+    gap: 8px !important;
+    padding-top: 12px !important;
+}
+
+#header .shopw-account-dropdown-links form {
+    display: block !important;
+    width: 100% !important;
+    margin: 0 !important;
+}
+
+#header .shopw-location-dropdown a,
+#header .shopw-account-dropdown-link,
+#header .shopw-account-dropdown-link[type="submit"] {
+    width: 100% !important;
+    min-height: 42px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 10px !important;
+    padding: 0 12px !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 10px !important;
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+    text-align: left !important;
+    text-decoration: none !important;
+    white-space: normal !important;
+    box-sizing: border-box !important;
+}
+
+#header .shopw-location-dropdown .shopw-location-link {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    margin-top: 2px !important;
+    white-space: normal !important;
+    overflow-wrap: break-word !important;
+    justify-content: center !important;
+    text-align: center !important;
+}
+
+#header .shopw-account-dropdown-link[type="submit"] {
+    appearance: none !important;
+    cursor: pointer !important;
+}
+
+#header .shopw-account-dropdown-link > i,
+#header .shopw-location-dropdown a > i {
+    flex: 0 0 18px !important;
+    width: 18px !important;
+    height: 18px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #0891b2 !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+}
+
+#header .shopw-account-dropdown-link:hover,
+#header .shopw-location-dropdown a:hover {
+    background: #eff6ff !important;
+    border-color: #bae6fd !important;
+    color: #0f766e !important;
+}
+
+#header .shopw-account-dropdown-link.is-danger:hover {
+    background: #fff1f2 !important;
+    border-color: #fecdd3 !important;
+    color: #be123c !important;
+}
+
+@media (min-width: 992px) {
+    #header .container {
+        width: min(1200px, calc(100% - 32px)) !important;
+        max-width: 1200px !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    #header .shopw-header {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0 !important;
+        min-height: 92px !important;
+        padding: 14px 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    #header .shopw-header-brand {
+        flex: 0 0 248px !important;
+        width: 248px !important;
+        max-width: 248px !important;
+        min-width: 248px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        padding-left: 20px !important;
+        margin-right: 20px !important;
+        box-sizing: border-box !important;
+    }
+
+    #header .shopw-logo-link img,
+    #header .shopw-logo img {
+        height: 62px !important;
+        max-height: 62px !important;
+        max-width: 220px !important;
+        object-fit: contain !important;
+    }
+
+    #header .shopw-header-center {
+        flex: 1 1 420px !important;
+        min-width: 280px !important;
+        max-width: 520px !important;
+        margin-right: 18px !important;
+        overflow: visible !important;
+    }
+
+    #header .shopw-search-shell {
+        width: 100% !important;
+        max-width: 520px !important;
+        margin: 0 auto !important;
+    }
+
+    #header .shopw-search-hints {
+        max-height: min(480px, calc(100vh - 170px)) !important;
+    }
+
+    #header .shopw-header-actions {
+        flex: 0 0 auto !important;
+        min-width: 0 !important;
+        margin-left: auto !important;
+    }
+
+    #header .shopw-utilities--desktop {
+        display: grid !important;
+        grid-template-columns: 152px 152px 152px !important;
+        align-items: stretch !important;
+        justify-content: end !important;
+        gap: 12px !important;
+        width: auto !important;
+        min-width: 468px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+        white-space: nowrap !important;
+    }
+
+    #header .shopw-utilities--desktop > .shopw-util {
+        width: 152px !important;
+        min-width: 152px !important;
+        max-width: 152px !important;
+        display: flex !important;
+        align-items: stretch !important;
+        overflow: visible !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util > a,
+    #header .shopw-utilities--desktop .shopw-util > details > summary {
+        width: 100% !important;
+        height: 64px !important;
+        min-height: 64px !important;
+        min-width: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        gap: 9px !important;
+        padding: 0 12px !important;
+        border: 1px solid #e3e9ef !important;
+        border-radius: 14px !important;
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        box-shadow: none !important;
+        box-sizing: border-box !important;
+        text-align: left !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+        cursor: pointer !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util > a:hover,
+    #header .shopw-utilities--desktop .shopw-util > a.is-current,
+    #header .shopw-utilities--desktop .shopw-util > a[aria-current="page"],
+    #header .shopw-utilities--desktop .shopw-util > details[open] > summary,
+    #header .shopw-utilities--desktop .shopw-util > details > summary:hover,
+    #header .shopw-utilities--desktop .shopw-util > details > summary.is-current,
+    #header .shopw-utilities--desktop .shopw-util > details > summary[aria-current="page"] {
+        background: #f0fdfa !important;
+        border-color: #b8efec !important;
+        color: #0f766e !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util > a > i,
+    #header .shopw-utilities--desktop .shopw-util > details > summary > i {
+        flex: 0 0 24px !important;
+        width: 24px !important;
+        height: 24px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 0 !important;
+        border-radius: 8px !important;
+        background: transparent !important;
+        color: #0f766e !important;
+        font-size: 18px !important;
+        line-height: 1 !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util-text {
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        gap: 3px !important;
+        overflow: hidden !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util-label,
+    #header .shopw-utilities--desktop .shopw-util-sub {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        display: block !important;
+        color: inherit !important;
+        line-height: 1.2 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util-label {
+        font-size: 13px !important;
+        font-weight: 800 !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util-sub {
+        color: #64748b !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util-sub i {
+        margin-left: 3px !important;
+        font-size: 12px !important;
+        line-height: 1 !important;
+        vertical-align: baseline !important;
+    }
+
+    #header .shopw-cart-count {
+        flex: 0 0 auto !important;
+        min-width: 22px !important;
+        height: 22px !important;
+        margin-left: auto !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border-radius: 999px !important;
+        font-size: 12px !important;
+        font-weight: 800 !important;
+        line-height: 1 !important;
+    }
+}
+
+@media (min-width: 992px) and (max-width: 1235px) {
+    #header .shopw-header-brand {
+        flex-basis: 220px !important;
+        width: 220px !important;
+        min-width: 220px !important;
+        max-width: 220px !important;
+        margin-right: 14px !important;
+        padding-left: 8px !important;
+    }
+
+    #header .shopw-logo-link img,
+    #header .shopw-logo img {
+        height: 56px !important;
+        max-height: 56px !important;
+        max-width: 200px !important;
+    }
+
+    #header .shopw-header-center {
+        flex-basis: 330px !important;
+        min-width: 240px !important;
+        max-width: 430px !important;
+        margin-right: 12px !important;
+    }
+
+    #header .shopw-utilities--desktop {
+        grid-template-columns: 136px 136px 136px !important;
+        min-width: 432px !important;
+        gap: 8px !important;
+    }
+
+    #header .shopw-utilities--desktop > .shopw-util {
+        width: 136px !important;
+        min-width: 136px !important;
+        max-width: 136px !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util > a,
+    #header .shopw-utilities--desktop .shopw-util > details > summary {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util-label {
+        font-size: 12px !important;
+    }
+}
+
+@media (max-width: 991px) {
+    #header .shopw-header {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+        gap: 12px !important;
+        max-width: 100% !important;
+    }
+
+    #header .shopw-header-brand,
+    #header .shopw-header-center,
+    #header .shopw-header-actions {
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    #header .shopw-header-actions,
+    #header .shopw-utilities--desktop {
+        width: 100% !important;
+    }
+
+    #header .shopw-utilities--desktop {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        overflow: visible !important;
+    }
+
+    #header .shopw-utilities--desktop > .shopw-util {
+        min-width: 0 !important;
+        width: 100% !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util > a,
+    #header .shopw-utilities--desktop .shopw-util > details > summary {
+        min-width: 0 !important;
+        width: 100% !important;
+        min-height: 54px !important;
+        justify-content: center !important;
+        padding: 8px 6px !important;
+        text-align: center !important;
+        box-sizing: border-box !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util-text {
+        min-width: 0 !important;
+        align-items: center !important;
+        overflow: hidden !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util-label,
+    #header .shopw-utilities--desktop .shopw-util-sub {
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+    }
+}
+
+@media (max-width: 575px) {
+    #header .shopw-location-dropdown {
+        left: 50% !important;
+        width: min(360px, calc(100vw - 24px)) !important;
+        transform: translateX(-50%) !important;
+    }
+
+    #header .shopw-search-hints {
+        left: 50% !important;
+        right: auto !important;
+        width: min(100%, calc(100vw - 24px)) !important;
+        max-height: min(420px, calc(100vh - 140px)) !important;
+        transform: translateX(-50%) !important;
+    }
+
+    #header .shopw-utilities--desktop {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util > a,
+    #header .shopw-utilities--desktop .shopw-util > details > summary {
+        gap: 5px !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util > a > i,
+    #header .shopw-utilities--desktop .shopw-util > details > summary > i {
+        flex-basis: 20px !important;
+        width: 20px !important;
+        height: 20px !important;
+        font-size: 15px !important;
+    }
+
+    #header .shopw-utilities--desktop .shopw-util-sub {
+        display: none !important;
+    }
+}

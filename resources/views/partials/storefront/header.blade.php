@@ -25,7 +25,6 @@
         || request()->is('danh-muc-bai-viet/*')
         || request()->is('bai-viet/*')
         || request()->is('video')
-        || request()->is('video-shop')
         || request()->is('xem-video/*');
     $isCartSection = request()->is('gio-hang')
         || request()->is('checkout')
@@ -78,6 +77,9 @@
 
     $categoryItems = collect($category ?? [])->filter(fn($item) => ! empty($item->slug_category_product));
     $blogCategoryItems = collect($category_post ?? [])->filter(fn($item) => ! empty($item->cate_post_slug));
+    $headerCartCount = collect(Session::get('cart', []))
+        ->filter(fn ($item) => is_array($item))
+        ->sum(fn ($item) => (int) ($item['product_qty'] ?? 0));
 
     $featuredBlogCategory = $blogCategoryItems->first();
     $featuredBlogUrl = url('/bai-viet');
@@ -122,8 +124,7 @@
                     <button type="button"
                         class="shopw-header-menu-toggle shopw-mobile-nav-toggle"
                         data-nav-intent="categories"
-                        data-desktop-panel="#shopw-desktop-category-panel"
-                        aria-label="Mở danh mục sản phẩm"
+                        aria-label="Mở menu cửa hàng"
                         aria-expanded="false">
                         <i class="fa fa-bars"></i>
                     </button>
@@ -159,37 +160,55 @@
                 </div>
 
                 <div class="shopw-header-actions">
-                    <ul class="shopw-utilities shopw-utilities--desktop {{ $isAccountSection ? 'shopw-utilities--compact' : '' }}">
+                    <ul class="shopw-utilities shopw-utilities--desktop">
                         <li class="shopw-util">
-                            <a href="{{ url('/lien-he') }}">
-                                <i class="fa fa-map-marker"></i>
-                                <span class="shopw-util-text">
-                                    <span class="shopw-util-label">Giao hàng</span>
-                                    <span class="shopw-util-sub">Hà Nội <i class="fa fa-angle-down"></i></span>
-                                </span>
-                            </a>
+                            <details class="shopw-location-menu">
+                                <summary class="shopw-util-link" aria-label="Chọn khu vực giao hàng">
+                                    <i class="fa fa-map-marker"></i>
+                                    <span class="shopw-util-text">
+                                        <span class="shopw-util-label">Giao hàng</span>
+                                        <span class="shopw-util-sub">Hà Nội <i class="fa fa-angle-down"></i></span>
+                                    </span>
+                                </summary>
+                                <div class="shopw-location-dropdown">
+                                    <strong>Giao hàng tại Hà Nội</strong>
+                                    <small>Phí vận chuyển sẽ được cập nhật chính xác ở bước thanh toán.</small>
+                                    <a class="shopw-location-link" href="{{ url('/lien-he') }}">Xem thông tin cửa hàng</a>
+                                </div>
+                            </details>
                         </li>
                         <li class="shopw-util">
                             @if ($isAuthenticatedCustomer)
-                                <a href="{{ url('/history') }}"
-                                    @class(['shopw-account-summary--avatar-only', 'is-current' => $isAccountSection])
-                                    @if ($isAccountSection) aria-current="page" @endif>
-                                    <img src="{{ $headerCustomerAvatar }}" alt="Avatar" style="display:none;">
-                                    <i class="fa fa-user"></i>
-                                    <span class="shopw-util-text">
-                                        <span class="shopw-util-label">{{ \Illuminate\Support\Str::limit($headerCustomerName, 12) }}</span>
-                                        <span class="shopw-util-sub">Tài khoản <i class="fa fa-angle-down"></i></span>
-                                    </span>
-                                </a>
-                                <div class="shopw-account-menu" style="display:none;">
-                                    <span class="shopw-account-name">Header Customer</span>
-                                    <a href="{{ url('/history') }}">Đơn hàng của tôi</a>
-                                    <form method="POST" action="{{ url('/dang-xuat-khach-hang') }}">
-                                        @csrf
-                                        <input type="hidden" name="redirect" value="login">
-                                        <button type="submit">Đăng xuất</button>
-                                    </form>
-                                </div>
+                                <details class="shopw-account-menu">
+                                    <summary
+                                        @class(['shopw-account-summary shopw-util-link', 'is-current' => $isAccountSection])
+                                        aria-expanded="false"
+                                        @if ($isAccountSection) aria-current="page" @endif>
+                                        <i class="fa fa-user"></i>
+                                        <span class="shopw-util-text">
+                                            <span class="shopw-util-label">{{ \Illuminate\Support\Str::limit($headerCustomerName, 12) }}</span>
+                                            <span class="shopw-util-sub">Tài khoản <i class="fa fa-angle-down"></i></span>
+                                        </span>
+                                    </summary>
+                                    <div class="shopw-account-dropdown">
+                                        <div class="shopw-account-dropdown-head">
+                                            <span class="shopw-account-dropdown-kicker">Tài khoản</span>
+                                            <strong>{{ $headerCustomerName }}</strong>
+                                            @if ($headerCustomerEmail)
+                                                <small>{{ $headerCustomerEmail }}</small>
+                                            @endif
+                                        </div>
+                                        <div class="shopw-account-dropdown-links">
+                                            <a class="shopw-account-dropdown-link" href="{{ url('/account') }}"><i class="fa fa-user"></i> Trang tài khoản</a>
+                                            <a class="shopw-account-dropdown-link" href="{{ url('/history') }}"><i class="fa fa-list-alt"></i> Đơn hàng của tôi</a>
+                                            <form method="POST" action="{{ url('/dang-xuat-khach-hang') }}">
+                                                @csrf
+                                                <input type="hidden" name="redirect" value="login">
+                                                <button type="submit" class="shopw-account-dropdown-link is-danger"><i class="fa fa-sign-out"></i> Đăng xuất</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </details>
                             @else
                                 <a href="{{ url('/dang-nhap') }}" @class(['is-current' => $isAccountSection]) @if ($isAccountSection) aria-current="page" @endif>
                                     <i class="fa fa-user"></i>
@@ -204,7 +223,7 @@
                             <a href="{{ url('/gio-hang') }}" @class(['is-current' => $isCartSection]) @if ($isCartSection) aria-current="page" @endif>
                                 <i class="fa fa-shopping-cart"></i>
                                 <span class="shopw-util-label">Giỏ hàng</span>
-                                <span class="shopw-cart-count">{{ Session::has('cart') ? count(Session::get('cart')) : 0 }}</span>
+                                <span class="shopw-cart-count">{{ $headerCartCount }}</span>
                             </a>
                         </li>
                     </ul>
@@ -244,6 +263,9 @@
                                             data-storefront-nav-parent="blogs"
                                             @class(['active' => $isBlogSection, 'is-current' => $isBlogSection])
                                             @if ($isBlogSection) aria-current="page" @endif>Bài viết</a>
+                                        <button type="button" class="shopw-submenu-toggle" aria-label="Mở danh mục bài viết" aria-expanded="false">
+                                            <i class="fa fa-angle-down"></i>
+                                        </button>
                                     </div>
                                     <ul role="menu" class="sub-menu">
                                         @foreach ($blogCategoryItems as $key => $danhmucbaiviet)

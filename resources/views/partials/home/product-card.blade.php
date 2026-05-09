@@ -83,7 +83,10 @@
                 <div class="tech-sale-price">{{ $formatPrice($price) }}</div>
             </div>
 
-            <button type="button" class="tech-add-cart-btn" aria-label="Thêm {{ $productName }} vào giỏ">
+            <button type="button"
+                class="tech-add-cart-btn"
+                data-cart-product-id="{{ $productId }}"
+                aria-label="Thêm {{ $productName }} vào giỏ">
                 <i class="fa fa-shopping-cart"></i>
             </button>
         </div>

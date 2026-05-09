@@ -3,8 +3,10 @@
 namespace App\Http\Requests\Storefront\Checkout;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Infrastructure\Persistence\Eloquent\Geo\VietnamWard;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class ConfirmOrderRequest extends BaseFormRequest
 {
@@ -20,6 +22,8 @@ class ConfirmOrderRequest extends BaseFormRequest
             'shipping_method' => ['nullable', 'string', 'max:50', Rule::in(['cod', 'bank_transfer', 'cash', 'card', 'paypal'])],
             // payment_method: phương thức thanh toán độc lập (nếu form gửi riêng biệt)
             'payment_method'  => ['nullable', 'string', 'max:50', Rule::in(['cod', 'bank_transfer', 'momo', 'vnpay', 'paypal', 'cash', 'card'])],
+            'vietnam_province_code' => $this->vietnamProvinceRules(),
+            'vietnam_ward_code' => $this->vietnamWardRules(),
             'city_id'         => $this->locationRules('city'),
             'province_id'     => $this->locationRules('province'),
             'ward_id'         => $this->locationRules('ward'),
@@ -50,13 +54,38 @@ class ConfirmOrderRequest extends BaseFormRequest
             'ward_id.integer' => 'Mã phường/xã giao hàng không hợp lệ.',
             'ward_id.min' => 'Mã phường/xã giao hàng không hợp lệ.',
             'ward_id.exists' => 'Phường/xã giao hàng không tồn tại.',
+            'vietnam_province_code.exists' => 'Tỉnh/thành phố giao hàng không tồn tại.',
+            'vietnam_ward_code.exists' => 'Xã/phường/đặc khu giao hàng không tồn tại.',
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $provinceCode = (string) $this->input('vietnam_province_code');
+            $wardCode = (string) $this->input('vietnam_ward_code');
+
+            if ($provinceCode === '' || $wardCode === '' || ! Schema::hasTable('vietnam_wards')) {
+                return;
+            }
+
+            $exists = VietnamWard::query()
+                ->where('code', $wardCode)
+                ->where('province_code', $provinceCode)
+                ->exists();
+
+            if (! $exists) {
+                $validator->errors()->add('vietnam_ward_code', 'Xã/phường/đặc khu đã chọn không thuộc tỉnh/thành phố.');
+            }
+        });
     }
 
     protected function prepareForValidation(): void
     {
         $this->merge([
             'shipping_method' => $this->normalizeNullableString($this->input('shipping_method')),
+            'vietnam_province_code' => $this->normalizeNullableString($this->input('vietnam_province_code')),
+            'vietnam_ward_code' => $this->normalizeNullableString($this->input('vietnam_ward_code')),
             'city_id' => $this->normalizeNullableInteger($this->input('city_id')),
             'province_id' => $this->normalizeNullableInteger($this->input('province_id')),
             'ward_id' => $this->normalizeNullableInteger($this->input('ward_id')),
@@ -98,6 +127,28 @@ class ConfirmOrderRequest extends BaseFormRequest
         if (Schema::hasTable('locations')) {
             $rules[] = Rule::exists('locations', 'id')
                 ->where(fn ($query) => $query->where('type', $type));
+        }
+
+        return $rules;
+    }
+
+    protected function vietnamProvinceRules(): array
+    {
+        $rules = ['nullable', 'string', 'max:20'];
+
+        if (Schema::hasTable('vietnam_provinces')) {
+            $rules[] = Rule::exists('vietnam_provinces', 'code');
+        }
+
+        return $rules;
+    }
+
+    protected function vietnamWardRules(): array
+    {
+        $rules = ['nullable', 'string', 'max:20'];
+
+        if (Schema::hasTable('vietnam_wards')) {
+            $rules[] = Rule::exists('vietnam_wards', 'code');
         }
 
         return $rules;

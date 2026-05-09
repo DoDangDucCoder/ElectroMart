@@ -66,7 +66,7 @@
             box-shadow: 0 6px 14px rgba(13,148,136,.25);
         }
         .ckq-step.is-active .label { color:#0d9488; font-weight:600; }
-        .ckq-line { flex:1; height:2px; background:#e5e7eb; min-width:40px; max-width:90px; margin-bottom: 26px;}
+        .ckq-step-line { flex:1; height:2px; background:#e5e7eb; min-width:40px; max-width:90px; margin-bottom: 26px;}
 
         /* ====== TWO COLUMN LAYOUT ====== */
         .ckq-grid {
@@ -209,7 +209,7 @@
         .ckq-secure-note i { color:#0d9488; }
 
         /* ====== RIGHT SUMMARY ====== */
-        .ckq-summary { position:sticky; top: 16px; }
+        .ckq-summary { position:sticky; top: 16px; min-width: 0; }
         .ckq-summary-head {
             display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;
         }
@@ -234,16 +234,26 @@
         .ckq-product-meta { font-size: 12px; color:#6b7280; }
         .ckq-product-price { font-size: 14px; font-weight:700; color:#dc2626; white-space: nowrap; }
 
-        .ckq-totals { margin-top: 16px; padding-top: 16px; border-top: 1px solid #f1f5f9; }
-        .ckq-line { display:flex; justify-content:space-between; padding: 6px 0; font-size: 14px; color:#374151; }
+        .ckq-totals { margin-top: 16px; padding-top: 16px; border-top: 1px solid #f1f5f9; min-width: 0; }
+        .ckq-line {
+            display:grid; grid-template-columns:minmax(0, 1fr) max-content;
+            align-items:center; column-gap: 16px;
+            padding: 7px 0; font-size: 14px; line-height: 1.45; color:#374151;
+        }
         .ckq-line.muted { color:#6b7280; }
+        .ckq-line > span:first-child { min-width: 0; word-break: normal; overflow-wrap: normal; }
+        .ckq-line > span:last-child {
+            min-width: max-content; white-space: nowrap; text-align: right;
+            font-weight: 700; color:#111827;
+        }
         .ckq-line .v.discount { color:#16a34a; font-weight: 600; }
         .ckq-grand {
-            display:flex; justify-content:space-between; align-items:center;
+            display:grid; grid-template-columns:minmax(0, 1fr) max-content;
+            align-items:center; column-gap: 16px;
             padding: 14px 0 4px; border-top: 1px solid #f1f5f9; margin-top: 6px;
         }
-        .ckq-grand .lbl { font-size: 14px; font-weight: 700; letter-spacing:.5px; text-transform:uppercase; }
-        .ckq-grand .val { font-size: 24px; font-weight: 800; color:#dc2626; }
+        .ckq-grand .lbl { min-width: 0; font-size: 14px; font-weight: 700; letter-spacing:.5px; text-transform:uppercase; }
+        .ckq-grand .val { min-width: max-content; white-space: nowrap; text-align: right; font-size: 24px; font-weight: 800; color:#dc2626; }
         .ckq-vat { text-align:right; font-size: 12px; color:#9ca3af; margin-bottom: 12px; }
 
         .ckq-save-pill {
@@ -254,8 +264,8 @@
         }
         .ckq-save-pill i { color:#10b981; }
 
-        .ckq-coupon { display:flex; gap: 8px; margin-bottom: 14px; }
-        .ckq-coupon .ckq-input { flex: 1; }
+        .ckq-coupon { display:flex; gap: 8px; margin-bottom: 14px; min-width: 0; }
+        .ckq-coupon .ckq-input { flex: 1 1 auto; min-width: 0; }
         .ckq-coupon-btn {
             height: 44px; padding: 0 16px; border-radius: 8px;
             background:#f1f5f9; color:#475569; border:1px solid #e2e8f0;
@@ -263,6 +273,13 @@
             transition: all .15s;
         }
         .ckq-coupon-btn:hover { background:#0d9488; color:#fff; border-color:#0d9488; }
+
+        @media (max-width: 380px) {
+            .ckq-card { padding: 18px 16px; }
+            .ckq-coupon { display:grid; grid-template-columns:1fr; }
+            .ckq-coupon-btn { width:100%; }
+            .ckq-grand .val { font-size: 21px; }
+        }
 
         .ckq-place-btn {
             width: 100%; height: 52px; border:none; border-radius: 10px;
@@ -352,12 +369,12 @@
                     <div class="dot"><i class="fa fa-shopping-cart"></i></div>
                     <div class="label">Thông tin đơn hàng</div>
                 </div>
-                <div class="ckq-line"></div>
+                <div class="ckq-step-line"></div>
                 <div class="ckq-step">
                     <div class="dot">2</div>
                     <div class="label">Thanh toán</div>
                 </div>
-                <div class="ckq-line"></div>
+                <div class="ckq-step-line"></div>
                 <div class="ckq-step">
                     <div class="dot">3</div>
                     <div class="label">Hoàn tất</div>
@@ -375,12 +392,9 @@
                         @if($customerLoggedIn)
                             <i class="fa fa-user-circle"></i> Xin chào <strong>{{ $checkoutCustomerDisplayName }}</strong>
                             ({{ $currentCustomer->email }}) —
-                            <form method="POST" action="{{ url('/logout-checkout') }}" style="display:inline;">
-                                @csrf
-                                <button type="submit" style="border:0;background:transparent;padding:0;color:#0d9488;font-weight:600;">
-                                    Đăng xuất
-                                </button>
-                            </form>
+                            <button type="submit" form="checkout-logout-form" style="border:0;background:transparent;padding:0;color:#0d9488;font-weight:600;">
+                                Đăng xuất
+                            </button>
                         @else
                             Bạn đã có tài khoản? <a href="{{ url('/dang-nhap?redirect=checkout') }}">Đăng nhập</a> để thanh toán nhanh hơn.
                         @endif
@@ -431,26 +445,20 @@
                             </div>
                         </div>
 
-                        <div class="ckq-row three">
+                        <div class="ckq-row two">
                             <div class="ckq-field">
                                 <label>Tỉnh / Thành phố <span class="hint">(không bắt buộc)</span></label>
-                                <select name="city_id" class="ckq-select choose city" id="city">
-                                    <option value="">--- Chọn tỉnh / TP nếu có dữ liệu ---</option>
-                                    @foreach ($cities as $city)
-                                        <option value="{{ $city->id }}">{{ $city->name }}</option>
+                                <select name="vietnam_province_code" class="ckq-select choose province" id="vietnam_province">
+                                    <option value="">--- Chọn tỉnh / thành phố ---</option>
+                                    @foreach ($vietnamProvinces as $province)
+                                        <option value="{{ $province->code }}">{{ $province->name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="ckq-field">
-                                <label>Quận / Huyện <span class="hint">(không bắt buộc)</span></label>
-                                <select name="province_id" class="ckq-select choose province" id="province">
-                                    <option value="">--- Chọn quận ---</option>
-                                </select>
-                            </div>
-                            <div class="ckq-field">
-                                <label>Phường / Xã <span class="hint">(không bắt buộc)</span></label>
-                                <select name="ward_id" class="ckq-select wards" id="wards">
-                                    <option value="">--- Chọn phường ---</option>
+                                <label>Xã / Phường / Đặc khu <span class="hint">(không bắt buộc)</span></label>
+                                <select name="vietnam_ward_code" class="ckq-select wards" id="wards">
+                                    <option value="">--- Chọn xã / phường / đặc khu ---</option>
                                 </select>
                             </div>
                         </div>
@@ -561,6 +569,12 @@
                     <input type="hidden" name="order_coupon" class="order_coupon" value="{{ $coupon['code'] ?? 'no' }}">
                     <input type="hidden" name="total_after" class="total_after" value="{{ $cartTotals['total'] }}">
                 </form>
+
+                @if($customerLoggedIn)
+                    <form id="checkout-logout-form" method="POST" action="{{ url('/logout-checkout') }}" style="display:none;">
+                        @csrf
+                    </form>
+                @endif
             </div>
 
             {{-- RIGHT - SUMMARY --}}
@@ -634,6 +648,7 @@
                     <button type="button" class="ckq-place-btn send_order">
                         <i class="fa fa-lock"></i> Đặt hàng và thanh toán
                     </button>
+                    <div id="checkout_order_notice" aria-live="polite"></div>
 
                     <div class="ckq-terms">
                         Bằng việc đặt hàng, bạn đồng ý với

@@ -21,6 +21,7 @@
 <script src="https://www.paypalobjects.com/api/checkout.js"></script>
 
 {{-- Consolidated Storefront Logic --}}
+@include('partials.storefront.scripts.countdown')
 @include('partials.storefront.scripts.interactions')
 
 @stack('scripts')

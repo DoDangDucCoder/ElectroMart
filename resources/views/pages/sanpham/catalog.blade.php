@@ -8,6 +8,7 @@
         $selectedCategory = $filters['category_id'] ?? null;
         $selectedBrand = $filters['brand_id'] ?? null;
         $selectedSort = $filters['sort'] ?? 'popular';
+        $selectedUsage = collect((array) request()->input('usage', []))->map(fn ($value) => (string) $value)->all();
         $keyword = trim((string) ($search_keyword ?? ''));
         $productCount = method_exists($search_product, 'total') ? $search_product->total() : $search_product->count();
         $perPage = method_exists($search_product, 'perPage') ? $search_product->perPage() : 12;
@@ -45,7 +46,7 @@
         }
         $subcategoryChips = $rootCategories->take(6)->values();
 
-        $brandChunks = collect($search_brands ?? [])->take(7);
+        $brandChunks = collect($search_brands ?? []);
 
         $brandUsageOptions = [
             'gaming' => 'Gaming - Đồ họa',
@@ -257,15 +258,17 @@
                         <section class="catalog-filter-block">
                             <h3>Thương hiệu</h3>
                             <ul class="catalog-filter-list">
-                                @foreach ($brandChunks as $brandItem)
+                                @foreach ($brandChunks as $brandIndex => $brandItem)
                                     @php
                                         $brandLabel = $storefrontLabel::neutralizeSource($brandItem->brand_name);
                                         $brandCount = $brandItem->product_count ?? $brandItem->products_count ?? null;
+                                        $brandActive = (string) $selectedBrand === (string) $brandItem->brand_id;
                                     @endphp
-                                    <li>
+                                    <li @if ($brandIndex >= 7) data-catalog-more-item="brand" @endif @if ($brandIndex >= 7 && ! $brandActive) hidden @endif>
                                         <label>
-                                            <input type="radio" name="brand_id" value="{{ $brandItem->brand_id }}"
-                                                @checked((string) $selectedBrand === (string) $brandItem->brand_id)>
+                                            <input type="checkbox" name="brand_id" value="{{ $brandItem->brand_id }}"
+                                                data-catalog-single-checkbox="brand"
+                                                @checked($brandActive)>
                                             <span class="catalog-filter-check catalog-filter-check--square"></span>
                                             <span class="catalog-filter-text">{{ $brandLabel }}</span>
                                             @if ($brandCount !== null)
@@ -276,7 +279,7 @@
                                 @endforeach
                             </ul>
                             @if (collect($search_brands ?? [])->count() > 7)
-                                <button type="button" class="catalog-filter-more">Xem thêm</button>
+                                <button type="button" class="catalog-filter-more" data-catalog-more-toggle="brand" aria-expanded="false">Xem thêm</button>
                             @endif
                         </section>
 
@@ -286,7 +289,7 @@
                                 @foreach ($brandUsageOptions as $usageKey => $usageLabel)
                                     <li>
                                         <label>
-                                            <input type="checkbox" name="usage[]" value="{{ $usageKey }}" disabled>
+                                            <input type="checkbox" name="usage[]" value="{{ $usageKey }}" @checked(in_array((string) $usageKey, $selectedUsage, true))>
                                             <span class="catalog-filter-check catalog-filter-check--square"></span>
                                             <span class="catalog-filter-text">{{ $usageLabel }}</span>
                                         </label>
@@ -440,6 +443,38 @@
         (function () {
             const grid = document.querySelector('[data-catalog-view]');
             const buttons = document.querySelectorAll('.catalog-view-btn');
+            const singleCheckboxGroups = document.querySelectorAll('[data-catalog-single-checkbox]');
+            const moreToggles = document.querySelectorAll('[data-catalog-more-toggle]');
+
+            singleCheckboxGroups.forEach((input) => {
+                input.addEventListener('change', () => {
+                    if (!input.checked) {
+                        return;
+                    }
+
+                    const group = input.getAttribute('data-catalog-single-checkbox');
+                    document.querySelectorAll(`[data-catalog-single-checkbox="${group}"]`).forEach((other) => {
+                        if (other !== input) {
+                            other.checked = false;
+                        }
+                    });
+                });
+            });
+
+            moreToggles.forEach((toggle) => {
+                toggle.addEventListener('click', () => {
+                    const target = toggle.getAttribute('data-catalog-more-toggle');
+                    const expanded = toggle.getAttribute('aria-expanded') === 'true';
+
+                    document.querySelectorAll(`[data-catalog-more-item="${target}"]`).forEach((item) => {
+                        item.hidden = expanded;
+                    });
+
+                    toggle.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+                    toggle.textContent = expanded ? 'Xem thêm' : 'Thu gọn';
+                });
+            });
+
             buttons.forEach((btn) => {
                 btn.addEventListener('click', () => {
                     buttons.forEach((b) => b.classList.remove('is-active'));

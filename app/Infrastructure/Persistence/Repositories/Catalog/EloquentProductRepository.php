@@ -21,7 +21,8 @@ class EloquentProductRepository implements ProductRepositoryInterface
             'variants.attributeValues.attribute',
         ])
             ->where('slug', $slug)
-            ->where('is_active', true);
+            ->where('is_active', true)
+            ->withCompleteStorefrontMedia();
 
         $this->applyLocalDemoImageSafety($query);
 
@@ -75,6 +76,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
         $query = Product::with(['brand', 'categories'])
             ->where('id', '!=', $product->id)
             ->where('is_active', true)
+            ->withCompleteStorefrontMedia()
             ->when($product->primary_category_id, function ($query, $categoryId) {
                 $query->where('primary_category_id', $categoryId);
             })
@@ -89,6 +91,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
     {
         $query = Product::with(['brand', 'categories'])
             ->where('is_active', true)
+            ->withCompleteStorefrontMedia()
             ->orderByDesc('id');
 
         $this->applyLocalDemoImageSafety($query);
@@ -107,6 +110,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
         $query = Product::with(['brand', 'categories'])
             ->where('is_active', true)
+            ->withCompleteStorefrontMedia()
             ->where(function (Builder $query) use ($normalized) {
                 $query->where('name', 'like', "%{$normalized}%")
                     ->orWhere('slug', 'like', "%{$normalized}%")
@@ -127,6 +131,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
         $query = Product::with(['brand', 'categories'])
             ->where('is_active', true)
+            ->withCompleteStorefrontMedia()
             ->where(function (Builder $builder) use ($ids) {
                 $builder->whereIn('primary_category_id', $ids)
                     ->orWhereHas('categories', fn (Builder $relation) => $relation->whereIn('product_categories.id', $ids));
@@ -169,6 +174,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
     {
         $query = Product::with(['brand', 'categories'])
             ->where('is_active', true)
+            ->withCompleteStorefrontMedia()
             ->orderByDesc('id');
 
         $this->applyLocalDemoImageSafety($query);
@@ -184,6 +190,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
     {
         $query = Product::with(['brand', 'categories'])
             ->where('is_active', true)
+            ->withCompleteStorefrontMedia()
             ->inRandomOrder();
 
         $this->applyLocalDemoImageSafety($query);
@@ -195,6 +202,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
     {
         $query = Product::with(['brand', 'categories'])
             ->where('is_active', true)
+            ->withCompleteStorefrontMedia()
             ->where('name', 'like', "%{$keyword}%");
 
         $this->applyLocalDemoImageSafety($query);
@@ -214,6 +222,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
         if ($onlyActive) {
             $query->where('is_active', true);
+            $query->withCompleteStorefrontMedia();
             $this->applyLocalDemoImageSafety($query);
         }
 

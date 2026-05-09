@@ -2,8 +2,8 @@
 @section('content')
     @php
         $section = $active_section ?? 'payment-methods';
-        $customerName = $customer->name ?? 'Nguyễn Văn An';
-        $customerEmail = $customer->email ?? 'nguyenvanan@gmail.com';
+        $customerName = filled($customer->name ?? null) ? $customer->name : 'Khách hàng';
+        $customerEmail = filled($customer->email ?? null) ? $customer->email : 'Chưa cập nhật';
         $customerInitial = strtoupper(mb_substr($customerName, 0, 1, 'UTF-8'));
 
         $accountMenu = [
@@ -20,71 +20,8 @@
             ['key' => 'password', 'label' => 'Cài đặt tài khoản', 'icon' => 'fa-cog', 'href' => route('customer.account', ['section' => 'password'])],
         ];
 
-        $savedMethods = [
-            [
-                'type' => 'visa',
-                'logo' => 'visa',
-                'title' => 'Visa',
-                'masked' => '•••• 4242',
-                'holder' => 'NGUYEN VAN AN',
-                'extra' => 'Hết hạn 08/28',
-                'is_default' => true,
-                'verified' => true,
-                'status_label' => 'Đã xác minh',
-            ],
-            [
-                'type' => 'mastercard',
-                'logo' => 'mastercard',
-                'title' => 'Mastercard',
-                'masked' => '•••• 8891',
-                'holder' => 'NGUYEN VAN AN',
-                'extra' => 'Hết hạn 04/27',
-                'is_default' => false,
-                'verified' => true,
-                'status_label' => 'Đã liên kết',
-                'set_default' => true,
-            ],
-            [
-                'type' => 'momo',
-                'logo' => 'momo',
-                'title' => 'Ví MoMo',
-                'masked' => '0912 345 678',
-                'holder' => null,
-                'extra' => null,
-                'is_default' => false,
-                'verified' => true,
-                'status_label' => 'Đã liên kết',
-            ],
-            [
-                'type' => 'zalopay',
-                'logo' => 'zalopay',
-                'title' => 'Ví ZaloPay',
-                'masked' => 'nguyenvanan@gmail.com',
-                'holder' => null,
-                'extra' => null,
-                'is_default' => false,
-                'verified' => true,
-                'status_label' => 'Đã liên kết',
-            ],
-            [
-                'type' => 'vietcombank',
-                'logo' => 'vietcombank',
-                'title' => 'Vietcombank',
-                'masked' => 'TK thanh toán •••• 6789',
-                'holder' => 'NGUYEN VAN AN',
-                'extra' => null,
-                'is_default' => false,
-                'verified' => true,
-                'status_label' => 'Đã liên kết',
-            ],
-        ];
-
-        $promoOffers = [
-            ['logo' => 'visa', 'title' => 'Giảm 5%', 'sub' => 'Tối đa 300.000đ', 'desc' => 'Cho thẻ Visa'],
-            ['logo' => 'momo', 'title' => 'Giảm 10%', 'sub' => 'Tối đa 200.000đ', 'desc' => 'Khi thanh toán qua MoMo'],
-            ['logo' => 'zalopay', 'title' => 'Giảm 10%', 'sub' => 'Tối đa 150.000đ', 'desc' => 'Khi thanh toán qua ZaloPay'],
-            ['logo' => 'qr', 'title' => 'Giảm 5%', 'sub' => '', 'desc' => 'Thanh toán qua QR Code'],
-        ];
+        $savedMethods = collect($savedMethods ?? []);
+        $promoOffers = collect($promoOffers ?? []);
     @endphp
 
     <div class="pmpage">
@@ -194,24 +131,28 @@
                     @endif
 
                     {{-- ===================== PROMO OFFERS ===================== --}}
-                    <div class="pmpage-card pmpage-promo">
-                        <div class="pmpage-promo-head">Ưu đãi thanh toán</div>
-                        <div class="pmpage-promo-grid">
-                            @foreach ($promoOffers as $offer)
-                                <div class="pmpage-promo-item">
-                                    <div class="pmpage-promo-logo pmpage-promo-logo--{{ $offer['logo'] }}">
-                                        @include('pages.account.partials.brand-mark', ['brand' => $offer['logo']])
+                    @if ($promoOffers->isNotEmpty())
+                        <div class="pmpage-card pmpage-promo">
+                            <div class="pmpage-promo-head">Ưu đãi thanh toán</div>
+                            <div class="pmpage-promo-grid">
+                                @foreach ($promoOffers as $offer)
+                                    <div class="pmpage-promo-item">
+                                        <div class="pmpage-promo-logo pmpage-promo-logo--{{ $offer['logo'] }}">
+                                            @include('pages.account.partials.brand-mark', ['brand' => $offer['logo']])
+                                        </div>
+                                        <div class="pmpage-promo-body">
+                                            <strong>{{ $offer['title'] }}</strong>
+                                            @if ($offer['sub'])<span class="pmpage-promo-sub">{{ $offer['sub'] }}</span>@endif
+                                            <span class="pmpage-promo-desc">{{ $offer['desc'] }}</span>
+                                            @if (!empty($offer['url']))
+                                                <a href="{{ $offer['url'] }}" class="pmpage-promo-link">Xem chi tiết <i class="fa fa-angle-right"></i></a>
+                                            @endif
+                                        </div>
                                     </div>
-                                    <div class="pmpage-promo-body">
-                                        <strong>{{ $offer['title'] }}</strong>
-                                        @if ($offer['sub'])<span class="pmpage-promo-sub">{{ $offer['sub'] }}</span>@endif
-                                        <span class="pmpage-promo-desc">{{ $offer['desc'] }}</span>
-                                        <a href="#" class="pmpage-promo-link">Xem chi tiết <i class="fa fa-angle-right"></i></a>
-                                    </div>
-                                </div>
-                            @endforeach
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
+                    @endif
                 </main>
 
                 {{-- ===================== RIGHT SIDEBAR ===================== --}}
@@ -230,11 +171,11 @@
                             <span class="pmpage-aside-icon pmpage-aside-icon--blue"><i class="fa fa-lock"></i></span>
                             <h4>Xác thực 2 lớp (2FA)</h4>
                         </div>
-                        <p>Tăng cường bảo mật cho tài khoản của bạn bằng mã xác thực.</p>
+                        <p>Tính năng xác thực 2 lớp chưa được bật cho tài khoản này.</p>
                         <div class="pmpage-aside-row">
-                            <span class="pmpage-aside-status is-ok"><i class="fa fa-check-circle"></i> Đã bật</span>
+                            <span class="pmpage-aside-status"><i class="fa fa-info-circle"></i> Chưa hỗ trợ</span>
                             <label class="pmpage-switch">
-                                <input type="checkbox" checked>
+                                <input type="checkbox" disabled>
                                 <span></span>
                             </label>
                         </div>
@@ -250,7 +191,7 @@
                             <li><i class="fa fa-check"></i> Không chia sẻ thông tin thẻ với người khác.</li>
                             <li><i class="fa fa-check"></i> Bật xác thực 2 lớp để bảo vệ tài khoản.</li>
                         </ul>
-                        <a href="#" class="pmpage-aside-link">Xem thêm mẹo bảo mật <i class="fa fa-angle-right"></i></a>
+                        <a href="{{ url('/chinh-sach-bao-mat') }}" class="pmpage-aside-link">Xem thêm mẹo bảo mật <i class="fa fa-angle-right"></i></a>
                     </div>
 
                     <div class="pmpage-aside-card">
@@ -264,7 +205,7 @@
                             <li><i class="fa fa-envelope-o"></i> Email: <strong>support@dangduc.vn</strong></li>
                             <li><i class="fa fa-clock-o"></i> Thời gian: <strong>8:00 - 21:00 (T2 - CN)</strong></li>
                         </ul>
-                        <a href="#" class="pmpage-btn pmpage-btn--outline pmpage-btn--block"><i class="fa fa-comment-o"></i> Chat với chúng tôi</a>
+                        <a href="{{ url('/lien-he') }}" class="pmpage-btn pmpage-btn--outline pmpage-btn--block"><i class="fa fa-comment-o"></i> Liên hệ hỗ trợ</a>
                     </div>
 
                     <div class="pmpage-aside-card pmpage-aside-card--bank">
@@ -277,7 +218,7 @@
                             <span>Tối đa 100.000đ</span>
                         </div>
                         <p>Khi chuyển khoản trước</p>
-                        <a href="#" class="pmpage-aside-link">Xem chi tiết <i class="fa fa-angle-right"></i></a>
+                        <a href="{{ url('/huong-dan-thanh-toan') }}" class="pmpage-aside-link">Xem chi tiết <i class="fa fa-angle-right"></i></a>
                     </div>
                 </aside>
             </div>

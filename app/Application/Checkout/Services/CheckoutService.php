@@ -5,6 +5,8 @@ namespace App\Application\Checkout\Services;
 use App\Infrastructure\Persistence\Eloquent\Checkout\CartItem;
 use App\Infrastructure\Persistence\Eloquent\Customer\Address;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
+use App\Infrastructure\Persistence\Eloquent\Geo\VietnamProvince;
+use App\Infrastructure\Persistence\Eloquent\Geo\VietnamWard;
 use App\Infrastructure\Persistence\Eloquent\Order\Order;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -177,6 +179,17 @@ class CheckoutService
 
     protected function resolveShippingFee(array $payload): float
     {
+        $vietnamProvinceCode = $payload['vietnam_province_code'] ?? null;
+        $vietnamWardCode = $payload['vietnam_ward_code'] ?? null;
+
+        if ($vietnamProvinceCode && $vietnamWardCode) {
+            $fee = $this->shippingService->calculateVietnam2025Fee($vietnamProvinceCode, $vietnamWardCode, -1);
+
+            if ($fee >= 0) {
+                return $fee;
+            }
+        }
+
         $cityId = (int) ($payload['city_id'] ?? 0);
         $provinceId = (int) ($payload['province_id'] ?? 0);
         $wardId = (int) ($payload['ward_id'] ?? 0);
@@ -213,9 +226,10 @@ class CheckoutService
             'location_province_id' => $payload['province_id'] ?? null,
             'location_ward_id' => $payload['ward_id'] ?? null,
             'is_default' => false,
-            'meta' => [
+            'meta' => array_filter([
                 'source' => 'checkout_form',
-            ],
+                'vietnam_2025' => $this->vietnamLocationMeta($payload),
+            ]),
         ]);
     }
 
@@ -349,7 +363,32 @@ class CheckoutService
             'amount' => $amount,
             'fee' => 0,
             'paid_at' => null,
-            'meta' => null,
+            'meta' => array_filter([
+                'vietnam_2025' => $this->vietnamLocationMeta($payload),
+            ]),
         ]);
+    }
+
+    protected function vietnamLocationMeta(array $payload): ?array
+    {
+        $provinceCode = $payload['vietnam_province_code'] ?? null;
+        $wardCode = $payload['vietnam_ward_code'] ?? null;
+
+        if (! $provinceCode || ! $wardCode) {
+            return null;
+        }
+
+        $province = VietnamProvince::query()->where('code', $provinceCode)->first();
+        $ward = VietnamWard::query()
+            ->where('code', $wardCode)
+            ->where('province_code', $provinceCode)
+            ->first();
+
+        return [
+            'province_code' => $provinceCode,
+            'province_name' => $province?->name,
+            'ward_code' => $wardCode,
+            'ward_name' => $ward?->name,
+        ];
     }
 }
