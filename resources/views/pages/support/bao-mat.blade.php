@@ -1,15 +1,10 @@
-@extends('layouts.home-tech')
-@section('body_class','policy-page bao-mat-page')
-@php
-$meta_desc=$meta_desc??'Chính sách bảo mật thông tin khách hàng tại DangDuc.vn';
-$meta_keywords=$meta_keywords??'bảo mật, chính sách bảo mật, DangDuc, privacy';
-$url_canonical=$url_canonical??url('/chinh-sach-bao-mat');
-$meta_title=$meta_title??'Chính sách bảo mật - DangDuc';
-@endphp
-@push('styles')<link href="{{ asset('frontend/css/policy-page.css') }}" rel="stylesheet">@endpush
-@section('content')
-<div class="pp-wrap">
-    @include('partials.storefront.breadcrumb', ['class' => 'pp-breadcrumb', 'separator' => '›', 'items' => [['label' => 'Chính sách bảo mật', 'current' => true]]])
+@extends('pages.support.content-page')
+@section('support_page_class', 'bao-mat-page')
+@section('support_title', 'Chính sách bảo mật')
+@section('support_meta_desc', 'Chính sách bảo mật thông tin khách hàng tại DangDuc.vn')
+@section('support_meta_keywords', 'bảo mật, chính sách bảo mật, DangDuc, privacy')
+@section('support_canonical', '/chinh-sach-bao-mat')
+@section('support_content')
 
     <section class="pp-hero">
         <div class="pp-hero-copy">
@@ -164,5 +159,4 @@ $meta_title=$meta_title??'Chính sách bảo mật - DangDuc';
         <div class="pp-pol"><i class="fa fa-lock"></i><div><strong>Thanh toán an toàn</strong><span>Nhiều phương thức thanh toán</span></div></div>
         <div class="pp-pol"><i class="fa fa-headphones"></i><div><strong>Hỗ trợ tận tâm 24/7</strong><span>Đội ngũ tư vấn luôn sẵn sàng</span></div></div>
     </div>
-</div>
 @endsection

@@ -36,17 +36,42 @@
 
     <script>
         (function () {
-            function readWishlist() {
-                if (typeof window.readStorefrontStorage === 'function') {
-                    return window.readStorefrontStorage('data');
+            function wishlistItemId(item) {
+                if (!item) {
+                    return '';
                 }
 
-                try {
-                    const parsed = JSON.parse(localStorage.getItem('data') || '[]');
-                    return Array.isArray(parsed) ? parsed : [];
-                } catch (error) {
-                    return [];
+                return String(item.id ?? item.product_id ?? item.productId ?? '').trim();
+            }
+
+            function readWishlist() {
+                let items = [];
+
+                if (typeof window.readStorefrontStorage === 'function') {
+                    items = window.readStorefrontStorage('data');
+                } else {
+                    try {
+                        const parsed = JSON.parse(localStorage.getItem('data') || '[]');
+                        items = Array.isArray(parsed) ? parsed : [];
+                    } catch (error) {
+                        items = [];
+                    }
                 }
+
+                const seen = new Set();
+
+                return items.filter((item) => {
+                    const id = wishlistItemId(item);
+
+                    if (!id || seen.has(id)) {
+                        return false;
+                    }
+
+                    seen.add(id);
+                    item.id = id;
+
+                    return true;
+                });
             }
 
             function writeWishlist(items) {
@@ -59,10 +84,10 @@
             }
 
             function syncWishlistButtons() {
-                const savedIds = new Set(readWishlist().map((item) => String(item.id)));
+                const savedIds = new Set(readWishlist().map(wishlistItemId));
 
                 document.querySelectorAll('[data-tech-wishlist]').forEach((button) => {
-                    const productId = String(button.getAttribute('data-product-id') || '');
+                    const productId = String(button.getAttribute('data-product-id') || '').trim();
                     const isActive = savedIds.has(productId);
                     const icon = button.querySelector('i');
 
@@ -70,14 +95,14 @@
                     button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
 
                     if (icon) {
-                        icon.classList.toggle('fa-heart', isActive);
-                        icon.classList.toggle('fa-heart-o', !isActive);
+                        icon.classList.remove('fa-heart');
+                        icon.classList.add('fa-heart-o');
                     }
                 });
             }
 
             function toggleWishlist(button) {
-                const productId = String(button.getAttribute('data-product-id') || '');
+                const productId = String(button.getAttribute('data-product-id') || '').trim();
 
                 if (!productId) {
                     return;
@@ -88,13 +113,15 @@
                     name: button.getAttribute('data-product-name') || '',
                     price: button.getAttribute('data-product-price') || '',
                     image: button.getAttribute('data-product-image') || '',
-                    url: button.getAttribute('data-product-url') || ''
+                    url: button.getAttribute('data-product-url') || '',
+                    category_id: button.getAttribute('data-product-category-id') || '',
+                    category: button.getAttribute('data-product-category') || ''
                 };
                 let items = readWishlist();
-                const exists = items.some((item) => String(item.id) === productId);
+                const exists = items.some((item) => wishlistItemId(item) === productId);
 
                 items = exists
-                    ? items.filter((item) => String(item.id) !== productId)
+                    ? items.filter((item) => wishlistItemId(item) !== productId)
                     : items.concat(product);
 
                 writeWishlist(items);
@@ -105,6 +132,14 @@
 
                 syncWishlistButtons();
             }
+
+            window.syncStorefrontWishlistButtons = syncWishlistButtons;
+            window.addEventListener('storage', (event) => {
+                if (event.key === 'data') {
+                    syncWishlistButtons();
+                }
+            });
+            window.addEventListener('storefront:wishlist-updated', syncWishlistButtons);
 
             function initFlashSaleControls() {
                 document.querySelectorAll('[data-tech-sale-viewport]').forEach((viewport) => {
@@ -256,8 +291,9 @@
 
                 event.preventDefault();
                 event.stopPropagation();
+                event.stopImmediatePropagation();
                 toggleWishlist(wishlistButton);
-            });
+            }, true);
 
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', () => {

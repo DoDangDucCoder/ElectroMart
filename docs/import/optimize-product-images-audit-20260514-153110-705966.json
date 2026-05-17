@@ -1,0 +1,47 @@
+[
+    {
+        "source_path": "uploads/products/1902/cellphones-laptop-asus-vivobook-s16-s3607aa-sh042w-2ab9d9f1-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1902,
+        "source_bytes": 310524,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "thumb",
+        "target_width": 360,
+        "optimized_path": "uploads/products/1902/_optimized/cellphones-laptop-asus-vivobook-s16-s3607aa-sh042w-2ab9d9f1-main-thumb.webp",
+        "optimized_bytes": 12486,
+        "saved_bytes": 298038,
+        "status": "exists",
+        "message": "Optimized variant already exists."
+    },
+    {
+        "source_path": "uploads/products/1902/cellphones-laptop-asus-vivobook-s16-s3607aa-sh042w-2ab9d9f1-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1902,
+        "source_bytes": 310524,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "medium",
+        "target_width": 800,
+        "optimized_path": "uploads/products/1902/_optimized/cellphones-laptop-asus-vivobook-s16-s3607aa-sh042w-2ab9d9f1-main-medium.webp",
+        "optimized_bytes": 32228,
+        "saved_bytes": 278296,
+        "status": "exists",
+        "message": "Optimized variant already exists."
+    },
+    {
+        "source_path": "uploads/products/1902/cellphones-laptop-asus-vivobook-s16-s3607aa-sh042w-2ab9d9f1-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1902,
+        "source_bytes": 310524,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "large",
+        "target_width": 1200,
+        "optimized_path": "uploads/products/1902/_optimized/cellphones-laptop-asus-vivobook-s16-s3607aa-sh042w-2ab9d9f1-main-large.webp",
+        "optimized_bytes": 52894,
+        "saved_bytes": 257630,
+        "status": "exists",
+        "message": "Optimized variant already exists."
+    }
+]

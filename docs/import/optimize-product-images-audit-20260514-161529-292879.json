@@ -1,0 +1,47 @@
+[
+    {
+        "source_path": "uploads/products/1515/cellphones-cap-momax-truyen-du-lieu-usb-c-to-c-32-100w-gen-2x2-dc51-dai-2m-b596e7c4-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1515,
+        "source_bytes": 211047,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "thumb",
+        "target_width": 360,
+        "optimized_path": "uploads/products/1515/_optimized/cellphones-cap-momax-truyen-du-lieu-usb-c-to-c-32-100w-gen-2x2-dc51-dai-2m-b596e7c4-main-thumb.webp",
+        "optimized_bytes": 7948,
+        "saved_bytes": 203099,
+        "status": "exists",
+        "message": "Optimized variant already exists."
+    },
+    {
+        "source_path": "uploads/products/1515/cellphones-cap-momax-truyen-du-lieu-usb-c-to-c-32-100w-gen-2x2-dc51-dai-2m-b596e7c4-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1515,
+        "source_bytes": 211047,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "medium",
+        "target_width": 800,
+        "optimized_path": "uploads/products/1515/_optimized/cellphones-cap-momax-truyen-du-lieu-usb-c-to-c-32-100w-gen-2x2-dc51-dai-2m-b596e7c4-main-medium.webp",
+        "optimized_bytes": 22156,
+        "saved_bytes": 188891,
+        "status": "exists",
+        "message": "Optimized variant already exists."
+    },
+    {
+        "source_path": "uploads/products/1515/cellphones-cap-momax-truyen-du-lieu-usb-c-to-c-32-100w-gen-2x2-dc51-dai-2m-b596e7c4-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1515,
+        "source_bytes": 211047,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "large",
+        "target_width": 1200,
+        "optimized_path": "uploads/products/1515/_optimized/cellphones-cap-momax-truyen-du-lieu-usb-c-to-c-32-100w-gen-2x2-dc51-dai-2m-b596e7c4-main-large.webp",
+        "optimized_bytes": 37922,
+        "saved_bytes": 173125,
+        "status": "exists",
+        "message": "Optimized variant already exists."
+    }
+]

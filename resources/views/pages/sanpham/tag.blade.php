@@ -1,65 +1,59 @@
-@extends('layouts.home-tech')
-
-@section('body_class', 'g-search')
-
-@section('content')
-    @php
-        $tagLabel = \App\Support\StorefrontLabel::neutralizeSource(str_replace('-', ' ', (string) $product_tag));
-        $productCount = $pro_tag->count();
-    @endphp
-
-    <div class="shopw-search-page">
-        @include('partials.storefront.breadcrumb', [
-            'items' => [
-                [
-                    'label' => 'Sản phẩm',
-                    'url' => url('/san-pham'),
-                ],
-                [
-                    'label' => $tagLabel,
-                    'current' => true,
-                ],
+@php
+    $pageMode = 'tag';
+    $tag = \App\Support\StorefrontLabel::neutralizeSource(str_replace('-', ' ', (string) $product_tag));
+    $products = $pro_tag;
+    $productCount = method_exists($products, 'total') ? $products->total() : $products->count();
+    $banner = [
+        'breadcrumbItems' => [
+            [
+                'label' => 'Sản phẩm',
+                'url' => url('/san-pham'),
             ],
-        ])
+            [
+                'label' => $tag,
+                'current' => true,
+            ],
+        ],
+        'kicker' => 'Nhãn sản phẩm',
+        'title' => $tag,
+        'subtitle' => number_format($productCount).' sản phẩm đang được hiển thị theo nhãn này.',
+        'results_kicker' => 'Danh sách sản phẩm',
+        'results_title' => $tag,
+        'results_description' => 'Các sản phẩm cùng nhãn được trình bày bằng cùng một mẫu card để dễ so sánh và thêm vào giỏ hàng.',
+        'empty_title' => 'Không có sản phẩm nào phù hợp với nhãn này.',
+        'empty_action_text' => 'Xem tất cả sản phẩm',
+        'empty_action_url' => url('/san-pham'),
+        'actions' => [
+            [
+                'url' => url('/'),
+                'icon' => 'fa-home',
+                'label' => 'Về trang chủ',
+            ],
+            [
+                'url' => url('/san-pham'),
+                'icon' => 'fa-search',
+                'label' => 'Tìm kiếm nâng cao',
+            ],
+        ],
+    ];
+    $filter = [
+        'keyword' => $tag,
+        'tag' => $tag,
+        'action' => url()->current(),
+        'clear_url' => url('/san-pham'),
+        'show_sidebar' => true,
+        'show_sort' => true,
+        'categories' => $category ?? collect(),
+        'brands' => $brand ?? collect(),
+        'sort' => request('sort', 'popular'),
+        'sort_labels' => [
+            'popular' => 'Phổ biến',
+            'newest' => 'Mới nhất',
+            'price_asc' => 'Giá thấp đến cao',
+            'price_desc' => 'Giá cao đến thấp',
+        ],
+        'mode' => $pageMode,
+    ];
+@endphp
 
-        <section class="shopw-search-hero">
-            <div class="shopw-search-hero-copy">
-                <span class="shopw-search-kicker">Nhãn sản phẩm</span>
-                <h1>{{ $tagLabel }}</h1>
-                <p>{{ number_format($productCount) }} sản phẩm đang được hiển thị theo nhãn này.</p>
-            </div>
-
-            <div class="shopw-search-hero-actions">
-                <a href="{{ url('/') }}" class="shopw-search-secondary-link">
-                    <i class="fa fa-home"></i>Về trang chủ
-                </a>
-                <a href="{{ url('/tim-kiem') }}" class="shopw-search-secondary-link">
-                    <i class="fa fa-search"></i>Tìm kiếm nâng cao
-                </a>
-            </div>
-        </section>
-
-        <section class="shopw-search-results">
-            <div class="shopw-search-results-head">
-                <div>
-                    <span class="shopw-search-kicker">Danh sách sản phẩm</span>
-                    <h2>{{ $tagLabel }}</h2>
-                    <p>Các sản phẩm cùng nhãn được trình bày bằng cùng một mẫu card để dễ so sánh và thêm vào giỏ hàng.</p>
-                </div>
-            </div>
-
-            <div class="row shopw-search-grid shopw-search-grid--full">
-                @include('pages.category.partials.product_cards', [
-                    'products' => $pro_tag,
-                    'emptyMessage' => 'Không có sản phẩm nào phù hợp với nhãn này.',
-                    'emptyMessageClasses' => 'text-center text-muted',
-                    'cardColumnClass' => 'col-xs-12 col-sm-6 col-md-4 col-lg-3',
-                    'showQuickView' => false,
-                    'showCartToggle' => false,
-                    'showWishlist' => true,
-                    'showCompare' => true,
-                ])
-            </div>
-        </section>
-    </div>
-@endsection
+@extends('pages.sanpham.listing')

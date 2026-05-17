@@ -1,8 +1,6 @@
 @extends('admin_layout')
 
 @section('admin_content')
-<link rel="stylesheet" href="{{ asset('backend/css/admin-dashboard.css') }}">
-<link rel="stylesheet" href="{{ asset('backend/css/admin-pages.css') }}">
 
 <div class="adm-page">
     <div class="adm-page-title">
@@ -92,20 +90,31 @@
                                         <i class="fa fa-pencil"></i> Sửa
                                     </a>
                                     @if ($category->is_active)
-                                        <a href="{{ url('/unactive-category-product/' . $category->id) }}" class="adm-btn outline" title="Tắt trạng thái danh mục">
-                                            <i class="fa fa-eye-slash"></i> Tắt
-                                        </a>
+                                        <form action="{{ url('/unactive-category-product/' . $category->id) }}" method="POST">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="adm-btn outline" title="Tắt trạng thái danh mục">
+                                                <i class="fa fa-eye-slash"></i> Tắt
+                                            </button>
+                                        </form>
                                     @else
-                                        <a href="{{ url('/active-category-product/' . $category->id) }}" class="adm-btn outline" title="Bật trạng thái danh mục">
-                                            <i class="fa fa-eye"></i> Bật
-                                        </a>
+                                        <form action="{{ url('/active-category-product/' . $category->id) }}" method="POST">
+                                            @csrf
+                                            @method('PATCH')
+                                            <button type="submit" class="adm-btn outline" title="Bật trạng thái danh mục">
+                                                <i class="fa fa-eye"></i> Bật
+                                            </button>
+                                        </form>
                                     @endif
-                                    <a href="{{ url('/delete-category-product/' . $category->id) }}"
-                                        class="adm-btn danger"
-                                        title="Xóa danh mục"
-                                        onclick="return confirm('Bạn có chắc muốn xóa danh mục này? Danh mục đang có sản phẩm sẽ không được xóa.');">
-                                        <i class="fa fa-trash-o"></i> Xóa
-                                    </a>
+                                    <form action="{{ url('/delete-category-product/' . $category->id) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Bạn có chắc muốn xóa danh mục này? Danh mục đang có sản phẩm sẽ không được xóa.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="adm-btn danger" title="Xóa danh mục">
+                                            <i class="fa fa-trash-o"></i> Xóa
+                                        </button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

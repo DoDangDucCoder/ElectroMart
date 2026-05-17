@@ -347,7 +347,7 @@ class OrderController extends Controller
             $order = $orderQuery->where('code', $order_code)->first();
 
             if (! $order) {
-                return redirect($modernCustomer ? '/history' : '/')->with('error', 'Không tìm thấy đơn hàng bạn cần xem.');
+                return redirect($modernCustomer ? '/account/orders' : '/')->with('error', 'Không tìm thấy đơn hàng bạn cần xem.');
             }
 
             return view('pages.history.view_history_order', array_merge(
@@ -358,7 +358,7 @@ class OrderController extends Controller
             ));
         }
 
-        return redirect('/history')->with('error', 'Không tìm thấy đơn hàng bạn cần xem.');
+        return redirect('/account/orders')->with('error', 'Không tìm thấy đơn hàng bạn cần xem.');
     }
 
     protected function storefrontPageContext(Request $request, string $title): array

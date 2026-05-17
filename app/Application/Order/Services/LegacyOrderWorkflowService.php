@@ -2,6 +2,7 @@
 
 namespace App\Application\Order\Services;
 
+use App\Application\Shared\Services\CacheService;
 use App\Infrastructure\Persistence\Eloquent\Marketing\Coupon;
 use App\Infrastructure\Persistence\Eloquent\Order\Order;
 use App\Infrastructure\Persistence\Eloquent\Order\OrderItem;
@@ -12,7 +13,8 @@ use Illuminate\Support\Facades\Schema;
 class LegacyOrderWorkflowService
 {
     public function __construct(
-        protected LegacyOrderPresentationService $presentationService
+        protected LegacyOrderPresentationService $presentationService,
+        protected CacheService $cacheService
     ) {
     }
 
@@ -161,6 +163,7 @@ class LegacyOrderWorkflowService
                 if ($shouldFinalize && $detail->product) {
                     $detail->product->stock_quantity = max(0, (int) $detail->product->stock_quantity - $qty);
                     $detail->product->save();
+                    $this->cacheService->invalidateProductCache((int) $detail->product->id);
                 }
             }
 

@@ -1,7 +1,7 @@
-@extends('layouts.home-tech')
+﻿@extends('layouts.home-tech')
 
 @push('styles')
-    <link href="{{ asset('frontend/css/contact-page.css') }}" rel="stylesheet">
+<link href="{{ asset('frontend/css/contact-page.css') }}?v=2.1" rel="stylesheet">
 @endpush
 
 @section('content')
@@ -220,7 +220,7 @@
 
                         <p class="dd-form__policy">
                             Bằng việc gửi thông tin, bạn đã đồng ý với
-                            <a href="{{ url('/chinh-sach-bao-mat') }}">chính sách bảo mật</a>
+                            <a href="{{ url('/cham-soc-khach-hang/bao-mat') }}">chính sách bảo mật</a>
                             của chúng tôi.
                         </p>
                     </form>

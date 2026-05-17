@@ -1,6 +1,5 @@
 @extends('layouts.home-tech')
 @section('body_class','accp-page')
-@push('styles')<link href="{{ asset('frontend/css/account-shared.css') }}" rel="stylesheet">@endpush
 @section('content')
 @php
     $customerName = $customer->name ?? '';

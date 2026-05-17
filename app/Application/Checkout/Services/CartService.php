@@ -16,6 +16,7 @@ use RuntimeException;
 class CartService
 {
     public const SESSION_KEY = 'cart';
+    public const CHECKOUT_SELECTED_SESSION_KEY = 'checkout_cart_item_ids';
 
     public function __construct(
         private readonly ProductService $productService,
@@ -64,6 +65,97 @@ class CartService
         return $this->items()->sum(function (array $item) {
             return (float) $item['product_price'] * (int) $item['product_qty'];
         });
+    }
+
+    public function selectedCheckoutItems(): Collection
+    {
+        $ids = $this->selectedCheckoutItemIds();
+
+        if ($ids === []) {
+            return collect();
+        }
+
+        return $this->items()
+            ->filter(fn (array $item) => in_array((string) ($item['session_id'] ?? ''), $ids, true))
+            ->values();
+    }
+
+    public function selectedCheckoutItemIds(): array
+    {
+        $ids = Session::get(self::CHECKOUT_SELECTED_SESSION_KEY, []);
+
+        if (! is_array($ids)) {
+            return [];
+        }
+
+        return collect($ids)
+            ->map(fn ($id) => trim((string) $id))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    public function setSelectedCheckoutItemIds(array $ids): Collection
+    {
+        $normalizedIds = collect($ids)
+            ->map(fn ($id) => trim((string) $id))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $selectedItems = $this->items()
+            ->filter(fn (array $item) => in_array((string) ($item['session_id'] ?? ''), $normalizedIds, true))
+            ->values();
+
+        Session::put(self::CHECKOUT_SELECTED_SESSION_KEY, $selectedItems->pluck('session_id')->values()->all());
+        Session::save();
+
+        return $selectedItems;
+    }
+
+    public function clearSelectedCheckoutItemIds(): void
+    {
+        Session::forget(self::CHECKOUT_SELECTED_SESSION_KEY);
+    }
+
+    public function removeBySessionIds(array $sessionIds): void
+    {
+        $ids = collect($sessionIds)
+            ->map(fn ($id) => trim((string) $id))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($ids === []) {
+            return;
+        }
+
+        $cart = $this->items()->reject(fn (array $item) => in_array((string) ($item['session_id'] ?? ''), $ids, true));
+        $this->persist($cart);
+    }
+
+    public function subtotalFor(Collection $items): float
+    {
+        return $items->sum(function (array $item) {
+            return (float) $item['product_price'] * (int) $item['product_qty'];
+        });
+    }
+
+    public function totalsFor(Collection $items, ?array $coupon = null, float $shippingFee = 0.0): array
+    {
+        $subtotal = $this->subtotalFor($items);
+        $discount = $coupon ? (float) Arr::get($coupon, 'discount_amount', 0) : 0.0;
+        $shipping = max(0, $shippingFee);
+
+        return [
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'shipping' => $shipping,
+            'total' => max(0, $subtotal - $discount + $shipping),
+        ];
     }
 
     public function addItem(int $productId, int $quantity = 1, ?int $attributeId = null): array

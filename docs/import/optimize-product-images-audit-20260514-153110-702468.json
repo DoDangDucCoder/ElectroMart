@@ -1,0 +1,47 @@
+[
+    {
+        "source_path": "uploads/products/sample-imported/NETWORK-002/NETWORK-002-asus-rt-ax86u-pro-wifi-6-router-main.jpg",
+        "source_type": "thumbnail",
+        "product_id": 445,
+        "source_bytes": 140421,
+        "source_width": 726,
+        "source_height": 1642,
+        "variant": "thumb",
+        "target_width": 360,
+        "optimized_path": "uploads/products/sample-imported/NETWORK-002/_optimized/NETWORK-002-asus-rt-ax86u-pro-wifi-6-router-main-thumb.webp",
+        "optimized_bytes": 13876,
+        "saved_bytes": 126545,
+        "status": "created",
+        "message": "Optimized variant created."
+    },
+    {
+        "source_path": "uploads/products/sample-imported/NETWORK-002/NETWORK-002-asus-rt-ax86u-pro-wifi-6-router-main.jpg",
+        "source_type": "thumbnail",
+        "product_id": 445,
+        "source_bytes": 140421,
+        "source_width": 726,
+        "source_height": 1642,
+        "variant": "medium",
+        "target_width": 800,
+        "optimized_path": "uploads/products/sample-imported/NETWORK-002/_optimized/NETWORK-002-asus-rt-ax86u-pro-wifi-6-router-main-medium.webp",
+        "optimized_bytes": 55544,
+        "saved_bytes": 84877,
+        "status": "created",
+        "message": "Optimized variant created."
+    },
+    {
+        "source_path": "uploads/products/sample-imported/NETWORK-002/NETWORK-002-asus-rt-ax86u-pro-wifi-6-router-main.jpg",
+        "source_type": "thumbnail",
+        "product_id": 445,
+        "source_bytes": 140421,
+        "source_width": 726,
+        "source_height": 1642,
+        "variant": "large",
+        "target_width": 1200,
+        "optimized_path": "uploads/products/sample-imported/NETWORK-002/_optimized/NETWORK-002-asus-rt-ax86u-pro-wifi-6-router-main-large.webp",
+        "optimized_bytes": 55544,
+        "saved_bytes": 84877,
+        "status": "created",
+        "message": "Optimized variant created."
+    }
+]

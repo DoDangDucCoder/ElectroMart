@@ -1,7 +1,6 @@
 @extends('layouts.home-tech')
 @section('body_class', 'accp-page')
 @section('content')
-<link rel="stylesheet" href="{{ asset('frontend/css/account-shared.css') }}">
 
 <div class="accp-wrap">
     @include('partials.storefront.breadcrumb', [

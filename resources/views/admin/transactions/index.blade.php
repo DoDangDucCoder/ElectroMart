@@ -1,8 +1,6 @@
 @extends('admin_layout')
 
 @section('admin_content')
-<link rel="stylesheet" href="{{ asset('backend/css/admin-dashboard.css') }}">
-<link rel="stylesheet" href="{{ asset('backend/css/admin-pages.css') }}">
 
 @php
     $statusLabels = [
@@ -117,7 +115,7 @@
                         <td>
                             @if ($payment->order)
                                 <a href="{{ url('/view-order/' . $payment->order->code) }}" class="dd-link">{{ $payment->order->code }}</a>
-                                <small style="display:block;color:var(--adm-muted)">Order: {{ $payment->order->status }} / {{ $payment->order->payment_status }}</small>
+                                <small style="display:block;color:var(--adm-muted)">Đơn hàng: {{ $payment->order->status }} / {{ $payment->order->payment_status }}</small>
                             @else
                                 <span style="color:var(--adm-muted)">Đơn đã xóa</span>
                             @endif

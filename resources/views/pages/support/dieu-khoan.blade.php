@@ -1,15 +1,10 @@
-@extends('layouts.home-tech')
-@section('body_class','policy-page dieu-khoan-page')
-@php
-$meta_desc=$meta_desc??'Điều khoản sử dụng website DangDuc.vn - Quy định quyền và nghĩa vụ khi sử dụng dịch vụ';
-$meta_keywords=$meta_keywords??'điều khoản sử dụng, terms of service, DangDuc';
-$url_canonical=$url_canonical??url('/dieu-khoan-su-dung');
-$meta_title=$meta_title??'Điều khoản sử dụng - DangDuc';
-@endphp
-@push('styles')<link href="{{ asset('frontend/css/policy-page.css') }}" rel="stylesheet">@endpush
-@section('content')
-<div class="pp-wrap">
-    @include('partials.storefront.breadcrumb', ['class' => 'pp-breadcrumb', 'separator' => '›', 'items' => [['label' => 'Điều khoản sử dụng', 'current' => true]]])
+@extends('pages.support.content-page')
+@section('support_page_class', 'dieu-khoan-page')
+@section('support_title', 'Điều khoản sử dụng')
+@section('support_meta_desc', 'Điều khoản sử dụng website DangDuc.vn - Quy định quyền và nghĩa vụ khi sử dụng dịch vụ')
+@section('support_meta_keywords', 'điều khoản sử dụng, terms of service, DangDuc')
+@section('support_canonical', '/dieu-khoan-su-dung')
+@section('support_content')
 
     <section class="pp-hero">
         <div class="pp-hero-copy">
@@ -156,5 +151,4 @@ $meta_title=$meta_title??'Điều khoản sử dụng - DangDuc';
         <div class="pp-pol"><i class="fa fa-lock"></i><div><strong>Thanh toán an toàn</strong><span>Nhiều phương thức thanh toán</span></div></div>
         <div class="pp-pol"><i class="fa fa-headphones"></i><div><strong>Hỗ trợ tận tâm 24/7</strong><span>Đội ngũ tư vấn luôn sẵn sàng</span></div></div>
     </div>
-</div>
 @endsection

@@ -1,12 +1,12 @@
-@extends('layouts.home-tech')
-@section('body_class', 'warranty-page')
-@php
-    $meta_desc = $meta_desc ?? 'Chính sách bảo hành sản phẩm tại DangDuc.vn - Cam kết bảo hành chính hãng, minh bạch, nhanh chóng';
-    $meta_keywords = $meta_keywords ?? 'bảo hành, chính sách bảo hành, DangDuc, warranty';
-    $url_canonical = $url_canonical ?? url('/chinh-sach-bao-hanh');
-    $meta_title = $meta_title ?? 'Chính sách bảo hành - DangDuc';
-@endphp
-@section('content')
+@extends('pages.support.content-page')
+
+@section('support_page_class', 'warranty-page')
+@section('support_title', 'Chính sách bảo hành')
+@section('support_meta_desc', 'Chính sách bảo hành sản phẩm tại DangDuc.vn - Cam kết bảo hành chính hãng, minh bạch, nhanh chóng')
+@section('support_meta_keywords', 'bảo hành, chính sách bảo hành, DangDuc, warranty')
+@section('support_canonical', '/chinh-sach-bao-hanh')
+
+@section('support_content')
 <style>
 .wr-wrap{max-width:1240px;margin:0 auto;padding:0 16px}
 .wr-breadcrumb{padding:14px 0;font-size:13px;color:#64748b}
@@ -96,9 +96,6 @@
 @media(max-width:900px){.wr-hero{flex-direction:column;padding:24px}.wr-hero-art{display:none}.wr-scope-grid{grid-template-columns:repeat(3,1fr)}.wr-process,.wr-contacts{grid-template-columns:repeat(2,1fr)}.wr-conditions{grid-template-columns:1fr}.wr-policy-cards,.wr-policies{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.wr-scope-grid,.wr-policy-cards,.wr-policies{grid-template-columns:1fr}}
 </style>
-
-<div class="wr-wrap">
-    @include('partials.storefront.breadcrumb', ['class' => 'wr-breadcrumb', 'separator' => '›', 'items' => [['label' => 'Chính sách bảo hành', 'current' => true]]])
 
     {{-- Hero --}}
     <section class="wr-hero">
@@ -232,5 +229,4 @@
         <div class="wr-pol"><i class="fa fa-lock"></i><div><strong>Thanh toán an toàn</strong><span>Nhiều phương thức thanh toán</span></div></div>
         <div class="wr-pol"><i class="fa fa-headphones"></i><div><strong>Hỗ trợ tận tâm 24/7</strong><span>Đội ngũ tư vấn luôn sẵn sàng giải đáp</span></div></div>
     </div>
-</div>
 @endsection

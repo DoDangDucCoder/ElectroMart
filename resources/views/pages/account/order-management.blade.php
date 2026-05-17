@@ -1,6 +1,5 @@
 @extends('layouts.home-tech')
 @section('body_class','accp-page')
-@push('styles')<link href="{{ asset('frontend/css/account-shared.css') }}" rel="stylesheet">@endpush
 @section('content')
 <div class="accp-wrap">
     @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Tài khoản', 'url' => url('/account')], ['label' => 'Đơn hàng của tôi', 'current' => true]]])
@@ -51,7 +50,7 @@
                 <div style="display:flex;align-items:center;gap:14px;padding:10px 0;border-top:1px solid #f3f4f6">
                     <div style="width:56px;height:56px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
                         @if($item->product && $item->product->product_image)
-                        <img src="{{ asset($item->product->product_image) }}" alt="" style="width:100%;height:100%;object-fit:cover">
+                        <img src="{{ \App\Support\AssetUrl::productVariant($item->product->product_image, 'thumb') }}" alt="" style="width:100%;height:100%;object-fit:cover">
                         @else
                         <i class="fa fa-laptop" style="font-size:24px;color:#0d9488;opacity:.5"></i>
                         @endif
@@ -76,7 +75,7 @@
                         <a href="#" class="accp-btn accp-btn--primary accp-btn--sm"><i class="fa fa-refresh"></i> Mua lại</a>
                         <a href="#" class="accp-btn accp-btn--outline accp-btn--sm"><i class="fa fa-star"></i> Đánh giá</a>
                         @endif
-                        <a href="{{ url('/view-history-order/' . $orderCode) }}" class="accp-btn accp-btn--outline accp-btn--sm">Chi tiết</a>
+                        <a href="{{ route('customer.account.order-tracking', ['orderCode' => $orderCode]) }}" class="accp-btn accp-btn--outline accp-btn--sm">Chi tiết</a>
                     </div>
                 </div>
             </div>
@@ -91,7 +90,7 @@
             {{-- Real pagination --}}
             @if($orders->hasPages())
             <div style="display:flex;justify-content:center;margin-top:20px">
-                {{ $orders->links() }}
+                {{ $orders->links('vendor.pagination.shop-pagination') }}
             </div>
             @endif
         </main>

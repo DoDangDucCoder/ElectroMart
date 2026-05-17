@@ -117,7 +117,7 @@ class CalculateFeeRequest extends BaseFormRequest
 
     protected function vietnamProvinceRules(): array
     {
-        $rules = ['required_without_all:city_id,province_id,ward_id', 'nullable', 'string', 'max:20'];
+        $rules = ['required', 'string', 'max:20'];
 
         if (Schema::hasTable('vietnam_provinces')) {
             $rules[] = Rule::exists('vietnam_provinces', 'code');
@@ -128,7 +128,7 @@ class CalculateFeeRequest extends BaseFormRequest
 
     protected function vietnamWardRules(): array
     {
-        $rules = ['required_with:vietnam_province_code', 'nullable', 'string', 'max:20'];
+        $rules = ['required', 'string', 'max:20'];
 
         if (Schema::hasTable('vietnam_wards')) {
             $rules[] = Rule::exists('vietnam_wards', 'code');

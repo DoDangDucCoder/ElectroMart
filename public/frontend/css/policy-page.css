@@ -4,7 +4,7 @@
    ============================================================ */
 
 /* Container */
-.pp-wrap{max-width:1240px;margin:0 auto;padding:0 16px}
+.pp-wrap{max-width:var(--sf-container);margin:0 auto;padding:0 var(--sf-gutter)}
 .pp-breadcrumb{padding:14px 0;font-size:13px;color:#64748b}
 .pp-breadcrumb a{color:#64748b;text-decoration:none}
 .pp-breadcrumb a:hover{color:#0d9488}

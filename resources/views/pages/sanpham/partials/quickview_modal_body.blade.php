@@ -22,7 +22,7 @@
     <div class="col-md-5">
         {{-- Main Image --}}
         <span id="product_quickview_image">
-            <p><img width="100%" src="{{ \App\Support\AssetUrl::product($product->product_image) }}" alt="Hình ảnh sản phẩm"></p>
+            <p><img width="100%" src="{{ \App\Support\AssetUrl::productVariant($product->product_image, 'medium') }}" alt="Hình ảnh sản phẩm"></p>
         </span>
         
         {{-- Gallery --}}
@@ -31,7 +31,7 @@
                 @foreach ($mediaItems as $media)
                     @php
                         $imagePath = $media->file_path ?? $fallbackPath;
-                        $imageUrl = \App\Support\AssetUrl::product($imagePath);
+                        $imageUrl = \App\Support\AssetUrl::productVariant($imagePath, 'medium');
                         $imageAlt = $storefrontLabel::neutralizeSource($media->gallery_name ?? 'Hình ảnh sản phẩm');
                     @endphp
                     @if ($imagePath)
@@ -51,7 +51,7 @@
             <input type="hidden" value="{{ $product->product_id }}" class="cart_product_id_{{ $product->product_id }}">
             <input type="hidden" value="{{ $storefrontLabel::neutralizeSource($product->product_name) }}" class="cart_product_name_{{ $product->product_id }}">
             <input type="hidden" value="{{ $product->product_quantity }}" class="cart_product_quantity_{{ $product->product_id }}">
-            <input type="hidden" value="{{ \App\Support\AssetUrl::product($product->product_image) }}" class="cart_product_image_{{ $product->product_id }}">
+            <input type="hidden" value="{{ \App\Support\AssetUrl::productVariant($product->product_image, 'thumb') }}" class="cart_product_image_{{ $product->product_id }}">
             <input type="hidden" value="{{ $product->final_price }}" class="cart_product_price_{{ $product->product_id }}">
             {{-- This hidden qty field is kept for backward compatibility with JS that looks for it, 
                  but we'll also update the visible input to have the same class. --}}

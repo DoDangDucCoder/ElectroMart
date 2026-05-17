@@ -4,8 +4,10 @@
     $productName = (string) ($product['name'] ?? 'Sản phẩm công nghệ');
     $productId = (string) ($product['id'] ?? \Illuminate\Support\Str::slug($productName));
     $productUrl = $product['url'] ?? '#';
-    $productImage = $product['image'] ?? asset('uploads/product/no-image.svg');
+    $productImage = \App\Support\AssetUrl::productVariant($product['image'] ?? null, 'thumb');
     $productBrand = $product['brand'] ?? 'DangDuc';
+    $productCategoryId = $product['category_id'] ?? '';
+    $productCategoryName = $product['category'] ?? '';
     $originalPrice = (float) ($product['original_price'] ?? 0);
     $price = (float) ($product['price'] ?? 0);
 
@@ -33,18 +35,23 @@
         class="tech-wishlist-btn"
         aria-label="Yêu thích {{ $productName }}"
         aria-pressed="false"
+        onpointerdown="event.preventDefault(); event.stopPropagation();"
+        onmousedown="event.preventDefault(); event.stopPropagation();"
+        onclick="event.preventDefault(); event.stopPropagation();"
         data-tech-wishlist
         data-product-id="{{ $productId }}"
         data-product-name="{{ $productName }}"
         data-product-price="{{ $formatPrice($price) }}"
         data-product-image="{{ $productImage }}"
-        data-product-url="{{ $productUrl }}">
+        data-product-url="{{ $productUrl }}"
+        data-product-category-id="{{ $productCategoryId }}"
+        data-product-category="{{ $productCategoryName }}">
         <i class="fa fa-heart-o"></i>
     </button>
 
     <a href="{{ $productUrl }}" class="tech-product-media">
         @if (!empty($productImage))
-            <img src="{{ $productImage }}" alt="{{ $productName }}">
+            <img src="{{ $productImage }}" alt="{{ $productName }}" loading="lazy" decoding="async">
         @else
             <span class="tech-product-placeholder">{{ $product['brand_initials'] ?? 'SW' }}</span>
         @endif
@@ -54,7 +61,7 @@
         <div class="tech-product-brand-row">
             <span class="tech-brand-chip">
                 @if (!empty($product['brand_logo']))
-                    <img src="{{ $product['brand_logo'] }}" alt="{{ $productBrand }}">
+                    <img src="{{ $product['brand_logo'] }}" alt="{{ $productBrand }}" loading="lazy" decoding="async">
                 @else
                     <span>{{ $product['brand_initials'] ?? 'SW' }}</span>
                 @endif

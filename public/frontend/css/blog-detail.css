@@ -4,31 +4,32 @@
    ========================================================= */
 
 .bd-page {
-    --bd-primary: #06b6d4;
-    --bd-primary-dark: #0e7490;
+    /* ---- Redirect to unified design tokens ---- */
+    --bd-primary: var(--sf-primary);
+    --bd-primary-dark: var(--sf-primary-darker);
     --bd-primary-soft: #e0f7fb;
-    --bd-text: #0f172a;
-    --bd-text-muted: #64748b;
-    --bd-text-subtle: #94a3b8;
-    --bd-border: #e2e8f0;
-    --bd-border-soft: #eef2f6;
-    --bd-bg: #f8fafc;
-    --bd-card-bg: #ffffff;
-    --bd-radius: 16px;
-    --bd-radius-sm: 10px;
-    --bd-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    --bd-shadow-md: 0 4px 16px rgba(15, 23, 42, 0.05);
-    --bd-shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.07);
+    --bd-text: var(--sf-text);
+    --bd-text-muted: var(--sf-text-muted);
+    --bd-text-subtle: var(--sf-text-subtle);
+    --bd-border: var(--sf-border);
+    --bd-border-soft: var(--sf-border-soft);
+    --bd-bg: var(--sf-bg);
+    --bd-card-bg: var(--sf-card-bg);
+    --bd-radius: var(--sf-radius);
+    --bd-radius-sm: var(--sf-radius-sm);
+    --bd-shadow: var(--sf-shadow-xs);
+    --bd-shadow-md: var(--sf-shadow);
+    --bd-shadow-lg: var(--sf-shadow-md);
     --bd-info-bg: #eaf6fb;
     --bd-info-border: #b6e3ef;
     --bd-success-bg: #ecfbf3;
     --bd-success-border: #b9ecd0;
-    --bd-discount: #ef4444;
+    --bd-discount: var(--sf-danger);
 
-    background: var(--bd-bg);
-    color: var(--bd-text);
-    font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
-    padding: 16px 0 56px;
+    background: var(--sf-bg);
+    color: var(--sf-text);
+    font-family: var(--sf-font);
+    padding: 16px 0 var(--sf-page-bottom);
     line-height: 1.6;
 }
 

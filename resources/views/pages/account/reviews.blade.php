@@ -1,7 +1,6 @@
 @extends('layouts.home-tech')
 @section('body_class', 'accp-page')
 @section('content')
-<link rel="stylesheet" href="{{ asset('frontend/css/account-shared.css') }}">
 <style>
 .rv-item{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:18px;margin-bottom:12px;transition:box-shadow .15s}
 .rv-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.05)}
@@ -24,8 +23,8 @@
 .rv-date{font-size:11px;color:#9ca3af}
 .rv-bottom{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 /* Review-able products */
-.rv-able{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:14px}
-@media(max-width:900px){.rv-able{grid-template-columns:repeat(3,1fr)}}
+.rv-able{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px}
+@media(max-width:900px){.rv-able{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.rv-able{grid-template-columns:repeat(2,1fr)}}
 .rv-able-item{border:1px solid #e5e7eb;border-radius:10px;padding:14px;background:#fff;text-align:center}
 .rv-able-item img{width:60px;height:60px;object-fit:contain;margin:0 auto 8px;display:block}
@@ -43,6 +42,8 @@
     $reviews            = $reviews ?? collect();
     $stats              = $stats ?? ['total' => 0, 'approved' => 0, 'pending' => 0, 'avg' => 0];
     $reviewableProducts = $reviewableProducts ?? collect();
+    $visibleReviewableProducts = collect($reviewableProducts)
+        ->take($reviewableProducts->count() >= 8 ? 8 : min(4, $reviewableProducts->count()));
     $statusMap          = ['approved' => ['Đã đăng', 'green'], 'pending' => ['Chờ duyệt', 'amber'], 'rejected' => ['Bị từ chối', 'red']];
 @endphp
 
@@ -81,12 +82,12 @@
                 $st = $statusMap[$rv->status] ?? ['Khác', 'gray'];
                 $product = $rv->product;
                 $productUrl = $product ? url('/chi-tiet/' . ($product->slug ?? $product->id)) : '#';
-                $productImage = $product?->thumbnail ?? $product?->image ?? 'uploads/product/no-image.svg';
+                $productImage = \App\Support\AssetUrl::productVariant($product?->thumbnail ?? $product?->image ?? null, 'thumb');
             @endphp
             <div class="rv-item">
                 <div class="rv-head">
                     <div class="rv-prod">
-                        <div class="rv-img"><img src="{{ asset($productImage) }}" alt=""></div>
+                        <div class="rv-img"><img src="{{ $productImage }}" alt=""></div>
                         <div class="rv-prod-info">
                             <h4>{{ $product?->name ?? 'Sản phẩm đã xoá' }}</h4>
                             <div class="rv-stars">
@@ -116,7 +117,7 @@
             @endforelse
 
             @if ($reviews instanceof \Illuminate\Contracts\Pagination\Paginator && $reviews->hasPages())
-            <div class="rv-pagination" style="margin-top:16px">{{ $reviews->links() }}</div>
+            <div class="rv-pagination" style="margin-top:16px">{{ $reviews->links('vendor.pagination.shop-pagination') }}</div>
             @endif
         </main>
 
@@ -148,13 +149,13 @@
     </div>
 
     {{-- Products you can review --}}
-    @if ($reviewableProducts->isNotEmpty())
+    @if ($visibleReviewableProducts->isNotEmpty())
     <div class="accp-recommend" style="margin-top:24px">
         <div class="accp-recommend-head"><h3>Sản phẩm bạn có thể đánh giá</h3></div>
         <div class="rv-able">
-            @foreach ($reviewableProducts as $able)
+            @foreach ($visibleReviewableProducts as $able)
             <div class="rv-able-item">
-                <img src="{{ asset($able->thumbnail ?? $able->image ?? 'uploads/product/no-image.svg') }}" alt="">
+                <img src="{{ \App\Support\AssetUrl::productVariant($able->thumbnail ?? $able->image ?? null, 'thumb') }}" alt="">
                 <div class="name">{{ $able->name }}</div>
                 <div class="price">{{ number_format((float) ($able->sale_price ?: $able->price), 0, ',', '.') }}đ</div>
                 <a href="{{ url('/chi-tiet/' . ($able->slug ?? $able->id)) }}" class="accp-btn accp-btn--outline accp-btn--sm accp-btn--block" style="margin-top:4px">Viết đánh giá</a>

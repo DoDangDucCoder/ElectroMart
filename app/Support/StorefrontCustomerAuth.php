@@ -2,7 +2,9 @@
 
 namespace App\Support;
 
+use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 
 class StorefrontCustomerAuth
@@ -26,7 +28,7 @@ class StorefrontCustomerAuth
         'cart' => '/gio-hang',
         'checkout' => '/checkout',
         'payment' => '/payment',
-        'history' => '/history',
+        'history' => '/account/orders',
     ];
 
     public static function fromRequest(Request $request, string $default = 'checkout'): string
@@ -99,6 +101,19 @@ class StorefrontCustomerAuth
         $key = static::normalizeRedirectKey($candidate, $default);
 
         return url(static::DESTINATIONS[$key]);
+    }
+
+    public static function headerCustomer(?int $customerId): ?Customer
+    {
+        if (! $customerId || ! static::customersTableExists()) {
+            return null;
+        }
+
+        return Customer::query()
+            ->select(['id', 'name', 'email', 'phone', 'avatar_path', 'is_active'])
+            ->whereKey($customerId)
+            ->where('is_active', true)
+            ->first();
     }
 
     public static function normalizeRedirectKey(?string $candidate, string $default = 'checkout'): string
@@ -203,5 +218,16 @@ class StorefrontCustomerAuth
         }
 
         Session::put($key, $value);
+    }
+
+    protected static function customersTableExists(): bool
+    {
+        static $exists = null;
+
+        if ($exists === null) {
+            $exists = Schema::hasTable('customers');
+        }
+
+        return $exists;
     }
 }

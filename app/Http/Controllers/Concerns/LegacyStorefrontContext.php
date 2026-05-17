@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Concerns;
 
 use App\Infrastructure\Persistence\Eloquent\Cms\Banner;
 use App\Infrastructure\Persistence\Eloquent\Cms\BlogCategory;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -18,17 +19,19 @@ trait LegacyStorefrontContext
      */
     protected function legacyCategoryPosts()
     {
-        $table = (new BlogCategory())->getTable();
+        return Cache::remember('storefront.legacy_category_posts.active', 300, function () {
+            $table = (new BlogCategory())->getTable();
 
-        if (! Schema::hasTable($table)) {
-            return collect();
-        }
+            if (! Schema::hasTable($table)) {
+                return collect();
+            }
 
-        return BlogCategory::query()
-            ->where('is_active', true)
-            ->orderBy('display_order')
-            ->orderByDesc('id')
-            ->get();
+            return BlogCategory::query()
+                ->where('is_active', true)
+                ->orderBy('display_order')
+                ->orderByDesc('id')
+                ->get();
+        });
     }
 
     /**
@@ -38,28 +41,32 @@ trait LegacyStorefrontContext
      */
     protected function legacyActiveSliders(int $limit = 4)
     {
-        $table = (new Banner())->getTable();
+        $limit = max(1, $limit);
 
-        if (! Schema::hasTable($table)) {
-            return collect();
-        }
+        return Cache::remember("storefront.legacy_active_sliders.{$limit}", 300, function () use ($limit) {
+            $table = (new Banner())->getTable();
 
-        return Banner::query()
-            ->where('is_active', true)
-            ->where('placement', 'homepage')
-            ->where(function ($query) {
-                $query->whereNull('starts_at')
-                    ->orWhere('starts_at', '<=', now());
-            })
-            ->where(function ($query) {
-                $query->whereNull('ends_at')
-                    ->orWhere('ends_at', '>=', now());
-            })
-            ->orderBy('display_order')
-            ->orderByDesc('id')
-            ->take(max(1, $limit))
-            ->get()
-            ->map(fn (Banner $banner) => $this->mapBannerToSliderShape($banner));
+            if (! Schema::hasTable($table)) {
+                return collect();
+            }
+
+            return Banner::query()
+                ->where('is_active', true)
+                ->where('placement', 'homepage')
+                ->where(function ($query) {
+                    $query->whereNull('starts_at')
+                        ->orWhere('starts_at', '<=', now());
+                })
+                ->where(function ($query) {
+                    $query->whereNull('ends_at')
+                        ->orWhere('ends_at', '>=', now());
+                })
+                ->orderBy('display_order')
+                ->orderByDesc('id')
+                ->take($limit)
+                ->get()
+                ->map(fn (Banner $banner) => $this->mapBannerToSliderShape($banner));
+        });
     }
 
     /**

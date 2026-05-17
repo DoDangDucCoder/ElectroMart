@@ -187,34 +187,39 @@ class MailController extends Controller
     {
         return [
             'coupon-standard' => [
-                'label' => 'Coupon khách thường',
+                'label' => 'Mã giảm giá khách thường',
                 'category' => 'Khuyến mãi',
-                'description' => 'Mail giảm giá phần trăm cho nhóm khách hàng phổ thông.',
+                'description' => 'Email giảm giá phần trăm cho nhóm khách hàng phổ thông.',
                 'snapshot' => 'coupon-campaign.standard',
+                'snapshot_label' => 'Mẫu mã giảm giá khách thường',
             ],
             'coupon-vip' => [
-                'label' => 'Coupon khách thân thiết',
+                'label' => 'Mã giảm giá khách thân thiết',
                 'category' => 'Khuyến mãi',
-                'description' => 'Mail giảm giá theo tiền cho nhóm khách hàng thân thiết.',
+                'description' => 'Email giảm giá theo tiền cho nhóm khách hàng thân thiết.',
                 'snapshot' => 'coupon-campaign.vip',
+                'snapshot_label' => 'Mẫu mã giảm giá khách thân thiết',
             ],
             'password-recovery' => [
                 'label' => 'Khôi phục mật khẩu',
                 'category' => 'Tài khoản',
-                'description' => 'Mail đặt lại mật khẩu cho khách hàng storefront.',
+                'description' => 'Email đặt lại mật khẩu cho khách hàng trên website.',
                 'snapshot' => 'password-recovery',
+                'snapshot_label' => 'Mẫu khôi phục mật khẩu',
             ],
             'order-cod' => [
                 'label' => 'Xác nhận đơn COD',
                 'category' => 'Đơn hàng',
                 'description' => 'Biến thể xác nhận đơn hàng mặc định với thanh toán tiền mặt.',
                 'snapshot' => 'order-confirmation',
+                'snapshot_label' => 'Mẫu xác nhận đơn COD',
             ],
             'order-atm' => [
                 'label' => 'Xác nhận đơn chuyển khoản',
                 'category' => 'Đơn hàng',
                 'description' => 'Biến thể xác nhận đơn hàng với chuyển khoản ATM và không áp mã.',
                 'snapshot' => 'order-confirmation.atm',
+                'snapshot_label' => 'Mẫu xác nhận đơn chuyển khoản',
             ],
         ];
     }
@@ -241,7 +246,7 @@ class MailController extends Controller
             ))->render(),
             'coupon-vip' => (new LegacyCouponCampaignMail(
                 mailData: new CouponCampaignMailData(
-                    couponCode: 'VIP25',
+                    couponCode: 'THANTHIET25',
                     couponTime: 10,
                     couponCondition: 2,
                     couponNumber: 250000,
@@ -252,7 +257,7 @@ class MailController extends Controller
                     shopUrl: url('/'),
                     loginUrl: url('/dang-nhap')
                 ),
-                subjectLine: 'Mã khuyến mãi VIP ngày 23-03-2026 10:00:00'
+                subjectLine: 'Mã khuyến mãi khách thân thiết ngày 23-03-2026 10:00:00'
             ))->render(),
             'password-recovery' => (new LegacyPasswordRecoveryMail(
                 mailData: new PasswordRecoveryMailData(

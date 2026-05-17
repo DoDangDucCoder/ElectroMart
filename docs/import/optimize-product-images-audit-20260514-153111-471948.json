@@ -1,0 +1,47 @@
+[
+    {
+        "source_path": "uploads/products/1898/cellphones-dong-ho-thong-minh-garmin-forerunner-570-47mm-da-kich-hoat-f9f1fc10-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1898,
+        "source_bytes": 158355,
+        "source_width": 600,
+        "source_height": 600,
+        "variant": "thumb",
+        "target_width": 360,
+        "optimized_path": "uploads/products/1898/_optimized/cellphones-dong-ho-thong-minh-garmin-forerunner-570-47mm-da-kich-hoat-f9f1fc10-main-thumb.webp",
+        "optimized_bytes": 13314,
+        "saved_bytes": 145041,
+        "status": "created",
+        "message": "Optimized variant created."
+    },
+    {
+        "source_path": "uploads/products/1898/cellphones-dong-ho-thong-minh-garmin-forerunner-570-47mm-da-kich-hoat-f9f1fc10-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1898,
+        "source_bytes": 158355,
+        "source_width": 600,
+        "source_height": 600,
+        "variant": "medium",
+        "target_width": 800,
+        "optimized_path": "uploads/products/1898/_optimized/cellphones-dong-ho-thong-minh-garmin-forerunner-570-47mm-da-kich-hoat-f9f1fc10-main-medium.webp",
+        "optimized_bytes": 25036,
+        "saved_bytes": 133319,
+        "status": "created",
+        "message": "Optimized variant created."
+    },
+    {
+        "source_path": "uploads/products/1898/cellphones-dong-ho-thong-minh-garmin-forerunner-570-47mm-da-kich-hoat-f9f1fc10-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1898,
+        "source_bytes": 158355,
+        "source_width": 600,
+        "source_height": 600,
+        "variant": "large",
+        "target_width": 1200,
+        "optimized_path": "uploads/products/1898/_optimized/cellphones-dong-ho-thong-minh-garmin-forerunner-570-47mm-da-kich-hoat-f9f1fc10-main-large.webp",
+        "optimized_bytes": 25036,
+        "saved_bytes": 133319,
+        "status": "created",
+        "message": "Optimized variant created."
+    }
+]

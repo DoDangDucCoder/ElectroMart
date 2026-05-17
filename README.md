@@ -369,7 +369,9 @@ Sau khi chạy `db:seed`, hệ thống tạo sẵn các tài khoản:
 
 > Có thể thay đổi trong `.env` qua biến `ADMIN_SEED_EMAIL`, `ADMIN_SEED_PASSWORD`.
 
-**Truy cập admin:** `http://127.0.0.1:8000/admin-dashboard`
+**Truy cập admin:** `http://127.0.0.1:8000/admin`  
+**Dashboard sau đăng nhập:** `http://127.0.0.1:8000/dashboard`  
+**URL tương thích cũ:** `http://127.0.0.1:8000/admin-dashboard` chuyển hướng về `/dashboard`
 
 ---
 

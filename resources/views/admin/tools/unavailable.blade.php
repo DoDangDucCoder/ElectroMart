@@ -14,12 +14,12 @@
             <header class="g-admin-panel-head">
                 <div>
                     <strong>Trạng thái: Đang tạm khóa hoặc đang phát triển</strong>
-                    <p>Vui lòng quay lại Dashboard để tiếp tục sử dụng các chức năng quản trị đang hoạt động.</p>
+                    <p>Vui lòng quay lại Bảng quản trị để tiếp tục sử dụng các chức năng quản trị đang hoạt động.</p>
                 </div>
             </header>
             <div class="g-admin-panel-body">
                 <a href="{{ url('/dashboard') }}" class="btn btn-primary">
-                    <i class="fa fa-dashboard"></i> Quay về Dashboard
+                    <i class="fa fa-dashboard"></i> Quay về Bảng quản trị
                 </a>
             </div>
         </section>

@@ -108,11 +108,19 @@ class EloquentBlogPostRepository implements BlogPostRepositoryInterface
         }
 
         if (! empty($filters['search'])) {
-            $search = $filters['search'];
+            $search = trim((string) $filters['search']);
             $query->where(function (Builder $builder) use ($search) {
                 $builder->where('title', 'like', "%{$search}%")
                     ->orWhere('slug', 'like', "%{$search}%")
-                    ->orWhere('meta->keywords', 'like', "%{$search}%");
+                    ->orWhere('excerpt', 'like', "%{$search}%")
+                    ->orWhere('content', 'like', "%{$search}%")
+                    ->orWhere('meta_title', 'like', "%{$search}%")
+                    ->orWhere('meta_description', 'like', "%{$search}%")
+                    ->orWhere('meta->keywords', 'like', "%{$search}%")
+                    ->orWhereHas('category', function (Builder $categoryQuery) use ($search): void {
+                        $categoryQuery->where('name', 'like', "%{$search}%")
+                            ->orWhere('slug', 'like', "%{$search}%");
+                    });
             });
         }
 

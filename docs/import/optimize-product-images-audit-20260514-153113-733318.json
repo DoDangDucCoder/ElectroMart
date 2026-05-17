@@ -1,0 +1,47 @@
+[
+    {
+        "source_path": "uploads/products/1786/cellphones-dong-ho-thong-minh-garmin-instinct-3-tactical-solar-45mm-da-kich-hoat-7a584027-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1786,
+        "source_bytes": 132170,
+        "source_width": 600,
+        "source_height": 600,
+        "variant": "thumb",
+        "target_width": 360,
+        "optimized_path": "uploads/products/1786/_optimized/cellphones-dong-ho-thong-minh-garmin-instinct-3-tactical-solar-45mm-da-kich-hoat-7a584027-main-thumb.webp",
+        "optimized_bytes": 12166,
+        "saved_bytes": 120004,
+        "status": "created",
+        "message": "Optimized variant created."
+    },
+    {
+        "source_path": "uploads/products/1786/cellphones-dong-ho-thong-minh-garmin-instinct-3-tactical-solar-45mm-da-kich-hoat-7a584027-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1786,
+        "source_bytes": 132170,
+        "source_width": 600,
+        "source_height": 600,
+        "variant": "medium",
+        "target_width": 800,
+        "optimized_path": "uploads/products/1786/_optimized/cellphones-dong-ho-thong-minh-garmin-instinct-3-tactical-solar-45mm-da-kich-hoat-7a584027-main-medium.webp",
+        "optimized_bytes": 23436,
+        "saved_bytes": 108734,
+        "status": "created",
+        "message": "Optimized variant created."
+    },
+    {
+        "source_path": "uploads/products/1786/cellphones-dong-ho-thong-minh-garmin-instinct-3-tactical-solar-45mm-da-kich-hoat-7a584027-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1786,
+        "source_bytes": 132170,
+        "source_width": 600,
+        "source_height": 600,
+        "variant": "large",
+        "target_width": 1200,
+        "optimized_path": "uploads/products/1786/_optimized/cellphones-dong-ho-thong-minh-garmin-instinct-3-tactical-solar-45mm-da-kich-hoat-7a584027-main-large.webp",
+        "optimized_bytes": 23436,
+        "saved_bytes": 108734,
+        "status": "created",
+        "message": "Optimized variant created."
+    }
+]

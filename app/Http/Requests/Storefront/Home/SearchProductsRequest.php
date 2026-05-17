@@ -10,9 +10,14 @@ class SearchProductsRequest extends BaseFormRequest
     {
         return [
             'keywords_submit' => ['nullable', 'string', 'max:100'],
+            'q' => ['nullable', 'string', 'max:100'],
             'product_code' => ['nullable', 'string', 'max:100'],
             'category_id' => ['nullable', 'integer', 'exists:product_categories,id'],
+            'category' => ['nullable', 'string', 'max:255'],
             'brand_id' => ['nullable', 'integer', 'exists:brands,id'],
+            'brand' => ['nullable', 'string', 'max:255'],
+            'tag' => ['nullable', 'string', 'max:100'],
+            'mode' => ['nullable', 'in:recommendations'],
             'price_min' => ['nullable', 'numeric', 'min:0'],
             'price_max' => ['nullable', 'numeric', 'min:0'],
             'sort' => ['nullable', 'in:popular,best_selling,price_asc,price_desc,name_asc,name_desc,sale_desc,created_at_desc'],
@@ -40,9 +45,14 @@ class SearchProductsRequest extends BaseFormRequest
     {
         $this->merge([
             'keywords_submit' => $this->normalizeNullableString($this->input('keywords_submit')),
+            'q' => $this->normalizeNullableString($this->input('q')),
             'product_code' => $this->normalizeNullableString($this->input('product_code')),
             'category_id' => $this->normalizeNullableInteger($this->input('category_id')),
+            'category' => $this->normalizeNullableString($this->input('category')),
             'brand_id' => $this->normalizeNullableInteger($this->input('brand_id')),
+            'brand' => $this->normalizeNullableString($this->input('brand')),
+            'tag' => $this->normalizeNullableString($this->input('tag')),
+            'mode' => $this->normalizeNullableString($this->input('mode')),
             'price_min' => $this->normalizeNullableNumber($this->input('price_min')),
             'price_max' => $this->normalizeNullableNumber($this->input('price_max')),
             'sort' => $this->normalizeNullableString($this->input('sort')),

@@ -122,7 +122,7 @@
                 @endif
 
                 <div class="dd-bank-transfer-actions">
-                    <a href="{{ url('/history') }}" class="dd-bank-transfer-action dd-bank-transfer-action--primary">
+                    <a href="{{ $currentCustomer ? url('/account/orders') : url('/view-history-order/' . $order->code) }}" class="dd-bank-transfer-action dd-bank-transfer-action--primary">
                         <i class="fa fa-history"></i> Xem lịch sử đơn hàng
                     </a>
                     <a href="{{ url('/') }}" class="dd-bank-transfer-action dd-bank-transfer-action--secondary">

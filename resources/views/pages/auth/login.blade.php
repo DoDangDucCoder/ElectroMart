@@ -5,7 +5,6 @@ $meta_title=$meta_title??'Đăng nhập - DangDuc';
 $meta_desc=$meta_desc??'Đăng nhập tài khoản DangDuc để mua sắm và quản lý đơn hàng';
 $url_canonical=$url_canonical??url('/dang-nhap');
 @endphp
-@push('styles')<link href="{{ asset('frontend/css/account-shared.css') }}" rel="stylesheet">@endpush
 @section('content')
 <div class="auth-wrap">
     @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Đăng nhập', 'current' => true]]])
@@ -25,13 +24,13 @@ $url_canonical=$url_canonical??url('/dang-nhap');
         </div>
         <div class="auth-right">
             <div class="auth-card">
-                <h2>Đăng nhập</h2>
+                <h1>Đăng nhập</h1>
                 <p>Nhập thông tin tài khoản của bạn</p>
                 <form action="{{ url('/login-customer') }}" method="POST">
                     @csrf
                     <div class="accp-field"><label>Email hoặc Số điện thoại</label><input type="text" name="email_account" placeholder="Nhập email hoặc số điện thoại" required></div>
                     <div class="accp-field"><label>Mật khẩu</label>
-                        <div class="input-wrap"><input type="password" name="password_account" placeholder="Nhập mật khẩu" required><button type="button" class="toggle-pw"><i class="fa fa-eye"></i></button></div>
+                        <div class="input-wrap"><input type="password" name="password_account" placeholder="Nhập mật khẩu" required data-auth-password><button type="button" class="toggle-pw" aria-label="Hiện mật khẩu"><i class="fa fa-eye"></i></button></div>
                     </div>
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
                         <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:#374151;cursor:pointer"><input type="checkbox" name="remember"> Ghi nhớ đăng nhập</label>
@@ -62,7 +61,7 @@ body.auth-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
 .auth-feat i{width:36px;height:36px;border-radius:8px;background:#0d9488;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 .auth-feat strong{font-size:12.5px;color:#111827;display:block}.auth-feat span{font-size:11px;color:#6b7280}
 .auth-card{background:#fff;border-radius:16px;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,.06)}
-.auth-card h2{font-size:24px;font-weight:800;color:#0f172a;margin:0 0 4px}
+.auth-card h1{font-size:24px;font-weight:800;color:#0f172a;margin:0 0 4px}
 .auth-card p{font-size:14px;color:#6b7280;margin:0 0 24px}
 .auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
@@ -75,4 +74,22 @@ body.auth-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
 .auth-footer{text-align:center;margin-top:20px;font-size:14px;color:#6b7280}
 .auth-footer a{color:#0d9488;font-weight:600;text-decoration:none}
 </style>
+<script>
+document.querySelectorAll('.auth-card .toggle-pw').forEach(function (button) {
+    button.addEventListener('click', function () {
+        var input = button.parentElement.querySelector('[data-auth-password]');
+        if (!input) return;
+
+        var icon = button.querySelector('i');
+        var isPassword = input.getAttribute('type') === 'password';
+        input.setAttribute('type', isPassword ? 'text' : 'password');
+        button.setAttribute('aria-label', isPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
+
+        if (icon) {
+            icon.classList.toggle('fa-eye-slash', isPassword);
+            icon.classList.toggle('fa-eye', !isPassword);
+        }
+    });
+});
+</script>
 @endsection

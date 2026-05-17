@@ -35,7 +35,7 @@
                     </div>
                 @endif
 
-                <form method="GET" action="{{ url('/product-discovery-report') }}" class="g-admin-report-toolbar">
+                <form method="GET" action="{{ url('/product-discovery-report') }}" class="g-admin-report-toolbar g-admin-compact-filter">
                     <div class="form-group">
                         <label for="date_from">Từ ngày</label>
                         <input type="date" id="date_from" name="date_from" value="{{ $filters['date_from'] ?? '' }}"
@@ -46,8 +46,8 @@
                         <input type="date" id="date_to" name="date_to" value="{{ $filters['date_to'] ?? '' }}"
                             class="form-control">
                     </div>
-                    <div class="form-group">
-                        <label>&nbsp;</label>
+                    <div class="form-group g-admin-filter-actions">
+                        <label class="sr-only">Thao tác lọc</label>
                         <div class="g-admin-inline-actions">
                             <button type="submit" class="btn btn-info">Lọc báo cáo</button>
                             <a href="{{ url('/product-discovery-report') }}" class="btn btn-default">Xóa bộ lọc</a>

@@ -12,7 +12,7 @@ class CategorySeeder extends Seeder
         $now = now();
 
         $categories = [
-            // Main categories
+            // Main categories (3)
             [
                 'name' => 'Điện thoại',
                 'slug' => 'dien-thoai',
@@ -56,7 +56,7 @@ class CategorySeeder extends Seeder
                 'updated_at' => now(),
             ],
 
-            // Sub-categories for Điện thoại
+            // Sub-categories for Điện thoại (3)
             [
                 'name' => 'iPhone',
                 'slug' => 'iphone',
@@ -100,7 +100,7 @@ class CategorySeeder extends Seeder
                 'updated_at' => now(),
             ],
 
-            // Sub-categories for Laptop
+            // Sub-categories for Laptop (2)
             [
                 'name' => 'Laptop Gaming',
                 'slug' => 'laptop-gaming',
@@ -130,7 +130,7 @@ class CategorySeeder extends Seeder
                 'updated_at' => now(),
             ],
 
-            // Sub-categories for Phụ kiện
+            // Sub-categories for Phụ kiện (3)
             [
                 'name' => 'Sạc & Cáp',
                 'slug' => 'sac-cap',
@@ -156,6 +156,20 @@ class CategorySeeder extends Seeder
                 'display_order' => 2,
                 'meta_title' => 'Ốp lưng và kính cường lực',
                 'meta_description' => 'Bảo vệ điện thoại với ốp lưng và kính cường lực',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Linh kiện',
+                'slug' => 'linh-kien',
+                'code' => 'COMPONENTS',
+                'parent_id' => 3,
+                'description' => 'Linh kiện điện tử, phụ tùng thay thế',
+                'thumbnail_path' => 'categories/components.jpg',
+                'is_active' => true,
+                'display_order' => 3,
+                'meta_title' => 'Linh kiện điện tử chính hãng',
+                'meta_description' => 'Linh kiện, phụ tùng chất lượng cao',
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

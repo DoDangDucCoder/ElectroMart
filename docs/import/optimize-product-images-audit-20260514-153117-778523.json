@@ -1,0 +1,47 @@
+[
+    {
+        "source_path": "uploads/products/1235/xgear-man-hinh-msi-mag-255pxf-245-inch-fhdrapid-ips300hz05msspeaker-52f69ec2-main.jpg",
+        "source_type": "thumbnail",
+        "product_id": 1235,
+        "source_bytes": 72075,
+        "source_width": 1000,
+        "source_height": 1000,
+        "variant": "thumb",
+        "target_width": 360,
+        "optimized_path": "uploads/products/1235/_optimized/xgear-man-hinh-msi-mag-255pxf-245-inch-fhdrapid-ips300hz05msspeaker-52f69ec2-main-thumb.webp",
+        "optimized_bytes": 13094,
+        "saved_bytes": 58981,
+        "status": "created",
+        "message": "Optimized variant created."
+    },
+    {
+        "source_path": "uploads/products/1235/xgear-man-hinh-msi-mag-255pxf-245-inch-fhdrapid-ips300hz05msspeaker-52f69ec2-main.jpg",
+        "source_type": "thumbnail",
+        "product_id": 1235,
+        "source_bytes": 72075,
+        "source_width": 1000,
+        "source_height": 1000,
+        "variant": "medium",
+        "target_width": 800,
+        "optimized_path": "uploads/products/1235/_optimized/xgear-man-hinh-msi-mag-255pxf-245-inch-fhdrapid-ips300hz05msspeaker-52f69ec2-main-medium.webp",
+        "optimized_bytes": 35468,
+        "saved_bytes": 36607,
+        "status": "created",
+        "message": "Optimized variant created."
+    },
+    {
+        "source_path": "uploads/products/1235/xgear-man-hinh-msi-mag-255pxf-245-inch-fhdrapid-ips300hz05msspeaker-52f69ec2-main.jpg",
+        "source_type": "thumbnail",
+        "product_id": 1235,
+        "source_bytes": 72075,
+        "source_width": 1000,
+        "source_height": 1000,
+        "variant": "large",
+        "target_width": 1200,
+        "optimized_path": "uploads/products/1235/_optimized/xgear-man-hinh-msi-mag-255pxf-245-inch-fhdrapid-ips300hz05msspeaker-52f69ec2-main-large.webp",
+        "optimized_bytes": 43358,
+        "saved_bytes": 28717,
+        "status": "created",
+        "message": "Optimized variant created."
+    }
+]

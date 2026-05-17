@@ -5,7 +5,6 @@ $meta_title=$meta_title??'Đăng ký - DangDuc';
 $meta_desc=$meta_desc??'Tạo tài khoản DangDuc để mua sắm công nghệ hàng đầu';
 $url_canonical=$url_canonical??url('/dang-ky');
 @endphp
-@push('styles')<link href="{{ asset('frontend/css/account-shared.css') }}" rel="stylesheet">@endpush
 @section('content')
 <div class="auth-wrap">
     @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Đăng ký', 'current' => true]]])
@@ -25,7 +24,7 @@ $url_canonical=$url_canonical??url('/dang-ky');
         </div>
         <div class="auth-right">
             <div class="auth-card">
-                <h2>Đăng ký tài khoản</h2>
+                <h1>Đăng ký tài khoản</h1>
                 <p>Chỉ mất 1 phút để bắt đầu!</p>
                 <form action="{{ url('/add-customer') }}" method="POST">
                     @csrf
@@ -71,7 +70,7 @@ body.auth-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif;o
 .auth-feat strong{font-size:12.5px;color:#111827;display:block}.auth-feat span{font-size:11px;color:#6b7280}
 .auth-card{background:#fff;border-radius:16px;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,.06)}
 .auth-card *{box-sizing:border-box}
-.auth-card h2{font-size:24px;font-weight:800;color:#0f172a;margin:0 0 4px}
+.auth-card h1{font-size:24px;font-weight:800;color:#0f172a;margin:0 0 4px}
 .auth-card p{font-size:14px;color:#6b7280;margin:0 0 24px}
 .auth-card .accp-field .input-wrap{
     display:flex;

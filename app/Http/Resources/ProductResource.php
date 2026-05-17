@@ -33,7 +33,7 @@ class ProductResource extends JsonResource
             'is_low_stock' => $this->stock_quantity <= $this->stock_alert_threshold,
             'is_active' => $this->is_active,
             'is_featured' => $this->is_featured,
-            'thumbnail_url' => AssetUrl::product($this->thumbnail_path),
+            'thumbnail_url' => AssetUrl::productVariant($this->thumbnail_path, 'thumb'),
             'description' => $this->description,
             'content' => $this->content,
             'views_count' => $this->views_count,
@@ -62,7 +62,7 @@ class ProductResource extends JsonResource
             'media' => $this->whenLoaded('media', fn() => 
                 $this->media->map(fn($media) => [
                     'id' => $media->id,
-                    'file_url' => AssetUrl::product($media->file_path),
+                    'file_url' => AssetUrl::productVariant($media->file_path, 'medium'),
                     'collection' => $media->collection,
                     'display_order' => $media->display_order,
                 ])

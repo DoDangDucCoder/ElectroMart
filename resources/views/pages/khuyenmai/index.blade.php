@@ -1,10 +1,11 @@
-@extends('layouts.home-tech')
+﻿@extends('layouts.home-tech')
 
 @section('body_class', 'g-home tech-home promo-page')
 
 @push('styles')
-<link href="{{ asset('frontend/css/promo-page.css') }}" rel="stylesheet">
+<link href="{{ asset('frontend/css/promo-page.css') }}?v=2.1" rel="stylesheet">
 @endpush
+
 
 @section('content')
 <main class="promo-main">
@@ -38,16 +39,16 @@
             <div class="promo-cats-grid">
                 @php
                     $promoCategories = [
-                        ['name' => 'Laptop sinh viên', 'icon' => 'fa-laptop', 'query' => 'laptop sinh viên'],
-                        ['name' => 'Gaming setup', 'icon' => 'fa-gamepad', 'query' => 'gaming'],
-                        ['name' => 'Phụ kiện hot', 'icon' => 'fa-headphones', 'query' => 'phụ kiện'],
-                        ['name' => 'Văn phòng tối ưu', 'icon' => 'fa-briefcase', 'query' => 'laptop văn phòng'],
-                        ['name' => 'Deal cuối tuần', 'icon' => 'fa-tags', 'query' => 'deal cuối tuần'],
-                        ['name' => 'Flash Sale', 'icon' => 'fa-bolt', 'query' => 'flash sale'],
+                        ['name' => 'Laptop sinh viên', 'icon' => 'fa-laptop', 'url' => url('/danh-muc/laptop')],
+                        ['name' => 'Gaming setup', 'icon' => 'fa-gamepad', 'url' => url('/danh-muc/gaming-gear')],
+                        ['name' => 'Phụ kiện hot', 'icon' => 'fa-headphones', 'url' => url('/danh-muc/phu-kien')],
+                        ['name' => 'Văn phòng tối ưu', 'icon' => 'fa-briefcase', 'url' => url('/danh-muc/laptop-van-phong')],
+                        ['name' => 'Deal cuối tuần', 'icon' => 'fa-tags', 'url' => url('/san-pham?' . http_build_query(['sort' => 'sale_desc']))],
+                        ['name' => 'Flash Sale', 'icon' => 'fa-bolt', 'url' => url('/san-pham?' . http_build_query(['sort' => 'sale_desc']))],
                     ];
                 @endphp
                 @foreach ($promoCategories as $cat)
-                    <a href="{{ url('/tim-kiem?keywords_submit=' . urlencode($cat['query'])) }}" class="promo-cat-item">
+                    <a href="{{ $cat['url'] }}" class="promo-cat-item">
                         <span class="promo-cat-icon-wrap">
                             <i class="fa {{ $cat['icon'] }}"></i>
                         </span>
@@ -66,7 +67,7 @@
                 <a href="{{ url('/san-pham') }}" class="promo-see-all">Xem tất cả ưu đãi <i class="fa fa-arrow-right"></i></a>
             </div>
             <div class="promo-banner-grid">
-                <a href="{{ url('/tim-kiem?keywords_submit=laptop+sinh+viên') }}" class="promo-banner-card promo-banner--blue">
+                <a href="{{ url('/danh-muc/laptop') }}" class="promo-banner-card promo-banner--blue">
                     <div class="promo-banner-content">
                         <span class="promo-banner-tag">Back to School</span>
                         <h3>LÊN LỚP<br>THẬT CHẤT</h3>
@@ -74,7 +75,7 @@
                         <span class="promo-banner-cta">Xem ngay <i class="fa fa-arrow-right"></i></span>
                     </div>
                 </a>
-                <a href="{{ url('/tim-kiem?keywords_submit=gaming') }}" class="promo-banner-card promo-banner--dark">
+                <a href="{{ url('/danh-muc/pc') }}" class="promo-banner-card promo-banner--dark">
                     <div class="promo-banner-content">
                         <span class="promo-banner-tag">GAMING COLLECTION</span>
                         <h3>SỨC MẠNH<br>DẪN ĐẦU</h3>
@@ -82,7 +83,7 @@
                         <span class="promo-banner-cta">Xem ngay <i class="fa fa-arrow-right"></i></span>
                     </div>
                 </a>
-                <a href="{{ url('/tim-kiem?keywords_submit=làm+việc+tại+nhà') }}" class="promo-banner-card promo-banner--teal">
+                <a href="{{ url('/danh-muc/laptop-van-phong') }}" class="promo-banner-card promo-banner--teal">
                     <div class="promo-banner-content">
                         <span class="promo-banner-tag">LÀM VIỆC TẠI NHÀ</span>
                         <h3>HIỆU QUẢ<br>MỖI NGÀY</h3>
@@ -90,7 +91,7 @@
                         <span class="promo-banner-cta">Xem ngay <i class="fa fa-arrow-right"></i></span>
                     </div>
                 </a>
-                <a href="{{ url('/tim-kiem?keywords_submit=phụ+kiện') }}" class="promo-banner-card promo-banner--purple">
+                <a href="{{ url('/danh-muc/phu-kien') }}" class="promo-banner-card promo-banner--purple">
                     <div class="promo-banner-content">
                         <span class="promo-banner-tag">COMBO PHỤ KIỆN</span>
                         <h3>MUA NHIỀU<br>GIẢM SÂU</h3>
@@ -154,14 +155,14 @@
             <div class="promo-collection-grid">
                 @php
                     $collections = [
-                        ['name' => 'Laptop học tập', 'desc' => 'Gọn nhẹ, bền bỉ, hiệu năng ổn định.', 'icon' => 'fa-book', 'query' => 'laptop học tập'],
-                        ['name' => 'Laptop gaming', 'desc' => 'Hiệu năng mạnh mẽ, chiến game đỉnh cao.', 'icon' => 'fa-gamepad', 'query' => 'laptop gaming'],
-                        ['name' => 'PC streaming', 'desc' => 'Cấu hình tối ưu, stream mượt mọi game.', 'icon' => 'fa-video-camera', 'query' => 'pc streaming'],
-                        ['name' => 'Thiết bị làm việc tại nhà', 'desc' => 'Tăng năng suất, làm việc thoải mái.', 'icon' => 'fa-home', 'query' => 'thiết bị văn phòng'],
+                        ['name' => 'Laptop học tập', 'desc' => 'Gọn nhẹ, bền bỉ, hiệu năng ổn định.', 'icon' => 'fa-book', 'url' => url('/danh-muc/laptop')],
+                        ['name' => 'Laptop gaming', 'desc' => 'Hiệu năng mạnh mẽ, chiến game đỉnh cao.', 'icon' => 'fa-gamepad', 'url' => url('/danh-muc/laptop-gaming')],
+                        ['name' => 'PC streaming', 'desc' => 'Cấu hình tối ưu, stream mượt mọi game.', 'icon' => 'fa-video-camera', 'url' => url('/danh-muc/pc')],
+                        ['name' => 'Thiết bị làm việc tại nhà', 'desc' => 'Tăng năng suất, làm việc thoải mái.', 'icon' => 'fa-home', 'url' => url('/danh-muc/laptop-van-phong')],
                     ];
                 @endphp
                 @foreach ($collections as $col)
-                    <a href="{{ url('/tim-kiem?keywords_submit=' . urlencode($col['query'])) }}" class="promo-collection-card">
+                    <a href="{{ $col['url'] }}" class="promo-collection-card">
                         <span class="promo-collection-icon"><i class="fa {{ $col['icon'] }}"></i></span>
                         <div class="promo-collection-body">
                             <h3>{{ $col['name'] }}</h3>
@@ -236,8 +237,13 @@
                 <h2>Sản phẩm trong khuyến mãi</h2>
                 <a href="{{ url('/san-pham') }}" class="promo-see-all">Xem tất cả <i class="fa fa-arrow-right"></i></a>
             </div>
+            @php
+                $visiblePromoProducts = collect($promoProducts ?? []);
+                $visiblePromoProducts = $visiblePromoProducts
+                    ->take($visiblePromoProducts->count() >= 8 ? 8 : min(4, $visiblePromoProducts->count()));
+            @endphp
             <div class="promo-product-grid">
-                @foreach ($promoProducts as $product)
+                @foreach ($visiblePromoProducts as $product)
                     <div class="promo-product-col">
                         @include('partials.home.product-card', [
                             'product' => $product,

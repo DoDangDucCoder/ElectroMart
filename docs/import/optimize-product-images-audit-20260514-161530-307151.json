@@ -1,0 +1,47 @@
+[
+    {
+        "source_path": "uploads/products/1697/cellphones-sac-momax-1c-30w-pd-30-um71-f56ff7d7-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1697,
+        "source_bytes": 142492,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "thumb",
+        "target_width": 360,
+        "optimized_path": "uploads/products/1697/_optimized/cellphones-sac-momax-1c-30w-pd-30-um71-f56ff7d7-main-thumb.webp",
+        "optimized_bytes": 7536,
+        "saved_bytes": 134956,
+        "status": "created",
+        "message": "Optimized variant created."
+    },
+    {
+        "source_path": "uploads/products/1697/cellphones-sac-momax-1c-30w-pd-30-um71-f56ff7d7-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1697,
+        "source_bytes": 142492,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "medium",
+        "target_width": 800,
+        "optimized_path": "uploads/products/1697/_optimized/cellphones-sac-momax-1c-30w-pd-30-um71-f56ff7d7-main-medium.webp",
+        "optimized_bytes": 18260,
+        "saved_bytes": 124232,
+        "status": "created",
+        "message": "Optimized variant created."
+    },
+    {
+        "source_path": "uploads/products/1697/cellphones-sac-momax-1c-30w-pd-30-um71-f56ff7d7-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1697,
+        "source_bytes": 142492,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "large",
+        "target_width": 1200,
+        "optimized_path": "uploads/products/1697/_optimized/cellphones-sac-momax-1c-30w-pd-30-um71-f56ff7d7-main-large.webp",
+        "optimized_bytes": 28576,
+        "saved_bytes": 113916,
+        "status": "created",
+        "message": "Optimized variant created."
+    }
+]

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -19,12 +20,16 @@ class ProductMediaQuality
         $minGalleryImages = max(1, $minGalleryImages);
 
         if (! isset(self::$completeIdsCache[$minGalleryImages])) {
-            self::$completeIdsCache[$minGalleryImages] = self::audit($minGalleryImages)['rows']
-                ->filter(fn (array $row) => (bool) $row['is_visible'])
-                ->pluck('product_id')
-                ->map(fn ($id) => (int) $id)
-                ->values()
-                ->all();
+            self::$completeIdsCache[$minGalleryImages] = Cache::remember(
+                'storefront.product_media_quality.complete_ids.'.$minGalleryImages,
+                3600,
+                fn () => self::audit($minGalleryImages)['rows']
+                    ->filter(fn (array $row) => (bool) $row['is_visible'])
+                    ->pluck('product_id')
+                    ->map(fn ($id) => (int) $id)
+                    ->values()
+                    ->all()
+            );
         }
 
         return self::$completeIdsCache[$minGalleryImages];

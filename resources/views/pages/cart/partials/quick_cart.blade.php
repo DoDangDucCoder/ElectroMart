@@ -13,7 +13,7 @@
     <tbody>
         @forelse ($items as $item)
             @php
-                $image = \App\Support\AssetUrl::product($item['product_image'] ?? null);
+                $image = \App\Support\AssetUrl::productVariant($item['product_image'] ?? null, 'thumb');
                 $subtotal = (float) $item['product_price'] * (int) $item['product_qty'];
             @endphp
             <tr>

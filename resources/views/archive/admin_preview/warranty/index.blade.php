@@ -1,7 +1,5 @@
 @extends('admin_layout')
 @section('admin_content')
-<link rel="stylesheet" href="{{ asset('backend/css/admin-dashboard.css') }}">
-<link rel="stylesheet" href="{{ asset('backend/css/admin-pages.css') }}">
 @php
 $warranties = [
     ['id'=>'BH20250524-001','customer'=>'Nguyễn Văn An','product'=>'ASUS ROG Strix G16','serial'=>'SN-AS516-8992','reason'=>'Không lên nguồn','priority'=>'Khẩn cấp','priority_class'=>'urgent','assigned'=>'Lê Minh Đức','date'=>'24/05/2025 10:25','status'=>'Đang tiếp nhận','status_class'=>'blue','sla'=>'72%','sla_class'=>'amber'],

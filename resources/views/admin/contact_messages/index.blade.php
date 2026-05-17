@@ -62,12 +62,12 @@
                 </div>
             </header>
             <div class="g-admin-panel-body">
-                <form method="get" action="{{ route('admin.contact-messages.index') }}" class="row" style="row-gap:12px;">
-                    <div class="col-md-4">
+                <form method="get" action="{{ route('admin.contact-messages.index') }}" class="g-admin-contact-filter">
+                    <div class="g-admin-contact-filter-keyword">
                         <label for="q">Từ khóa</label>
                         <input type="search" name="q" id="q" value="{{ $filters['q'] }}" class="form-control" placeholder="Tên, email, chủ đề, nội dung...">
                     </div>
-                    <div class="col-md-2">
+                    <div>
                         <label for="status">Trạng thái</label>
                         <select name="status" id="status" class="form-control">
                             <option value="all" @selected($filters['status'] === 'all')>Tất cả</option>
@@ -76,15 +76,15 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-2">
+                    <div>
                         <label for="date_from">Từ ngày</label>
                         <input type="date" name="date_from" id="date_from" value="{{ $filters['date_from'] }}" class="form-control">
                     </div>
-                    <div class="col-md-2">
+                    <div>
                         <label for="date_to">Đến ngày</label>
                         <input type="date" name="date_to" id="date_to" value="{{ $filters['date_to'] }}" class="form-control">
                     </div>
-                    <div class="col-md-2">
+                    <div>
                         <label for="per_page">Mỗi trang</label>
                         <select name="per_page" id="per_page" class="form-control">
                             @foreach ([10, 15, 25, 50] as $size)
@@ -92,7 +92,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-12" style="display:flex;gap:8px;align-items:center;">
+                    <div class="g-admin-contact-filter-actions">
                         <button type="submit" class="btn btn-info">
                             <i class="fa fa-search"></i> Lọc liên hệ
                         </button>

@@ -3,6 +3,7 @@
 namespace App\Application\Shared\Services;
 
 use Illuminate\Cache\TaggableStore;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -53,7 +54,8 @@ class CacheService
     // Product-related cache methods
     public function getProductsByCategory(string $categorySlug, array $filters = [], int $perPage = 12): mixed
     {
-        $key = "products_category_{$categorySlug}_" . $this->hashFilters($filters) . "_{$perPage}";
+        $page = $this->currentPage();
+        $key = "products_category_{$categorySlug}_" . $this->hashFilters($filters) . "_{$perPage}_page_{$page}";
         $registryKey = $this->categoryProductsRegistryKey($categorySlug);
 
         $this->trackCacheKey(self::REGISTRY_CATEGORY_PRODUCT_REGISTRIES, $registryKey);
@@ -66,7 +68,8 @@ class CacheService
 
     public function getProductsForApi(array $filters = [], int $perPage = 12): mixed
     {
-        $key = "api_products_" . $this->hashFilters($filters) . "_{$perPage}";
+        $page = $this->currentPage();
+        $key = "api_products_" . $this->hashFilters($filters) . "_{$perPage}_page_{$page}";
 
         return $this->rememberIndexed(self::REGISTRY_PUBLIC_PRODUCTS, $key, function () use ($filters, $perPage) {
             return app(\App\Domain\Catalog\Repositories\ProductRepositoryInterface::class)
@@ -76,7 +79,8 @@ class CacheService
 
     public function getProductsByBrand(string $brandSlug, array $filters = [], int $perPage = 12): mixed
     {
-        $key = "products_brand_{$brandSlug}_" . $this->hashFilters($filters) . "_{$perPage}";
+        $page = $this->currentPage();
+        $key = "products_brand_{$brandSlug}_" . $this->hashFilters($filters) . "_{$perPage}_page_{$page}";
         $registryKey = $this->brandProductsRegistryKey($brandSlug);
 
         $this->trackCacheKey(self::REGISTRY_BRAND_PRODUCT_REGISTRIES, $registryKey);
@@ -99,7 +103,8 @@ class CacheService
 
     public function getFeaturedProducts(int $limit = 8): mixed
     {
-        $key = "featured_products_{$limit}";
+        $page = $this->currentPage();
+        $key = "featured_products_{$limit}_page_{$page}";
 
         return $this->rememberIndexed(self::REGISTRY_FEATURED_PRODUCTS, $key, function () use ($limit) {
             return app(\App\Domain\Catalog\Repositories\ProductRepositoryInterface::class)
@@ -114,6 +119,16 @@ class CacheService
         return $this->remember($key, function () use ($slug) {
             return app(\App\Domain\Catalog\Repositories\ProductRepositoryInterface::class)
                 ->findBySlug($slug);
+        }, self::LONG_TTL);
+    }
+
+    public function getProductById(int $id): mixed
+    {
+        $key = "product_id_{$id}";
+
+        return $this->remember($key, function () use ($id) {
+            return app(\App\Domain\Catalog\Repositories\ProductRepositoryInterface::class)
+                ->findById($id);
         }, self::LONG_TTL);
     }
 
@@ -235,6 +250,8 @@ class CacheService
         foreach ($productSlugs->filter()->unique()->values() as $slug) {
             $this->forget("product_slug_{$slug}");
         }
+
+        $this->forget("product_id_{$productId}");
 
         $this->forgetRegisteredKeys(self::REGISTRY_LATEST_PRODUCTS);
         $this->forgetRegisteredKeys(self::REGISTRY_FEATURED_PRODUCTS);
@@ -420,5 +437,10 @@ class CacheService
     protected function supportsTags(): bool
     {
         return Cache::getStore() instanceof TaggableStore;
+    }
+
+    protected function currentPage(): int
+    {
+        return max(1, (int) Paginator::resolveCurrentPage('page'));
     }
 }

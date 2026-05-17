@@ -1,7 +1,5 @@
 @extends('admin_layout')
 @section('admin_content')
-<link rel="stylesheet" href="{{ asset('backend/css/admin-dashboard.css') }}">
-<link rel="stylesheet" href="{{ asset('backend/css/admin-pages.css') }}">
 @php
 $tabs = ['general'=>'Thông tin chung','appearance'=>'Giao diện','seo'=>'SEO & Meta','email'=>'Email & Thông báo','payment'=>'Thanh toán','shipping'=>'Vận chuyển','security'=>'Bảo mật'];
 $socials = [

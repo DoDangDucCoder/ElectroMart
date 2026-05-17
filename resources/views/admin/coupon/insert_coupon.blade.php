@@ -97,7 +97,7 @@
 
                     <div class="g-admin-inline-actions g-admin-form-span-2">
                         <button type="submit" name="add_coupon" class="btn btn-info">Thêm mã</button>
-                        <a href="{{ url('/list-coupon') }}" class="btn btn-default">Xem danh sách mã giảm giá</a>
+                        <a href="{{ route('admin.vouchers') }}" class="btn btn-default">Xem danh sách mã giảm giá</a>
                     </div>
                 </form>
             </div>

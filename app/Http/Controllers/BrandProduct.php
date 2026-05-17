@@ -169,14 +169,51 @@ class BrandProduct extends Controller
         $products = $this->productService->getProductsByBrandSlug($brandSlug, [], 9);
         $products->appends($request->query());
 
+        $brandMeta = is_array($brand->meta ?? null) ? $brand->meta : [];
         $metaDesc = $brand->brand_desc;
         $metaKeywords = $brand->brand_desc;
-        $metaTitle = $brand->brand_name;
+        $metaTitle = trim((string) ($brandMeta['meta_title'] ?? '')) ?: $brand->brand_name;
 
-        return view('pages.brand.show_brand', [
+        $productCount = method_exists($products, 'total') ? $products->total() : $products->count();
+        $brandSlugForUrl = $brand->brand_slug ?? $brand->slug ?? $brandSlug;
+
+        return view('pages.sanpham.listing', [
             'category' => $productCategories,
             'brand' => $brandList,
             'brand_by_id' => $products,
+            'products' => $products,
+            'pageMode' => 'brand',
+            'banner' => [
+                'breadcrumbItems' => [
+                    [
+                        'label' => 'Sản phẩm',
+                        'url' => url('/san-pham'),
+                    ],
+                    [
+                        'label' => $brand->brand_name,
+                        'current' => true,
+                    ],
+                ],
+                'kicker' => 'Thương hiệu',
+                'title' => $brand->brand_name,
+                'subtitle' => 'Khám phá '.number_format($productCount).' sản phẩm thuộc thương hiệu '.$brand->brand_name.'.',
+                'results_title' => 'Sản phẩm '.$brand->brand_name,
+                'results_kicker' => 'Danh sách sản phẩm',
+                'results_description' => 'Các sản phẩm cùng thương hiệu được trình bày bằng mẫu card dùng chung để dễ so sánh.',
+                'empty_title' => 'Hiện chưa có sản phẩm nào trong thương hiệu này.',
+                'empty_action_text' => 'Xem tất cả sản phẩm',
+                'empty_action_url' => url('/san-pham'),
+            ],
+            'filter' => [
+                'show_sidebar' => true,
+                'mode' => 'brand',
+                'action' => url('/thuong-hieu/'.$brandSlugForUrl),
+                'clear_url' => url('/thuong-hieu/'.$brandSlugForUrl),
+                'categories' => $productCategories,
+                'brands' => $brandList,
+                'brand_id' => $brand->brand_id ?? null,
+                'sort' => request('sort', 'popular'),
+            ],
             'selected_brand' => $brand,
             'meta_desc' => $metaDesc,
             'meta_keywords' => $metaKeywords,

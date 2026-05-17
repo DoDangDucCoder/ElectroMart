@@ -1,8 +1,6 @@
 @extends('admin_layout')
 
 @section('admin_content')
-<link rel="stylesheet" href="{{ asset('backend/css/admin-dashboard.css') }}">
-<link rel="stylesheet" href="{{ asset('backend/css/admin-pages.css') }}">
 
 @php
     $statusLabels = [

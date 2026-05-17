@@ -5,7 +5,7 @@
 @section('hero_copy', 'Quản lý toàn diện sản phẩm, đơn hàng, khách hàng và báo cáo hiệu quả – Nền tảng vận hành mạnh mẽ cho tăng trưởng bền vững.')
 @section('form_title', 'Đăng nhập quản trị')
 @section('form_intro', 'Chào mừng bạn quay trở lại hệ thống quản trị DangDuc')
-@section('badge', 'DangDuc Admin')
+@section('badge', 'Quản trị DangDuc')
 
 @section('hero_notes')
     {{-- Dashboard preview mockup --}}
@@ -128,5 +128,5 @@
         <div style="font-size:12px;color:#15803d;font-weight:600"><i class="fa fa-shield" style="margin-right:4px;color:#16a34a"></i>Bảo mật 2 lớp / Truy cập an toàn</div>
         <div style="font-size:11px;color:#6b7280;margin-top:4px">Hệ thống được bảo vệ bởi nhiều lớp bảo mật hiện đại để đảm bảo an toàn dữ liệu.</div>
     </div>
-    <div style="text-align:center;font-size:11px;color:#9ca3af;margin-top:8px">© {{ date('Y') }} DangDuc Admin. All rights reserved.</div>
+    <div style="text-align:center;font-size:11px;color:#9ca3af;margin-top:8px">© {{ date('Y') }} Quản trị DangDuc. Đã đăng ký bản quyền.</div>
 @endsection

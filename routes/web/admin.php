@@ -51,6 +51,7 @@ Route::middleware('guest:web')->group(function () {
 Route::middleware(['auth:web', 'admin.access'])->group(function () {
     // Admin dashboard
     Route::get('/dashboard', [AdminController::class, 'show_dashboard'])->name('admin.dashboard');
+    Route::get('/admin-dashboard', fn () => redirect()->route('admin.dashboard'))->name('admin.dashboard.legacy');
     Route::get('/admin/quick-search', [AdminWorkspaceController::class, 'search'])->name('admin.tools.search');
     Route::get('/admin/profile', [AdminWorkspaceController::class, 'profile'])->name('admin.profile.show');
     Route::put('/admin/profile', [AdminWorkspaceController::class, 'updateProfile'])->name('admin.profile.update');
@@ -83,12 +84,24 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
         ->middleware('admin.permission:'.AdminPermissions::MANAGE_PRODUCTS)
         ->name('admin.inventory');
     Route::get('/admin/warehouse', fn () => redirect('/admin/inventory'))->name('admin.warehouse');
-    Route::get('/admin/vouchers', fn () => redirect('/list-coupon'))->name('admin.vouchers');
-    Route::get('/admin/brands-management', fn () => redirect('/all-brand-product'))->name('admin.brands.management');
-    Route::get('/admin/attributes-management', fn () => redirect('/attribute'))->name('admin.attributes.management');
-    Route::get('/admin/banners-management', fn () => redirect('/manage-slider'))->name('admin.banners.management');
-    Route::get('/admin/posts-management', fn () => redirect('/all-post'))->name('admin.posts.management');
-    Route::get('/admin/posts/create', fn () => redirect('/add-post'))->name('admin.posts.create');
+    Route::get('/admin/vouchers', fn () => redirect('/list-coupon'))
+        ->middleware('admin.permission:'.AdminPermissions::MANAGE_COUPONS)
+        ->name('admin.vouchers');
+    Route::get('/admin/brands-management', fn () => redirect('/all-brand-product'))
+        ->middleware('admin.permission:'.AdminPermissions::MANAGE_PRODUCTS)
+        ->name('admin.brands.management');
+    Route::get('/admin/attributes-management', fn () => redirect('/attribute'))
+        ->middleware('admin.permission:'.AdminPermissions::MANAGE_PRODUCTS)
+        ->name('admin.attributes.management');
+    Route::get('/admin/banners-management', fn () => redirect('/manage-slider'))
+        ->middleware('admin.permission:'.AdminPermissions::MANAGE_CONTENT)
+        ->name('admin.banners.management');
+    Route::get('/admin/posts-management', fn () => redirect('/all-post'))
+        ->middleware('admin.permission:'.AdminPermissions::MANAGE_CONTENT)
+        ->name('admin.posts.management');
+    Route::get('/admin/posts/create', fn () => redirect('/add-post'))
+        ->middleware('admin.permission:'.AdminPermissions::MANAGE_CONTENT)
+        ->name('admin.posts.create');
     Route::get('/admin/reviews', [AdminProductReviewController::class, 'index'])
         ->middleware('admin.permission:'.AdminPermissions::MANAGE_PRODUCTS)
         ->name('admin.reviews');
@@ -97,7 +110,9 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
         ->name('admin.reviews.status');
     Route::get('/admin/warranties', fn () => view('admin.tools.unavailable', ['title' => 'Bảo hành']))->name('admin.warranties');
     Route::get('/admin/customer-contacts', fn () => redirect('/admin/contact-messages'))->name('admin.customer-contacts');
-    Route::get('/admin/support-requests', fn () => redirect('/chat-inbox'))->name('admin.support-requests');
+    Route::get('/admin/support-requests', fn () => redirect('/chat-inbox'))
+        ->middleware('admin.permission:'.AdminPermissions::MANAGE_SYSTEM)
+        ->name('admin.support-requests');
     Route::get('/admin/returns', [AdminOrderReturnController::class, 'index'])
         ->middleware('admin.permission:'.AdminPermissions::MANAGE_ORDERS)
         ->name('admin.returns');
@@ -107,10 +122,14 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
     Route::get('/admin/transactions', [AdminPaymentController::class, 'index'])
         ->middleware('admin.permission:'.AdminPermissions::MANAGE_ORDERS)
         ->name('admin.transactions');
-    Route::get('/admin/shipping', fn () => redirect('/delivery'))->name('admin.shipping');
+    Route::get('/admin/shipping', fn () => redirect('/delivery'))
+        ->middleware('admin.permission:'.AdminPermissions::MANAGE_ORDERS)
+        ->name('admin.shipping');
     Route::get('/admin/site-settings', fn () => redirect('/admin/settings'))->name('admin.site-settings');
     Route::get('/admin/activity-log', fn () => view('admin.tools.unavailable', ['title' => 'Nhật ký hoạt động']))->name('admin.activity-log');
-    Route::get('/admin/user-management', fn () => redirect('/users'))->name('admin.user-management');
+    Route::get('/admin/user-management', fn () => redirect('/users'))
+        ->middleware('admin.permission:'.AdminPermissions::MANAGE_USERS)
+        ->name('admin.user-management');
     Route::get('/admin/overview', fn () => view('admin.tools.unavailable', ['title' => 'Tổng quan mở rộng']))->name('admin.overview');
 
     Route::middleware('admin.permission:'.AdminPermissions::MANAGE_SYSTEM)->group(function () {
@@ -164,15 +183,15 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
         // Product category management
         Route::get('/admin/categories-management', [AdminWorkspaceController::class, 'categoriesManagement'])->name('admin.categories.management');
 
-        // Product category management (legacy blade interface, read-only safe routes)
+        // Product category management (legacy blade interface with safe form actions)
         Route::get('/add-category-product', [CategoryProductAdminController::class, 'add_category_product']);
         Route::post('/save-category-product', [CategoryProductAdminController::class, 'save_category_product'])->middleware('admin.create.locked');
         Route::get('/all-category-product', fn () => redirect('/admin/categories-management'));
         Route::get('/edit-category-product/{category_id}', [CategoryProductAdminController::class, 'edit_category_product']);
         Route::post('/update-category-product/{category_id}', [CategoryProductAdminController::class, 'update_category_product']);
-        Route::get('/delete-category-product/{category_id}', [CategoryProductAdminController::class, 'delete_category_product']);
-        Route::get('/active-category-product/{category_id}', [CategoryProductAdminController::class, 'active_category_product']);
-        Route::get('/unactive-category-product/{category_id}', [CategoryProductAdminController::class, 'unactive_category_product']);
+        Route::delete('/delete-category-product/{category_id}', [CategoryProductAdminController::class, 'delete_category_product']);
+        Route::patch('/active-category-product/{category_id}', [CategoryProductAdminController::class, 'active_category_product']);
+        Route::patch('/unactive-category-product/{category_id}', [CategoryProductAdminController::class, 'unactive_category_product']);
 
         // Brand management (legacy blade interface)
         Route::get('/add-brand-product', [BrandProduct::class, 'add_brand_product']);

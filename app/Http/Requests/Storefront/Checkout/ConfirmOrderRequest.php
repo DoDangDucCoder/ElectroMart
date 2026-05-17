@@ -54,7 +54,9 @@ class ConfirmOrderRequest extends BaseFormRequest
             'ward_id.integer' => 'Mã phường/xã giao hàng không hợp lệ.',
             'ward_id.min' => 'Mã phường/xã giao hàng không hợp lệ.',
             'ward_id.exists' => 'Phường/xã giao hàng không tồn tại.',
+            'vietnam_province_code.required' => 'Vui lòng chọn tỉnh/thành phố giao hàng.',
             'vietnam_province_code.exists' => 'Tỉnh/thành phố giao hàng không tồn tại.',
+            'vietnam_ward_code.required' => 'Vui lòng chọn xã/phường/đặc khu giao hàng.',
             'vietnam_ward_code.exists' => 'Xã/phường/đặc khu giao hàng không tồn tại.',
         ];
     }
@@ -134,7 +136,7 @@ class ConfirmOrderRequest extends BaseFormRequest
 
     protected function vietnamProvinceRules(): array
     {
-        $rules = ['nullable', 'string', 'max:20'];
+        $rules = ['required', 'string', 'max:20'];
 
         if (Schema::hasTable('vietnam_provinces')) {
             $rules[] = Rule::exists('vietnam_provinces', 'code');
@@ -145,7 +147,7 @@ class ConfirmOrderRequest extends BaseFormRequest
 
     protected function vietnamWardRules(): array
     {
-        $rules = ['nullable', 'string', 'max:20'];
+        $rules = ['required', 'string', 'max:20'];
 
         if (Schema::hasTable('vietnam_wards')) {
             $rules[] = Rule::exists('vietnam_wards', 'code');

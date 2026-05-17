@@ -76,7 +76,7 @@
                     </div>
                     <div class="g-admin-inline-actions">
                         <button type="submit" class="btn btn-info">Cập nhật thương hiệu</button>
-                        <a href="{{ url('/all-brand-product') }}" class="btn btn-default">Quay lại danh sách</a>
+                        <a href="{{ route('admin.brands.management') }}" class="btn btn-default">Quay lại danh sách</a>
                     </div>
                 </form>
             </div>

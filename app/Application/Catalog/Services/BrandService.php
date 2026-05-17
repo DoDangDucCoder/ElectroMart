@@ -24,12 +24,16 @@ class BrandService
 
     public function listAll(array $filters = []): Collection
     {
+        if ($this->isActiveOnlyFilter($filters)) {
+            return $this->cache->getBrands();
+        }
+
         return $this->brands->all($filters);
     }
 
     public function listActive(): Collection
     {
-        return $this->brands->all(['is_active' => true]);
+        return $this->cache->getBrands();
     }
 
     public function findById(int $id): ?Brand
@@ -44,7 +48,7 @@ class BrandService
 
     public function findActiveBySlug(string $slug): ?Brand
     {
-        return $this->brands->findBySlug($slug, true);
+        return $this->cache->getBrandBySlug($slug, true);
     }
 
     public function create(array $data): Brand
@@ -100,5 +104,12 @@ class BrandService
             'display_order' => $data['display_order'] ?? $brand?->display_order ?? 0,
             'meta' => $data['meta'] ?? $brand?->meta,
         ];
+    }
+
+    protected function isActiveOnlyFilter(array $filters): bool
+    {
+        return count($filters) === 1
+            && array_key_exists('is_active', $filters)
+            && (bool) $filters['is_active'] === true;
     }
 }

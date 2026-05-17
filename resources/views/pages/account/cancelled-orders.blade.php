@@ -1,7 +1,6 @@
 @extends('layouts.home-tech')
 @section('body_class', 'accp-page')
 @section('content')
-<link rel="stylesheet" href="{{ asset('frontend/css/account-shared.css') }}">
 <style>
 .cord-item{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:18px;margin-bottom:12px;transition:box-shadow .15s}
 .cord-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.05)}
@@ -29,6 +28,9 @@
 @php
     $cancelledOrders = $cancelledOrders ?? collect();
     $stats           = $stats ?? ['total' => 0, 'refunded' => 0, 'pending' => 0, 'total_value' => 0];
+    $visibleRecommendedProducts = collect($recommendedProducts ?? []);
+    $visibleRecommendedProducts = $visibleRecommendedProducts
+        ->take($visibleRecommendedProducts->count() >= 8 ? 8 : min(4, $visibleRecommendedProducts->count()));
 
     $refundLabel = function ($order) {
         return match ($order->payment_status) {
@@ -89,8 +91,8 @@
                     </div>
                     <div class="cord-products">
                         @foreach ($order->items->take(2) as $item)
-                        @php $product = $item->product; $productImage = $product?->thumbnail ?? $product?->image ?? 'uploads/product/no-image.svg'; @endphp
-                        <div class="cord-prod-img"><img src="{{ asset($productImage) }}" alt=""></div>
+                        @php $product = $item->product; $productImage = \App\Support\AssetUrl::productVariant($product?->thumbnail ?? $product?->image ?? null, 'thumb'); @endphp
+                        <div class="cord-prod-img"><img src="{{ $productImage }}" alt=""></div>
                         <div class="cord-prod-info">
                             <div class="cord-prod-name">{{ $product?->name ?? $item->name ?? 'Sản phẩm' }}</div>
                             <div class="cord-prod-meta">x{{ $item->quantity }} sản phẩm</div>
@@ -105,7 +107,7 @@
                         <div class="cord-total">{{ number_format((float) $order->total, 0, ',', '.') }}đ</div>
                         <div class="cord-refund-status"><span class="accp-badge {{ $refundLabelClass }}">{{ $refundLabelText }}</span></div>
                         <div class="cord-actions">
-                            <a href="{{ url('/view-history-order/' . $order->code) }}" class="accp-btn accp-btn--outline accp-btn--sm">Xem chi tiết</a>
+                            <a href="{{ route('customer.account.order-tracking', ['orderCode' => $order->code]) }}" class="accp-btn accp-btn--outline accp-btn--sm">Xem chi tiết</a>
                             <a href="{{ url('/san-pham') }}" class="accp-btn accp-btn--outline accp-btn--sm"><i class="fa fa-shopping-cart"></i> Mua lại</a>
                         </div>
                     </div>
@@ -140,17 +142,17 @@
     </div>
 
     {{-- Recommended products --}}
-    @if (!empty($recommendedProducts) && $recommendedProducts->count() > 0)
+    @if ($visibleRecommendedProducts->isNotEmpty())
     <div class="accp-recommend">
         <div class="accp-recommend-head"><h3>Có thể bạn cũng thích</h3><a href="{{ url('/san-pham') }}">Xem tất cả <i class="fa fa-arrow-right"></i></a></div>
-        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:14px">
-            @foreach ($recommendedProducts->take(6) as $p)
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+            @foreach ($visibleRecommendedProducts as $p)
                 @php
                     $productCard = [
                         'id' => $p->id,
                         'name' => $p->product_name ?? $p->name ?? 'Sản phẩm',
                         'url' => url('/chi-tiet-san-pham/' . ($p->product_slug ?? $p->slug ?? $p->id)),
-                        'image' => !empty($p->product_image) ? asset('uploads/product/' . $p->product_image) : asset('uploads/product/no-image.svg'),
+                        'image' => \App\Support\AssetUrl::productVariant($p->product_image ?? null, 'thumb'),
                         'original_price' => $p->product_price ?? $p->original_price ?? 0,
                         'price' => $p->product_price_sale ?? $p->price ?? $p->product_price ?? 0,
                     ];

@@ -1,0 +1,47 @@
+[
+    {
+        "source_path": "uploads/products/1474/cellphones-sac-o-to-momax-67w-uc16e-37a6ae89-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1474,
+        "source_bytes": 282171,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "thumb",
+        "target_width": 360,
+        "optimized_path": "uploads/products/1474/_optimized/cellphones-sac-o-to-momax-67w-uc16e-37a6ae89-main-thumb.webp",
+        "optimized_bytes": 8566,
+        "saved_bytes": 273605,
+        "status": "exists",
+        "message": "Optimized variant already exists."
+    },
+    {
+        "source_path": "uploads/products/1474/cellphones-sac-o-to-momax-67w-uc16e-37a6ae89-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1474,
+        "source_bytes": 282171,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "medium",
+        "target_width": 800,
+        "optimized_path": "uploads/products/1474/_optimized/cellphones-sac-o-to-momax-67w-uc16e-37a6ae89-main-medium.webp",
+        "optimized_bytes": 20772,
+        "saved_bytes": 261399,
+        "status": "exists",
+        "message": "Optimized variant already exists."
+    },
+    {
+        "source_path": "uploads/products/1474/cellphones-sac-o-to-momax-67w-uc16e-37a6ae89-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1474,
+        "source_bytes": 282171,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "large",
+        "target_width": 1200,
+        "optimized_path": "uploads/products/1474/_optimized/cellphones-sac-o-to-momax-67w-uc16e-37a6ae89-main-large.webp",
+        "optimized_bytes": 32972,
+        "saved_bytes": 249199,
+        "status": "exists",
+        "message": "Optimized variant already exists."
+    }
+]

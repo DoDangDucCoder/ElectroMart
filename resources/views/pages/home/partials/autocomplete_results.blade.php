@@ -4,7 +4,7 @@
     $trendingKeywords = collect(data_get($searchSuggest ?? [], 'trending_keywords', []))->values();
     $shortcutLinks = collect(data_get($searchSuggest ?? [], 'shortcut_links', []))->values();
     $utilityLinks = collect(data_get($searchSuggest ?? [], 'utility_links', []))->values();
-    $searchResultsUrl = data_get($searchSuggest ?? [], 'search_results_url', url('/tim-kiem'));
+    $searchResultsUrl = data_get($searchSuggest ?? [], 'search_results_url', url('/san-pham'));
     $hasProducts = $products->isNotEmpty();
     $showHelperState = blank($query) || mb_strlen($query) < 2;
     $showEmptyState = !$hasProducts && !$showHelperState;
@@ -88,7 +88,7 @@
                 <ul class="dropdown-menu shopw-search-suggest-list">
                     @foreach ($products as $item)
                         @php
-                            $imageUrl = \App\Support\AssetUrl::product($item->product_image);
+                            $imageUrl = \App\Support\AssetUrl::productVariant($item->product_image, 'thumb');
                             $productName = \App\Support\StorefrontLabel::neutralizeSource($item->product_name);
                             $brandName = \App\Support\StorefrontLabel::neutralizeSource($item->brand?->brand_name ?? $item->brand_name);
                             $categoryName = \App\Support\StorefrontLabel::neutralizeSource($item->primaryCategory?->category_name ?? $item->category_name);

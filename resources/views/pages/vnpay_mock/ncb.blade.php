@@ -123,7 +123,7 @@
                 </div>
                 
                 <div class="form-actions">
-                    <a href="{{ url('/history') }}" class="btn btn-cancel">Hủy thanh toán</a>
+                    <a href="{{ url('/account/orders') }}" class="btn btn-cancel">Hủy thanh toán</a>
                     <button type="submit" class="btn btn-continue">Tiếp tục</button>
                 </div>
             </form>

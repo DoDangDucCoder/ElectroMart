@@ -81,7 +81,7 @@
                 <h2>Xác thực OTP</h2>
             </div>
             
-            <form action="{{ url('/history') }}" method="GET">
+            <form action="{{ url('/account/orders') }}" method="GET">
                 <div class="otp-group">
                     <span class="key-icon">&#128273;</span>
                     <input type="text" class="otp-input" placeholder="Nhập mã OTP" value="123456" required>

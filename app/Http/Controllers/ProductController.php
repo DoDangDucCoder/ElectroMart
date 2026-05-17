@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Application\Catalog\Services\BrandService;
+use App\Application\Catalog\Services\CategoryService;
 use App\Application\Catalog\Services\ProductPricingService;
 use App\Application\Catalog\Services\ProductReviewService;
 use App\Application\Catalog\Services\ProductService;
@@ -12,9 +14,7 @@ use App\Http\Requests\Storefront\Product\InsertRatingRequest;
 use App\Http\Requests\Storefront\Product\LoadCommentRequest;
 use App\Http\Requests\Storefront\Product\QuickviewRequest;
 use App\Http\Requests\Storefront\Product\SendCommentRequest;
-use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
-use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductVariant;
 use App\Support\AssetUrl;
 use App\Support\StorefrontLabel;
@@ -36,6 +36,8 @@ class ProductController extends Controller
         private readonly ProductService $productService,
         private readonly ProductPricingService $pricingService,
         private readonly ProductReviewService $productReviewService,
+        private readonly CategoryService $categoryService,
+        private readonly BrandService $brandService,
         private readonly CategoryRepositoryInterface $categoryRepository,
         private readonly BrandRepositoryInterface $brandRepository
     ) {}
@@ -146,7 +148,8 @@ class ProductController extends Controller
 
         $mediaItems = $product->media ?? collect();
         $fallbackPath = AssetUrl::rawOrFallback($product->product_image);
-        $fallbackImage = AssetUrl::product($product->product_image);
+        $fallbackImage = AssetUrl::productVariant($product->product_image, 'medium');
+        $cartImage = AssetUrl::productVariant($product->product_image, 'thumb');
         $output = [
             'product_name' => StorefrontLabel::neutralizeSource($product->product_name),
             'product_id' => $product->product_id,
@@ -161,7 +164,7 @@ class ProductController extends Controller
             'product_image' => '<p><img width="100%" src="'.$fallbackImage.'" alt="Hình ảnh sản phẩm"></p>',
             'product_button' => '<input type="button" value="Mua ngay" class="btn btn-primary btn-sm add-to-cart-quickview" id="buy_quickview" data-id_product="'.$product->product_id.'" name="add-to-cart">',
             'product_gallery' => $mediaItems->isNotEmpty()
-                ? $mediaItems->map(fn ($m) => '<p><img width="100%" src="'.\App\Support\AssetUrl::product($m->file_path ?? $fallbackPath).'" alt="'.StorefrontLabel::neutralizeSource($m->gallery_name ?? 'Hình ảnh sản phẩm').'"></p>')->implode('')
+                ? $mediaItems->map(fn ($m) => '<p><img width="100%" src="'.\App\Support\AssetUrl::productVariant($m->file_path ?? $fallbackPath, 'medium').'" alt="'.StorefrontLabel::neutralizeSource($m->gallery_name ?? 'Hình ảnh sản phẩm').'"></p>')->implode('')
                 : '<p><img width="100%" src="'.$fallbackImage.'" alt="Hình ảnh sản phẩm"></p>',
             'product_quickview_value' => sprintf(
                 '<input type="hidden" value="%d" class="cart_product_id_%d">'.
@@ -173,7 +176,7 @@ class ProductController extends Controller
                 $product->product_id, $product->product_id,
                 StorefrontLabel::neutralizeSource($product->product_name), $product->product_id,
                 $product->product_quantity, $product->product_id,
-                \App\Support\AssetUrl::product($product->product_image), $product->product_id,
+                $cartImage, $product->product_id,
                 $product->final_price, $product->product_id,
                 $product->product_id
             ),
@@ -529,15 +532,9 @@ class ProductController extends Controller
         $slider = $this->legacyActiveSliders();
         $category_post = $this->legacyCategoryPosts();
 
-        $cate_product = ProductCategory::where('is_active', true)
-            ->orderBy('display_order')
-            ->orderByDesc('id')
-            ->get();
+        $cate_product = $this->categoryService->listActive();
 
-        $brand_product = Brand::where('is_active', true)
-            ->orderBy('display_order')
-            ->orderByDesc('id')
-            ->get();
+        $brand_product = $this->brandService->listActive();
 
         $this->productService->recordProductView(
             $product,
@@ -554,13 +551,13 @@ class ProductController extends Controller
         $meta_keywords = $product->product_slug;
         $meta_title = StorefrontLabel::neutralizeSource($product->product_name);
         $url_canonical = $request->url();
-        $share_image = AssetUrl::product($product->product_image);
+        $share_image = AssetUrl::productVariant($product->product_image, 'large');
 
         $gallery = $product->media ?? collect();
         $product_attribute = $this->legacyProductAttributes($product->product_id);
         $related_product = $this->productService->getRelatedProducts($product, 12);
         if ($this->allowsLocalPreviewCatalog() && $related_product->count() < 6) {
-            $fallbackRelated = Product::with(['brand', 'categories'])
+            $fallbackRelated = Product::with(['brand', 'categories', 'primaryCategory'])
                 ->withCompleteStorefrontMedia()
                 ->where('id', '!=', $product->id)
                 ->whereNotNull('thumbnail_path')
@@ -585,6 +582,8 @@ class ProductController extends Controller
             4,
             'product_detail'
         );
+        $quickCompareProducts = $this->quickCompareProducts($product, $related_product);
+        $quickCompareRows = $this->quickCompareRows($quickCompareProducts);
         $rating = $this->productReviewService->getAverageRating($product->id);
 
         return view('pages.sanpham.show_details')
@@ -604,9 +603,104 @@ class ProductController extends Controller
             ->with('cate_slug', $cate_slug)
             ->with('recommended_products', $recommendedProducts['products'])
             ->with('recommendation_description', $recommendedProducts['description'])
+            ->with('quick_compare_products', $quickCompareProducts)
+            ->with('quick_compare_rows', $quickCompareRows)
             ->with('rating', $rating)
             ->with('share_image', $share_image)
             ->with('share_images', $share_image);
+    }
+
+    private function quickCompareProducts(Product $product, mixed $relatedProducts)
+    {
+        $primaryCategoryId = (int) ($product->primary_category_id ?? 0);
+
+        return collect([$product])
+            ->merge(collect($relatedProducts)
+                ->filter(function ($item) use ($product, $primaryCategoryId) {
+                    if ((int) $item->id === (int) $product->id) {
+                        return false;
+                    }
+
+                    if ($primaryCategoryId <= 0) {
+                        return true;
+                    }
+
+                    return (int) ($item->primary_category_id ?? 0) === $primaryCategoryId
+                        || collect($item->categories ?? [])->contains(fn ($category) => (int) $category->id === $primaryCategoryId);
+                })
+                ->take(6))
+            ->unique('id')
+            ->values();
+    }
+
+    private function quickCompareRows($products): array
+    {
+        $rows = [
+            'price' => ['label' => 'Giá bán', 'values' => []],
+            'brand' => ['label' => 'Thương hiệu', 'values' => []],
+            'category' => ['label' => 'Nhóm sản phẩm', 'values' => []],
+            'stock' => ['label' => 'Tồn kho', 'values' => []],
+        ];
+
+        foreach ($products as $product) {
+            $id = (int) $product->id;
+            $price = (float) ($product->final_price ?? $product->product_price ?? 0);
+            $rows['price']['values'][$id] = $price > 0 ? number_format($price, 0, ',', '.').'đ' : 'Liên hệ';
+            $rows['brand']['values'][$id] = StorefrontLabel::neutralizeSource($product->brand_name ?: ($product->brand->brand_name ?? 'Đang cập nhật'));
+            $rows['category']['values'][$id] = StorefrontLabel::category($product->primaryCategory->category_name ?? $product->category_name ?? null, $product->primaryCategory->slug_category_product ?? null, 'Sản phẩm');
+            $rows['stock']['values'][$id] = ((int) ($product->product_quantity ?? 0) > 0) ? 'Còn hàng' : 'Tạm hết';
+
+            foreach ($this->normalizedQuickCompareSpecs($product) as $key => $spec) {
+                $rows[$key] ??= ['label' => $spec['label'], 'values' => []];
+                $rows[$key]['values'][$id] = $spec['value'];
+            }
+        }
+
+        return array_values($rows);
+    }
+
+    private function normalizedQuickCompareSpecs(Product $product): array
+    {
+        $meta = $product->meta ?? [];
+        $specs = [];
+
+        foreach ((array) data_get($meta, 'specifications', []) as $key => $value) {
+            $label = trim((string) Str::of((string) $key)->replace(['_', '-'], ' ')->title());
+            $normalizedKey = Str::slug($label, '_');
+            $text = $this->stringifyQuickCompareValue($value);
+
+            if ($normalizedKey !== '' && $text !== '') {
+                $specs[$normalizedKey] = ['label' => $label, 'value' => $text];
+            }
+        }
+
+        foreach ((array) data_get($meta, 'specs', []) as $spec) {
+            if (! is_array($spec)) {
+                continue;
+            }
+
+            $label = trim((string) ($spec['label'] ?? ''));
+            $text = $this->stringifyQuickCompareValue($spec['value'] ?? null);
+            $normalizedKey = Str::slug($label, '_');
+
+            if ($normalizedKey !== '' && $text !== '') {
+                $specs[$normalizedKey] = ['label' => $label, 'value' => $text];
+            }
+        }
+
+        return $specs;
+    }
+
+    private function stringifyQuickCompareValue(mixed $value): string
+    {
+        if (is_array($value)) {
+            return collect($value)
+                ->map(fn ($entry) => is_scalar($entry) ? trim((string) $entry) : '')
+                ->filter()
+                ->implode(', ');
+        }
+
+        return is_scalar($value) ? trim((string) $value) : '';
     }
 
     private function allowsLocalPreviewCatalog(): bool
@@ -622,15 +716,9 @@ class ProductController extends Controller
         $category_post = $this->legacyCategoryPosts();
         $slider = $this->legacyActiveSliders();
 
-        $cate_product = ProductCategory::where('is_active', true)
-            ->orderBy('display_order')
-            ->orderByDesc('id')
-            ->get();
+        $cate_product = $this->categoryService->listActive();
 
-        $brand_product = Brand::where('is_active', true)
-            ->orderBy('display_order')
-            ->orderByDesc('id')
-            ->get();
+        $brand_product = $this->brandService->listActive();
 
         $tag = str_replace('-', ' ', $product_tag);
         $pro_tag = $this->productService->getProductsByTag($tag, 30);
@@ -640,7 +728,10 @@ class ProductController extends Controller
         $meta_title = 'Nhãn tìm kiếm: '.$product_tag;
         $url_canonical = $request->url();
 
-        return view('pages.sanpham.tag')
+        $tagLabel = \App\Support\StorefrontLabel::neutralizeSource($tag);
+        $productCount = method_exists($pro_tag, 'total') ? $pro_tag->total() : $pro_tag->count();
+
+        return view('pages.sanpham.listing')
             ->with('slider', $slider)
             ->with('category_post', $category_post)
             ->with('category', $cate_product)
@@ -650,7 +741,42 @@ class ProductController extends Controller
             ->with('meta_title', $meta_title)
             ->with('url_canonical', $url_canonical)
             ->with('product_tag', $product_tag)
-            ->with('pro_tag', $pro_tag);
+            ->with('pro_tag', $pro_tag)
+            ->with('pageMode', 'tag')
+            ->with('products', $pro_tag)
+            ->with('banner', [
+                'breadcrumbItems' => [
+                    [
+                        'label' => 'Sản phẩm',
+                        'url' => url('/san-pham'),
+                    ],
+                    [
+                        'label' => $tagLabel,
+                        'current' => true,
+                    ],
+                ],
+                'kicker' => 'Nhãn sản phẩm',
+                'title' => $tagLabel,
+                'subtitle' => number_format($productCount).' sản phẩm đang được hiển thị theo nhãn này.',
+                'results_kicker' => 'Danh sách sản phẩm',
+                'results_title' => $tagLabel,
+                'results_description' => 'Các sản phẩm cùng nhãn được trình bày bằng cùng một mẫu card để dễ so sánh và thêm vào giỏ hàng.',
+                'empty_title' => 'Không có sản phẩm nào phù hợp với nhãn này.',
+                'empty_action_text' => 'Xem tất cả sản phẩm',
+                'empty_action_url' => url('/san-pham'),
+            ])
+            ->with('filter', [
+                'keyword' => $tagLabel,
+                'tag' => $tagLabel,
+                'action' => url()->current(),
+                'clear_url' => url('/san-pham'),
+                'show_sidebar' => true,
+                'show_sort' => true,
+                'categories' => $cate_product,
+                'brands' => $brand_product,
+                'sort' => request('sort', 'popular'),
+                'mode' => 'tag',
+            ]);
     }
 
     public function insert_rating(InsertRatingRequest $request): JsonResponse

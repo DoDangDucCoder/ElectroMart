@@ -160,6 +160,9 @@
         $target.stop(true, true).html('').show();
     }
 
+    window.setStorefrontInlineStatus = setStorefrontInlineStatus;
+    window.clearStorefrontInlineStatus = clearStorefrontInlineStatus;
+
     function setQuickCartStatus(message, type, options) {
         setStorefrontInlineStatus('.show_quick_cart_alert', message, type, $.extend({
             autoHideAfter: 1600
@@ -450,7 +453,9 @@
                     data-product-name="${escapeHtml(name)}"
                     data-product-price="${escapeHtml(item.price || '')}"
                     data-product-image="${escapeHtml(image)}"
-                    data-product-url="${escapeHtml(url)}">
+                    data-product-url="${escapeHtml(url)}"
+                    data-product-category-id="${escapeHtml(item.category_id || '')}"
+                    data-product-category="${escapeHtml(item.category || '')}">
                     <i class="fa fa-heart-o"></i>
                 </button>
 
@@ -710,6 +715,12 @@
             return;
         }
 
+        var firstItem = data[0] || null;
+        if (firstItem && firstItem.url) {
+            window.location.href = firstItem.url + '?compare=' + encodeURIComponent(ids) + '#so-sanh-nhanh';
+            return;
+        }
+
         window.location.href = "{{ url('/so-sanh') }}" + '?ids=' + encodeURIComponent(ids);
     }
 
@@ -835,6 +846,12 @@
 
         writeStorefrontStorage('data', data);
         view();
+
+        if (typeof window.syncStorefrontWishlistButtons === 'function') {
+            window.syncStorefrontWishlistButtons();
+        }
+
+        window.dispatchEvent(new CustomEvent('storefront:wishlist-updated'));
     }
 
     function add_wistlist(clicked_id) {
@@ -1502,31 +1519,6 @@
         }
         }, '#paypal-button');
     })();
-</script>
-
-<div id="fb-root"></div>
-<script async defer crossorigin="anonymous"
-    src="https://connect.facebook.net/vi_VN/sdk.js#xfbml=1&version=v6.0&appId=2339123679735877&autoLogAppEvents=1">
-</script>
-
-<script>
-    window.fbAsyncInit = function() {
-        if (typeof FB !== 'undefined') {
-            FB.init({
-                xfbml: true,
-                version: 'v9.0'
-            });
-        }
-    };
-
-    (function(d, s, id) {
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) return;
-        js = d.createElement(s);
-        js.id = id;
-        js.src = 'https://connect.facebook.net/vi_VN/sdk/xfbml.customerchat.js';
-        fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
 </script>
 
 <script type="text/javascript">
@@ -2498,8 +2490,16 @@
             }
         });
     }
+
+    window.addProductToCart = addProductToCart;
+    window.refreshStorefrontCartUi = refreshStorefrontCartUi;
+
     $(document).ready(function() {
         $('.add-to-cart').click(function() {
+            if ($(this).is('[data-pdx-add-cart]')) {
+                return;
+            }
+
             var id_product = $('.product_id').val();
             var id_attribute = $('.cart_product_id_attribute').val();
             var maxQuantity = parseInt($('.cart_product_qty').attr('max') || 0, 10);
@@ -2708,6 +2708,23 @@
         $('#checkout_order_notice').html('<div class="alert ' + cssClass + '" style="margin:12px 0 0;padding:10px 12px;border-radius:8px;font-size:13px;">' + escapeHtml(message) + '</div>');
     }
 
+    function clearCheckoutFieldErrors() {
+        $('[data-checkout-error-for]').text('');
+    }
+
+    function renderCheckoutFieldErrors(errors) {
+        clearCheckoutFieldErrors();
+
+        if (!errors) {
+            return;
+        }
+
+        Object.keys(errors).forEach(function(field) {
+            var message = errors[field] && errors[field][0] ? errors[field][0] : '';
+            $('[data-checkout-error-for="' + field + '"]').text(message);
+        });
+    }
+
     function syncCheckoutDeliveryTotals(fee) {
         var numericFee = Math.max(0, parseFloat(fee || 0));
         var baseTotal = Math.max(0, parseFloat($('.checkout_base_total').val() || 0));
@@ -2749,14 +2766,26 @@
             var shipping_address = $('.shipping_address').val();
             var shipping_phone = $('.shipping_phone').val();
             var shipping_notes = $('.shipping_notes').val();
-            var shipping_method = $('.payment_select').val() || 'cod';
+            var shipping_method = $('.payment_select:checked').val() || 'cod';
             var vietnam_province_code = $('.province').val();
             var vietnam_ward_code = $('.wards').val();
             var _token = $('input[name="_token"]').val();
 
+            clearCheckoutFieldErrors();
+
             if (shipping_email == '' || shipping_name == '' || shipping_address == '' || shipping_phone == '') {
                 renderCheckoutOrderNotice('Vui lòng điền đầy đủ tên, email, số điện thoại và địa chỉ nhận hàng.', 'error');
                 swal("Thiếu thông tin", "Vui lòng điền đầy đủ tên, email, số điện thoại và địa chỉ nhận hàng.", "error");
+                return;
+            }
+
+            if (vietnam_province_code == '' || vietnam_ward_code == '') {
+                renderCheckoutFieldErrors({
+                    vietnam_province_code: vietnam_province_code == '' ? ['Vui lòng chọn tỉnh/thành phố giao hàng.'] : [],
+                    vietnam_ward_code: vietnam_ward_code == '' ? ['Vui lòng chọn xã/phường/đặc khu giao hàng.'] : []
+                });
+                renderCheckoutOrderNotice('Vui lòng chọn tỉnh/thành phố và xã/phường/đặc khu giao hàng.', 'error');
+                swal("Thiếu thông tin giao hàng", "Vui lòng chọn tỉnh/thành phố và xã/phường/đặc khu giao hàng.", "error");
                 return;
             }
 
@@ -2790,6 +2819,7 @@
                     $button.prop('disabled', false);
                     $button.html($button.data('originalHtml') || originalHtml);
                     var message = getAjaxErrorMessage(xhr, 'Không thể gửi đơn hàng lúc này.');
+                    renderCheckoutFieldErrors(xhr && xhr.responseJSON ? xhr.responseJSON.errors : null);
                     renderCheckoutOrderNotice(message, 'error');
                     swal("Lỗi đặt hàng", message, "error");
                 }
@@ -2869,12 +2899,12 @@
 
 <script>
     $(document).ready(function() {
-        if (typeof $.fn.lightSlider === 'function') {
+        if (typeof $.fn.lightSlider === 'function' && !$("#imageGallery").is('[hidden]')) {
             var slider = $("#imageGallery").lightSlider({
                 gallery: true,
                 item: 1,
                 loop: true,
-                thumbItem: 3,
+                thumbItem: 4,
                 slideMargin: 0,
                 enableDrag: false,
                 currentPagerPosition: 'left',
@@ -2899,7 +2929,7 @@
             var availableStock = Math.max(0, parseInt(stock || 0, 10));
             var $purchase = $('.shopw-pdp-purchase');
             var $quantityInput = $('.cart_product_qty');
-            var $addButton = $('.add-to-cart');
+            var $actionButtons = $('[data-pdx-add-cart], [data-pdx-buy-now]');
             var $buttonLabel = $('.shopw-pdp-purchase-btn-label');
             var defaultLabel = $purchase.data('defaultLabel') || 'Thêm giỏ hàng';
             var nextLabel = label || (availableStock > 0 ? defaultLabel : 'Tạm hết hàng');
@@ -2909,11 +2939,11 @@
 
             if (availableStock <= 0) {
                 $quantityInput.val(0).prop('disabled', true);
-                $addButton.prop('disabled', true);
+                $actionButtons.prop('disabled', true);
             } else {
                 $quantityInput.prop('disabled', false);
                 $quantityInput.val(Math.min(Math.max(1, currentValue || 1), availableStock));
-                $addButton.prop('disabled', false);
+                $actionButtons.prop('disabled', false);
             }
 
             $buttonLabel.text(nextLabel);

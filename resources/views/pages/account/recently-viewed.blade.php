@@ -1,10 +1,9 @@
 @extends('layouts.home-tech')
 @section('body_class', 'accp-page')
 @section('content')
-<link rel="stylesheet" href="{{ asset('frontend/css/account-shared.css') }}">
 <style>
-.rvp-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:16px}
-@media(max-width:1100px){.rvp-grid{grid-template-columns:repeat(3,1fr)}}
+.rvp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+@media(max-width:1100px){.rvp-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.rvp-grid{grid-template-columns:repeat(2,1fr)}}
 .rvp-card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;transition:box-shadow .2s;position:relative}
 .rvp-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.08)}
@@ -93,14 +92,14 @@
                     $oldPrice = (float) $p->price;
                     $hasDiscount = $p->sale_price && $p->sale_price > 0 && $p->sale_price < $p->price;
                     $discountPercent = $hasDiscount && $oldPrice > 0 ? round((1 - $price / $oldPrice) * 100) : 0;
-                    $thumb = $p->thumbnail ?? $p->image ?? 'uploads/product/no-image.svg';
+                    $thumb = \App\Support\AssetUrl::productVariant($p->thumbnail ?? $p->image ?? null, 'thumb');
                     $brandName = $p->brand?->name ?? '';
                     $detailUrl = url('/chi-tiet/' . ($p->slug ?? $p->id));
                 @endphp
                 <div class="rvp-card">
                     <button class="rvp-fav" title="Yêu thích"><i class="fa fa-heart-o"></i></button>
                     @if ($discountPercent > 0)<span style="position:absolute;top:8px;left:8px;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;z-index:2">-{{ $discountPercent }}%</span>@endif
-                    <div class="rvp-img"><a href="{{ $detailUrl }}"><img src="{{ asset($thumb) }}" alt="{{ $p->name }}"></a></div>
+                    <div class="rvp-img"><a href="{{ $detailUrl }}"><img src="{{ $thumb }}" alt="{{ $p->name }}"></a></div>
                     <div class="rvp-body">
                         @if ($brandName)<div class="rvp-brand">{{ $brandName }}</div>@endif
                         <div class="rvp-name"><a href="{{ $detailUrl }}" style="color:inherit;text-decoration:none">{{ $p->name }}</a></div>
@@ -115,7 +114,7 @@
             </div>
 
             @if ($paginator && $paginator->hasPages())
-            <div class="rvp-pagination" style="margin-top:16px">{{ $paginator->links() }}</div>
+            <div class="rvp-pagination" style="margin-top:16px">{{ $paginator->links('vendor.pagination.shop-pagination') }}</div>
             @endif
             @endif
         </main>

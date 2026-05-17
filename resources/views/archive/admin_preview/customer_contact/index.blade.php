@@ -1,7 +1,5 @@
 @extends('admin_layout')
 @section('admin_content')
-<link rel="stylesheet" href="{{ asset('backend/css/admin-dashboard.css') }}">
-<link rel="stylesheet" href="{{ asset('backend/css/admin-pages.css') }}">
 @php
 $contacts = [
     ['id'=>'LH0006284','customer'=>'Nguyễn Văn An','channel'=>'Email','channel_class'=>'email','subject'=>'Bảo hành','topic'=>'Sản phẩm loa bluetooth không lên nguồn.','priority'=>'Khẩn cấp','priority_class'=>'urgent','assigned'=>'Lê Minh Đức','date'=>'24/05/2025 10:28','status'=>'Đã phản hồi','status_class'=>'green','sla'=>'72%','sla_class'=>'amber'],

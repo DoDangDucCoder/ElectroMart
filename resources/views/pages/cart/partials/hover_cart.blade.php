@@ -2,7 +2,7 @@
     <ul class="hover-cart">
         @foreach ($items as $item)
             @php
-                $image = \App\Support\AssetUrl::product($item['product_image'] ?? null);
+                $image = \App\Support\AssetUrl::productVariant($item['product_image'] ?? null, 'thumb');
             @endphp
             <li style="position: relative; padding-right: 35px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid #f1f5f9;">
                 <div class="hover-cart-item-copy" style="display: flex; gap: 15px; align-items: center;">

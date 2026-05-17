@@ -28,12 +28,12 @@ class ProductService
 
     public function getLatestProducts(int $limit = 6): Collection
     {
-        return $this->products->latestProducts($limit);
+        return $this->cache->getLatestProducts($limit);
     }
 
     public function findProductById(int $id): ?Product
     {
-        return $this->products->findById($id);
+        return $this->cache->getProductById($id);
     }
 
     public function getProducts(array $filters = [], int $perPage = 12): LengthAwarePaginator
@@ -43,17 +43,17 @@ class ProductService
 
     public function getProductsByCategorySlug(string $slug, array $filters = [], int $perPage = 12): LengthAwarePaginator
     {
-        return $this->products->paginateByCategorySlug($slug, $filters, $perPage);
+        return $this->cache->getProductsByCategory($this->normalizeStorefrontCategorySlug($slug), $filters, $perPage);
     }
 
     public function getProductsByBrandSlug(string $slug, array $filters = [], int $perPage = 12): LengthAwarePaginator
     {
-        return $this->products->paginateByBrandSlug($slug, $filters, $perPage);
+        return $this->cache->getProductsByBrand($slug, $filters, $perPage);
     }
 
     public function findProductBySlug(string $slug): ?Product
     {
-        return $this->products->findBySlug($slug);
+        return $this->cache->getProductBySlug($slug);
     }
 
     public function incrementProductViews(Product $product): void
@@ -87,7 +87,18 @@ class ProductService
 
     public function getCategoryPriceRange(string $slug): array
     {
-        return $this->products->priceRangeByCategorySlug($slug);
+        return $this->products->priceRangeByCategorySlug($this->normalizeStorefrontCategorySlug($slug));
+    }
+
+    protected function normalizeStorefrontCategorySlug(string $slug): string
+    {
+        return [
+            'may-tinh' => 'may-tinh-bang',
+            'tablet' => 'may-tinh-bang',
+            'audio' => 'am-thanh',
+            'smartwatch' => 'dong-ho-thong-minh',
+            'gaming' => 'laptop-gaming',
+        ][$slug] ?? $slug;
     }
 
     public function loadMoreProducts(?int $afterId, int $limit = 6): Collection
@@ -110,7 +121,19 @@ class ProductService
 
     public function searchCatalog(array $filters = [], int $perPage = 12): LengthAwarePaginator
     {
-        return $this->search->searchCatalog($filters, $perPage);
+        $cacheFilters = $filters;
+        ksort($cacheFilters);
+
+        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage('page');
+        $key = 'storefront_search_catalog_'.md5(json_encode([
+            'filters' => $cacheFilters,
+            'per_page' => $perPage,
+            'page' => $page,
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+        return $this->cache->remember($key, function () use ($filters, $perPage) {
+            return $this->search->searchCatalog($filters, $perPage);
+        }, 300);
     }
 
     public function searchSuggestions(string $keyword, int $limit = 8): Collection
@@ -125,7 +148,16 @@ class ProductService
         int $limit = 6,
         string $context = 'storefront'
     ): array {
-        $recommendationData = $this->recommendations->recommendForStorefront($customerId, $ipAddress, $excludeProductId, $limit);
+        $key = 'storefront_recommendations_'.md5(json_encode([
+            'customer_id' => $customerId,
+            'ip_address' => $customerId ? null : $ipAddress,
+            'exclude_product_id' => $excludeProductId,
+            'limit' => $limit,
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+        $recommendationData = $this->cache->remember($key, function () use ($customerId, $ipAddress, $excludeProductId, $limit) {
+            return $this->recommendations->recommendForStorefront($customerId, $ipAddress, $excludeProductId, $limit);
+        }, 300);
 
         $this->discoveryTracking->trackRecommendationImpressions(
             $recommendationData['products'],

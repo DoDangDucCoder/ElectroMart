@@ -3,7 +3,10 @@
         <header class="header fixed-top clearfix">
             @php
                 $adminUser = auth('web')->user();
-                $adminDisplayName = trim((string) ($adminUser?->name ?: 'Quản trị viên'));
+                $adminRawDisplayName = trim((string) ($adminUser?->name ?: 'Quản trị viên'));
+                $adminDisplayName = strcasecmp($adminRawDisplayName, 'Super Admin') === 0
+                    ? 'Quản trị viên cấp cao'
+                    : $adminRawDisplayName;
                 $adminAvatarPath = asset('backend/images/admin-avatar-default.svg');
                 $adminShellTitle = 'Bảng quản trị';
                 $adminInitials = (string) \Illuminate\Support\Str::of($adminDisplayName)

@@ -49,6 +49,7 @@ use App\Support\DatabaseRuntime;
 use App\Support\AdminPermissions;
 use Carbon\Carbon;
 use Illuminate\Http\Client\Response as HttpClientResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Throwable;
 
@@ -105,99 +106,107 @@ class AppServiceProvider extends ServiceProvider
         $this->registerHttpClientCompatibilityMacros();
 
         view()->composer('*', function ($view) {
-            $sharedData = $this->sharedViewDefaults();
+            static $requestSharedData = null;
 
-            if (! DatabaseRuntime::unavailable()) {
-                try {
-                    $post_footer = collect();
-                    $contact_footer = collect();
-                    $icons = collect();
-                    $icons_doitac = collect();
-                    $min_price = 0;
-                    $max_price = 0;
-                    $app_product = 0;
-                    $app_post = 0;
-                    $app_order = 0;
-                    $app_video = 0;
-                    $app_customer = 0;
+            if ($requestSharedData === null) {
+                $requestSharedData = Cache::remember('storefront.shared_view_data', 300, function () {
+                    $sharedData = $this->sharedViewDefaults();
 
-                    if (Schema::hasTable((new BlogPost())->getTable())) {
-                        $post_footer = BlogPost::query()
-                            ->where('blog_category_id', 7)
-                            ->where('status', 'published')
-                            ->get();
-                        $app_post = BlogPost::count();
+                    if (! DatabaseRuntime::unavailable()) {
+                        try {
+                            $post_footer = collect();
+                            $contact_footer = collect();
+                            $icons = collect();
+                            $icons_doitac = collect();
+                            $min_price = 0;
+                            $max_price = 0;
+                            $app_product = 0;
+                            $app_post = 0;
+                            $app_order = 0;
+                            $app_video = 0;
+                            $app_customer = 0;
+
+                            if (Schema::hasTable((new BlogPost())->getTable())) {
+                                $post_footer = BlogPost::query()
+                                    ->where('blog_category_id', 7)
+                                    ->where('status', 'published')
+                                    ->get();
+                                $app_post = BlogPost::count();
+                            }
+
+                            if (Schema::hasTable((new SiteContact())->getTable())) {
+                                $contact_footer = SiteContact::query()
+                                    ->orderBy('id')
+                                    ->limit(1)
+                                    ->get()
+                                    ->map(fn (SiteContact $contact): object => $this->legacyContactRecord($contact));
+                            }
+
+                            if (Schema::hasTable((new SiteLink())->getTable())) {
+                                $icons = SiteLink::query()
+                                    ->where('category', 'social')
+                                    ->where('is_active', true)
+                                    ->orderBy('display_order')
+                                    ->orderByDesc('id')
+                                    ->get()
+                                    ->map(fn (SiteLink $link): object => $this->legacySiteLinkRecord($link));
+                                $icons_doitac = SiteLink::query()
+                                    ->where('category', 'partner')
+                                    ->where('is_active', true)
+                                    ->orderBy('display_order')
+                                    ->orderByDesc('id')
+                                    ->get()
+                                    ->map(fn (SiteLink $link): object => $this->legacySiteLinkRecord($link));
+                            }
+
+                            if (Schema::hasTable((new CatalogProduct())->getTable())) {
+                                $min_price = (float) (CatalogProduct::min('price') ?? 0);
+                                $max_price = (float) (CatalogProduct::max('price') ?? 0);
+                                $app_product = CatalogProduct::count();
+                            }
+
+                            if (Schema::hasTable((new StorefrontOrder())->getTable())) {
+                                $app_order = StorefrontOrder::count();
+                            }
+
+                            if (Schema::hasTable((new CmsVideo())->getTable())) {
+                                $app_video = CmsVideo::count();
+                            }
+
+                            if (Schema::hasTable((new StorefrontCustomer())->getTable())) {
+                                $app_customer = StorefrontCustomer::count();
+                            }
+
+                            $sharedData = [
+                                'min_price' => $min_price,
+                                'max_price' => $max_price,
+                                'min_price_range' => $min_price + 500000,
+                                'max_price_range' => $max_price + 10000000,
+                                'app_product' => $app_product,
+                                'app_post' => $app_post,
+                                'app_order' => $app_order,
+                                'app_video' => $app_video,
+                                'app_customer' => $app_customer,
+                                'share_image' => '',
+                                'icons' => $icons,
+                                'icons_doitac' => $icons_doitac,
+                                'contact_footer' => $contact_footer,
+                                'post_footer' => $post_footer,
+                            ];
+                        } catch (Throwable $e) {
+                            if (! DatabaseRuntime::causedByConnectionFailure($e)) {
+                                throw $e;
+                            }
+
+                            DatabaseRuntime::markUnavailable();
+                        }
                     }
 
-                    if (Schema::hasTable((new SiteContact())->getTable())) {
-                        $contact_footer = SiteContact::query()
-                            ->orderBy('id')
-                            ->limit(1)
-                            ->get()
-                            ->map(fn (SiteContact $contact): object => $this->legacyContactRecord($contact));
-                    }
-
-                    if (Schema::hasTable((new SiteLink())->getTable())) {
-                        $icons = SiteLink::query()
-                            ->where('category', 'social')
-                            ->where('is_active', true)
-                            ->orderBy('display_order')
-                            ->orderByDesc('id')
-                            ->get()
-                            ->map(fn (SiteLink $link): object => $this->legacySiteLinkRecord($link));
-                        $icons_doitac = SiteLink::query()
-                            ->where('category', 'partner')
-                            ->where('is_active', true)
-                            ->orderBy('display_order')
-                            ->orderByDesc('id')
-                            ->get()
-                            ->map(fn (SiteLink $link): object => $this->legacySiteLinkRecord($link));
-                    }
-
-                    if (Schema::hasTable((new CatalogProduct())->getTable())) {
-                        $min_price = (float) (CatalogProduct::min('price') ?? 0);
-                        $max_price = (float) (CatalogProduct::max('price') ?? 0);
-                        $app_product = CatalogProduct::count();
-                    }
-
-                    if (Schema::hasTable((new StorefrontOrder())->getTable())) {
-                        $app_order = StorefrontOrder::count();
-                    }
-
-                    if (Schema::hasTable((new CmsVideo())->getTable())) {
-                        $app_video = CmsVideo::count();
-                    }
-
-                    if (Schema::hasTable((new StorefrontCustomer())->getTable())) {
-                        $app_customer = StorefrontCustomer::count();
-                    }
-
-                    $sharedData = [
-                        'min_price' => $min_price,
-                        'max_price' => $max_price,
-                        'min_price_range' => $min_price + 500000,
-                        'max_price_range' => $max_price + 10000000,
-                        'app_product' => $app_product,
-                        'app_post' => $app_post,
-                        'app_order' => $app_order,
-                        'app_video' => $app_video,
-                        'app_customer' => $app_customer,
-                        'share_image' => '',
-                        'icons' => $icons,
-                        'icons_doitac' => $icons_doitac,
-                        'contact_footer' => $contact_footer,
-                        'post_footer' => $post_footer,
-                    ];
-                } catch (Throwable $e) {
-                    if (! DatabaseRuntime::causedByConnectionFailure($e)) {
-                        throw $e;
-                    }
-
-                    DatabaseRuntime::markUnavailable();
-                }
+                    return $sharedData;
+                });
             }
 
-            $view->with($sharedData);
+            $view->with($requestSharedData);
         });
 
         view()->composer('partials.admin.sidebar', function ($view) {

@@ -107,7 +107,7 @@
                                             </form>
                                         </td>
                                         <td>
-                                            <div class="g-admin-action-stack">
+                                            <div class="g-admin-action-stack g-admin-user-actions">
                                                 <a href="{{ url('/create-spatie/' . $user->id) }}" class="btn btn-xs btn-primary">Vai trò</a>
                                                 <a href="{{ url('/create-permission/' . $user->id) }}" class="btn btn-xs btn-info">Quyền</a>
                                                 <form action="{{ url('/delete-user-roles/' . $user->id) }}" method="POST"

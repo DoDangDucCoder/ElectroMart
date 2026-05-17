@@ -1,0 +1,47 @@
+[
+    {
+        "source_path": "uploads/products/1911/cellphones-man-hinh-gigabyte-gs24f14-24-inch-6f6cff5d-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1911,
+        "source_bytes": 606071,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "thumb",
+        "target_width": 360,
+        "optimized_path": "uploads/products/1911/_optimized/cellphones-man-hinh-gigabyte-gs24f14-24-inch-6f6cff5d-main-thumb.webp",
+        "optimized_bytes": 12220,
+        "saved_bytes": 593851,
+        "status": "exists",
+        "message": "Optimized variant already exists."
+    },
+    {
+        "source_path": "uploads/products/1911/cellphones-man-hinh-gigabyte-gs24f14-24-inch-6f6cff5d-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1911,
+        "source_bytes": 606071,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "medium",
+        "target_width": 800,
+        "optimized_path": "uploads/products/1911/_optimized/cellphones-man-hinh-gigabyte-gs24f14-24-inch-6f6cff5d-main-medium.webp",
+        "optimized_bytes": 30508,
+        "saved_bytes": 575563,
+        "status": "exists",
+        "message": "Optimized variant already exists."
+    },
+    {
+        "source_path": "uploads/products/1911/cellphones-man-hinh-gigabyte-gs24f14-24-inch-6f6cff5d-main.png",
+        "source_type": "thumbnail",
+        "product_id": 1911,
+        "source_bytes": 606071,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "large",
+        "target_width": 1200,
+        "optimized_path": "uploads/products/1911/_optimized/cellphones-man-hinh-gigabyte-gs24f14-24-inch-6f6cff5d-main-large.webp",
+        "optimized_bytes": 49970,
+        "saved_bytes": 556101,
+        "status": "exists",
+        "message": "Optimized variant already exists."
+    }
+]

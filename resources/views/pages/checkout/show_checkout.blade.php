@@ -108,6 +108,7 @@
         }
         .ckq-field label .req { color:#ef4444; margin-left: 2px; }
         .ckq-field .hint { color:#9ca3af; font-weight:400; margin-left:4px; font-size:12px;}
+        .ckq-field-error { margin-top: 6px; color:#dc2626; font-size:12px; line-height:1.4; }
 
         .ckq-input,
         .ckq-select,
@@ -419,7 +420,7 @@
                                 <input type="text" name="shipping_phone"
                                     class="shipping_phone ckq-input has-icon"
                                     value="{{ old('shipping_phone', $currentCustomer?->phone) }}"
-                                    placeholder="0912 345 678" required>
+                                    placeholder="Nhập số điện thoại" required>
                             </div>
                         </div>
 
@@ -447,19 +448,21 @@
 
                         <div class="ckq-row two">
                             <div class="ckq-field">
-                                <label>Tỉnh / Thành phố <span class="hint">(không bắt buộc)</span></label>
-                                <select name="vietnam_province_code" class="ckq-select choose province" id="vietnam_province">
+                                <label>Tỉnh / Thành phố <span class="req">*</span></label>
+                                <select name="vietnam_province_code" class="ckq-select choose province" id="vietnam_province" required>
                                     <option value="">--- Chọn tỉnh / thành phố ---</option>
                                     @foreach ($vietnamProvinces as $province)
                                         <option value="{{ $province->code }}">{{ $province->name }}</option>
                                     @endforeach
                                 </select>
+                                <div class="ckq-field-error" data-checkout-error-for="vietnam_province_code"></div>
                             </div>
                             <div class="ckq-field">
-                                <label>Xã / Phường / Đặc khu <span class="hint">(không bắt buộc)</span></label>
-                                <select name="vietnam_ward_code" class="ckq-select wards" id="wards">
+                                <label>Xã / Phường / Đặc khu <span class="req">*</span></label>
+                                <select name="vietnam_ward_code" class="ckq-select wards" id="wards" required>
                                     <option value="">--- Chọn xã / phường / đặc khu ---</option>
                                 </select>
+                                <div class="ckq-field-error" data-checkout-error-for="vietnam_ward_code"></div>
                             </div>
                         </div>
 
@@ -588,7 +591,7 @@
                     <div>
                         @foreach ($cartItems as $item)
                             @php
-                                $image = \App\Support\AssetUrl::product($item['product_image'] ?? null);
+                                $image = \App\Support\AssetUrl::productVariant($item['product_image'] ?? null, 'thumb');
                                 $subtotal = (float) $item['product_price'] * (int) $item['product_qty'];
                             @endphp
                             <div class="ckq-product">

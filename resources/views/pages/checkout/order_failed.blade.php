@@ -14,6 +14,9 @@
     $couponCode = $order['coupon_code'] ?? null;
     $failReason = $order['fail_reason'] ?? 'Giao dịch bị từ chối bởi ngân hàng (Mã lỗi: 05)';
     $orderStatus = $order['status'] ?? 'failed';
+    $visibleRecommendedProducts = collect($recommendedProducts ?? []);
+    $visibleRecommendedProducts = $visibleRecommendedProducts
+        ->take($visibleRecommendedProducts->count() >= 8 ? 8 : min(4, $visibleRecommendedProducts->count()));
 @endphp
 
 @section('content')
@@ -111,8 +114,8 @@ body.ors-page #header .header-bottom { display: none; }
 .ors-recommend-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .ors-recommend-head h2 { font-size: 18px; font-weight: 700; color: #111827; margin: 0; }
 .ors-recommend-head a { font-size: 13px; color: #0d9488; text-decoration: none; font-weight: 500; }
-.ors-recommend-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
-@media (max-width: 991px) { .ors-recommend-grid { grid-template-columns: repeat(3, 1fr); } }
+.ors-recommend-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+@media (max-width: 991px) { .ors-recommend-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .ors-recommend-grid { grid-template-columns: repeat(2, 1fr); } }
 </style>
 
@@ -237,7 +240,7 @@ body.ors-page #header .header-bottom { display: none; }
                 </div>
 
                 @foreach ($items as $item)
-                    @php $image = !empty($item['image']) ? asset($item['image']) : asset('uploads/product/no-image.svg'); @endphp
+                    @php $image = \App\Support\AssetUrl::productVariant($item['image'] ?? null, 'thumb'); @endphp
                     <div class="ors-product">
                         <div class="ors-product-thumb"><img src="{{ $image }}" alt="{{ $item['name'] }}"></div>
                         <div class="ors-product-info">
@@ -277,14 +280,14 @@ body.ors-page #header .header-bottom { display: none; }
         <div class="ors-policy-item"><span class="ors-policy-icon"><i class="fa fa-headphones"></i></span><div><div class="ors-policy-title">Hỗ trợ tư vấn 24/7</div><div class="ors-policy-sub">Đội ngũ chuyên viên sẵn sàng hỗ trợ</div></div></div>
     </div>
 
-    @if (!empty($recommendedProducts) && $recommendedProducts->count() > 0)
+    @if ($visibleRecommendedProducts->isNotEmpty())
     <div class="ors-recommend">
         <div class="ors-recommend-head">
             <h2>Có thể bạn cũng thích</h2>
             <a href="{{ url('/san-pham') }}">Xem tất cả <i class="fa fa-arrow-right"></i></a>
         </div>
         <div class="ors-recommend-grid">
-            @foreach ($recommendedProducts->take(5) as $product)
+            @foreach ($visibleRecommendedProducts as $product)
                 <div>@include('partials.home.product-card', ['product' => $product, 'compact' => true])</div>
             @endforeach
         </div>

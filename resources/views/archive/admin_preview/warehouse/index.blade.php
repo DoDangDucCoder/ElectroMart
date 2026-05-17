@@ -1,6 +1,5 @@
 @extends('admin_layout')
 @section('admin_content')
-<link rel="stylesheet" href="{{ asset('backend/css/admin-dashboard.css') }}">
 <div class="adm-page">
     <div class="adm-page-title"><h1><i class="fa fa-exchange" style="color:#0d9488;margin-right:6px"></i>Nhập kho / xuất kho</h1><div class="crumb"><a href="{{ url('/dashboard') }}">Trang chủ</a> › <a href="#">Kho hàng</a> › Nhập kho / xuất kho</div></div>
 

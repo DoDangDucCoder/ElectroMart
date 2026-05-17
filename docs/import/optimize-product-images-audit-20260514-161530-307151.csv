@@ -1,0 +1,4 @@
+source_path,source_type,product_id,source_bytes,source_width,source_height,variant,target_width,optimized_path,optimized_bytes,saved_bytes,status,message
+uploads/products/1697/cellphones-sac-momax-1c-30w-pd-30-um71-f56ff7d7-main.png,thumbnail,1697,142492,1200,1200,thumb,360,uploads/products/1697/_optimized/cellphones-sac-momax-1c-30w-pd-30-um71-f56ff7d7-main-thumb.webp,7536,134956,created,"Optimized variant created."
+uploads/products/1697/cellphones-sac-momax-1c-30w-pd-30-um71-f56ff7d7-main.png,thumbnail,1697,142492,1200,1200,medium,800,uploads/products/1697/_optimized/cellphones-sac-momax-1c-30w-pd-30-um71-f56ff7d7-main-medium.webp,18260,124232,created,"Optimized variant created."
+uploads/products/1697/cellphones-sac-momax-1c-30w-pd-30-um71-f56ff7d7-main.png,thumbnail,1697,142492,1200,1200,large,1200,uploads/products/1697/_optimized/cellphones-sac-momax-1c-30w-pd-30-um71-f56ff7d7-main-large.webp,28576,113916,created,"Optimized variant created."

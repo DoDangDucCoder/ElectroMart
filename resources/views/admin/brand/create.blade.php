@@ -66,7 +66,7 @@
                     </div>
                     <div class="g-admin-inline-actions">
                         <button type="submit" class="btn btn-info">Thêm thương hiệu</button>
-                        <a href="{{ url('/all-brand-product') }}" class="btn btn-default">Danh sách thương hiệu</a>
+                        <a href="{{ route('admin.brands.management') }}" class="btn btn-default">Danh sách thương hiệu</a>
                     </div>
                 </form>
             </div>

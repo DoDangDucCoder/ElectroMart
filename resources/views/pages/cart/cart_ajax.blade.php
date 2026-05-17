@@ -91,7 +91,7 @@
                             <div class="cart-v2-list-body">
                                 @foreach ($cartItems as $item)
                                     @php
-                                        $image = \App\Support\AssetUrl::product($item['product_image'] ?? null);
+                                        $image = \App\Support\AssetUrl::productVariant($item['product_image'] ?? null, 'thumb');
                                         $qty = (int) $item['product_qty'];
                                         $price = (float) $item['product_price'];
                                         $subtotal = $price * $qty;
@@ -107,7 +107,7 @@
 
                                     <article class="cart-v2-row" data-cart-row data-line-total="{{ $subtotal }}">
                                         <label class="cart-v2-check">
-                                            <input type="checkbox" class="cart-v2-row-check" checked>
+                                            <input type="checkbox" class="cart-v2-row-check" data-cart-item-id="{{ $sid }}" checked>
                                             <span class="cart-v2-check-box"></span>
                                         </label>
 
@@ -258,15 +258,19 @@
                             </div>
 
                             <div class="cart-v2-summary-actions">
-                                <a href="{{ $checkoutUrl }}" class="cart-v2-btn cart-v2-btn--checkout">
+                                <button type="submit" form="cart-v2-checkout-form" class="cart-v2-btn cart-v2-btn--checkout">
                                     <i class="fa fa-lock" aria-hidden="true"></i>
                                     Tiến hành thanh toán
-                                </a>
-                                <a href="{{ $checkoutUrl }}?quick=1" class="cart-v2-btn cart-v2-btn--quick">
+                                </button>
+                                <button type="submit" form="cart-v2-checkout-form" class="cart-v2-btn cart-v2-btn--quick">
                                     <i class="fa fa-bolt" aria-hidden="true"></i>
                                     Thanh toán nhanh
-                                </a>
+                                </button>
                             </div>
+                            <form method="POST" action="{{ $checkoutUrl }}" id="cart-v2-checkout-form" style="display:none;">
+                                @csrf
+                                <div data-checkout-selected-items></div>
+                            </form>
 
                             <div class="cart-v2-payments" aria-hidden="true">
                                 <span class="cart-v2-pay cart-v2-pay--visa"><i class="fa fa-cc-visa"></i></span>
@@ -420,6 +424,7 @@
             const headCheck = document.getElementById('cart-v2-check-all');
             const footCheck = document.getElementById('cart-v2-check-all-foot');
             const rowChecks = document.querySelectorAll('.cart-v2-row-check');
+            const checkoutForm = document.getElementById('cart-v2-checkout-form');
 
             const setAll = (state) => {
                 rowChecks.forEach((c) => { c.checked = state; });
@@ -477,6 +482,29 @@
             document.getElementById('cart-v2-clear-all')?.addEventListener('click', () => {
                 if (!confirm('Xóa toàn bộ sản phẩm trong giỏ hàng?')) return;
                 submitCartMutation('{{ url("/del-all-product") }}');
+            });
+
+            checkoutForm?.addEventListener('submit', (event) => {
+                const holder = checkoutForm.querySelector('[data-checkout-selected-items]');
+                const selectedIds = Array.from(rowChecks)
+                    .filter((checkbox) => checkbox.checked)
+                    .map((checkbox) => checkbox.dataset.cartItemId)
+                    .filter(Boolean);
+
+                if (!selectedIds.length) {
+                    event.preventDefault();
+                    alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán.');
+                    return;
+                }
+
+                holder.innerHTML = '';
+                selectedIds.forEach((id) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'checkout_cart_item_ids[]';
+                    input.value = id;
+                    holder.appendChild(input);
+                });
             });
 
             refreshSummary();

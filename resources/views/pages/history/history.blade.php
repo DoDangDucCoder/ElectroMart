@@ -171,7 +171,7 @@
                                             {{ $order['placed_at_label'] }}
                                         </td>
                                         <td>
-                                            <a href="{{ url('/view-history-order/' . $order['code']) }}" class="btn-action btn-view" title="Xem chi tiết">Chi tiết</a>
+                                            <a href="{{ url('/account/order-tracking/' . $order['code']) }}" class="btn-action btn-view" title="Xem chi tiết">Chi tiết</a>
                                             @if ($order['can_cancel'])
                                                 <button type="button" class="btn-action btn-cancel" data-toggle="modal" data-target="#cancelOrderModal" data-order-code="{{ $order['code'] }}">HỦY</button>
                                             @endif
@@ -183,7 +183,7 @@
                     </div>
                     
                     <div style="margin-top: 20px;">
-                        {!! $orders->links() !!}
+                        {!! $orders->links('vendor.pagination.shop-pagination') !!}
                     </div>
                 @endif
             </div>

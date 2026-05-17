@@ -264,7 +264,7 @@
                             href="{{ route('admin.customers') }}"
                             data-admin-sidebar-key="admin-customers"
                             @if ($customersActive) aria-current="page" @endif>
-                            <i class="fa fa-address-book-o"></i>
+                            <i class="fa fa-users"></i>
                             <span>Khách hàng</span>
                         </a>
                     </li>
@@ -289,7 +289,7 @@
                             </a>
                         </li>
                         <li class="{{ $sidebarItemClass($matchesSidebarRoute(['list-coupon', 'edit-coupon/*'])) }}">
-                            <a href="{{ URL::to('/list-coupon') }}"
+                            <a href="{{ route('admin.vouchers') }}"
                                 data-admin-sidebar-key="list-coupon"
                                 @if ($matchesSidebarRoute(['list-coupon', 'edit-coupon/*'])) aria-current="page" @endif>
                                 Liệt kê mã giảm giá
@@ -300,24 +300,14 @@
                 @endif
 
                 @if ($canManageOrders)
-                    <li class="{{ $sidebarItemClass($deliveryActive, true) }}" data-admin-sidebar-group="delivery">
-                    <button type="button"
-                        class="{{ $sidebarLinkClass($deliveryActive, true) }}"
-                        data-admin-sidebar-trigger="delivery"
-                        aria-expanded="{{ $deliveryActive ? 'true' : 'false' }}"
-                        aria-controls="admin-sidebar-group-delivery">
-                        <i class="fa fa-truck"></i>
-                        <span>Vận chuyển</span>
-                    </button>
-                    <ul class="sub" id="admin-sidebar-group-delivery">
-                        <li class="{{ $sidebarItemClass($matchesSidebarRoute(['delivery'])) }}">
-                            <a href="{{ URL::to('/delivery') }}"
-                                data-admin-sidebar-key="delivery"
-                                @if ($matchesSidebarRoute(['delivery'])) aria-current="page" @endif>
-                                Quản lý vận chuyển
-                            </a>
-                        </li>
-                    </ul>
+                    <li class="{{ $sidebarItemClass($deliveryActive) }}">
+                        <a class="{{ $sidebarLinkClass($deliveryActive) }}"
+                            href="{{ route('admin.shipping') }}"
+                            data-admin-sidebar-key="delivery"
+                            @if ($deliveryActive) aria-current="page" @endif>
+                            <i class="fa fa-truck"></i>
+                            <span>Vận chuyển</span>
+                        </a>
                     </li>
                 @endif
 
@@ -377,7 +367,7 @@
                             </a>
                         </li>
                         <li class="{{ $sidebarItemClass($matchesSidebarRoute(['all-brand-product', 'edit-brand-product/*'])) }}">
-                            <a href="{{ URL::to('/all-brand-product') }}"
+                            <a href="{{ route('admin.brands.management') }}"
                                 data-admin-sidebar-key="all-brand-product"
                                 @if ($matchesSidebarRoute(['all-brand-product', 'edit-brand-product/*'])) aria-current="page" @endif>
                                 Liệt kê thương hiệu
@@ -453,7 +443,7 @@
                     </button>
                     <ul class="sub" id="admin-sidebar-group-sliders">
                         <li class="{{ $sidebarItemClass($matchesSidebarRoute(['manage-slider'])) }}">
-                            <a href="{{ URL::to('/manage-slider') }}"
+                            <a href="{{ route('admin.banners.management') }}"
                                 data-admin-sidebar-key="manage-slider"
                                 @if ($matchesSidebarRoute(['manage-slider'])) aria-current="page" @endif>
                                 Danh sách trình chiếu
@@ -581,14 +571,14 @@
                     </button>
                     <ul class="sub" id="admin-sidebar-group-posts">
                         <li class="{{ $sidebarItemClass($matchesSidebarRoute(['add-post'])) }}">
-                            <a href="{{ URL::to('/add-post') }}"
+                            <a href="{{ route('admin.posts.create') }}"
                                 data-admin-sidebar-key="add-post"
                                 @if ($matchesSidebarRoute(['add-post'])) aria-current="page" @endif>
                                 Thêm bài viết
                             </a>
                         </li>
                         <li class="{{ $sidebarItemClass($matchesSidebarRoute(['all-post', 'edit-post/*'])) }}">
-                            <a href="{{ URL::to('/all-post') }}"
+                            <a href="{{ route('admin.posts.management') }}"
                                 data-admin-sidebar-key="all-post"
                                 @if ($matchesSidebarRoute(['all-post', 'edit-post/*'])) aria-current="page" @endif>
                                 Liệt kê bài viết
@@ -597,24 +587,14 @@
                     </ul>
                     </li>
 
-                    <li class="{{ $sidebarItemClass($videoActive, true) }}" data-admin-sidebar-group="videos">
-                    <button type="button"
-                        class="{{ $sidebarLinkClass($videoActive, true) }}"
-                        data-admin-sidebar-trigger="videos"
-                        aria-expanded="{{ $videoActive ? 'true' : 'false' }}"
-                        aria-controls="admin-sidebar-group-videos">
-                        <i class="fa fa-video-camera"></i>
-                        <span>Video</span>
-                    </button>
-                    <ul class="sub" id="admin-sidebar-group-videos">
-                        <li class="{{ $sidebarItemClass($matchesSidebarRoute(['video'])) }}">
-                            <a href="{{ URL::to('video') }}"
-                                data-admin-sidebar-key="video"
-                                @if ($matchesSidebarRoute(['video'])) aria-current="page" @endif>
-                                Thêm video
-                            </a>
-                        </li>
-                    </ul>
+                    <li class="{{ $sidebarItemClass($videoActive) }}">
+                        <a class="{{ $sidebarLinkClass($videoActive) }}"
+                            href="{{ URL::to('video') }}"
+                            data-admin-sidebar-key="video"
+                            @if ($videoActive) aria-current="page" @endif>
+                            <i class="fa fa-video-camera"></i>
+                            <span>Video</span>
+                        </a>
                     </li>
                 @endif
 
@@ -661,24 +641,14 @@
                 @endif
 
                 @if ($canManageDocuments)
-                    <li class="{{ $sidebarItemClass($documentActive, true) }}" data-admin-sidebar-group="documents">
-                    <button type="button"
-                        class="{{ $sidebarLinkClass($documentActive, true) }}"
-                        data-admin-sidebar-trigger="documents"
-                        aria-expanded="{{ $documentActive ? 'true' : 'false' }}"
-                        aria-controls="admin-sidebar-group-documents">
-                        <i class="fa fa-folder-open"></i>
-                        <span>Tài liệu</span>
-                    </button>
-                    <ul class="sub" id="admin-sidebar-group-documents">
-                        <li class="{{ $sidebarItemClass($matchesSidebarRoute(['read_data'])) }}">
-                            <a href="{{ URL::to('/read_data') }}"
-                                data-admin-sidebar-key="read-data"
-                                @if ($matchesSidebarRoute(['read_data'])) aria-current="page" @endif>
-                                Kho tài liệu
-                            </a>
-                        </li>
-                    </ul>
+                    <li class="{{ $sidebarItemClass($documentActive) }}">
+                        <a class="{{ $sidebarLinkClass($documentActive) }}"
+                            href="{{ URL::to('/read_data') }}"
+                            data-admin-sidebar-key="read-data"
+                            @if ($documentActive) aria-current="page" @endif>
+                            <i class="fa fa-folder-open"></i>
+                            <span>Tài liệu</span>
+                        </a>
                     </li>
                 @endif
             </ul>

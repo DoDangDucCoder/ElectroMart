@@ -1,9 +1,10 @@
 @php
     $cards = collect($cards ?? [])->values();
+    $cards = $cards->take($cards->count() >= 8 ? 8 : min(4, $cards->count()));
     $title = $title ?? 'Sản phẩm nổi bật';
     $description = $description ?? 'Những mẫu đang được quan tâm nhiều trên storefront.';
     $ctaLabel = $ctaLabel ?? 'Xem thêm sản phẩm';
-    $ctaUrl = $ctaUrl ?? url('/tim-kiem');
+    $ctaUrl = $ctaUrl ?? url('/san-pham');
 @endphp
 
 @if ($cards->isNotEmpty())
@@ -139,7 +140,7 @@
                 position: relative;
                 z-index: 1;
                 display: grid;
-                grid-template-columns: repeat(5, minmax(0, 1fr));
+                grid-template-columns: repeat(4, minmax(0, 1fr));
                 gap: 16px;
             }
 
@@ -323,7 +324,7 @@
 
             @media (max-width: 1199px) {
                 .g-home .shopw-featured-showcase-grid {
-                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
                 }
             }
 
@@ -382,7 +383,7 @@
                             <i class="fa fa-heart-o"></i>
                         </span>
 
-                        <a href="{{ $card['url'] ?? url('/tim-kiem') }}" class="shopw-featured-showcase-card-link">
+                        <a href="{{ $card['url'] ?? url('/san-pham') }}" class="shopw-featured-showcase-card-link">
                             <span class="shopw-featured-showcase-media">
                                 <img src="{{ $card['image'] }}" alt="{{ $card['name'] }}">
                             </span>

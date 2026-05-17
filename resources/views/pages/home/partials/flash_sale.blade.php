@@ -5,7 +5,7 @@
     $flashSaleTitle = $flashSaleTitle !== '' ? $flashSaleTitle : 'KHUYẾN MÃI CHỚP NHOÁNG';
     $flashSaleHeading = trim($flashSaleKicker !== '' ? $flashSaleKicker . ' ' . $flashSaleTitle : $flashSaleTitle);
     $flashSaleCtaLabel = filled($flashSale['cta_label'] ?? null) ? $flashSale['cta_label'] : 'Xem tất cả';
-    $flashSaleCtaUrl = filled($flashSale['cta_url'] ?? null) ? $flashSale['cta_url'] : url('/tim-kiem');
+    $flashSaleCtaUrl = filled($flashSale['cta_url'] ?? null) ? $flashSale['cta_url'] : url('/san-pham');
     $countdownEndsAt = $flashSale['countdown_ends_at'] ?? null;
     if (! filled($countdownEndsAt)) {
         $countdownEndsAt = now()->addHours(4)->addMinutes(7)->addSeconds(46)->toIso8601String();

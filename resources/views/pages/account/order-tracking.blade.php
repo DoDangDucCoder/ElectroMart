@@ -1,6 +1,5 @@
 @extends('layouts.home-tech')
 @section('body_class','accp-page')
-@push('styles')<link href="{{ asset('frontend/css/account-shared.css') }}" rel="stylesheet">@endpush
 @section('content')
 @php
     $statusMap = ['pending' => ['Chờ xác nhận', 'amber'], 'confirmed' => ['Đã xác nhận', 'teal'], 'processing' => ['Đang xử lý', 'teal'], 'shipping' => ['Đang giao', 'blue'], 'shipped' => ['Đang giao', 'blue'], 'completed' => ['Hoàn thành', 'green'], 'cancelled' => ['Đã hủy', 'red']];
@@ -83,7 +82,7 @@
                 <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid #f3f4f6">
                     <div style="width:64px;height:64px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
                         @if($item->product && $item->product->product_image)
-                        <img src="{{ asset($item->product->product_image) }}" alt="" style="width:100%;height:100%;object-fit:cover">
+                        <img src="{{ \App\Support\AssetUrl::productVariant($item->product->product_image, 'thumb') }}" alt="" style="width:100%;height:100%;object-fit:cover">
                         @else
                         <i class="fa fa-laptop" style="font-size:28px;color:#0d9488;opacity:.5"></i>
                         @endif

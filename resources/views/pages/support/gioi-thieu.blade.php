@@ -1,12 +1,15 @@
 @extends('layouts.home-tech')
-@section('body_class','policy-page about-page')
+
 @php
-$meta_desc=$meta_desc??'Giới thiệu về DangDuc - Đồng hành cùng hiệu năng đỉnh cao, phân phối laptop, PC và linh kiện chính hãng';
-$meta_keywords=$meta_keywords??'giới thiệu, về chúng tôi, DangDuc, about us';
-$url_canonical=$url_canonical??url('/gioi-thieu');
-$meta_title=$meta_title??'Giới thiệu - DangDuc';
+    $meta_desc = $meta_desc ?? 'Giới thiệu về DangDuc - Đồng hành cùng hiệu năng đỉnh cao, phân phối laptop, PC và linh kiện chính hãng';
+    $meta_keywords = $meta_keywords ?? 'giới thiệu, về chúng tôi, DangDuc, about us';
+    $meta_title = $meta_title ?? 'Giới thiệu - DangDuc';
+    $url_canonical = $url_canonical ?? url('/gioi-thieu');
 @endphp
-@push('styles')<link href="{{ asset('frontend/css/policy-page.css') }}" rel="stylesheet">
+
+@section('body_class', 'policy-page about-page')
+
+@push('styles')
 <style>
 .about-hero{display:flex;align-items:center;gap:48px;padding:48px 0;margin-bottom:32px}
 .about-hero-copy{flex:1}
@@ -40,13 +43,22 @@ $meta_title=$meta_title??'Giới thiệu - DangDuc';
 @endpush
 @section('content')
 <div class="pp-wrap">
-    @include('partials.storefront.breadcrumb', ['class' => 'pp-breadcrumb', 'separator' => '›', 'items' => [['label' => 'Giới thiệu', 'current' => true]]])
+    @include('partials.storefront.breadcrumb', [
+        'class' => 'pp-breadcrumb',
+        'separator' => '›',
+        'items' => [
+            [
+                'label' => 'Giới thiệu',
+                'current' => true,
+            ],
+        ],
+    ])
 
     {{-- Hero --}}
     <section class="about-hero">
         <div class="about-hero-copy">
             <div class="label">VỀ CHÚNG TÔI</div>
-            <h1>DangDuc – Đồng hành cùng<br><span>hiệu năng đỉnh cao</span></h1>
+            <h1>DangDuc – Đồng hành cùng <br> <span>hiệu năng đỉnh cao</span></h1>
             <p>DangDuc là hệ thống phân phối laptop, PC, workstation và linh kiện chính hãng hàng đầu tại Việt Nam. Chúng tôi cam kết mang đến cho khách hàng những sản phẩm chất lượng – giá tốt – dịch vụ chuyên nghiệp để đáp ứng mọi nhu cầu từ học tập, làm việc đến gaming và sáng tạo.</p>
             <a href="#" class="about-hero-cta">Tìm hiểu thêm về DangDuc <i class="fa fa-arrow-right"></i></a>
         </div>

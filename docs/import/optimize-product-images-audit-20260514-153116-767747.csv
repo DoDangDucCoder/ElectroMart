@@ -1,0 +1,4 @@
+source_path,source_type,product_id,source_bytes,source_width,source_height,variant,target_width,optimized_path,optimized_bytes,saved_bytes,status,message
+uploads/products/1334/cellphones-honor-x9d-5g-12gb-256gb-81cfd8d6-main.jpg,thumbnail,1334,83542,1200,1200,thumb,360,uploads/products/1334/_optimized/cellphones-honor-x9d-5g-12gb-256gb-81cfd8d6-main-thumb.webp,7260,76282,created,"Optimized variant created."
+uploads/products/1334/cellphones-honor-x9d-5g-12gb-256gb-81cfd8d6-main.jpg,thumbnail,1334,83542,1200,1200,medium,800,uploads/products/1334/_optimized/cellphones-honor-x9d-5g-12gb-256gb-81cfd8d6-main-medium.webp,21738,61804,created,"Optimized variant created."
+uploads/products/1334/cellphones-honor-x9d-5g-12gb-256gb-81cfd8d6-main.jpg,thumbnail,1334,83542,1200,1200,large,1200,uploads/products/1334/_optimized/cellphones-honor-x9d-5g-12gb-256gb-81cfd8d6-main-large.webp,42958,40584,created,"Optimized variant created."

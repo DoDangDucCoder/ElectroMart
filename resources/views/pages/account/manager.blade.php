@@ -191,7 +191,7 @@
                             <li><i class="fa fa-check"></i> Không chia sẻ thông tin thẻ với người khác.</li>
                             <li><i class="fa fa-check"></i> Bật xác thực 2 lớp để bảo vệ tài khoản.</li>
                         </ul>
-                        <a href="{{ url('/chinh-sach-bao-mat') }}" class="pmpage-aside-link">Xem thêm mẹo bảo mật <i class="fa fa-angle-right"></i></a>
+                        <a href="{{ url('/cham-soc-khach-hang/bao-mat') }}" class="pmpage-aside-link">Xem thêm mẹo bảo mật <i class="fa fa-angle-right"></i></a>
                     </div>
 
                     <div class="pmpage-aside-card">
@@ -218,7 +218,7 @@
                             <span>Tối đa 100.000đ</span>
                         </div>
                         <p>Khi chuyển khoản trước</p>
-                        <a href="{{ url('/huong-dan-thanh-toan') }}" class="pmpage-aside-link">Xem chi tiết <i class="fa fa-angle-right"></i></a>
+                        <a href="{{ url('/cham-soc-khach-hang/huong-dan-thanh-toan') }}" class="pmpage-aside-link">Xem chi tiết <i class="fa fa-angle-right"></i></a>
                     </div>
                 </aside>
             </div>

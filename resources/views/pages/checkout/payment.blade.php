@@ -13,6 +13,7 @@
             ])
 
             <div class="review-payment">
+                <h1>Phương thức thanh toán</h1>
                 <h2>Xem lại giỏ hàng</h2>
             </div>
 
@@ -30,7 +31,7 @@
                     <tbody>
                         @forelse ($cartItems as $item)
                             @php
-                                $image = \App\Support\AssetUrl::product($item['product_image'] ?? null);
+                                $image = \App\Support\AssetUrl::productVariant($item['product_image'] ?? null, 'thumb');
                                 $subtotal = (float) $item['product_price'] * (int) $item['product_qty'];
                             @endphp
                             <tr>

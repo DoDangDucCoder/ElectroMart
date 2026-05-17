@@ -17,7 +17,7 @@
                     <span>Biến thể đang có</span>
                 </article>
                 <article>
-                    <strong>{{ $selectedPreview['snapshot'] ?? 'Chưa có' }}</strong>
+                    <strong>{{ $selectedPreview['snapshot_label'] ?? 'Chưa có' }}</strong>
                     <span>Bản lưu đang khóa</span>
                 </article>
             </div>
@@ -59,7 +59,7 @@
                     <div>{{ $selectedPreview['label'] }}</div>
                     <p>{{ $selectedPreview['description'] }}</p>
                 </div>
-                <span class="g-admin-status-chip is-info">{{ $selectedPreview['snapshot'] }}</span>
+                <span class="g-admin-status-chip is-info">{{ $selectedPreview['snapshot_label'] ?? $selectedPreview['label'] }}</span>
             </div>
             <div class="g-admin-panel-body">
                 <iframe

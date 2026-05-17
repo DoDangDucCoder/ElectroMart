@@ -1,6 +1,5 @@
 @extends('layouts.home-tech')
 @section('body_class','accp-page')
-@push('styles')<link href="{{ asset('frontend/css/account-shared.css') }}" rel="stylesheet">@endpush
 @section('content')
 <div class="accp-wrap">
     @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Tài khoản', 'url' => url('/account')], ['label' => 'Sản phẩm yêu thích', 'current' => true]]])
@@ -33,7 +32,7 @@
                         <button class="wl-heart active"><i class="fa fa-heart"></i></button>
                         @if($discountPercent > 0)<span class="wl-disc">-{{ $discountPercent }}%</span>@endif
                         @if($p->product_image)
-                        <img src="{{ asset($p->product_image) }}" alt="{{ $p->name }}" style="width:100%;height:100%;object-fit:contain">
+                        <img src="{{ \App\Support\AssetUrl::productVariant($p->product_image, 'thumb') }}" alt="{{ $p->name }}" style="width:100%;height:100%;object-fit:contain">
                         @else
                         <i class="fa fa-laptop" style="font-size:48px;color:#0d9488;opacity:.3"></i>
                         @endif

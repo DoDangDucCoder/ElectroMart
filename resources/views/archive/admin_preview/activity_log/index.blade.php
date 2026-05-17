@@ -1,7 +1,5 @@
 @extends('admin_layout')
 @section('admin_content')
-<link rel="stylesheet" href="{{ asset('backend/css/admin-dashboard.css') }}">
-<link rel="stylesheet" href="{{ asset('backend/css/admin-pages.css') }}">
 @php
 $logs = [
     ['id'=>'LOG001','time'=>'24/05/2025 10:28','user'=>'Nguyễn Văn An','type'=>'Đăng nhập','type_class'=>'blue','module'=>'Hệ thống','desc'=>'Đăng nhập thành công từ IP 192.168.1.100','ip'=>'192.168.1.100','device'=>'Chrome/Win','level'=>'Thông tin','level_class'=>'blue'],

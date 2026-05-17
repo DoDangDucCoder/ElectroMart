@@ -1,7 +1,5 @@
 @extends('admin_layout')
 @section('admin_content')
-<link rel="stylesheet" href="{{ asset('backend/css/admin-dashboard.css') }}">
-<link rel="stylesheet" href="{{ asset('backend/css/admin-pages.css') }}">
 <div class="adm-page">
     <div class="adm-page-title">
         <h1><i class="fa fa-tachometer" style="color:var(--adm-teal);margin-right:8px"></i>Tổng quan Admin</h1>

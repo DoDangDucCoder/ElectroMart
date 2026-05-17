@@ -14,7 +14,7 @@
                     <article class="tech-news-card">
                         <a href="{{ $news['url'] }}" class="tech-news-thumb">
                             @if (!empty($news['thumbnail']))
-                                <img src="{{ $news['thumbnail'] }}" alt="{{ $news['title'] }}">
+                                <img src="{{ $news['thumbnail'] }}" alt="{{ $news['title'] }}" loading="lazy" decoding="async">
                             @endif
                         </a>
                         <div class="tech-news-body">

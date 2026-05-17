@@ -16,8 +16,10 @@ use App\Http\Controllers\PayPalController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\VideoController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Session;
 
 // Đổi ngôn ngữ giao diện (hiện chuẩn hóa về tiếng Việt)
 Route::get('lang/{locale}', function ($locale) {
@@ -40,10 +42,11 @@ Route::match(['get', 'post'], '/tim-kiem', [HomeController::class, 'search']);
 Route::match(['get', 'post'], '/san-pham', [HomeController::class, 'products']);
 Route::get('/san-pham-ban-chay', [HomeController::class, 'best_selling']);
 Route::post('/autocomplete-ajax', [HomeController::class, 'autocomplete_ajax']);
-Route::get('/yeu-thich', [HomeController::class, 'yeu_thich']);
-Route::get('/goi-y-san-pham', [HomeController::class, 'recommendations']);
+Route::get('/yeu-thich', fn () => redirect()->route('customer.account.wishlist', [], 301));
+Route::get('/goi-y-san-pham', fn () => redirect()->to(url('/san-pham?mode=recommendations'), 301));
 Route::get('/khuyen-mai', [HomeController::class, 'khuyenMai']);
 Route::get('/kiem-tra-don-hang', [HomeController::class, 'orderTracking']);
+Route::redirect('/order_tracking', '/kiem-tra-don-hang', 301);
 Route::get('/chatbot/conversation', [ChatController::class, 'conversation']);
 Route::post('/chatbot/messages', [ChatController::class, 'store']);
 
@@ -53,33 +56,79 @@ Route::post('/lien-he', [ContactController::class, 'submitContact']);
 
 // Customer support center
 Route::view('/cham-soc-khach-hang', 'pages.support.index')->name('support.index');
-Route::view('/cau-hoi-thuong-gap', 'pages.support.faq')->name('support.faq');
-Route::view('/chinh-sach-bao-hanh', 'pages.support.warranty')->name('support.warranty');
-Route::view('/chinh-sach-doi-tra', 'pages.support.doi-tra')->name('support.doi-tra');
-Route::view('/chinh-sach-bao-mat', 'pages.support.bao-mat')->name('support.bao-mat');
-Route::view('/chinh-sach-thanh-toan', 'pages.support.thanh-toan')->name('support.thanh-toan');
-Route::view('/chinh-sach-van-chuyen', 'pages.support.van-chuyen')->name('support.van-chuyen');
-Route::view('/dieu-khoan-su-dung', 'pages.support.dieu-khoan')->name('support.dieu-khoan');
-Route::view('/huong-dan-mua-hang', 'pages.support.huong-dan-mua-hang')->name('support.huong-dan-mua-hang');
-Route::view('/huong-dan-thanh-toan', 'pages.support.huong-dan-thanh-toan')->name('support.huong-dan-thanh-toan');
-Route::view('/gioi-thieu', 'pages.support.gioi-thieu')->name('support.gioi-thieu');
+Route::redirect('/support/index', '/cham-soc-khach-hang', 301);
+$supportPages = [
+    'faq' => ['/cau-hoi-thuong-gap', 'pages.support.faq', 'support.faq'],
+    'bao-hanh' => ['/chinh-sach-bao-hanh', 'pages.support.warranty', 'support.warranty'],
+    'doi-tra' => ['/chinh-sach-doi-tra', 'pages.support.doi-tra', 'support.doi-tra'],
+    'bao-mat' => ['/chinh-sach-bao-mat', 'pages.support.bao-mat', 'support.bao-mat'],
+    'thanh-toan' => ['/chinh-sach-thanh-toan', 'pages.support.thanh-toan', 'support.thanh-toan'],
+    'van-chuyen' => ['/chinh-sach-van-chuyen', 'pages.support.van-chuyen', 'support.van-chuyen'],
+    'dieu-khoan' => ['/dieu-khoan-su-dung', 'pages.support.dieu-khoan', 'support.dieu-khoan'],
+    'huong-dan-mua-hang' => ['/huong-dan-mua-hang', 'pages.support.huong-dan-mua-hang', 'support.huong-dan-mua-hang'],
+    'huong-dan-thanh-toan' => ['/huong-dan-thanh-toan', 'pages.support.huong-dan-thanh-toan', 'support.huong-dan-thanh-toan'],
+    'gioi-thieu' => ['/gioi-thieu', 'pages.support.gioi-thieu', 'support.gioi-thieu'],
+];
+foreach ($supportPages as $slug => [$legacyPath, $view, $name]) {
+    Route::get('/cham-soc-khach-hang/'.$slug, fn () => view($view, [
+        'url_canonical' => url('/cham-soc-khach-hang/'.$slug),
+    ]))->name($name);
+    Route::redirect($legacyPath, '/cham-soc-khach-hang/'.$slug, 301);
+}
+Route::redirect('/about', '/cham-soc-khach-hang/gioi-thieu', 301);
 
 // Catalog & product detail
-Route::get('/danh-muc/{slug_category_product}', [CategoryProduct::class, 'show_category_home']);
+Route::get('/danh-muc/{slug_category_product}', function (Request $request, string $slug_category_product) {
+    return redirect()->to(url('/san-pham').'?'.http_build_query(array_merge($request->query(), [
+        'category' => $slug_category_product,
+    ])), 301);
+});
 Route::post('/product-tabs', [CategoryProduct::class, 'product_tabs']);
 Route::get('/chi-tiet/{product_slug}', [ProductController::class, 'details_product']);
-Route::get('/tag/{product_tag}', [ProductController::class, 'tag']);
+Route::get('/tag/{product_tag}', function (Request $request, string $product_tag) {
+    return redirect()->to(url('/san-pham').'?'.http_build_query(array_merge($request->query(), [
+        'tag' => $product_tag,
+    ])), 301);
+});
 Route::post('/quickview', [ProductController::class, 'quickview']);
 Route::post('/load-comment', [ProductController::class, 'load_comment']);
 Route::post('/send-comment', [ProductController::class, 'send_comment']);
 Route::post('/insert-rating', [ProductController::class, 'insert_rating']);
-Route::get('/so-sanh', [CompareController::class, 'index']);
+Route::get('/so-sanh', function (Request $request) {
+    $firstId = collect(explode(',', (string) $request->query('ids')))
+        ->map(fn ($id) => (int) $id)
+        ->filter()
+        ->first();
+
+    if ($firstId) {
+        $product = \App\Infrastructure\Persistence\Eloquent\Catalog\Product::query()
+            ->whereKey($firstId)
+            ->where('is_active', true)
+            ->first();
+
+        if ($product) {
+            $slug = $product->product_slug ?? $product->slug;
+
+            return redirect()->to(url('/chi-tiet/'.$slug).'?compare=1#so-sanh-nhanh', 301);
+        }
+    }
+
+    return redirect()->to(url('/san-pham'), 301);
+});
 
 // Blog
 Route::get('/bai-viet', [PostController::class, 'index'])->name('blog.index');
-Route::get('/danh-muc-bai-viet/{post_slug}', [PostController::class, 'danh_muc_bai_viet']);
+Route::get('/danh-muc-bai-viet/{post_slug}', function (Request $request, string $post_slug) {
+    return redirect()->to(url('/bai-viet').'?'.http_build_query(array_merge($request->query(), [
+        'category' => $post_slug,
+    ])), 301);
+});
 Route::get('/bai-viet/{post_slug}', [PostController::class, 'bai_viet']);
-Route::get('/thuong-hieu/{brandSlug}', [BrandProduct::class, 'show_brand_home']);
+Route::get('/thuong-hieu/{brandSlug}', function (Request $request, string $brandSlug) {
+    return redirect()->to(url('/san-pham').'?'.http_build_query(array_merge($request->query(), [
+        'brand' => $brandSlug,
+    ])), 301);
+});
 
 // Coupon (customer side)
 Route::post('/check-coupon', [CartController::class, 'check_coupon']);
@@ -125,6 +174,8 @@ Route::get('/logout-checkout', fn () => Redirect::to('/dang-nhap')
 Route::post('/add-customer', [CheckoutController::class, 'add_customer']);
 Route::post('/login-customer', [CheckoutController::class, 'login_customer']);
 Route::get('/checkout', [CheckoutController::class, 'checkout'])->name('checkout');
+Route::redirect('/thanh-toan', '/checkout', 301);
+Route::post('/checkout', [CheckoutController::class, 'select_checkout_items']);
 Route::get('/payment', [CheckoutController::class, 'payment']);
 Route::post('/calculate-fee', [CheckoutController::class, 'calculate_fee']);
 Route::post('/select-delivery-home', [CheckoutController::class, 'select_delivery_home']);
@@ -132,11 +183,18 @@ Route::post('/confirm-order', [CheckoutController::class, 'confirm_order']);
 
 // Order result pages
 Route::get('/dat-hang-thanh-cong/{order_code}', [CheckoutController::class, 'orderSuccess'])->name('order.success');
+Route::redirect('/thank-you', '/account/orders', 301);
 Route::get('/dat-hang-that-bai/{order_code}', [CheckoutController::class, 'orderFailed'])->name('order.failed');
 
 // Customer order history
-Route::get('/view-history-order/{order_code}', [OrderController::class, 'view_history_order']);
-Route::get('/history', [OrderController::class, 'history']);
+Route::get('/view-history-order/{order_code}', function (Request $request, string $order_code) {
+    if (! Session::get('customer_id') && Session::get('guest_order_code') === $order_code) {
+        return app(OrderController::class)->view_history_order($request, $order_code);
+    }
+
+    return redirect()->route('customer.account.order-tracking', ['orderCode' => $order_code], 301);
+});
+Route::redirect('/history', '/account/orders', 301);
 Route::post('/huy-don-hang', [OrderController::class, 'huy_don_hang']);
 
 // Bank transfer instruction page
@@ -150,7 +208,7 @@ Route::get('/login-customer-google', [AdminController::class, 'login_customer_go
 Route::get('/customer/google/callback', [AdminController::class, 'callback_customer_google']);
 
 // Video for storefront
-Route::redirect('video-shop', '/bai-viet', 302);
+Route::redirect('video-shop', '/bai-viet', 301);
 Route::post('watch-video', [VideoController::class, 'watch_video']);
 
 // Forgot password flow
@@ -168,27 +226,27 @@ Route::get('cancel-transaction', [PayPalController::class, 'cancelTransaction'])
 
 // Compatibility redirects for old Laravel scaffold auth URLs.
 // Official auth flows live under the custom admin/customer routes above.
-Route::get('/login', fn () => Redirect::to('/admin'))->name('login');
+Route::get('/login', fn () => Redirect::to('/admin', 301))->name('login');
 Route::post('/login', fn () => Redirect::to('/admin')
     ->with('error', 'Vui lòng đăng nhập bằng trang quản trị chính thức.'));
 
-Route::get('/register', fn () => Redirect::to('/admin/register'));
+Route::get('/register', fn () => Redirect::to('/admin/register', 301));
 Route::post('/register', fn () => Redirect::to('/admin/register')
     ->with('error', 'Vui lòng đăng ký bằng trang quản trị chính thức.'));
 
-Route::get('/password/reset', fn () => Redirect::to('/admin/forgot-password'));
+Route::get('/password/reset', fn () => Redirect::to('/admin/forgot-password', 301));
 Route::post('/password/email', fn () => Redirect::to('/admin/forgot-password')
     ->with('error', 'Vui lòng dùng trang quên mật khẩu quản trị chính thức.'));
 Route::get('/password/reset/{token}', function (string $token) {
     $email = request()->query('email');
     $query = $email ? '?'.http_build_query(['email' => $email]) : '';
 
-    return Redirect::to('/admin/reset-password/'.$token.$query);
+    return Redirect::to('/admin/reset-password/'.$token.$query, 301);
 });
 Route::post('/password/reset', fn () => Redirect::to('/admin/forgot-password')
     ->with('error', 'Vui lòng dùng trang đặt lại mật khẩu quản trị chính thức.'));
 
-Route::get('/password/confirm', fn () => Redirect::to('/admin'));
+Route::get('/password/confirm', fn () => Redirect::to('/admin', 301));
 Route::post('/password/confirm', fn () => Redirect::to('/admin'));
 Route::post('/logout', fn () => Redirect::to('/admin')
     ->with('error', 'Vui lòng đăng xuất bằng luồng đăng xuất chính thức.'));

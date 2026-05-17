@@ -22,7 +22,7 @@
 </head>
 <body>
     <div style="max-width: 600px; margin: 0 auto;">
-        <a href="{{ url('/history') }}" class="back-btn">&larr; Quay lại</a>
+        <a href="{{ url('/account/orders') }}" class="back-btn">&larr; Quay lại</a>
     </div>
     <div class="vnpay-container">
         <div class="vnpay-header">

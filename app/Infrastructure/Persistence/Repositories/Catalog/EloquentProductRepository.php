@@ -17,6 +17,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
         $query = Product::with([
             'brand',
             'categories',
+            'primaryCategory',
             'media' => fn ($query) => $query->orderBy('display_order')->orderBy('id'),
             'variants.attributeValues.attribute',
         ])
@@ -73,7 +74,7 @@ class EloquentProductRepository implements ProductRepositoryInterface
 
     public function relatedProducts(Product $product, int $limit = 6): Collection
     {
-        $query = Product::with(['brand', 'categories'])
+        $query = Product::with(['brand', 'categories', 'primaryCategory'])
             ->where('id', '!=', $product->id)
             ->where('is_active', true)
             ->withCompleteStorefrontMedia()

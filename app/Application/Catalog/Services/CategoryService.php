@@ -24,12 +24,16 @@ class CategoryService
 
     public function listAll(array $filters = []): Collection
     {
+        if ($this->isActiveOnlyFilter($filters)) {
+            return $this->cache->getCategories();
+        }
+
         return $this->categories->all($filters);
     }
 
     public function listActive(): Collection
     {
-        return $this->categories->all(['is_active' => true]);
+        return $this->cache->getCategories();
     }
 
     public function listRootActive(): Collection
@@ -42,7 +46,7 @@ class CategoryService
 
     public function getCategoryTree(): array
     {
-        $categories = $this->categories->all(['is_active' => true]);
+        $categories = $this->listActive();
 
         $grouped = $categories->groupBy(static function ($category) {
             return $category->parent_id ?? 0;
@@ -119,7 +123,20 @@ class CategoryService
 
     public function findActiveBySlug(string $slug): ?ProductCategory
     {
-        return $this->categories->findBySlug($slug, true);
+        return $this->cache->getCategoryBySlug($this->resolveStorefrontSlug($slug));
+    }
+
+    public function resolveStorefrontSlug(string $slug): string
+    {
+        return [
+            'may-tinh' => 'may-tinh-bang',
+            'tablet' => 'may-tinh-bang',
+            'audio' => 'am-thanh',
+            'phu-tung' => 'phu-kien',
+            'may-anh' => 'may-anh-cu',
+            'smartwatch' => 'dong-ho-thong-minh',
+            'gaming' => 'laptop-gaming',
+        ][$slug] ?? $slug;
     }
 
     public function getDescendantIds(ProductCategory $category, bool $onlyActive = true): array
@@ -159,5 +176,12 @@ class CategoryService
         ];
 
         return $payload;
+    }
+
+    protected function isActiveOnlyFilter(array $filters): bool
+    {
+        return count($filters) === 1
+            && array_key_exists('is_active', $filters)
+            && (bool) $filters['is_active'] === true;
     }
 }

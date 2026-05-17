@@ -20,6 +20,9 @@ class EloquentCategoryRepository implements CategoryRepositoryInterface
     public function all(array $filters = []): Collection
     {
         return $this->applyFilters(ProductCategory::query(), $filters)
+            ->withCount(['products' => function ($q) {
+                $q->where('products.is_active', true);
+            }])
             ->orderBy('display_order')
             ->orderByDesc('id')
             ->get();

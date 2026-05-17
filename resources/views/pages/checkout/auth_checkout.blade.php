@@ -300,7 +300,7 @@
                     </div>
                     <div class="dd-auth-logged-actions">
                         <a href="{{ $authRedirectUrl }}" class="primary">{{ $authContinueLabel }}</a>
-                        <a href="{{ url('/history') }}" class="ghost">Đơn hàng của tôi</a>
+                        <a href="{{ url('/account/orders') }}" class="ghost">Đơn hàng của tôi</a>
                         <form method="POST" action="{{ url('/dang-xuat-khach-hang') }}">
                             @csrf
                             <input type="hidden" name="redirect" value="{{ $authRedirectKey ?? 'login' }}">
@@ -375,7 +375,7 @@
                                 Tôi đồng ý với
                                 <a href="{{ url('/dieu-khoan-su-dung') }}" target="_blank" rel="noopener">Điều khoản sử dụng</a>
                                 và
-                                <a href="{{ url('/chinh-sach-bao-mat') }}" target="_blank" rel="noopener">Chính sách bảo mật</a>
+                                <a href="{{ url('/cham-soc-khach-hang/bao-mat') }}" target="_blank" rel="noopener">Chính sách bảo mật</a>
                                 của DangDuc.
                             </span>
                         </label>

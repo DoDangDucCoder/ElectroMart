@@ -48,7 +48,7 @@
                             value="{{ $search }}">
                     </div>
                     <button type="submit" class="btn btn-sm btn-primary mr-2">Lọc</button>
-                    <a href="{{ url('/all-brand-product') }}" class="btn btn-sm btn-default">Xóa lọc</a>
+                    <a href="{{ route('admin.brands.management') }}" class="btn btn-sm btn-default">Xóa lọc</a>
                 </form>
 
                 <div class="table-responsive">

@@ -1,6 +1,5 @@
 @extends('admin_layout')
 @section('admin_content')
-<link rel="stylesheet" href="{{ asset('backend/css/admin-dashboard.css') }}">
 <div class="adm-page">
     <div class="adm-page-title"><h1><i class="fa fa-tags" style="color:#0d9488;margin-right:6px"></i>Quản lý mã giảm giá / voucher</h1><div class="crumb"><a href="{{ url('/dashboard') }}">Trang chủ</a> › <a href="#">Khuyến mãi</a> › Quản lý voucher</div></div>
 

@@ -430,6 +430,28 @@
   gap: 8px;
 }
 
+.g-admin-user-actions {
+  width: 192px;
+  max-width: 100%;
+}
+
+.g-admin-user-actions .btn,
+.g-admin-user-actions form {
+  width: 100%;
+}
+
+.g-admin-user-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
 .g-admin-chip-grid {
   display: flex;
   flex-wrap: wrap;
@@ -602,6 +624,95 @@
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 20px;
+}
+
+.g-admin-chat-toolbar {
+  grid-template-columns:
+    minmax(180px, 220px)
+    minmax(180px, 220px)
+    minmax(180px, 220px)
+    minmax(190px, 220px)
+    minmax(260px, auto);
+  align-items: end;
+}
+
+.g-admin-chat-toolbar .form-group {
+  margin-bottom: 0;
+}
+
+.g-admin-chat-toolbar-actions .g-admin-inline-actions {
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.g-admin-chat-toolbar-actions .btn {
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.g-admin-compact-filter {
+  grid-template-columns: repeat(2, minmax(180px, 220px)) minmax(280px, auto);
+  align-items: end;
+}
+
+.g-admin-compact-filter .form-group,
+.g-admin-filter-actions .g-admin-inline-actions {
+  margin-bottom: 0;
+}
+
+.g-admin-filter-actions .g-admin-inline-actions,
+.g-admin-contact-filter-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.g-admin-filter-actions .btn,
+.g-admin-contact-filter-actions .btn {
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.g-admin-contact-filter {
+  display: grid;
+  grid-template-columns:
+    minmax(260px, 1.6fr)
+    minmax(150px, 0.8fr)
+    minmax(150px, 0.8fr)
+    minmax(150px, 0.8fr)
+    minmax(120px, 0.6fr)
+    minmax(210px, auto);
+  gap: 16px;
+  align-items: end;
+}
+
+.g-admin-contact-filter label {
+  display: block;
+}
+
+.g-admin-contact-filter .form-control {
+  width: 100%;
+}
+
+@media (max-width: 1399px) {
+  .g-admin-chat-toolbar {
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+  }
+
+  .g-admin-chat-toolbar-actions {
+    grid-column: 1 / -1;
+  }
+
+  .g-admin-contact-filter {
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+  }
+
+  .g-admin-contact-filter-keyword,
+  .g-admin-contact-filter-actions {
+    grid-column: span 3;
+  }
 }
 
 .g-admin-report-summary {

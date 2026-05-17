@@ -1,13 +1,14 @@
 @php
     $featuredCategories = [
-        ['name' => 'Laptop', 'icon' => 'fa-laptop', 'query' => 'laptop'],
-        ['name' => 'PC - Linh kiện', 'icon' => 'fa-cogs', 'query' => 'linh kiện'],
-        ['name' => 'Màn hình', 'icon' => 'fa-desktop', 'query' => 'màn hình'],
-        ['name' => 'Bàn phím', 'icon' => 'fa-keyboard-o', 'query' => 'bàn phím'],
-        ['name' => 'Chuột', 'icon' => 'fa-location-arrow', 'query' => 'chuột'],
-        ['name' => 'Tai nghe', 'icon' => 'fa-headphones', 'query' => 'tai nghe'],
-        ['name' => 'Ổ cứng', 'icon' => 'fa-hdd-o', 'query' => 'ổ cứng'],
-        ['name' => 'Phụ kiện khác', 'icon' => 'fa-puzzle-piece', 'query' => 'phụ kiện'],
+        ['name' => 'Laptop', 'icon' => 'fa-laptop', 'url' => url('/danh-muc/laptop')],
+        ['name' => 'PC', 'icon' => 'fa-desktop', 'url' => url('/danh-muc/pc')],
+        ['name' => 'Màn hình', 'icon' => 'fa-desktop', 'url' => url('/danh-muc/man-hinh')],
+        ['name' => 'Linh kiện', 'icon' => 'fa-cogs', 'url' => url('/danh-muc/linh-kien')],
+        ['name' => 'Tự chọn cấu hình', 'icon' => 'fa-tasks', 'url' => url('/danh-muc/pc')],
+        ['name' => 'Card màn hình', 'icon' => 'fa-picture-o', 'url' => url('/danh-muc/card-man-hinh')],
+        ['name' => 'Gaming Gear', 'icon' => 'fa-gamepad', 'url' => url('/danh-muc/gaming-gear')],
+        ['name' => 'RAM', 'icon' => 'fa-list-alt', 'url' => url('/danh-muc/ram')],
+        ['name' => 'SSD', 'icon' => 'fa-hdd-o', 'url' => url('/danh-muc/ssd')],
     ];
 @endphp
 
@@ -22,7 +23,7 @@
 
         <div class="tech-categories-grid">
             @foreach ($featuredCategories as $cat)
-                <a href="{{ url('/tim-kiem?keywords_submit=' . $cat['query']) }}" class="tech-cat-card">
+                <a href="{{ $cat['url'] }}" class="tech-cat-card">
                     <span class="tech-cat-icon">
                         <i class="fa {{ $cat['icon'] }}"></i>
                     </span>

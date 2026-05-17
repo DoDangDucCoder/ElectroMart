@@ -31,7 +31,7 @@
             <div>
                 <span class="g-admin-page-eyebrow">Sản phẩm / Tồn kho</span>
                 <h1>Tồn kho sản phẩm</h1>
-                <p>Dashboard read-only ở cấp sản phẩm, dùng dữ liệu từ products và product_variants. Chưa phải tồn kho theo từng warehouse.</p>
+                <p>Bảng tổng quan chỉ đọc ở cấp sản phẩm, dùng dữ liệu từ sản phẩm và biến thể sản phẩm. Chưa phải tồn kho theo từng kho hàng.</p>
             </div>
             <div class="g-admin-page-stats">
                 <article>
@@ -53,9 +53,9 @@
             <header class="g-admin-panel-head">
                 <div>
                     <strong>Tổng quan tồn kho</strong>
-                    <p>Giá trị tồn kho = stock_quantity * cost_price. Ngưỡng cảnh báo mặc định là {{ $fallbackThreshold }} nếu sản phẩm chưa cấu hình.</p>
+                    <p>Giá trị tồn kho = số lượng tồn * giá vốn. Ngưỡng cảnh báo mặc định là {{ $fallbackThreshold }} nếu sản phẩm chưa cấu hình.</p>
                 </div>
-                <span class="g-admin-status-chip">Read-only</span>
+                <span class="g-admin-status-chip">Chỉ đọc</span>
             </header>
             <div class="g-admin-panel-body">
                 <div class="row" style="row-gap:12px;">

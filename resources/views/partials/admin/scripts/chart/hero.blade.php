@@ -1,5 +1,4 @@
 <!--[if lte IE 8]><script language="javascript" type="text/javascript" src="js/flot-chart/excanvas.min.js"></script><![endif]-->
-<script src="{{ asset('backend/js/jquery.scrollTo.js') }}"></script>
 <script>
     $(function() {
         $('.small-graph-box').hover(function() {

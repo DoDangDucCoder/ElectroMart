@@ -27,7 +27,7 @@
                     <div>Thông tin mã giảm giá</div>
                     <p>Các thay đổi sẽ được lưu vào bảng coupons của schema hiện tại.</p>
                 </div>
-                <a href="{{ url('/list-coupon') }}" class="btn btn-default btn-sm">Quay lại danh sách</a>
+                <a href="{{ route('admin.vouchers') }}" class="btn btn-default btn-sm">Quay lại danh sách</a>
             </div>
             <div class="g-admin-panel-body">
                 @if (session('message'))
@@ -132,7 +132,7 @@
 
                     <div class="g-admin-inline-actions g-admin-form-span-2">
                         <button type="submit" class="btn btn-info">Cập nhật mã</button>
-                        <a href="{{ url('/list-coupon') }}" class="btn btn-default">Hủy</a>
+                        <a href="{{ route('admin.vouchers') }}" class="btn btn-default">Hủy</a>
                     </div>
                 </form>
             </div>

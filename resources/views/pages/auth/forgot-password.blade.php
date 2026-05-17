@@ -5,14 +5,13 @@ $meta_title=$meta_title??'Quên mật khẩu - DangDuc';
 $meta_desc=$meta_desc??'Khôi phục mật khẩu tài khoản DangDuc';
 $url_canonical=$url_canonical??url('/quen-mat-khau');
 @endphp
-@push('styles')<link href="{{ asset('frontend/css/account-shared.css') }}" rel="stylesheet">@endpush
 @section('content')
 <div class="auth-wrap">
     @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Quên mật khẩu', 'current' => true]]])
     <div style="max-width:480px;margin:0 auto;padding:0 16px 40px">
         <div class="auth-card" style="text-align:center">
             <div style="width:64px;height:64px;border-radius:50%;background:#f0fdfa;color:#0d9488;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px"><i class="fa fa-lock"></i></div>
-            <h2 style="font-size:24px;font-weight:800;color:#0f172a;margin:0 0 8px">Quên mật khẩu?</h2>
+            <h1 style="font-size:24px;font-weight:800;color:#0f172a;margin:0 0 8px">Quên mật khẩu?</h1>
             <p style="font-size:14px;color:#6b7280;margin:0 0 24px;line-height:1.5">Nhập email hoặc số điện thoại đã đăng ký, chúng tôi sẽ gửi mã xác nhận để đặt lại mật khẩu.</p>
             <form action="{{ url('/recover-pass') }}" method="POST" style="text-align:left">
                 @csrf

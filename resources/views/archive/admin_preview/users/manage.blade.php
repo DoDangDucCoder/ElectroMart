@@ -1,8 +1,6 @@
 @extends('admin_layout')
 @section('admin_content')
 {{-- Preview-only mock page. Production user management is /users and role management is /index-spatie. --}}
-<link rel="stylesheet" href="{{ asset('backend/css/admin-dashboard.css') }}">
-<link rel="stylesheet" href="{{ asset('backend/css/admin-pages.css') }}">
 @php
 $admins = [
     ['id'=>'QTV001','name'=>'Nguyễn Văn An','email'=>'admin@dangduc.com','phone'=>'0901 234 567','role'=>'Super Admin','role_class'=>'red','dept'=>'Ban giám đốc','login'=>'24/05/2025 10:28','status'=>'Hoạt động','status_class'=>'green','new'=>true],

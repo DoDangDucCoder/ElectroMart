@@ -132,7 +132,7 @@ body.cmp-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
                             <th style="min-width:140px">Sản phẩm</th>
                             @foreach ($products as $product)
                                 @php
-                                    $img = \App\Support\AssetUrl::product($product->product_image);
+                                    $img = \App\Support\AssetUrl::productVariant($product->product_image, 'thumb');
                                     $name = \App\Support\StorefrontLabel::neutralizeSource($product->product_name);
                                     $brand = \App\Support\StorefrontLabel::neutralizeSource($product->brand?->brand_name ?? $product->brand?->name ?? $product->brand_name ?? '-');
                                     $brandInitial = strtoupper(mb_substr($brand, 0, 2));
@@ -144,7 +144,7 @@ body.cmp-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
                                 @endphp
                                 <th class="cmp-prod-cell">
                                     <button type="button" class="cmp-prod-remove" title="Xóa"><i class="fa fa-times"></i></button>
-                                    <div class="cmp-prod-img"><img src="{{ $img }}" alt="{{ $name }}"></div>
+                                    <div class="cmp-prod-img"><img src="{{ $img }}" alt="{{ $name }}" loading="lazy"></div>
                                     <div class="cmp-prod-brand"><span class="badge">{{ $brandInitial }}</span> {{ $brand }}</div>
                                     <div class="cmp-prod-name">{{ $name }}</div>
                                     <div class="cmp-prod-price">
@@ -234,7 +234,7 @@ body.cmp-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
 <script type="text/javascript">
     function clearCompare() {
         localStorage.removeItem('compare');
-        window.location.href = "{{ url('/so-sanh') }}";
+        window.location.href = "{{ url('/san-pham') }}";
     }
     (function pruneInvalidCompareStorage() {
         var validIds = @json($products->pluck('product_id')->map(fn ($id) => (string) $id)->values());

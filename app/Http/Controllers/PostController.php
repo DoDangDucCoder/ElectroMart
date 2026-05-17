@@ -14,6 +14,7 @@ use App\Infrastructure\Persistence\Eloquent\Cms\BlogPost;
 use App\Support\AssetUrl;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class PostController extends Controller
@@ -108,7 +109,15 @@ class PostController extends Controller
 
     public function index(Request $request): View
     {
-        return $this->renderArchive($request, null);
+        $selectedCategory = null;
+        $categorySlug = trim((string) $request->query('category', ''));
+
+        if ($categorySlug !== '') {
+            $selectedCategory = $this->blogCategoryService->findActiveBySlug($categorySlug);
+            abort_if(! $selectedCategory, 404);
+        }
+
+        return $this->renderArchive($request, $selectedCategory);
     }
 
     public function danh_muc_bai_viet(Request $request, string $postSlug): View
@@ -152,11 +161,11 @@ class PostController extends Controller
         );
         $posts->appends($request->query());
 
-        $categoryCounts = \App\Infrastructure\Persistence\Eloquent\Cms\BlogPost::query()
+        $categoryCounts = Cache::remember('storefront.blog.category_counts', 300, fn () => \App\Infrastructure\Persistence\Eloquent\Cms\BlogPost::query()
             ->where('status', 'published')
             ->selectRaw('blog_category_id, COUNT(*) as total')
             ->groupBy('blog_category_id')
-            ->pluck('total', 'blog_category_id');
+            ->pluck('total', 'blog_category_id'));
         $totalPublished = (int) $categoryCounts->sum();
 
         $featuredPosts = $this->blogPostService->getFeaturedPosts(4);
@@ -173,7 +182,7 @@ class PostController extends Controller
             ? ($selectedCategory->cate_post_desc ?: 'Tổng hợp bài viết, tin nhanh và hướng dẫn liên quan đến nhóm nội dung này.')
             : 'Cập nhật xu hướng công nghệ, hướng dẫn sử dụng và mẹo chọn mua sản phẩm phù hợp.';
 
-        return view('pages.baiviet.danhmucbaiviet', [
+        return view('pages.blog.listing', [
             'category' => $productCategories,
             'brand' => $brands,
             'category_post' => $blogCategories,
@@ -204,17 +213,16 @@ class PostController extends Controller
             if (! empty($cat->cate_post_name)) {
                 $keywords[] = [
                     'label' => $cat->cate_post_name,
-                    'url' => url('/danh-muc-bai-viet/' . $cat->cate_post_slug),
+                    'url' => url('/bai-viet?' . http_build_query(['category' => $cat->cate_post_slug])),
                 ];
             }
         }
         foreach (collect($brands)->take(4) as $brand) {
             $name = $brand->brand_name ?? $brand->name ?? null;
-            $slug = $brand->brand_slug ?? $brand->slug ?? null;
-            if ($name && $slug) {
+            if ($name) {
                 $keywords[] = [
                     'label' => $name,
-                    'url' => url('/thuong-hieu/' . $slug),
+                    'url' => url('/bai-viet?' . http_build_query(['search' => $name])),
                 ];
             }
         }
@@ -279,7 +287,7 @@ class PostController extends Controller
             'suggested_products' => $suggestedProducts,
             'meta_desc' => $post->post_meta_desc,
             'meta_keywords' => $post->post_meta_keywords,
-            'meta_title' => $post->post_title,
+            'meta_title' => trim((string) ($post->meta_title ?? '')) ?: $post->post_title,
             'url_canonical' => $request->url(),
             'share_image' => $post->featured_image_path
                 ? url($post->featured_image_path)

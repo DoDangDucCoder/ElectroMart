@@ -1,15 +1,12 @@
-@extends('layouts.home-tech')
-@section('body_class','policy-page guide-page')
-@php
-$meta_desc=$meta_desc??'Hướng dẫn thanh toán tại DangDuc.vn - Thanh toán nhanh chóng, an toàn và tiện lợi';
-$meta_keywords=$meta_keywords??'hướng dẫn thanh toán, cách thanh toán, DangDuc';
-$url_canonical=$url_canonical??url('/huong-dan-thanh-toan');
-$meta_title=$meta_title??'Hướng dẫn thanh toán - DangDuc';
-@endphp
-@push('styles')<link href="{{ asset('frontend/css/policy-page.css') }}" rel="stylesheet">@endpush
-@section('content')
-<div class="pp-wrap">
-    @include('partials.storefront.breadcrumb', ['class' => 'pp-breadcrumb', 'separator' => '›', 'items' => [['label' => 'Hướng dẫn thanh toán', 'current' => true]]])
+@extends('pages.guide.content-page')
+
+@section('support_page_class', 'guide-page')
+@section('support_title', 'Hướng dẫn thanh toán')
+@section('support_meta_desc', 'Hướng dẫn thanh toán tại DangDuc.vn - Thanh toán nhanh chóng, an toàn và tiện lợi')
+@section('support_meta_keywords', 'hướng dẫn thanh toán, cách thanh toán, DangDuc')
+@section('support_canonical', '/huong-dan-thanh-toan')
+
+@section('support_content')
 
     <section class="pp-hero">
         <div class="pp-hero-copy">
@@ -170,5 +167,4 @@ $meta_title=$meta_title??'Hướng dẫn thanh toán - DangDuc';
         <div class="pp-pol"><i class="fa fa-lock"></i><div><strong>Thanh toán an toàn</strong><span>Nhiều phương thức thanh toán</span></div></div>
         <div class="pp-pol"><i class="fa fa-headphones"></i><div><strong>Hỗ trợ tận tâm 24/7</strong><span>Đội ngũ tư vấn luôn sẵn sàng</span></div></div>
     </div>
-</div>
 @endsection

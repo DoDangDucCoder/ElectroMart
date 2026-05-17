@@ -1,7 +1,6 @@
 @extends('layouts.home-tech')
 @section('body_class', 'accp-page')
 @section('content')
-<link rel="stylesheet" href="{{ asset('frontend/css/account-shared.css') }}">
 <style>
 .vc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
 @media(max-width:768px){.vc-grid{grid-template-columns:1fr}}

@@ -4,28 +4,29 @@
    ========================================================= */
 
 .dd-contact {
-    --dd-c-primary: #06b6d4;
-    --dd-c-primary-dark: #0891b2;
-    --dd-c-primary-soft: #ecfeff;
-    --dd-c-primary-soft-2: #cffafe;
-    --dd-c-text: #0f172a;
-    --dd-c-muted: #64748b;
-    --dd-c-border: #e2e8f0;
-    --dd-c-bg: #f8fafc;
-    --dd-c-card-bg: #ffffff;
-    --dd-c-radius: 16px;
-    --dd-c-radius-sm: 10px;
-    --dd-c-shadow: 0 4px 18px rgba(15, 23, 42, 0.05);
-    --dd-c-shadow-md: 0 10px 30px rgba(15, 23, 42, 0.06);
+    /* ---- Redirect to unified design tokens ---- */
+    --dd-c-primary: var(--sf-primary);
+    --dd-c-primary-dark: var(--sf-primary-dark);
+    --dd-c-primary-soft: var(--sf-primary-soft);
+    --dd-c-primary-soft-2: var(--sf-primary-soft-2);
+    --dd-c-text: var(--sf-text);
+    --dd-c-muted: var(--sf-text-muted);
+    --dd-c-border: var(--sf-border);
+    --dd-c-bg: var(--sf-bg);
+    --dd-c-card-bg: var(--sf-card-bg);
+    --dd-c-radius: var(--sf-radius);
+    --dd-c-radius-sm: var(--sf-radius-sm);
+    --dd-c-shadow: var(--sf-shadow);
+    --dd-c-shadow-md: var(--sf-shadow-md);
 
-    background: linear-gradient(180deg, #f1f7fb 0%, #f8fafc 360px);
-    padding: 16px 0 56px;
-    color: var(--dd-c-text);
-    font-family: 'Be Vietnam Pro', 'Segoe UI', sans-serif;
+    background: linear-gradient(180deg, #f1f7fb 0%, var(--sf-bg) 360px);
+    padding: 16px 0 var(--sf-page-bottom);
+    color: var(--sf-text);
+    font-family: var(--sf-font);
 }
 
 .dd-contact .container {
-    max-width: 1240px !important;
+    max-width: var(--sf-container) !important;
     width: 100%;
     margin: 0 auto;
     padding: 0 20px;

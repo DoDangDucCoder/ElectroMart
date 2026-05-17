@@ -38,7 +38,7 @@
                 <span class="g-admin-page-eyebrow">Mã giảm giá</span>
                 <h1>Liệt kê mã giảm giá</h1>
                 <p>
-                    Theo dõi thời gian hiệu lực, trạng thái hoạt động và gửi mã giảm giá trực tiếp cho nhóm khách thường hoặc khách VIP.
+                    Theo dõi thời gian hiệu lực, trạng thái hoạt động và gửi mã giảm giá trực tiếp cho nhóm khách thường hoặc khách thân thiết.
                 </p>
             </div>
 
@@ -172,7 +172,7 @@
                                         <td>
                                             <div class="g-admin-action-stack">
                                                 @if ($campaignBlockedReason)
-                                                    <button type="button" class="btn btn-primary btn-sm" disabled>Gửi khách VIP</button>
+                                                    <button type="button" class="btn btn-primary btn-sm" disabled>Gửi khách thân thiết</button>
                                                     <button type="button" class="btn btn-default btn-sm" disabled>Gửi khách thường</button>
                                                     <small class="text-muted">{{ $campaignBlockedReason }}</small>
                                                 @else
@@ -183,7 +183,7 @@
                                                         'coupon_code' => $cou->coupon_code,
                                                     ]) }}" method="POST">
                                                         @csrf
-                                                        <button type="submit" class="btn btn-primary btn-sm">Gửi khách VIP</button>
+                                                        <button type="submit" class="btn btn-primary btn-sm">Gửi khách thân thiết</button>
                                                     </form>
 
                                                     <form action="{{ url('/send-coupon', [

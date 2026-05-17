@@ -1,15 +1,10 @@
-@extends('layouts.home-tech')
-@section('body_class','policy-page van-chuyen-page')
-@php
-$meta_desc=$meta_desc??'Chính sách vận chuyển tại DangDuc.vn - Giao hàng nhanh, an toàn trên toàn quốc';
-$meta_keywords=$meta_keywords??'vận chuyển, chính sách vận chuyển, DangDuc, giao hàng';
-$url_canonical=$url_canonical??url('/chinh-sach-van-chuyen');
-$meta_title=$meta_title??'Chính sách vận chuyển - DangDuc';
-@endphp
-@push('styles')<link href="{{ asset('frontend/css/policy-page.css') }}" rel="stylesheet">@endpush
-@section('content')
-<div class="pp-wrap">
-    @include('partials.storefront.breadcrumb', ['class' => 'pp-breadcrumb', 'separator' => '›', 'items' => [['label' => 'Chính sách vận chuyển', 'current' => true]]])
+@extends('pages.support.content-page')
+@section('support_page_class', 'van-chuyen-page')
+@section('support_title', 'Chính sách vận chuyển')
+@section('support_meta_desc', 'Chính sách vận chuyển tại DangDuc.vn - Giao hàng nhanh, an toàn trên toàn quốc')
+@section('support_meta_keywords', 'vận chuyển, chính sách vận chuyển, DangDuc, giao hàng')
+@section('support_canonical', '/chinh-sach-van-chuyen')
+@section('support_content')
 
     <section class="pp-hero">
         <div class="pp-hero-copy">
@@ -144,5 +139,4 @@ $meta_title=$meta_title??'Chính sách vận chuyển - DangDuc';
         <div class="pp-pol"><i class="fa fa-lock"></i><div><strong>Thanh toán an toàn</strong><span>Nhiều phương thức thanh toán</span></div></div>
         <div class="pp-pol"><i class="fa fa-headphones"></i><div><strong>Hỗ trợ tận tâm 24/7</strong><span>Đội ngũ tư vấn luôn sẵn sàng</span></div></div>
     </div>
-</div>
 @endsection

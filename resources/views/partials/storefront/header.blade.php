@@ -18,11 +18,8 @@
         || request()->is('tim-kiem')
         || request()->is('tag/*')
         || request()->is('thuong-hieu/*')
-        || request()->is('goi-y-san-pham')
-        || request()->is('yeu-thich')
-        || request()->is('so-sanh');
+        || request()->is('goi-y-san-pham');
     $isBlogSection = request()->is('bai-viet')
-        || request()->is('danh-muc-bai-viet/*')
         || request()->is('bai-viet/*')
         || request()->is('video')
         || request()->is('xem-video/*');
@@ -45,15 +42,8 @@
         || request()->is('dang-ky')
         || request()->is('quen-mat-khau')
         || request()->is('update-new-pass');
-    $headerCustomer = null;
     $defaultStorefrontAvatar = asset('frontend/images/storefront-account-avatar.svg');
-    if ($customer_id && \Illuminate\Support\Facades\Schema::hasTable('customers')) {
-        $headerCustomer = \App\Infrastructure\Persistence\Eloquent\Customer\Customer::query()
-            ->select(['id', 'name', 'email', 'phone', 'avatar_path', 'is_active'])
-            ->whereKey((int) $customer_id)
-            ->where('is_active', true)
-            ->first();
-    }
+    $headerCustomer = $customer_id ? $storefrontCustomerAuth::headerCustomer((int) $customer_id) : null;
     $headerCustomerName = $headerCustomer?->name ?: Session::get($storefrontCustomerAuth::SESSION_NAME_KEY);
     $headerCustomerEmail = $headerCustomer?->email ?: Session::get($storefrontCustomerAuth::SESSION_EMAIL_KEY);
     $headerCustomerPhone = $headerCustomer?->phone;
@@ -137,11 +127,11 @@
 
                 <div class="shopw-header-center">
                     <div class="shopw-search-shell">
-                        <form action="{{ url('/tim-kiem') }}" method="GET" class="shopw-search">
+                        <form action="{{ url('/san-pham') }}" method="GET" class="shopw-search">
                             <label class="shopw-search-entry" for="keywords">
                                 <span class="shopw-search-prefix">Bạn cần gì?</span>
                                 <span class="shopw-search-input-stage">
-                                    <input type="text" name="keywords_submit" id="keywords"
+                                    <input type="text" name="q" id="keywords"
                                         placeholder=""
                                         data-placeholder-base=""
                                         data-search-trends='@json($headerSearchSuggestions)'
@@ -200,7 +190,7 @@
                                         </div>
                                         <div class="shopw-account-dropdown-links">
                                             <a class="shopw-account-dropdown-link" href="{{ url('/account') }}"><i class="fa fa-user"></i> Trang tài khoản</a>
-                                            <a class="shopw-account-dropdown-link" href="{{ url('/history') }}"><i class="fa fa-list-alt"></i> Đơn hàng của tôi</a>
+                                            <a class="shopw-account-dropdown-link" href="{{ url('/account/orders') }}"><i class="fa fa-list-alt"></i> Đơn hàng của tôi</a>
                                             <form method="POST" action="{{ url('/dang-xuat-khach-hang') }}">
                                                 @csrf
                                                 <input type="hidden" name="redirect" value="login">
@@ -270,7 +260,7 @@
                                     <ul role="menu" class="sub-menu">
                                         @foreach ($blogCategoryItems as $key => $danhmucbaiviet)
                                             <li><a
-                                                    href="{{ URL::to('/danh-muc-bai-viet/' . $danhmucbaiviet->cate_post_slug) }}">{{ $storefrontLabel::blogCategory($danhmucbaiviet->cate_post_name, $danhmucbaiviet->cate_post_slug) }}</a>
+                                                    href="{{ URL::to('/bai-viet?' . http_build_query(['category' => $danhmucbaiviet->cate_post_slug])) }}">{{ $storefrontLabel::blogCategory($danhmucbaiviet->cate_post_name, $danhmucbaiviet->cate_post_slug) }}</a>
                                             </li>
                                         @endforeach
 

@@ -17954,6 +17954,11 @@ a#scrollUp i {
     transform: scale(1.2);
 }
 
+.shopw-wishlist-float.is-active {
+    background: #ef4444;
+    color: #fff;
+}
+
 .shopw-card-btn-ghost {
     background: #f8fafc !important;
     border: 1px solid #dbe3ef !important;
@@ -23987,38 +23992,38 @@ body.tech-home {
 .tech-footer {
     background: #082f49;
     color: #fff;
-    padding: 60px 0 0;
+    padding: 42px 0 0;
     width: 100% !important;
     position: relative;
     z-index: 10;
 }
 
 .tech-footer-main {
-    padding-bottom: 40px;
+    padding-bottom: 24px;
 }
 
 .tech-footer h3 {
     font-size: 14px;
     font-weight: 900;
-    margin: 0 0 20px;
+    margin: 0 0 14px;
     color: #94a3b8;
 }
 
 .tech-footer-brand img {
     height: 38px;
-    margin-bottom: 20px;
+    margin-bottom: 14px;
 }
 
 .tech-footer-brand-description {
     color: #94a3b8;
     line-height: 1.6;
-    margin-bottom: 20px;
+    margin-bottom: 14px;
     font-size: 14px;
 }
 
 .tech-footer-social {
     display: flex;
-    gap: 16px;
+    gap: 12px;
 }
 
 .tech-footer-social a {
@@ -24040,7 +24045,7 @@ body.tech-home {
 .tech-footer-nav {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .tech-footer-nav a {
@@ -24054,10 +24059,10 @@ body.tech-home {
 }
 
 .tech-footer-contact {
-    margin-top: 24px;
+    margin-top: 16px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
     color: #94a3b8;
     font-size: 14px;
 }
@@ -24069,7 +24074,7 @@ body.tech-home {
 
 .tech-footer-bottom {
     background: #020617;
-    padding: 24px 0;
+    padding: 16px 0 18px;
     color: #64748b;
     font-size: 13px;
     border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -24079,6 +24084,7 @@ body.tech-home {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 12px;
 }
 
 .tech-payment-list {

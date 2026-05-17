@@ -17,7 +17,7 @@
         $productId = $product->product_id;
         $productName = \App\Support\StorefrontLabel::neutralizeSource($product->product_name);
         $productUrl = url('chi-tiet/' . $product->product_slug);
-        $imagePath = \App\Support\AssetUrl::product($product->product_image);
+        $imagePath = \App\Support\AssetUrl::productVariant($product->product_image, 'thumb');
         $priceFormatted = number_format($product->final_price ?? $product->product_price, 0, ',', '.') . 'đ';
         $productBrandRaw = optional($product->brand)->brand_name ?? ($product->brand_name ?? null);
         $productBrand = \App\Support\StorefrontLabel::neutralizeSource($productBrandRaw);
@@ -44,7 +44,12 @@
 
                         @if ($showWishlist)
                             <button type="button" class="shopw-wishlist-float"
-                                onclick="add_wishlist({{ $productId }})"
+                                data-tech-wishlist
+                                data-product-id="{{ $productId }}"
+                                data-product-name="{{ $productName }}"
+                                data-product-price="{{ $priceFormatted }}"
+                                data-product-image="{{ $imagePath }}"
+                                data-product-url="{{ $productUrl }}"
                                 aria-label="Thêm {{ $productName }} vào danh sách yêu thích">
                                 <i class="fa fa-heart-o"></i>
                             </button>
@@ -60,7 +65,7 @@
                         <a href="{{ $productUrl }}" class="shopw-product-link">
                             <span class="shopw-product-media">
                                 <img id="wishlist_productimage{{ $productId }}" src="{{ $imagePath }}"
-                                    alt="{{ $productName }}" />
+                                    alt="{{ $productName }}" loading="lazy" />
                             </span>
                             <span class="shopw-product-copy">
                                 @if ($productBrand)

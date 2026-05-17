@@ -12,7 +12,7 @@
                 @foreach ($brandItems as $brand)
                     <a href="{{ $brand['url'] }}" class="tech-brand-logo-card" title="{{ $brand['name'] }}">
                         @if (!empty($brand['logo']))
-                            <img src="{{ $brand['logo'] }}" alt="{{ $brand['name'] }}">
+                            <img src="{{ $brand['logo'] }}" alt="{{ $brand['name'] }}" loading="lazy" decoding="async">
                         @else
                             <span>{{ $brand['initials'] }}</span>
                         @endif
@@ -28,7 +28,7 @@
                     <article class="tech-policy-card">
                         @if (!empty($policy['image'] ?? null))
                             <span class="tech-policy-icon tech-policy-icon--image">
-                                <img src="{{ $policy['image'] }}" alt="{{ $policy['title'] }}">
+                                <img src="{{ $policy['image'] }}" alt="{{ $policy['title'] }}" loading="lazy" decoding="async">
                             </span>
                         @else
                             <span class="tech-policy-icon tech-policy-icon--symbol">

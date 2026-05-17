@@ -1,0 +1,47 @@
+[
+    {
+        "source_path": "uploads/products/950/cellphones-sac-cuktech-6-ultra-2c1a-100w-pd-30-qc-40-man-hinh-ad653u-kem-cap-type-c-240w-1m-0b6d9cbb-main.webp",
+        "source_type": "thumbnail",
+        "product_id": 950,
+        "source_bytes": 33806,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "thumb",
+        "target_width": 360,
+        "optimized_path": "uploads/products/950/_optimized/cellphones-sac-cuktech-6-ultra-2c1a-100w-pd-30-qc-40-man-hinh-ad653u-kem-cap-type-c-240w-1m-0b6d9cbb-main-thumb.webp",
+        "optimized_bytes": 7166,
+        "saved_bytes": 26640,
+        "status": "created",
+        "message": "Optimized variant created."
+    },
+    {
+        "source_path": "uploads/products/950/cellphones-sac-cuktech-6-ultra-2c1a-100w-pd-30-qc-40-man-hinh-ad653u-kem-cap-type-c-240w-1m-0b6d9cbb-main.webp",
+        "source_type": "thumbnail",
+        "product_id": 950,
+        "source_bytes": 33806,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "medium",
+        "target_width": 800,
+        "optimized_path": "uploads/products/950/_optimized/cellphones-sac-cuktech-6-ultra-2c1a-100w-pd-30-qc-40-man-hinh-ad653u-kem-cap-type-c-240w-1m-0b6d9cbb-main-medium.webp",
+        "optimized_bytes": 21016,
+        "saved_bytes": 12790,
+        "status": "created",
+        "message": "Optimized variant created."
+    },
+    {
+        "source_path": "uploads/products/950/cellphones-sac-cuktech-6-ultra-2c1a-100w-pd-30-qc-40-man-hinh-ad653u-kem-cap-type-c-240w-1m-0b6d9cbb-main.webp",
+        "source_type": "thumbnail",
+        "product_id": 950,
+        "source_bytes": 33806,
+        "source_width": 1200,
+        "source_height": 1200,
+        "variant": "large",
+        "target_width": 1200,
+        "optimized_path": "uploads/products/950/_optimized/cellphones-sac-cuktech-6-ultra-2c1a-100w-pd-30-qc-40-man-hinh-ad653u-kem-cap-type-c-240w-1m-0b6d9cbb-main-large.webp",
+        "optimized_bytes": 33570,
+        "saved_bytes": 236,
+        "status": "created",
+        "message": "Optimized variant created."
+    }
+]

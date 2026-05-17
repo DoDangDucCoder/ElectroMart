@@ -1,7 +1,5 @@
 @extends('admin_layout')
 @section('admin_content')
-<link rel="stylesheet" href="{{ asset('backend/css/admin-dashboard.css') }}">
-<link rel="stylesheet" href="{{ asset('backend/css/admin-pages.css') }}">
 <div class="adm-page">
     <div class="adm-page-title"><h1>Thêm / sửa bài viết</h1><div class="crumb"><a href="{{ url('/dashboard') }}">Trang chủ</a> › <a href="{{ route('admin.posts.management') }}">Bài viết</a> › <a href="#">Quản lý bài viết</a> › Thêm / sửa bài viết</div></div>
 

@@ -308,7 +308,7 @@
             </div>
 
             <div class="shopw-order-detail-support-strip">
-                <a href="{{ url('/history') }}">Xem lịch sử đơn hàng</a>
+                <a href="{{ url('/account/orders') }}">Xem lịch sử đơn hàng</a>
                 <a href="{{ url('/') }}">Tiếp tục mua hàng</a>
             </div>
 
@@ -385,11 +385,11 @@
                 <div class="summary-items-list">
                     @foreach ($orderView['items'] as $item)
                         @php
-                            $image = !empty($item['image']) ? asset($item['image']) : asset('uploads/product/no-image.svg');
+                            $image = \App\Support\AssetUrl::productVariant($item['image'] ?? null, 'thumb');
                         @endphp
                         <div class="summary-item">
                             <div class="summary-img">
-                                <img src="{{ $image }}" alt="{{ $item['name'] }}">
+                        <img src="{{ $image }}" alt="{{ $item['name'] }}">
                                 <span class="summary-qty">{{ $item['quantity'] }}</span>
                             </div>
                             <div class="summary-info">

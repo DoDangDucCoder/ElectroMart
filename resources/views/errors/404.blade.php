@@ -3,7 +3,7 @@
     $shopUrl = url('/san-pham');
     $contactUrl = url('/lien-he');
     $cartUrl = url('/gio-hang');
-    $blogUrl = url('/danh-muc-bai-viet');
+    $blogUrl = url('/bai-viet');
 
     $suggestedProducts = [
         [
@@ -52,6 +52,9 @@
             'reviews' => 242,
         ],
     ];
+
+    $visibleSuggestedProducts = collect($suggestedProducts)
+        ->take(count($suggestedProducts) >= 8 ? 8 : min(4, count($suggestedProducts)));
 
     $shortcuts = [
         ['label' => 'Laptop', 'icon' => '💻'],
@@ -524,7 +527,7 @@
         }
         .reco-grid {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 18px;
         }
         .product {
@@ -780,7 +783,7 @@
             .hero404-num { font-size: 120px; }
             .find-card { grid-template-columns: 1fr; }
             .find-chips { grid-template-columns: repeat(4, 1fr); }
-            .reco-grid { grid-template-columns: repeat(3, 1fr); }
+            .reco-grid { grid-template-columns: repeat(2, 1fr); }
             .support { grid-template-columns: 1fr 1fr; }
             .footer-grid { grid-template-columns: 1fr 1fr; }
             .header-inner { grid-template-columns: 40px auto 1fr auto; }
@@ -829,7 +832,7 @@
                 dangduc
             </a>
 
-            <form class="search" action="{{ url('/tim-kiem') }}" method="GET" role="search">
+            <form class="search" action="{{ url('/san-pham') }}" method="GET" role="search">
                 <input type="search" name="keywords_submit" placeholder="Bạn cần gì hôm nay?" aria-label="Tìm kiếm sản phẩm">
                 <button type="submit" class="search-btn" aria-label="Tìm kiếm">
                     <i class="fa fa-search"></i>
@@ -1075,7 +1078,7 @@
 
             {{-- Search + chips --}}
             <section class="find-card">
-                <form class="find-search" action="{{ url('/tim-kiem') }}" method="GET">
+                <form class="find-search" action="{{ url('/san-pham') }}" method="GET">
                     <span class="find-search-icon"><i class="fa fa-search"></i></span>
                     <div class="find-search-text">
                         <label for="find404-keywords">Tìm sản phẩm bạn cần...</label>
@@ -1116,7 +1119,7 @@
                     <a href="{{ $shopUrl }}">Xem tất cả <i class="fa fa-angle-right"></i></a>
                 </div>
                 <div class="reco-grid">
-                    @foreach ($suggestedProducts as $p)
+                    @foreach ($visibleSuggestedProducts as $p)
                         <article class="product">
                             <div class="product-media">
                                 <img src="{{ $p['image'] }}" alt="{{ $p['name'] }}" loading="lazy">

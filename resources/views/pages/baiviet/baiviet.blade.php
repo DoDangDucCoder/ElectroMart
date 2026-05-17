@@ -1,4 +1,8 @@
-@extends('layouts.home-tech')
+﻿@extends('layouts.home-tech')
+
+@push('styles')
+<link href="{{ asset('frontend/css/blog-detail.css') }}?v=2.1" rel="stylesheet">
+@endpush
 
 @section('content')
     @php
@@ -12,12 +16,10 @@
         $postCategoryName = optional($post->category)->cate_post_name;
         $postCategorySlug = optional($post->category)->cate_post_slug;
         $postCategoryUrl = $postCategorySlug
-            ? url('/danh-muc-bai-viet/' . $postCategorySlug)
+            ? url('/bai-viet?' . http_build_query(['category' => $postCategorySlug]))
             : url('/');
 
-        $postCover = $post->featured_image_path
-            ? asset($post->featured_image_path)
-            : $defaultPostCover;
+        $postCover = $assetUrl::resolve($post->featured_image_path, $defaultPostCover);
         $postPlainText = trim(strip_tags((string) $post->post_content));
         $postWordCount = $postPlainText !== '' ? str_word_count($postPlainText) : 0;
         $postReadTime = max(1, (int) ceil($postWordCount / 220));
@@ -54,8 +56,6 @@
 
         $shareUrl = urlencode($url_canonical);
     @endphp
-
-    <link href="{{ asset('frontend/css/blog-detail.css') }}" rel="stylesheet">
 
     <main class="bd-page">
         <div class="bd-container">
@@ -129,7 +129,7 @@
                             <ul class="bd-tags-list">
                                 @foreach ($postTags as $tag)
                                     <li>
-                                        <a href="{{ url('/tag/' . Str::slug($tag)) }}">{{ $tag }}</a>
+                                        <a href="{{ url('/bai-viet?' . http_build_query(['search' => $tag])) }}">{{ $tag }}</a>
                                     </li>
                                 @endforeach
                             </ul>
@@ -193,9 +193,7 @@
                             <div class="bd-related-grid">
                                 @foreach ($relatedPosts as $relatedPost)
                                     @php
-                                        $relCover = $relatedPost->featured_image_path
-                                            ? asset($relatedPost->featured_image_path)
-                                            : $defaultPostCover;
+                                        $relCover = $assetUrl::resolve($relatedPost->featured_image_path, $defaultPostCover);
                                     @endphp
                                     <a href="{{ url('/bai-viet/' . $relatedPost->post_slug) }}" class="bd-related-card">
                                         <span class="bd-related-cover">
@@ -265,8 +263,8 @@
                 <aside class="bd-sidebar">
                     <section class="bd-side-card bd-side-search">
                         <h3>Tìm kiếm bài viết</h3>
-                        <form action="{{ url('/tim-kiem') }}" method="GET" class="bd-side-search-form">
-                            <input type="text" name="keywords_submit" placeholder="Nhập từ khoá..." aria-label="Từ khoá tìm kiếm">
+                        <form action="{{ url('/bai-viet') }}" method="GET" class="bd-side-search-form">
+                            <input type="text" name="search" placeholder="Nhập từ khoá..." aria-label="Từ khoá tìm kiếm">
                             <button type="submit" aria-label="Tìm kiếm">
                                 <i class="fa fa-search" aria-hidden="true"></i>
                             </button>
@@ -288,7 +286,7 @@
                                     $isActive = (int) (optional($post->category)->id) === (int) ($cat->id ?? $cat->cate_post_id);
                                 @endphp
                                 <li>
-                                    <a href="{{ url('/danh-muc-bai-viet/' . $cat->cate_post_slug) }}"
+                                    <a href="{{ url('/bai-viet?' . http_build_query(['category' => $cat->cate_post_slug])) }}"
                                         class="{{ $isActive ? 'is-active' : '' }}">
                                         <span>{{ $storefrontLabel::blogCategory($cat->cate_post_name, $cat->cate_post_slug) }}</span>
                                         <span class="bd-side-cat-count">({{ $count }})</span>
@@ -304,9 +302,7 @@
                             <ul class="bd-side-featured-list">
                                 @foreach ($featuredPosts as $featured)
                                     @php
-                                        $featCover = $featured->featured_image_path
-                                            ? asset($featured->featured_image_path)
-                                            : $defaultPostCover;
+                                        $featCover = $assetUrl::resolve($featured->featured_image_path, $defaultPostCover);
                                     @endphp
                                     <li>
                                         <a href="{{ url('/bai-viet/' . $featured->post_slug) }}">
@@ -383,7 +379,7 @@
                             @csrf
                             <input type="email" name="email" placeholder="Nhập email của bạn" required>
                             <button type="submit" aria-label="Đăng ký">
-                                <i class="fa fa-paper-plane" aria-hidden="true"></i>
+                                <i class="fa fa-envelope" aria-hidden="true"></i>
                             </button>
                         </form>
                         <p class="bd-side-newsletter-note">

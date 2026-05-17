@@ -85,8 +85,8 @@
                             <option value="mine" @selected(($filters['scope'] ?? 'all') === 'mine')>Chỉ hội thoại của tôi</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label>&nbsp;</label>
+                    <div class="form-group g-admin-chat-toolbar-actions">
+                        <label class="sr-only">Thao tác lọc</label>
                         <div class="g-admin-inline-actions">
                             <button type="submit" class="btn btn-info">Lọc hội thoại</button>
                             <a href="{{ url('/chat-inbox') }}" class="btn btn-default">Xóa bộ lọc</a>

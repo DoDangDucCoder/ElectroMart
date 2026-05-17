@@ -1,4 +1,3 @@
-<script type="text/javascript" src="{{ asset('backend/js/monthly.js') }}"></script>
 <script type="text/javascript">
     $(window).on('load', function() {
         if ($.fn.monthly && $('#mycalendar').length) {

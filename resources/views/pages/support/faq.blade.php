@@ -1,12 +1,15 @@
 @extends('layouts.home-tech')
-@section('body_class', 'faq-page')
+
 @php
     $meta_desc = $meta_desc ?? 'Câu hỏi thường gặp về mua hàng, thanh toán, vận chuyển, bảo hành tại DangDuc.vn';
     $meta_keywords = $meta_keywords ?? 'FAQ, câu hỏi thường gặp, DangDuc, hỗ trợ khách hàng';
-    $url_canonical = $url_canonical ?? url('/cau-hoi-thuong-gap');
     $meta_title = $meta_title ?? 'Câu hỏi thường gặp - DangDuc';
+    $url_canonical = $url_canonical ?? url('/cau-hoi-thuong-gap');
 @endphp
-@section('content')
+
+@section('body_class', 'policy-page faq-page')
+
+@push('styles')
 <style>
 .faq-wrap{max-width:1240px;margin:0 auto;padding:0 16px}
 .faq-breadcrumb{padding:14px 0;font-size:13px;color:#64748b}
@@ -88,9 +91,20 @@
 @media(max-width:900px){.faq-hero{flex-direction:column;text-align:center;padding:24px}.faq-hero-art{display:none}.faq-categories{grid-template-columns:repeat(3,1fr)}.faq-grid{grid-template-columns:1fr}.faq-highlights,.faq-tips-grid,.faq-policies{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:600px){.faq-categories{grid-template-columns:repeat(2,1fr)}.faq-highlights,.faq-tips-grid,.faq-policies{grid-template-columns:1fr}}
 </style>
+@endpush
 
-<div class="faq-wrap">
-    @include('partials.storefront.breadcrumb', ['class' => 'faq-breadcrumb', 'separator' => '›', 'items' => [['label' => 'Câu hỏi thường gặp', 'current' => true]]])
+@section('content')
+<div class="pp-wrap">
+    @include('partials.storefront.breadcrumb', [
+        'class' => 'pp-breadcrumb',
+        'separator' => '›',
+        'items' => [
+            [
+                'label' => 'Câu hỏi thường gặp',
+                'current' => true,
+            ],
+        ],
+    ])
 
     {{-- Hero --}}
     <section class="faq-hero">

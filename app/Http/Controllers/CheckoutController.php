@@ -142,6 +142,12 @@ class CheckoutController extends Controller
             return Redirect::to('/gio-hang')->with('error', 'Giỏ hàng của bạn đang trống.');
         }
 
+        $selectedItems = $this->cartService->setSelectedCheckoutItemIds($this->cartService->selectedCheckoutItemIds());
+
+        if ($selectedItems->isEmpty()) {
+            return Redirect::to('/gio-hang')->with('error', 'Vui lòng chọn ít nhất một sản phẩm để thanh toán.');
+        }
+
         $currentCustomer = $this->sessionCustomer();
         if (! $currentCustomer) {
             $this->clearCustomerSession();
@@ -159,6 +165,17 @@ class CheckoutController extends Controller
                 'storefrontCustomerPicture' => Session::get(StorefrontCustomerAuth::SESSION_PICTURE_KEY),
             ]
         ));
+    }
+
+    public function select_checkout_items(Request $request): RedirectResponse
+    {
+        $selectedItems = $this->cartService->setSelectedCheckoutItemIds((array) $request->input('checkout_cart_item_ids', []));
+
+        if ($selectedItems->isEmpty()) {
+            return Redirect::to('/gio-hang')->with('error', 'Vui lòng chọn ít nhất một sản phẩm để thanh toán.');
+        }
+
+        return Redirect::to('/checkout');
     }
 
     public function payment(Request $request)
@@ -307,11 +324,11 @@ class CheckoutController extends Controller
             ->first();
 
         if (! $order) {
-            return Redirect::to('/history')->with('error', 'Không tìm thấy đơn hàng.');
+            return Redirect::to('/account/orders')->with('error', 'Không tìm thấy đơn hàng.');
         }
 
         if ($order->customer_id && (! $currentCustomer || $order->customer_id !== $currentCustomer->id)) {
-            return Redirect::to('/history')->with('error', 'Bạn không có quyền xem đơn hàng này.');
+            return Redirect::to('/account/orders')->with('error', 'Bạn không có quyền xem đơn hàng này.');
         }
 
         if (! $order->customer_id && Session::get('guest_order_code') !== $orderCode) {
@@ -370,7 +387,7 @@ class CheckoutController extends Controller
             ->first();
 
         if (!$order) {
-            return Redirect::to('/history')->with('error', 'Không tìm thấy đơn hàng.');
+            return Redirect::to('/account/orders')->with('error', 'Không tìm thấy đơn hàng.');
         }
 
         $orderView = $this->buildOrderViewData($order);
@@ -395,7 +412,7 @@ class CheckoutController extends Controller
             ->first();
 
         if (!$order) {
-            return Redirect::to('/history')->with('error', 'Không tìm thấy đơn hàng.');
+            return Redirect::to('/account/orders')->with('error', 'Không tìm thấy đơn hàng.');
         }
 
         $orderView = $this->buildOrderViewData($order);
@@ -531,7 +548,7 @@ class CheckoutController extends Controller
 
     protected function cartContext(): array
     {
-        $items = $this->cartService->items();
+        $items = $this->cartService->selectedCheckoutItems();
 
         if ($items->isEmpty()) {
             $this->couponService->clear();
@@ -541,14 +558,14 @@ class CheckoutController extends Controller
         $coupon = $items->isEmpty()
             ? null
             : $this->couponService->validatedCurrent(
-                $this->cartService->subtotal(),
+                $this->cartService->subtotalFor($items),
                 (int) Session::get('customer_id') ?: null
             );
         $shippingFee = $items->isEmpty() ? 0.0 : $this->shippingService->getFee();
 
         return [
             'cartItems' => $items,
-            'cartTotals' => $this->cartService->totals($coupon, $shippingFee),
+            'cartTotals' => $this->cartService->totalsFor($items, $coupon, $shippingFee),
             'coupon' => $coupon,
             'shipping_fee' => $shippingFee,
         ];

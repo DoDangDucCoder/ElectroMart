@@ -1,7 +1,6 @@
 @extends('layouts.home-tech')
 @section('body_class', 'accp-page')
 @section('content')
-<link rel="stylesheet" href="{{ asset('frontend/css/account-shared.css') }}">
 <style>
 .rt-item{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px 18px;margin-bottom:12px;transition:box-shadow .15s}
 .rt-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.05)}
@@ -31,6 +30,9 @@
 @php
     $returns = $returns ?? collect();
     $stats   = $stats ?? ['total' => 0, 'approved' => 0, 'pending' => 0, 'refunded' => 0, 'total_refund' => 0];
+    $visibleRecommendedProducts = collect($recommendedProducts ?? []);
+    $visibleRecommendedProducts = $visibleRecommendedProducts
+        ->take($visibleRecommendedProducts->count() >= 8 ? 8 : min(4, $visibleRecommendedProducts->count()));
 @endphp
 
 <div class="accp-wrap">
@@ -65,7 +67,7 @@
             @forelse ($returns as $r)
             @php
                 $product = optional($r->orderItem)->product ?? null;
-                $productImage = $product?->thumbnail ?? $product?->image ?? 'uploads/product/no-image.svg';
+                $productImage = \App\Support\AssetUrl::productVariant($product?->thumbnail ?? $product?->image ?? null, 'thumb');
             @endphp
             <div class="rt-item">
                 <div class="rt-head">
@@ -80,7 +82,7 @@
                 </div>
                 <div class="rt-body">
                     <div class="rt-product">
-                        <div class="rt-prod-img"><img src="{{ asset($productImage) }}" alt=""></div>
+                        <div class="rt-prod-img"><img src="{{ $productImage }}" alt=""></div>
                         <div class="rt-prod-info">
                             <div class="rt-prod-name">{{ $product?->name ?? 'Sản phẩm không còn tồn tại' }}</div>
                             <div class="rt-prod-meta">SL: {{ $r->quantity }} sản phẩm</div>
@@ -110,7 +112,7 @@
             @endforelse
 
             @if ($returns instanceof \Illuminate\Contracts\Pagination\Paginator && $returns->hasPages())
-            <div style="margin-top:16px">{{ $returns->links() }}</div>
+            <div style="margin-top:16px">{{ $returns->links('vendor.pagination.shop-pagination') }}</div>
             @endif
         </main>
 
@@ -139,12 +141,12 @@
     </div>
 
     {{-- Recommend --}}
-    @if (!empty($recommendedProducts) && $recommendedProducts->count() > 0)
+    @if ($visibleRecommendedProducts->isNotEmpty())
     <div class="accp-recommend" style="margin-top:20px">
         <div class="accp-recommend-head"><h3>Có thể bạn cũng thích</h3><a href="{{ url('/san-pham') }}">Xem tất cả <i class="fa fa-arrow-right"></i></a></div>
-        <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:14px">
-            @foreach ($recommendedProducts->take(6) as $p)
-                @php $pc = ['id'=>$p->id,'name'=>$p->name??'','url'=>url('/chi-tiet-san-pham/'.($p->slug??$p->id)),'image'=>!empty($p->thumbnail_path)?asset('uploads/product/'.$p->thumbnail_path):asset('uploads/product/no-image.svg'),'original_price'=>$p->price??0,'price'=>$p->sale_price??$p->price??0]; @endphp
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+            @foreach ($visibleRecommendedProducts as $p)
+                @php $pc = ['id'=>$p->id,'name'=>$p->name??'','url'=>url('/chi-tiet-san-pham/'.($p->slug??$p->id)),'image'=>\App\Support\AssetUrl::productVariant($p->thumbnail_path ?? null, 'thumb'),'original_price'=>$p->price??0,'price'=>$p->sale_price??$p->price??0]; @endphp
                 <div>@include('partials.home.product-card', ['product' => $pc, 'compact' => true])</div>
             @endforeach
         </div>

@@ -2,14 +2,17 @@
     $heroSlides = collect([
         [
             'src' => asset('assets/home/hero/hero-11.png'),
+            'webp' => asset('assets/home/hero/hero-11.webp'),
             'alt' => 'Ưu đãi công nghệ nổi bật',
         ],
         [
             'src' => asset('assets/home/hero/hero-10.png'),
+            'webp' => asset('assets/home/hero/hero-10.webp'),
             'alt' => 'Banner khuyến mãi thiết bị công nghệ',
         ],
         [
             'src' => asset('assets/home/hero/hero-9.png'),
+            'webp' => asset('assets/home/hero/hero-9.webp'),
             'alt' => 'Banner sản phẩm công nghệ local',
         ],
     ]);
@@ -30,7 +33,16 @@
                         @foreach ($heroSlides as $slide)
                             <div class="item {{ $loop->first ? 'active' : '' }}">
                                 <div class="shopw-home-hero__image-wrapper">
-                                    <img src="{{ $slide['src'] }}" alt="{{ $slide['alt'] }}" class="shopw-home-hero__image">
+                                    <picture>
+                                        <source srcset="{{ $slide['webp'] }}" type="image/webp">
+                                        <img
+                                            src="{{ $slide['src'] }}"
+                                            alt="{{ $slide['alt'] }}"
+                                            class="shopw-home-hero__image"
+                                            decoding="async"
+                                            fetchpriority="{{ $loop->first ? 'high' : 'low' }}"
+                                            loading="{{ $loop->first ? 'eager' : 'lazy' }}">
+                                    </picture>
                                 </div>
                             </div>
                         @endforeach

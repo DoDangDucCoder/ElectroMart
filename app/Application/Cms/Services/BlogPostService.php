@@ -8,6 +8,7 @@ use App\Infrastructure\Persistence\Eloquent\Cms\BlogPost;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
@@ -51,7 +52,15 @@ class BlogPostService
             $queryFilters['sort'] = $filters['sort'];
         }
 
-        return $this->posts->paginate($queryFilters, $perPage);
+        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage('page');
+        $cacheKey = 'storefront.blog.posts.'.md5(json_encode([
+            'version' => $this->cacheVersion(),
+            'filters' => $queryFilters,
+            'per_page' => $perPage,
+            'page' => $page,
+        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+        return Cache::remember($cacheKey, 300, fn () => $this->posts->paginate($queryFilters, $perPage));
     }
 
     public function getPublishedByCategorySlug(string $slug, int $perPage = 10): LengthAwarePaginator
@@ -66,17 +75,27 @@ class BlogPostService
 
     public function getFeaturedPosts(int $limit = 6): Collection
     {
-        $paginator = $this->posts->paginate([
-            'status' => 'published',
-            'is_featured' => true,
-        ], $limit);
+        return Cache::remember(
+            'storefront.blog.featured.'.$limit.'.'.$this->cacheVersion(),
+            300,
+            function () use ($limit) {
+                $paginator = $this->posts->paginate([
+                    'status' => 'published',
+                    'is_featured' => true,
+                ], $limit);
 
-        return collect($paginator->items());
+                return collect($paginator->items());
+            }
+        );
     }
 
     public function getLatestPosts(int $limit = 8): Collection
     {
-        return $this->posts->latestPublished($limit);
+        return Cache::remember(
+            'storefront.blog.latest.'.$limit.'.'.$this->cacheVersion(),
+            300,
+            fn () => $this->posts->latestPublished($limit)
+        );
     }
 
     public function searchPosts(string $keyword, ?int $limit = null): Collection
@@ -119,6 +138,7 @@ class BlogPostService
         }
 
         $post = $this->posts->create($payload);
+        $this->clearStorefrontCache();
 
         return $post->fresh(['category']);
     }
@@ -136,6 +156,7 @@ class BlogPostService
         }
 
         $updated = $this->posts->update($post, $payload);
+        $this->clearStorefrontCache();
 
         return $updated->fresh(['category']);
     }
@@ -144,6 +165,7 @@ class BlogPostService
     {
         $this->deleteImageIfExists($post->featured_image_path);
         $this->posts->delete($post);
+        $this->clearStorefrontCache();
     }
 
     public function incrementViews(BlogPost $post): void
@@ -254,5 +276,17 @@ class BlogPostService
         if (File::exists($fullPath)) {
             File::delete($fullPath);
         }
+    }
+
+    protected function cacheVersion(): int
+    {
+        return (int) Cache::get('storefront.blog_cache_version', 1);
+    }
+
+    protected function clearStorefrontCache(): void
+    {
+        Cache::forever('storefront.blog_cache_version', $this->cacheVersion() + 1);
+        Cache::forget('storefront.blog_categories.active');
+        Cache::forget('storefront.blog.category_counts');
     }
 }

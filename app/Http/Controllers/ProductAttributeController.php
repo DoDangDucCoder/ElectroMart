@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Application\Shared\Services\CacheService;
 use App\Application\Shared\Services\PublicUploadService;
 use App\Http\Requests\Admin\Legacy\Products\StoreProductAttributeRequest;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Attribute as CatalogAttribute;
@@ -13,6 +14,7 @@ class ProductAttributeController extends Controller
 {
     public function __construct(
         private readonly PublicUploadService $publicUploadService,
+        private readonly CacheService $cacheService,
     ) {
     }
 
@@ -30,7 +32,7 @@ class ProductAttributeController extends Controller
 
         $newImage = $this->publicUploadService->storeLegacyImage($request->file('image'), 'uploads/attribute');
 
-        ProductVariant::create([
+        $variant = ProductVariant::create([
             'product_id' => $validated['product_id'],
             'name' => $validated['name'],
             'price' => $validated['price'],
@@ -43,6 +45,8 @@ class ProductAttributeController extends Controller
             ],
             'is_active' => true,
         ]);
+
+        $this->cacheService->invalidateProductCache((int) $variant->product_id);
 
         return redirect()->back()->with('message', 'Đã thêm thuộc tính sản phẩm thành công.');
     }
@@ -95,8 +99,11 @@ class ProductAttributeController extends Controller
             return redirect()->back()->with('message', 'Không tìm thấy thuộc tính sản phẩm.');
         }
 
+        $productId = (int) $productAttribute->product_id;
+
         $this->publicUploadService->deletePublicFile($productAttribute->image_path);
         $productAttribute->delete();
+        $this->cacheService->invalidateProductCache($productId);
 
         return redirect()->back()->with('message', 'Đã xóa thuộc tính sản phẩm thành công.');
     }

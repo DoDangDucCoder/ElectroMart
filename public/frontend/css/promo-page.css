@@ -3,29 +3,29 @@
    Matches design reference: trang khuyen mai
    ================================================================ */
 
-/* ---- Variables ---- */
+/* ---- Variables: redirect to unified tokens ---- */
 :root {
-  --promo-teal: #0d9488;
-  --promo-teal-dark: #0f766e;
+  --promo-teal: var(--sf-teal);
+  --promo-teal-dark: var(--sf-teal-dark);
   --promo-navy: #0c1e35;
   --promo-dark: #111827;
   --promo-blue: #1e40af;
-  --promo-blue-light: #3b82f6;
+  --promo-blue-light: var(--sf-info);
   --promo-purple: #7c3aed;
   --promo-orange: #ea580c;
-  --promo-border: #e5e7eb;
-  --promo-bg: #f3f4f6;
-  --promo-card-bg: #ffffff;
+  --promo-border: var(--sf-border-hard);
+  --promo-bg: var(--sf-bg-warm);
+  --promo-card-bg: var(--sf-card-bg);
   --promo-text: #1f2937;
   --promo-text-muted: #6b7280;
   --promo-radius: 12px;
-  --promo-radius-sm: 8px;
-  --promo-radius-xs: 6px;
-  --promo-shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
-  --promo-shadow-md: 0 4px 6px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.05);
-  --promo-shadow-lg: 0 10px 25px rgba(0,0,0,.1);
-  --promo-font: 'Be Vietnam Pro', 'Inter', system-ui, -apple-system, sans-serif;
-  --promo-container: 1240px;
+  --promo-radius-sm: var(--sf-radius-xs);
+  --promo-radius-xs: var(--sf-radius-xxs);
+  --promo-shadow: var(--sf-shadow-xs);
+  --promo-shadow-md: var(--sf-shadow);
+  --promo-shadow-lg: var(--sf-shadow-lg);
+  --promo-font: var(--sf-font);
+  --promo-container: var(--sf-container);
 }
 
 .promo-page .tech-home-main {

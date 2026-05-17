@@ -11,7 +11,7 @@
             ?? $blogCategoryItems->firstWhere('cate_post_slug', 'tin-tuc')
             ?? $blogCategoryItems->first();
         $featuredBlogUrl = $featuredBlogCategory
-            ? url('/danh-muc-bai-viet/' . $featuredBlogCategory->cate_post_slug)
+            ? url('/bai-viet?' . http_build_query(['category' => $featuredBlogCategory->cate_post_slug]))
             : url('/bai-viet');
         $featuredBlogLabel = $storefrontLabel::blogCategory(
             $featuredBlogCategory?->cate_post_name,
@@ -122,7 +122,7 @@
             </div>
 
             <div class="shopw-video-pagination">
-                {!! $all_video->links() !!}
+                {!! $all_video->links('vendor.pagination.shop-pagination') !!}
             </div>
         @else
             <section class="shopw-video-empty">

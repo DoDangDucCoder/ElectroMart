@@ -1,7 +1,6 @@
 @extends('layouts.home-tech')
 @section('body_class', 'accp-page')
 @section('content')
-<link rel="stylesheet" href="{{ asset('frontend/css/account-shared.css') }}">
 <style>
 .pm-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
 .pm-header h2{font-size:22px;font-weight:800;color:#0f172a;margin:0}
@@ -162,7 +161,7 @@
                     <li><i class="fa fa-check"></i>Không chia sẻ thông tin thẻ với người khác.</li>
                     <li><i class="fa fa-check"></i>Bật xác thực 2 lớp để bảo vệ tài khoản.</li>
                 </ul>
-                <a href="{{ url('/chinh-sach-bao-mat') }}" style="font-size:12px;color:#0d9488;text-decoration:none;font-weight:600">Xem thêm mẹo bảo mật →</a>
+                <a href="{{ url('/cham-soc-khach-hang/bao-mat') }}" style="font-size:12px;color:#0d9488;text-decoration:none;font-weight:600">Xem thêm mẹo bảo mật →</a>
             </div>
             <div class="accp-aside-card accp-contact-card">
                 <h4>Liên hệ hỗ trợ</h4>

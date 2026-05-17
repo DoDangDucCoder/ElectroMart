@@ -153,7 +153,7 @@ class GalleryController extends Controller
 		return (object) [
 			'gallery_id' => $media->id,
 			'gallery_name' => $name,
-			'gallery_image_url' => AssetUrl::product($media->file_path),
+			'gallery_image_url' => AssetUrl::productVariant($media->file_path, 'thumb'),
 		];
 	}
 }

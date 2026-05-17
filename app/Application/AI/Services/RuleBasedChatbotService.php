@@ -184,7 +184,7 @@ class RuleBasedChatbotService
                 'message' => 'Bạn có thể mở trang lịch sử đơn hàng để tra cứu trạng thái, xem chi tiết hoặc hủy đơn nếu đơn vẫn đang chờ xử lý.',
                 'products' => [],
                 'actions' => [
-                    ['label' => 'Lịch sử đơn hàng', 'url' => url('/history')],
+                    ['label' => 'Đơn hàng của tôi', 'url' => url('/account/orders')],
                 ],
                 'source' => 'rule_based',
             ];

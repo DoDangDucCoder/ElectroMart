@@ -12,7 +12,7 @@
         $productBrandLabel = $storefrontLabel::neutralizeSource($product->brand_name ?: 'DangDuc');
         $productDescriptionHtml = $storefrontLabel::neutralizeSourceHtml($product->product_desc);
         $productContentHtml = $storefrontLabel::neutralizeSourceHtml($product->product_content);
-        $primaryImage = \App\Support\AssetUrl::product($product->product_image);
+        $primaryImage = \App\Support\AssetUrl::productVariant($product->product_image, 'large');
         $categoryUrl = $cate_slug ? url('/danh-muc/' . $cate_slug) : null;
         $shortDescription = trim(strip_tags($productDescriptionHtml));
         $supportConfig = config('services.storefront_support', []);
@@ -111,12 +111,10 @@
         // ========== Image slides (attribute thumbs + gallery) ==========
         $attributeSlides = [];
         foreach ($attributeOptions as $index => $attribute) {
-            $attributeImage = \App\Support\AssetUrl::resolve(
-                ! empty($attribute->image) ? 'uploads/attribute/' . $attribute->image : null,
-                \App\Support\AssetUrl::PRODUCT_FALLBACK,
-            );
+            $attributeSource = ! empty($attribute->image) ? 'uploads/attribute/' . $attribute->image : null;
+            $attributeImage = \App\Support\AssetUrl::productVariant($attributeSource, 'medium');
             $attributeSlides[] = [
-                'thumb' => $attributeImage,
+                'thumb' => \App\Support\AssetUrl::productVariant($attributeSource, 'thumb'),
                 'src' => $attributeImage,
                 'alt' => $storefrontLabel::neutralizeSource($attribute->name ?: $productName),
                 'attribute_key' => $index,
@@ -125,6 +123,7 @@
 
         $gallerySlides = [];
         foreach ($gallery as $media) {
+            $gallerySource = $media->file_path ?? (! empty($media->gallery_image) ? 'uploads/gallery/' . $media->gallery_image : ($media->url ?? null));
             $galleryUrl = $media->url
                 ?? \App\Support\AssetUrl::resolve(
                     $media->file_path ?? (! empty($media->gallery_image) ? 'uploads/gallery/' . $media->gallery_image : null),
@@ -136,8 +135,8 @@
             }
 
             $gallerySlides[] = [
-                'thumb' => $galleryUrl,
-                'src' => $galleryUrl,
+                'thumb' => \App\Support\AssetUrl::productVariant($gallerySource, 'thumb'),
+                'src' => \App\Support\AssetUrl::productVariant($gallerySource, 'medium'),
                 'alt' => $storefrontLabel::neutralizeSource($media->gallery_name ?? $productName),
                 'attribute_key' => null,
             ];
@@ -172,11 +171,11 @@
                 $publicPath = public_path($localPath);
 
                 if (file_exists($publicPath) && is_file($publicPath)) {
-                    return asset($localPath);
+                    return \App\Support\AssetUrl::productVariant($localPath, 'thumb');
                 }
 
                 if (! str_contains($localPath, '/') && file_exists(public_path('uploads/product/' . $localPath))) {
-                    return asset('uploads/product/' . $localPath);
+                    return \App\Support\AssetUrl::productVariant('uploads/product/' . $localPath, 'thumb');
                 }
             }
 
@@ -210,8 +209,11 @@
                 ];
             })
             ->filter()
-            ->take(5)
+            ->take(8)
             ->values();
+
+        $relatedLimit = $relatedProductCards->count() >= 8 ? 8 : min(4, $relatedProductCards->count());
+        $relatedProductCards = $relatedProductCards->take($relatedLimit)->values();
 
         // ========== Sidebar promo & deal data ==========
         $promoCards = [
@@ -294,7 +296,7 @@
            ============================================================ */
         body.pdx-page { background: #f4f6fa; }
 
-        .pdx-wrap { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+        .pdx-wrap { max-width: 1240px; margin: 0 auto; padding: 0 16px; }
 
         /* Breadcrumb */
         .pdx-crumbs {
@@ -307,12 +309,12 @@
         .pdx-crumbs .sep { color: #cbd5e1; }
         .pdx-crumbs .current { color: #0f172a; font-weight: 500; }
 
-        /* Main grid: gallery | info | sidebar */
+        /* Main grid: gallery | product summary | service sidebar */
         .pdx-grid {
             display: grid;
-            grid-template-columns: minmax(0, 420px) minmax(0, 1fr) minmax(0, 280px);
-            gap: 20px;
-            align-items: start;
+            grid-template-columns: minmax(0, 400px) minmax(0, 1fr) minmax(260px, 280px);
+            gap: 16px;
+            align-items: stretch;
         }
         @media (max-width: 1199px) {
             .pdx-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
@@ -321,14 +323,25 @@
         @media (max-width: 767px) {
             .pdx-grid, .pdx-side { grid-template-columns: 1fr; }
         }
+        .pdx-left-stack,
+        .pdx-right-stack {
+            min-width: 0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
 
         /* ===== Gallery card ===== */
         .pdx-gallery {
             background: #fff;
             border-radius: 12px;
             border: 1px solid #eef2f7;
-            padding: 20px;
+            padding: 12px;
             position: relative;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
         .pdx-wishlist {
             position: absolute; top: 14px; right: 14px;
@@ -341,8 +354,60 @@
         .pdx-wishlist:hover { background: #fff1f2; transform: scale(1.05); }
         .pdx-wishlist.is-active { background: #f43f5e; color: #fff; border-color: #f43f5e; }
 
+        .pdx-main-image {
+            flex: 1 1 auto;
+            display: grid;
+            place-items: center;
+            min-height: 328px;
+            border: 1px solid #eef2f7;
+            border-radius: 12px;
+            background: #fff;
+            overflow: hidden;
+        }
+        .pdx-main-image img {
+            display: block;
+            width: 100%;
+            max-height: 350px;
+            object-fit: contain;
+            aspect-ratio: 1 / 1;
+        }
+        .pdx-thumbs {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+            align-items: stretch;
+        }
+        .pdx-thumb {
+            display: grid;
+            place-items: center;
+            height: 72px;
+            min-height: 72px;
+            max-height: 72px;
+            padding: 6px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background: #fff;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .pdx-thumb.is-active,
+        .pdx-thumb:hover {
+            border-color: #14b8a6;
+        }
+        .pdx-thumb img {
+            display: block;
+            width: 100%;
+            height: 100% !important;
+            max-width: 100%;
+            max-height: 100% !important;
+            object-fit: contain !important;
+        }
         .pdx-gallery-list { list-style: none; margin: 0; padding: 0; }
+        .pdx-gallery-list[hidden] { display: none !important; }
         .pdx-gallery-list > li { list-style: none; }
+        .pdx-gallery-list:not(.lightSlider) > li { display: none; }
+        .pdx-gallery-list:not(.lightSlider) > li:first-child { display: block; }
         .pdx-gallery-list img {
             width: 100%; height: auto;
             object-fit: contain; border-radius: 8px; background: #fff;
@@ -370,15 +435,80 @@
         }
         .pdx-gallery .lSGallery li.active,
         .pdx-gallery .lSGallery li:hover { border-radius: 8px; }
-        .pdx-gallery .lSGallery img { border-radius: 8px; }
+        .pdx-gallery .lSGallery img {
+            width: 100%;
+            height: 76px;
+            object-fit: contain;
+            border: 1px solid #eef2f7;
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .pdx-spec-card,
+        .pdx-review-card {
+            background: #fff;
+            border: 1px solid #eef2f7;
+            border-radius: 12px;
+            padding: 14px;
+        }
+        .pdx-card-title {
+            margin: 0 0 12px;
+            color: #0f172a;
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        .pdx-review-score {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 18px;
+            align-items: center;
+        }
+        .pdx-review-big {
+            color: #0f172a;
+            font-size: 48px;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .pdx-review-big span {
+            color: #475569;
+            font-size: 28px;
+        }
+        .pdx-review-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .pdx-review-bar {
+            display: grid;
+            grid-template-columns: 32px 1fr 34px;
+            gap: 8px;
+            align-items: center;
+            color: #64748b;
+            font-size: 12px;
+        }
+        .pdx-review-track {
+            height: 8px;
+            overflow: hidden;
+            border-radius: 99px;
+            background: #e5e7eb;
+        }
+        .pdx-review-fill {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: #f59e0b;
+        }
 
         /* ===== Info card ===== */
         .pdx-info {
             background: #fff;
             border-radius: 12px;
             border: 1px solid #eef2f7;
-            padding: 24px;
-            display: flex; flex-direction: column; gap: 16px;
+            padding: 18px;
+            min-height: 100%;
+            display: flex; flex-direction: column; gap: 12px;
+            justify-content: flex-start;
         }
         .pdx-brand {
             font-size: 12px; font-weight: 700; letter-spacing: .08em;
@@ -398,7 +528,7 @@
 
         /* Price block */
         .pdx-price-card {
-            background: #fff5f5; border-radius: 10px; padding: 14px 16px;
+            background: #fff5f5; border-radius: 10px; padding: 12px 14px;
             display: flex; flex-direction: column; gap: 6px;
             margin-top: 2px;
         }
@@ -440,8 +570,8 @@
         /* Variant groups */
         .shopw-pdp-purchase {
             width: 100% !important;
-            margin-top: 6px !important;
-            gap: 18px !important;
+            margin-top: 2px !important;
+            gap: 12px !important;
             align-items: stretch !important;
         }
         .pdx-variant { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 9px; }
@@ -508,7 +638,7 @@
         @media (max-width: 480px) { .pdx-actions { grid-template-columns: 1fr; } }
         .pdx-btn {
             width: 100%;
-            min-height: 64px;
+            min-height: 56px;
             border-radius: 12px; padding: 12px 18px;
             font-size: 15px; font-weight: 700; cursor: pointer;
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -533,7 +663,7 @@
         /* Support row */
         .pdx-support {
             display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-            margin-top: 2px; padding-top: 16px; border-top: 1px solid #eef2f7;
+            margin-top: auto; padding-top: 12px; border-top: 1px solid #eef2f7;
             font-size: 13px; color: #475569;
         }
         .pdx-support-item { display: inline-flex; align-items: center; gap: 6px; }
@@ -555,12 +685,20 @@
         .pdx-tag-chip:hover { background: #e2e8f0; color: #0f172a; }
 
         /* ===== Right sidebar ===== */
-        .pdx-side { display: flex; flex-direction: column; gap: 16px; }
+        .pdx-side {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            height: 100%;
+            align-self: stretch;
+        }
         .pdx-side-card {
             background: #fff; border: 1px solid #eef2f7; border-radius: 12px;
-            padding: 18px;
+            padding: 16px;
             display: flex; flex-direction: column; gap: 14px;
         }
+        .pdx-side-card:first-child { flex: 1 1 auto; }
+        .pdx-side-card:last-child { flex: 0 0 auto; }
         .pdx-side-row { display: flex; align-items: flex-start; gap: 12px; }
         .pdx-side-icon {
             flex: 0 0 46px; width: 46px; height: 46px; border-radius: 12px;
@@ -586,21 +724,29 @@
 
         /* ===== Service policy strip (4 cards) ===== */
         .pdx-policies {
-            display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
-            margin: 24px 0;
+            display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(260px, 280px); gap: 16px;
+            margin: 16px 0;
+            align-items: stretch;
         }
-        @media (max-width: 991px) { .pdx-policies { grid-template-columns: repeat(2, 1fr); } }
+        .pdx-policies .pdx-policy:last-child {
+            grid-column: 4;
+        }
+        @media (max-width: 1199px) {
+            .pdx-policies { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .pdx-policies .pdx-policy:last-child { grid-column: auto; }
+        }
         @media (max-width: 575px) { .pdx-policies { grid-template-columns: 1fr; } }
         .pdx-policy {
             background: #fff; border: 1px solid #eef2f7; border-radius: 12px;
-            padding: 20px;
-            display: flex; align-items: center; gap: 16px;
+            min-height: 78px;
+            padding: 14px;
+            display: flex; align-items: center; gap: 10px;
         }
         .pdx-policy-icon {
-            flex: 0 0 66px; width: 66px; height: 66px; border-radius: 16px;
+            flex: 0 0 42px; width: 42px; height: 42px; border-radius: 12px;
             background: #f0fdfa; color: #0d9488;
             display: inline-flex; align-items: center; justify-content: center;
-            font-size: 30px;
+            font-size: 18px;
             position: relative;
         }
         .pdx-policy-icon .fa {
@@ -608,7 +754,7 @@
             width: auto !important;
             height: auto !important;
             margin: 0 !important;
-            font-size: 30px !important;
+            font-size: 18px !important;
             line-height: 1 !important;
             position: absolute !important;
             left: 50% !important;
@@ -751,37 +897,65 @@
                 ]),
             ])
 
-            {{-- Main 3-column grid --}}
+            {{-- Main 3-column detail layout --}}
             <div class="pdx-grid">
-                {{-- LEFT — Gallery --}}
-                <div class="pdx-gallery">
-                    <button type="button"
-                        class="pdx-wishlist"
-                        aria-label="Yêu thích {{ $productName }}"
-                        aria-pressed="false"
-                        data-tech-wishlist
-                        data-product-id="{{ $product->product_id }}"
-                        data-product-name="{{ $productName }}"
-                        data-product-price="{{ number_format($finalPrice, 0, ',', '.') }}đ"
-                        data-product-image="{{ $primaryImage }}"
-                        data-product-url="{{ url('/chi-tiet/' . $product->product_slug) }}">
-                        <i class="fa fa-heart-o"></i>
-                    </button>
-                    <ul id="imageGallery" class="pdx-gallery-list">
-                        @foreach ($imageSlides as $slide)
-                            <li
-                                @if ($slide['attribute_key'] !== null) class="pro_attr_image_{{ $slide['attribute_key'] }}" @endif
-                                data-thumb="{{ $slide['thumb'] }}" data-src="{{ $slide['src'] }}">
-                                <img src="{{ $slide['src'] }}" alt="{{ $slide['alt'] }}">
-                            </li>
-                        @endforeach
-                    </ul>
+                <div class="pdx-left-stack">
+                    {{-- LEFT — Gallery --}}
+                    <div class="pdx-gallery">
+                        <button type="button"
+                            class="pdx-wishlist"
+                            aria-label="Yêu thích {{ $productName }}"
+                            aria-pressed="false"
+                            data-tech-wishlist
+                            data-product-id="{{ $product->product_id }}"
+                            data-product-name="{{ $productName }}"
+                            data-product-price="{{ number_format($finalPrice, 0, ',', '.') }}đ"
+                            data-product-image="{{ $primaryImage }}"
+                            data-product-url="{{ url('/chi-tiet/' . $product->product_slug) }}"
+                            data-product-category-id="{{ $product->primary_category_id ?? $primaryCategory?->id }}"
+                            data-product-category="{{ $productCategoryLabel }}">
+                            <i class="fa fa-heart-o"></i>
+                        </button>
+                        @php $visibleSlides = collect($imageSlides)->take(4)->values(); @endphp
+                        <div class="pdx-main-image">
+                            <img id="pdx-main-product-image"
+                                src="{{ $imageSlides[0]['src'] }}"
+                                alt="{{ $imageSlides[0]['alt'] }}"
+                                loading="eager"
+                                decoding="async">
+                        </div>
+                        <div class="pdx-thumbs" aria-label="Ảnh sản phẩm">
+                            @foreach ($visibleSlides as $thumbIndex => $slide)
+                                <button type="button"
+                                    class="pdx-thumb {{ $thumbIndex === 0 ? 'is-active' : '' }}"
+                                    data-pdx-thumb
+                                    data-pdx-slide-key="{{ $slide['attribute_key'] ?? $thumbIndex }}"
+                                    data-pdx-image="{{ $slide['src'] }}"
+                                    data-pdx-alt="{{ $slide['alt'] }}"
+                                    aria-label="Xem ảnh {{ $thumbIndex + 1 }}">
+                                    <img src="{{ $slide['thumb'] }}" alt="{{ $slide['alt'] }}" loading="lazy" decoding="async">
+                                </button>
+                            @endforeach
+                        </div>
+
+                        <ul id="imageGallery" class="pdx-gallery-list" hidden>
+                            @foreach ($imageSlides as $slide)
+                                <li
+                                    @if ($slide['attribute_key'] !== null) class="pro_attr_image_{{ $slide['attribute_key'] }}" @endif
+                                    data-thumb="{{ $slide['thumb'] }}" data-src="{{ $slide['src'] }}">
+                                <img src="{{ $slide['src'] }}" alt="{{ $slide['alt'] }}" loading="lazy" decoding="async">
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+
                 </div>
 
-                {{-- CENTER — Info --}}
-                <div class="pdx-info">
-                    <span class="pdx-brand">{{ mb_strtoupper($productBrandLabel) }}</span>
-                    <h1 class="pdx-title">{{ $productName }}</h1>
+                <div class="pdx-right-stack">
+                    {{-- RIGHT — Info --}}
+                    <div class="pdx-info">
+                        <span class="pdx-brand">{{ mb_strtoupper($productBrandLabel) }}</span>
+                        <h1 class="pdx-title">{{ $productName }}</h1>
 
                     <div class="pdx-meta-row">
                         <div class="pdx-stars" aria-label="Đánh giá trung bình {{ number_format($ratingValue, 1) }} trên 5">
@@ -887,11 +1061,11 @@
                         </div>
 
                         <div class="pdx-actions">
-                            <button type="button" class="pdx-btn pdx-btn--ghost add-to-cart" {{ $stockAvailable ? '' : 'disabled' }}>
+                            <button type="button" class="pdx-btn pdx-btn--ghost add-to-cart" data-pdx-add-cart {{ $stockAvailable ? '' : 'disabled' }}>
                                 <i class="fa fa-shopping-bag"></i>
                                 <span class="shopw-pdp-purchase-btn-label">Thêm vào giỏ hàng</span>
                             </button>
-                            <button type="button" class="pdx-btn pdx-btn--primary" {{ $stockAvailable ? '' : 'disabled' }} onclick="pdxBuyNow()">
+                            <button type="button" class="pdx-btn pdx-btn--primary" data-pdx-buy-now {{ $stockAvailable ? '' : 'disabled' }}>
                                 <span class="pdx-btn-strong">Mua ngay</span>
                                 <span class="pdx-btn-sub">Giao hàng tận nơi</span>
                             </button>
@@ -922,6 +1096,8 @@
                             @endforeach
                         </div>
                     @endif
+                    </div>
+
                 </div>
 
                 {{-- RIGHT — Sidebar --}}
@@ -1047,6 +1223,11 @@
                 </div>
             </div>
 
+            @include('pages.sanpham.partials.quick-compare', [
+                'products' => $quick_compare_products ?? collect(),
+                'rows' => $quick_compare_rows ?? [],
+            ])
+
             {{-- Related products --}}
             @if ($relatedProductCards->isNotEmpty())
                 <section class="pdx-section">
@@ -1087,58 +1268,149 @@
             }
         }
 
-        function pdxBuyNow() {
-            if (typeof $ === 'undefined' || typeof addProductToCart !== 'function') {
-                alert('Chức năng mua ngay tạm thời không khả dụng.');
+        function pdxSetStatus(message, type) {
+            if (typeof window.setStorefrontInlineStatus === 'function') {
+                window.setStorefrontInlineStatus('#product-detail-purchase-status', message, type || 'info');
                 return;
             }
-            var id_product = $('.product_id').val();
-            var id_attribute = $('.cart_product_id_attribute').val();
-            var maxQuantity = parseInt($('.cart_product_qty').attr('max') || 0, 10);
-            var cart_product_qty = parseInt($('.cart_product_qty').val() || 1, 10);
-            var _token = $('input[name="_token"]').val();
-
-            if (typeof clearStorefrontInlineStatus === 'function') {
-                clearStorefrontInlineStatus('#product-detail-purchase-status');
-            }
-            if (!maxQuantity) {
-                if (typeof setStorefrontInlineStatus === 'function') {
-                    setStorefrontInlineStatus('#product-detail-purchase-status',
-                        'Sản phẩm hiện chưa sẵn sàng để mua.', 'warning');
-                }
-                return;
-            }
-            if (cart_product_qty > maxQuantity) {
-                $('.cart_product_qty').val(maxQuantity);
-                if (typeof setStorefrontInlineStatus === 'function') {
-                    setStorefrontInlineStatus('#product-detail-purchase-status',
-                        'Sản phẩm chỉ còn ' + maxQuantity + ' sản phẩm.', 'warning');
-                }
-                return;
-            }
-            addProductToCart({
-                id_product: id_product,
-                id_attribute: id_attribute,
-                cart_product_qty: cart_product_qty,
-                _token: _token
-            }, {
-                onSuccess: function () {
-                    if (typeof refreshStorefrontCartUi === 'function') {
-                        refreshStorefrontCartUi();
-                    }
-                    window.location.href = '{{ url('/gio-hang') }}';
-                },
-                onError: function (xhr) {
-                    var errorMessage = 'Không thể thêm sản phẩm vào giỏ hàng lúc này.';
-                    if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
-                        errorMessage = xhr.responseJSON.message;
-                    }
-                    if (typeof setStorefrontInlineStatus === 'function') {
-                        setStorefrontInlineStatus('#product-detail-purchase-status', errorMessage, 'error');
-                    }
-                }
-            });
+            var status = document.getElementById('product-detail-purchase-status');
+            if (status) status.textContent = message || '';
         }
+
+        function pdxClearStatus() {
+            if (typeof window.clearStorefrontInlineStatus === 'function') {
+                window.clearStorefrontInlineStatus('#product-detail-purchase-status');
+                return;
+            }
+            var status = document.getElementById('product-detail-purchase-status');
+            if (status) status.textContent = '';
+        }
+
+        function pdxCartPayload() {
+            var qtyInput = document.querySelector('.cart_product_qty');
+            return {
+                id_product: (document.querySelector('.product_id') || {}).value || '',
+                id_attribute: (document.querySelector('.cart_product_id_attribute') || {}).value || '0',
+                cart_product_qty: (qtyInput || {}).value || '1',
+                _token: (document.querySelector('input[name="_token"]') || {}).value || ''
+            };
+        }
+
+        function pdxValidateCartQuantity() {
+            var qtyInput = document.querySelector('.cart_product_qty');
+            var maxQuantity = parseInt(qtyInput ? qtyInput.getAttribute('max') || '0' : '0', 10);
+            var quantity = parseInt(qtyInput ? qtyInput.value || '1' : '1', 10);
+
+            pdxClearStatus();
+
+            if (!maxQuantity) {
+                pdxSetStatus('Sản phẩm hiện chưa sẵn sàng để mua.', 'warning');
+                return false;
+            }
+
+            if (quantity > maxQuantity) {
+                if (qtyInput) qtyInput.value = maxQuantity;
+                pdxSetStatus('Sản phẩm chỉ còn ' + maxQuantity + ' sản phẩm.', 'warning');
+                return false;
+            }
+
+            return true;
+        }
+
+        function pdxSubmitCart(redirectToCart) {
+            if (!pdxValidateCartQuantity()) return;
+
+            var payload = pdxCartPayload();
+            var buttons = document.querySelectorAll('[data-pdx-add-cart], [data-pdx-buy-now]');
+            buttons.forEach(function (button) { button.disabled = true; });
+
+            if (typeof window.addProductToCart === 'function') {
+                window.addProductToCart(payload, {
+                    fallbackMessage: 'Không thể thêm sản phẩm vào giỏ hàng lúc này.',
+                    beforeSend: function () {
+                        buttons.forEach(function (button) { button.disabled = true; });
+                    },
+                    onSuccess: function () {
+                        buttons.forEach(function (button) { button.disabled = false; });
+                        if (typeof window.refreshStorefrontCartUi === 'function') {
+                            window.refreshStorefrontCartUi();
+                        }
+                        if (redirectToCart) {
+                            window.location.href = '{{ url('/gio-hang') }}';
+                            return;
+                        }
+                        pdxSetStatus('Đã thêm sản phẩm vào giỏ hàng.', 'success');
+                    },
+                    onError: function (xhr) {
+                        buttons.forEach(function (button) { button.disabled = false; });
+                        var message = 'Không thể thêm sản phẩm vào giỏ hàng lúc này.';
+                        if (typeof window.getAjaxErrorMessage === 'function') {
+                            message = window.getAjaxErrorMessage(xhr, message);
+                        } else if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                            message = xhr.responseJSON.message;
+                        }
+                        pdxSetStatus(message, 'error');
+                    }
+                });
+                return;
+            }
+
+            fetch('{{ url('/add-cart-ajax') }}', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') || {}).content || payload._token,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(function (response) {
+                    return response.json().then(function (data) {
+                        if (!response.ok || !data.success) {
+                            throw new Error(data.message || 'Không thể thêm sản phẩm vào giỏ hàng.');
+                        }
+                        return data;
+                    });
+                })
+                .then(function () {
+                    if (typeof window.refreshStorefrontCartUi === 'function') {
+                        window.refreshStorefrontCartUi();
+                    }
+                    if (redirectToCart) {
+                        window.location.href = '{{ url('/gio-hang') }}';
+                        return;
+                    }
+                    pdxSetStatus('Đã thêm sản phẩm vào giỏ hàng.', 'success');
+                })
+                .catch(function (error) {
+                    pdxSetStatus(error.message || 'Không thể thêm sản phẩm vào giỏ hàng lúc này.', 'error');
+                })
+                .finally(function () {
+                    buttons.forEach(function (button) { button.disabled = false; });
+                });
+        }
+
+        function pdxBuyNow() {
+            pdxSubmitCart(true);
+        }
+
+        document.addEventListener('click', function (event) {
+            var addButton = event.target.closest ? event.target.closest('[data-pdx-add-cart]') : null;
+            var buyButton = event.target.closest ? event.target.closest('[data-pdx-buy-now]') : null;
+
+            if (!addButton && !buyButton) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            if (typeof event.stopImmediatePropagation === 'function') {
+                event.stopImmediatePropagation();
+            }
+
+            pdxSubmitCart(!!buyButton);
+        }, true);
 
         // Tabs
         document.querySelectorAll('.pdx-tab-btn').forEach(function (btn) {
@@ -1151,5 +1423,102 @@
                 if (pane) pane.classList.add('is-active');
             });
         });
+
+        (function () {
+            var mainImage = document.getElementById('pdx-main-product-image');
+            var thumbs = Array.prototype.slice.call(document.querySelectorAll('[data-pdx-thumb]'));
+
+            function showImage(button) {
+                if (!mainImage || !button) return;
+                mainImage.src = button.getAttribute('data-pdx-image') || mainImage.src;
+                mainImage.alt = button.getAttribute('data-pdx-alt') || mainImage.alt;
+                thumbs.forEach(function (thumb) { thumb.classList.remove('is-active'); });
+                button.classList.add('is-active');
+            }
+
+            thumbs.forEach(function (thumb) {
+                thumb.addEventListener('click', function () { showImage(thumb); });
+            });
+
+            document.querySelectorAll('.pro_attr_image_click').forEach(function (option) {
+                option.addEventListener('click', function () {
+                    var key = String(option.getAttribute('data-key_image') || '');
+                    var matched = thumbs.find(function (thumb) {
+                        return String(thumb.getAttribute('data-pdx-slide-key') || '') === key;
+                    });
+                    if (matched) showImage(matched);
+                });
+            });
+        })();
+
+        document.querySelectorAll('[data-pdx-compare-toggle]').forEach(function (toggle) {
+            toggle.addEventListener('change', function () {
+                var id = this.getAttribute('data-pdx-compare-toggle');
+                document.querySelectorAll('[data-pdx-compare-column="' + id + '"]').forEach(function (cell) {
+                    cell.hidden = !toggle.checked;
+                });
+            });
+            toggle.dispatchEvent(new Event('change'));
+        });
+
+        (function () {
+            var compareSection = document.querySelector('[data-current-category-id]');
+            var picker = document.querySelector('[data-pdx-compare-picker]');
+            var table = document.querySelector('[data-pdx-compare-table]');
+
+            if (!compareSection || !picker || !table) return;
+
+            var currentCategoryId = String(compareSection.getAttribute('data-current-category-id') || '');
+            if (!currentCategoryId) return;
+
+            var existingIds = new Set(Array.from(table.querySelectorAll('[data-pdx-compare-column]'))
+                .map(function (cell) { return String(cell.getAttribute('data-pdx-compare-column') || ''); }));
+            var wishlist = [];
+
+            try {
+                wishlist = JSON.parse(localStorage.getItem('data') || '[]');
+            } catch (error) {
+                wishlist = [];
+            }
+
+            wishlist
+                .filter(function (item) {
+                    return item && String(item.category_id || '') === currentCategoryId && item.id && !existingIds.has(String(item.id));
+                })
+                .slice(0, 3)
+                .forEach(function (item) {
+                    var id = String(item.id);
+                    var label = document.createElement('label');
+                    var input = document.createElement('input');
+                    var span = document.createElement('span');
+                    label.className = 'pdx-compare-option pdx-compare-option--wishlist';
+                    input.type = 'checkbox';
+                    input.setAttribute('data-pdx-compare-toggle', id);
+                    span.textContent = item.name || 'Sản phẩm yêu thích';
+                    label.appendChild(input);
+                    label.appendChild(span);
+                    picker.appendChild(label);
+
+                    var headCell = document.createElement('th');
+                    headCell.hidden = true;
+                    headCell.setAttribute('data-pdx-compare-column', id);
+                    headCell.textContent = item.name || 'Sản phẩm yêu thích';
+                    table.querySelector('thead tr').appendChild(headCell);
+
+                    table.querySelectorAll('tbody tr').forEach(function (row, index) {
+                        var cell = document.createElement('td');
+                        cell.hidden = true;
+                        cell.setAttribute('data-pdx-compare-column', id);
+                        cell.textContent = index === 0 ? (item.price || 'Đang cập nhật') : (index === 2 ? (item.category || 'Cùng nhóm') : 'Từ yêu thích');
+                        row.appendChild(cell);
+                    });
+
+                    input.addEventListener('change', function () {
+                        document.querySelectorAll('[data-pdx-compare-column="' + id + '"]').forEach(function (cell) {
+                            cell.hidden = !input.checked;
+                        });
+                    });
+                });
+        })();
     </script>
 @endsection

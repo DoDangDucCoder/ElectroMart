@@ -45,7 +45,7 @@ class OrderConfirmationMailData
             shippingAddress: (string) ($shipping['shipping_address'] ?? 'Không có'),
             shippingNotes: (string) ($shipping['shipping_notes'] ?? 'Không có ghi chú bổ sung.'),
             paymentLabel: $shippingMethod === '0' ? 'Chuyển khoản ATM' : 'Thanh toán tiền mặt',
-            historyUrl: (string) ($overrides['historyUrl'] ?? url('/history')),
+            historyUrl: (string) ($overrides['historyUrl'] ?? url('/account/orders')),
             shopUrl: (string) ($overrides['shopUrl'] ?? url('/')),
             supportPhone: (string) ($overrides['supportPhone'] ?? '1900 5689'),
             items: array_values(array_map(

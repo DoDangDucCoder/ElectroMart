@@ -1,0 +1,19 @@
+{
+    "dry_run": true,
+    "commit": false,
+    "driver": "ffmpeg",
+    "sources_audited": 5,
+    "variants_planned": 0,
+    "variants_created": 0,
+    "variants_existing": 0,
+    "variants_skipped": 15,
+    "variants_error": 0,
+    "estimated_source_bytes": 0,
+    "optimized_bytes": 0,
+    "saved_bytes": 0,
+    "reports": {
+        "csv": "C:/Users/Admin/Desktop/shop/Laravel11_Shop_Website_Full/docs/import/optimize-product-images-audit-20260511-101435.csv",
+        "json": "C:/Users/Admin/Desktop/shop/Laravel11_Shop_Website_Full/docs/import/optimize-product-images-audit-20260511-101435.json",
+        "summary": "C:/Users/Admin/Desktop/shop/Laravel11_Shop_Website_Full/docs/import/optimize-product-images-summary-20260511-101435.json"
+    }
+}

@@ -22,6 +22,7 @@ use App\Support\StorefrontLabel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -129,7 +130,7 @@ class HomeController extends Controller
             'url_canonical' => $request->url(),
             'availableCoupons' => $availableCoupons,
             'flashSaleProducts' => $this->resolveTechHomeProducts(10, preferHot: true, onlyDiscounted: true),
-            'promoProducts' => $this->resolveTechHomeProducts(7, preferHot: true, onlyDiscounted: true),
+            'promoProducts' => $this->resolveTechHomeProducts(8, preferHot: true, onlyDiscounted: true),
             'policyItems' => $this->resolveTechHomePolicyItems(),
             'paymentItems' => $this->resolveTechHomePaymentItems(),
         ]);
@@ -180,6 +181,21 @@ class HomeController extends Controller
     }
 
     private function resolveTechHomeProducts(int $limit = 8, bool $preferHot = false, bool $onlyDiscounted = false): Collection
+    {
+        $limit = max(1, $limit);
+        $cacheKey = 'storefront.home.tech_products.'
+            .$limit.'.'
+            .($preferHot ? 'hot' : 'normal').'.'
+            .($onlyDiscounted ? 'discounted' : 'all');
+
+        return Cache::remember(
+            $cacheKey,
+            300,
+            fn () => $this->resolveFreshTechHomeProducts($limit, $preferHot, $onlyDiscounted)
+        );
+    }
+
+    private function resolveFreshTechHomeProducts(int $limit = 8, bool $preferHot = false, bool $onlyDiscounted = false): Collection
     {
         $productTable = (new Product)->getTable();
 
@@ -298,7 +314,7 @@ class HomeController extends Controller
             'brand' => $brandName,
             'brand_logo' => $this->resolveTechHomeAssetUrl($product->brand?->logo_path),
             'brand_initials' => $this->brandInitials($brandName),
-            'image' => $this->resolveTechHomeAssetUrl($product->thumbnail_path),
+            'image' => AssetUrl::productVariant($product->thumbnail_path, 'thumb'),
             'original_price' => $originalPrice,
             'price' => $finalPrice,
             'discount_percent' => $discountPercent,
@@ -565,13 +581,21 @@ class HomeController extends Controller
 
     private function localPublicAssetExists(?string $path): bool
     {
+        static $existsCache = [];
+
         $path = trim((string) $path);
 
         if ($path === '' || AssetUrl::isAbsoluteUrl($path)) {
             return false;
         }
 
-        return file_exists(public_path(ltrim($path, '/\\')));
+        $normalizedPath = ltrim(str_replace('\\', '/', $path), '/');
+
+        if (array_key_exists($normalizedPath, $existsCache)) {
+            return $existsCache[$normalizedPath];
+        }
+
+        return $existsCache[$normalizedPath] = file_exists(public_path($normalizedPath));
     }
 
     private function brandInitials(?string $brandName): string
@@ -615,22 +639,21 @@ class HomeController extends Controller
 
     public function search(SearchProductsRequest $request)
     {
-        return $this->renderCatalogListingPage($request, [
-            'meta_desc' => 'Tìm kiếm sản phẩm',
-            'meta_keywords' => 'Tìm kiếm sản phẩm',
-            'meta_title' => 'Tìm kiếm sản phẩm',
-            'default_sort' => 'popular',
-            'search_page_kicker' => 'Tìm kiếm sản phẩm',
-            'search_page_title' => 'Kết quả tìm kiếm',
-            'search_form_action' => url('/tim-kiem'),
-            'search_clear_url' => url('/tim-kiem'),
-            'search_results_kicker' => 'Danh sách kết quả',
-            'tracking_context' => 'search_page',
-        ]);
+        $query = $request->query();
+        if (isset($query['keywords_submit']) && ! isset($query['q'])) {
+            $query['q'] = $query['keywords_submit'];
+            unset($query['keywords_submit']);
+        }
+
+        return redirect()->to(url('/san-pham').($query ? '?'.http_build_query($query) : ''), 301);
     }
 
     public function products(SearchProductsRequest $request)
     {
+        if ($request->input('mode') === 'recommendations') {
+            return $this->recommendations($request);
+        }
+
         return $this->renderCatalogListingPage($request, [
             'meta_desc' => 'Danh sách sản phẩm - Laptop, điện thoại, phụ kiện công nghệ chính hãng',
             'meta_keywords' => 'sản phẩm, laptop, điện thoại, phụ kiện công nghệ',
@@ -648,19 +671,9 @@ class HomeController extends Controller
 
     public function best_selling(SearchProductsRequest $request)
     {
-        return $this->renderCatalogListingPage($request, [
-            'meta_desc' => 'Sản phẩm đang bán chạy',
-            'meta_keywords' => 'sản phẩm bán chạy, top sản phẩm bán chạy',
-            'meta_title' => 'Sản phẩm đang bán chạy',
-            'default_sort' => 'best_selling',
-            'search_page_mode' => 'best_selling',
-            'search_page_kicker' => 'Sản phẩm đang bán chạy',
-            'search_page_title' => 'Top sản phẩm bán chạy',
-            'search_form_action' => url('/san-pham-ban-chay'),
-            'search_clear_url' => url('/san-pham-ban-chay'),
-            'search_results_kicker' => 'Bảng xếp hạng bán chạy',
-            'tracking_context' => 'best_selling_page',
-        ]);
+        $query = array_merge($request->query(), ['sort' => 'best_selling']);
+
+        return redirect()->to(url('/san-pham').'?'.http_build_query($query), 301);
     }
 
     private function renderCatalogListingPage(SearchProductsRequest $request, array $overrides = [])
@@ -669,18 +682,32 @@ class HomeController extends Controller
         $slider = $this->legacyActiveSliders();
         $url_canonical = $request->url();
         $validated = $request->validated();
-        $keywords = $validated['keywords_submit'] ?? '';
+        $keywords = $validated['q'] ?? $validated['keywords_submit'] ?? '';
         $defaultSort = $overrides['default_sort'] ?? 'popular';
         $highlightProductSlug = trim((string) ($validated['highlight_product'] ?? ''));
         $highlightProduct = $highlightProductSlug !== ''
             ? $this->productService->findProductBySlug($highlightProductSlug)
             : null;
 
+        $selectedCategory = null;
+        if (! empty($validated['category'])) {
+            $selectedCategorySlug = $this->categoryService->resolveStorefrontSlug((string) $validated['category']);
+            $selectedCategory = $this->categoryService->findActiveBySlug($selectedCategorySlug);
+        }
+
+        $selectedBrand = null;
+        if (! empty($validated['brand'])) {
+            $selectedBrand = $this->brandService->findActiveBySlug((string) $validated['brand']);
+        }
+
+        $tag = trim((string) ($validated['tag'] ?? ''));
+        $effectiveKeyword = trim($keywords.($tag !== '' ? ' '.$tag : ''));
+
         $filters = [
-            'keyword' => $keywords,
+            'keyword' => $effectiveKeyword,
             'product_code' => $validated['product_code'] ?? null,
-            'category_id' => $validated['category_id'] ?? null,
-            'brand_id' => $validated['brand_id'] ?? null,
+            'category_id' => $validated['category_id'] ?? $selectedCategory?->id,
+            'brand_id' => $validated['brand_id'] ?? $selectedBrand?->id,
             'price_min' => $validated['price_min'] ?? null,
             'price_max' => $validated['price_max'] ?? null,
             'sort' => $validated['sort'] ?? $defaultSort,
@@ -690,12 +717,15 @@ class HomeController extends Controller
 
         $cate_product = $this->categoryService->listActive();
         $brand_product = $this->brandService->listAll(['is_active' => true]);
-        $search_product = $this->productService->searchCatalog($filters, 12);
+        $search_product = $this->productService->searchCatalog($filters, 16);
         $search_product->appends(array_filter([
-            'keywords_submit' => $validated['keywords_submit'] ?? null,
+            'q' => $validated['q'] ?? $validated['keywords_submit'] ?? null,
             'product_code' => $validated['product_code'] ?? null,
-            'category_id' => $validated['category_id'] ?? null,
-            'brand_id' => $validated['brand_id'] ?? null,
+            'category' => $validated['category'] ?? null,
+            'category_id' => empty($validated['category']) ? ($validated['category_id'] ?? null) : null,
+            'brand' => $validated['brand'] ?? null,
+            'brand_id' => empty($validated['brand']) ? ($validated['brand_id'] ?? null) : null,
+            'tag' => $validated['tag'] ?? null,
             'price_min' => $validated['price_min'] ?? null,
             'price_max' => $validated['price_max'] ?? null,
             'sort' => $validated['sort'] ?? null,
@@ -722,8 +752,28 @@ class HomeController extends Controller
         }
 
         $pageMode = trim((string) ($overrides['search_page_mode'] ?? 'search'));
+        if ($selectedCategory) {
+            $pageMode = 'category';
+        } elseif ($selectedBrand) {
+            $pageMode = 'brand';
+        } elseif ($tag !== '') {
+            $pageMode = 'tag';
+        }
         $searchPageSummary = $overrides['search_page_summary'] ?? null;
         $searchResultsTitle = $overrides['search_results_title'] ?? null;
+
+        if ($selectedCategory) {
+            $categoryLabel = StorefrontLabel::category($selectedCategory->category_name, $selectedCategory->slug_category_product ?? null);
+            $searchPageSummary ??= 'Khám phá '.number_format(method_exists($search_product, 'total') ? $search_product->total() : $search_product->count()).' sản phẩm thuộc danh mục '.$categoryLabel.'.';
+            $searchResultsTitle ??= 'Sản phẩm '.$categoryLabel;
+        } elseif ($selectedBrand) {
+            $searchPageSummary ??= 'Khám phá '.number_format(method_exists($search_product, 'total') ? $search_product->total() : $search_product->count()).' sản phẩm thuộc thương hiệu '.$selectedBrand->brand_name.'.';
+            $searchResultsTitle ??= 'Sản phẩm '.$selectedBrand->brand_name;
+        } elseif ($tag !== '') {
+            $tagLabel = StorefrontLabel::neutralizeSource(str_replace('-', ' ', $tag));
+            $searchPageSummary ??= 'Các sản phẩm cùng nhãn được trình bày bằng cùng một mẫu card để dễ so sánh và thêm vào giỏ hàng.';
+            $searchResultsTitle ??= $tagLabel;
+        }
 
         if ($pageMode === 'best_selling') {
             $searchPageSummary ??= $highlightProduct
@@ -734,12 +784,117 @@ class HomeController extends Controller
                 : 'Sản phẩm bán chạy hiện tại';
         }
 
-        $viewName = $pageMode === 'all_products' ? 'pages.sanpham.catalog' : 'pages.sanpham.search';
+        $listingFilter = [
+            'show_sidebar' => true,
+            'show_sort' => true,
+            'action' => url('/san-pham'),
+            'clear_url' => url('/san-pham'),
+            'keyword' => $keywords,
+            'product_code' => $filters['product_code'],
+            'category_id' => $filters['category_id'],
+            'brand_id' => $filters['brand_id'],
+            'price_min' => $filters['price_min'],
+            'price_max' => $filters['price_max'],
+            'sort' => $filters['sort'],
+            'highlight_product' => $filters['highlight_product'],
+            'categories' => $cate_product,
+            'brands' => $brand_product,
+            'sort_labels' => [
+                'popular' => 'Liên quan',
+                'best_selling' => 'Bán chạy',
+                'price_asc' => 'Giá thấp đến cao',
+                'price_desc' => 'Giá cao đến thấp',
+                'sale_desc' => 'Khuyến mãi nhiều nhất',
+                'name_asc' => 'Tên A-Z',
+                'name_desc' => 'Tên Z-A',
+                'created_at_desc' => 'Mới nhất',
+            ],
+            'price_presets' => [
+                ['label' => 'Dưới 10 triệu', 'min' => 0, 'max' => 10000000],
+                ['label' => '10 - 20 triệu', 'min' => 10000000, 'max' => 20000000],
+                ['label' => '20 - 30 triệu', 'min' => 20000000, 'max' => 30000000],
+                ['label' => '30 - 40 triệu', 'min' => 30000000, 'max' => 40000000],
+                ['label' => 'Trên 40 triệu', 'min' => 40000000, 'max' => null],
+            ],
+        ];
 
-        return view($viewName, [
+        $listingTitle = match ($pageMode) {
+            'category' => StorefrontLabel::category($selectedCategory?->category_name, $selectedCategory?->slug_category_product, 'Sản phẩm'),
+            'brand' => $selectedBrand?->brand_name ?? 'Thương hiệu',
+            'tag' => StorefrontLabel::neutralizeSource(str_replace('-', ' ', $tag)),
+            default => $overrides['search_page_title'] ?? match ($pageMode) {
+            'all_products' => 'Tất cả sản phẩm',
+            'best_selling' => 'Top sản phẩm bán chạy',
+            default => 'Kết quả tìm kiếm',
+            },
+        };
+        $listingKicker = $overrides['search_page_kicker'] ?? match ($pageMode) {
+            'all_products' => 'Danh mục sản phẩm',
+            'best_selling' => 'Sản phẩm đang bán chạy',
+            default => 'Tìm kiếm sản phẩm',
+        };
+        $listingResultsKicker = $overrides['search_results_kicker'] ?? match ($pageMode) {
+            'best_selling' => 'Bảng xếp hạng bán chạy',
+            'all_products' => 'Danh sách sản phẩm',
+            default => 'Danh sách kết quả',
+        };
+        $listingResultsTitle = $searchResultsTitle ?? match ($pageMode) {
+            'best_selling' => 'Sản phẩm bán chạy hiện tại',
+            'all_products' => 'Tất cả sản phẩm đang có',
+            default => 'Sản phẩm phù hợp',
+        };
+        $listingSubtitle = $searchPageSummary ?? match ($pageMode) {
+            'all_products' => 'Khám phá toàn bộ sản phẩm chính hãng với giá tốt, bảo hành uy tín.',
+            'best_selling' => 'Danh sách được xếp theo số lượng bán thành công gần đây và mức độ quan tâm thực tế của người dùng.',
+            default => 'Lọc theo từ khóa, danh mục, thương hiệu hoặc khoảng giá để tìm sản phẩm phù hợp.',
+        };
+        $breadcrumbItems = [
+            [
+                'label' => 'Sản phẩm',
+                'url' => $pageMode === 'all_products' ? null : url('/san-pham'),
+                'current' => $pageMode === 'all_products',
+            ],
+        ];
+        if ($pageMode !== 'all_products') {
+            $breadcrumbItems[] = [
+                'label' => $listingTitle,
+                'current' => true,
+            ];
+        }
+
+        $listingBanner = [
+            'breadcrumbItems' => $breadcrumbItems,
+            'kicker' => $listingKicker,
+            'title' => $listingTitle,
+            'subtitle' => $listingSubtitle,
+            'results_kicker' => $listingResultsKicker,
+            'results_title' => $listingResultsTitle,
+            'results_description' => 'Lọc theo danh mục, thương hiệu, khoảng giá hoặc thứ tự để thu hẹp danh sách sản phẩm.',
+            'empty_title' => $pageMode === 'best_selling' ? 'Không có sản phẩm bán chạy phù hợp.' : 'Không có sản phẩm nào phù hợp.',
+            'empty_action_text' => 'Xóa bộ lọc',
+                'empty_action_url' => url('/san-pham'),
+            'actions' => [
+                [
+                    'url' => url('/san-pham'),
+                    'icon' => 'fa-th-large',
+                    'label' => 'Xem tất cả sản phẩm',
+                ],
+                [
+                    'url' => url('/san-pham'),
+                    'icon' => 'fa-search',
+                    'label' => 'Mở bộ lọc sản phẩm',
+                ],
+            ],
+        ];
+
+        return view('pages.sanpham.listing', [
             'category' => $cate_product,
             'brand' => $brand_product,
             'search_product' => $search_product,
+            'products' => $search_product,
+            'pageMode' => $pageMode,
+            'banner' => $listingBanner,
+            'filter' => $listingFilter,
             'search_keyword' => $keywords,
             'search_filters' => $filters,
             'search_categories' => $cate_product,
@@ -970,9 +1125,55 @@ class HomeController extends Controller
             'recommendations_page'
         );
 
-        return view('pages.sanpham.recommendations', [
+        return view('pages.sanpham.listing', [
             'category' => $cate_product,
             'brand' => $brand_product,
+            'pageMode' => 'recommendations',
+            'products' => $recommendationData['products'],
+            'filter' => [
+                'show_sidebar' => false,
+                'show_sort' => false,
+                'action' => url('/san-pham'),
+                'clear_url' => url('/san-pham?mode=recommendations'),
+            ],
+            'banner' => [
+                'breadcrumbItems' => [
+                    [
+                        'label' => 'Sản phẩm',
+                        'url' => url('/san-pham'),
+                    ],
+                    [
+                        'label' => 'Gợi ý sản phẩm',
+                        'current' => true,
+                    ],
+                ],
+                'kicker' => 'Gợi ý sản phẩm',
+                'title' => 'Sản phẩm nên xem tiếp',
+                'subtitle' => $recommendationData['description'],
+                'heroClass' => 'shopw-recommendation-page-head',
+                'chips' => $recommendationData['sources'],
+                'results_kicker' => 'Gợi ý sản phẩm',
+                'results_title' => 'Danh sách gợi ý',
+                'results_description' => $recommendationData['description'],
+                'empty_title' => 'Chưa có đủ dữ liệu để gợi ý sản phẩm cho bạn.',
+                'empty_action_text' => 'Mở bộ lọc sản phẩm',
+                'empty_action_url' => url('/san-pham'),
+                'card_column_class' => 'col-xs-12 col-sm-6 col-md-3',
+                'show_quickview' => true,
+                'show_cart_toggle' => true,
+                'actions' => [
+                    [
+                        'url' => url('/'),
+                        'icon' => 'fa-home',
+                        'label' => 'Về trang chủ',
+                    ],
+                    [
+                        'url' => url('/san-pham'),
+                        'icon' => 'fa-search',
+                        'label' => 'Mở bộ lọc sản phẩm',
+                    ],
+                ],
+            ],
             'recommended_products' => $recommendationData['products'],
             'recommendation_description' => $recommendationData['description'],
             'recommendation_sources' => $recommendationData['sources'],
@@ -1132,7 +1333,7 @@ class HomeController extends Controller
             'name' => $product->name,
             'slug' => $product->slug,
             'url' => url('/chi-tiet/'.$product->slug),
-            'image' => $this->resolvePublicAssetUrl($product->product_image),
+            'image' => AssetUrl::productVariant($product->product_image, 'thumb'),
             'price' => $originalPrice,
             'final_price' => $finalPrice,
             'discount_percent' => $discountPercent,

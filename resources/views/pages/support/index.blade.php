@@ -1,7 +1,14 @@
-@extends('layouts.home-tech')
+﻿@extends('layouts.home-tech')
+
+@php
+    $meta_desc = $meta_desc ?? 'Chăm sóc khách hàng DangDuc - hỗ trợ đơn hàng, bảo hành, đổi trả và tư vấn sản phẩm công nghệ';
+    $meta_keywords = $meta_keywords ?? 'chăm sóc khách hàng, hỗ trợ DangDuc, bảo hành, đổi trả, hỗ trợ đơn hàng';
+    $meta_title = $meta_title ?? 'Chăm sóc khách hàng - DangDuc';
+    $url_canonical = $url_canonical ?? url('/cham-soc-khach-hang');
+@endphp
 
 @push('styles')
-    <link href="{{ asset('frontend/css/support-page.css') }}" rel="stylesheet">
+<link href="{{ asset('frontend/css/support-page.css') }}?v=2.1" rel="stylesheet">
 @endpush
 
 @section('content')
@@ -37,7 +44,7 @@
                 'icon' => 'fa-search',
                 'title' => 'Kiểm tra đơn hàng',
                 'desc' => 'Tra cứu trạng thái đơn hàng nhanh chóng',
-                'href' => url('/lich-su-don-hang'),
+                'href' => url('/kiem-tra-don-hang'),
             ],
             [
                 'icon' => 'fa-shield',
@@ -58,9 +65,9 @@
             ['icon' => 'fa-truck', 'title' => 'Giao hàng', 'desc' => 'Thời gian giao hàng, phí và chính sách vận chuyển'],
             ['icon' => 'fa-shield', 'title' => 'Bảo hành', 'desc' => 'Chính sách & quy trình bảo hành sản phẩm'],
             ['icon' => 'fa-refresh', 'title' => 'Đổi trả', 'desc' => 'Điều kiện, quy trình đổi trả và hoàn tiền'],
-            ['icon' => 'fa-user-o', 'title' => 'Tài khoản', 'desc' => 'Quản lý tài khoản, đăng nhập và bảo mật'],
+            ['icon' => 'fa-user', 'title' => 'Tài khoản', 'desc' => 'Quản lý tài khoản, đăng nhập và bảo mật'],
             ['icon' => 'fa-tag', 'title' => 'Khuyến mãi', 'desc' => 'Mã giảm giá, chương trình khuyến mãi và ưu đãi'],
-            ['icon' => 'fa-shopping-bag', 'title' => 'Sản phẩm', 'desc' => 'Thông tin, hướng dẫn sử dụng và tương thích'],
+            ['icon' => 'fa-shopping-cart', 'title' => 'Sản phẩm', 'desc' => 'Thông tin, hướng dẫn sử dụng và tương thích'],
             ['icon' => 'fa-file-text-o', 'title' => 'Bài viết & hướng dẫn', 'desc' => 'Hướng dẫn sử dụng, mẹo và tin tức công nghệ'],
         ];
 
@@ -86,21 +93,21 @@
                 'tag' => 'Đặt hàng & thanh toán',
                 'title' => 'Hướng dẫn theo dõi đơn hàng trên DangDuc.vn',
                 'desc' => 'Các bước theo dõi đơn hàng nhanh chóng và chính xác nhất.',
-                'image' => asset('frontend/images/home/banner-1.jpg'),
+                'image' => asset('uploads/contact/blog-three41.jpg'),
             ],
             [
                 'date' => '10/05/2025',
                 'tag' => 'Đổi trả',
                 'title' => 'Chính sách đổi trả và hoàn tiền mới nhất 2025',
                 'desc' => 'Cập nhật điều kiện đổi trả và hoàn tiền áp dụng tại DangDuc.',
-                'image' => asset('frontend/images/home/banner-2.jpg'),
+                'image' => asset('uploads/contact/laptop-symbol-azy3.png'),
             ],
             [
                 'date' => '05/05/2025',
                 'tag' => 'Thanh toán',
                 'title' => 'Các phương thức thanh toán được chấp nhận tại DangDuc',
                 'desc' => 'Hướng dẫn các hình thức thanh toán an toàn và tiện lợi.',
-                'image' => asset('frontend/images/home/banner-3.jpg'),
+                'image' => asset('frontend/images/banners/hero-student-promo.png'),
             ],
         ];
 
@@ -267,7 +274,7 @@
                             </details>
                         @endforeach
                     </div>
-                    <a class="dd-faq-card__more" href="#">Xem tất cả câu hỏi thường gặp <i class="fa fa-long-arrow-right"></i></a>
+                    <a class="dd-faq-card__more" href="{{ url('/cham-soc-khach-hang/faq') }}">Xem tất cả câu hỏi thường gặp <i class="fa fa-long-arrow-right"></i></a>
                 </div>
 
                 {{-- Need help now --}}

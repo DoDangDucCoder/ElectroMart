@@ -15,7 +15,7 @@
                 <h2 class="title text-center">Điểm chạm nổi bật trong ngày</h2>
                 <p class="shopw-section-copy">Không dàn đều quá nhiều banner. Mỗi block chỉ giữ một mục tiêu rõ để người dùng dễ hiểu và đi tiếp nhanh hơn.</p>
             </div>
-            <a href="{{ url('/tim-kiem') }}" class="shopw-section-link">Mở trang tìm kiếm</a>
+            <a href="{{ url('/san-pham') }}" class="shopw-section-link">Mở bộ lọc sản phẩm</a>
         </div>
 
         <div class="shopw-home-campaign-grid {{ $campaignGridClass }}">

@@ -143,19 +143,19 @@ class CheckoutService
 
     public function confirmOrder(array $payload, ?int $customerId = null): Order
     {
-        $items = $this->cartService->items();
+        $items = $this->cartService->selectedCheckoutItems();
 
         if ($items->isEmpty()) {
-            throw new RuntimeException('Giỏ hàng đang trống.');
+            throw new RuntimeException('Vui lòng chọn ít nhất một sản phẩm để thanh toán.');
         }
 
         return DB::transaction(function () use ($payload, $customerId, $items) {
             $shippingFee = $this->resolveShippingFee($payload);
             $couponData = $this->couponService->validatedCurrent(
-                $this->cartService->subtotal(),
+                $this->cartService->subtotalFor($items),
                 $customerId
             );
-            $totals = $this->cartService->totals($couponData, $shippingFee);
+            $totals = $this->cartService->totalsFor($items, $couponData, $shippingFee);
 
             $address = $this->storeCustomerAddress($payload, $customerId);
             $order = $this->createOrderRecord($payload, $customerId, $address?->id, $totals, $couponData);
@@ -169,7 +169,8 @@ class CheckoutService
                 $this->couponService->redeem($couponModel, $customerId, $order->id, $totals['discount']);
             }
 
-            $this->cartService->clear();
+            $this->cartService->removeBySessionIds($items->pluck('session_id')->all());
+            $this->cartService->clearSelectedCheckoutItemIds();
             $this->couponService->clear();
             $this->shippingService->clearFee();
 
@@ -348,7 +349,9 @@ class CheckoutService
             'tracking_number' => null,
             'shipping_fee' => $shippingFee,
             'insurance_fee' => 0,
-            'meta' => null,
+            'meta' => array_filter([
+                'vietnam_2025' => $this->vietnamLocationMeta($payload),
+            ]),
         ]);
     }
 

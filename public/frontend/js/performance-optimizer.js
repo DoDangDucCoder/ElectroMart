@@ -263,8 +263,8 @@ class PerformanceOptimizer {
 
     preloadCriticalResources() {
         const criticalResources = [
-            '/css/tailwind.css',
-            '/js/app.js'
+            '/frontend/css/storefront-tokens.css',
+            '/frontend/css/storefront-components.css'
         ];
         
         criticalResources.forEach(resource => {

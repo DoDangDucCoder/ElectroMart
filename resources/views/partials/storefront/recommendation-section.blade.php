@@ -25,13 +25,13 @@
         [
             'title' => 'Tiếp tục lọc sản phẩm',
             'description' => 'Mở bộ lọc tìm kiếm để thử lại với tên, mã hoặc khoảng giá khác.',
-            'url' => url('/tim-kiem'),
+            'url' => url('/san-pham'),
             'icon' => 'fa-search',
         ],
         [
             'title' => config('storefront.labels.compare_products', 'So sánh sản phẩm'),
             'description' => 'Đặt vài mẫu lên cùng một bàn so sánh để ra quyết định nhanh hơn.',
-            'url' => url('/so-sanh'),
+            'url' => url('/san-pham'),
             'icon' => 'fa-refresh',
         ],
     ];

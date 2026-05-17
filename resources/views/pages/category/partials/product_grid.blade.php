@@ -21,7 +21,7 @@
 @if ($showPagination && $products instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator)
     <div class="col-sm-12">
         <div class="text-center">
-            {{ $products->links() }}
+            {{ $products->links('vendor.pagination.shop-pagination') }}
         </div>
     </div>
 @endif

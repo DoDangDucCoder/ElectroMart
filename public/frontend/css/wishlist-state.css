@@ -1,0 +1,50 @@
+.shopw-wishlist-float.is-active,
+.tech-wishlist-btn.is-active,
+.cat-x__card-wishlist.is-active,
+.pdx-wishlist.is-active {
+    background: #ef4444 !important;
+    color: #fff !important;
+    border-color: #ef4444 !important;
+}
+
+.shopw-wishlist-float.is-active i,
+.tech-wishlist-btn.is-active i,
+.cat-x__card-wishlist.is-active i,
+.pdx-wishlist.is-active i {
+    display: inline-block !important;
+    color: #fff !important;
+    font-family: FontAwesome !important;
+    font-size: 13px !important;
+    font-style: normal !important;
+    line-height: 1 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.shopw-wishlist-float.is-active .fa-heart-o:before,
+.tech-wishlist-btn.is-active .fa-heart-o:before,
+.cat-x__card-wishlist.is-active .fa-heart-o:before,
+.pdx-wishlist.is-active .fa-heart-o:before {
+    color: #fff !important;
+    content: "\f08a";
+}
+
+.shopw-wishlist-float:not(.is-active),
+.tech-wishlist-btn:not(.is-active),
+.cat-x__card-wishlist:not(.is-active),
+.pdx-wishlist:not(.is-active) {
+    background: #fff !important;
+    color: #ef4444 !important;
+}
+
+.shopw-wishlist-float:not(.is-active) i,
+.tech-wishlist-btn:not(.is-active) i,
+.cat-x__card-wishlist:not(.is-active) i,
+.pdx-wishlist:not(.is-active) i {
+    color: #ef4444 !important;
+}
+
+.tech-sale-section .tech-wishlist-btn {
+    z-index: 30;
+    pointer-events: auto;
+}

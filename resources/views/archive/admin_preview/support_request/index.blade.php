@@ -1,7 +1,5 @@
 @extends('admin_layout')
 @section('admin_content')
-<link rel="stylesheet" href="{{ asset('backend/css/admin-dashboard.css') }}">
-<link rel="stylesheet" href="{{ asset('backend/css/admin-pages.css') }}">
 @php
 $requests = [
     ['id'=>'SR20250524-0001','customer'=>'Nguyễn Văn An','channel'=>'Email','channel_class'=>'email','category'=>'Bảo hành','topic'=>'Laptop mất nguồn, không lên...','detail'=>'Máy tự tắt khi cắm sạc, mất...','priority'=>'Khẩn cấp','priority_class'=>'urgent','assigned'=>'Lê Minh Đức','date'=>'24/05/2025 10:23','status'=>'Chưa tiếp nhận','status_class'=>'gray','sla'=>'0%','sla_class'=>'red'],

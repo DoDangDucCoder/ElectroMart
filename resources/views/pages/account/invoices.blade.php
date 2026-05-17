@@ -9,10 +9,10 @@
 
     $accountMenu = [
         ['key' => 'overview', 'label' => 'Tổng quan tài khoản', 'icon' => 'fa-th-large', 'href' => route('customer.account')],
-        ['key' => 'orders', 'label' => 'Đơn hàng của tôi', 'icon' => 'fa-shopping-bag', 'href' => url('/history')],
+        ['key' => 'orders', 'label' => 'Đơn hàng của tôi', 'icon' => 'fa-shopping-bag', 'href' => url('/account/orders')],
         ['key' => 'cancelled', 'label' => 'Đơn hàng đã huỷ', 'icon' => 'fa-times-circle', 'href' => route('customer.account.cancelled-orders')],
         ['key' => 'returns', 'label' => 'Trả hàng / Hoàn tiền', 'icon' => 'fa-undo', 'href' => route('customer.account.returns')],
-        ['key' => 'wishlist', 'label' => 'Sản phẩm yêu thích', 'icon' => 'fa-heart-o', 'href' => url('/yeu-thich')],
+        ['key' => 'wishlist', 'label' => 'Sản phẩm yêu thích', 'icon' => 'fa-heart-o', 'href' => route('customer.account.wishlist')],
         ['key' => 'recently-viewed', 'label' => 'Sản phẩm đã xem', 'icon' => 'fa-eye', 'href' => route('customer.account.recently-viewed')],
         ['key' => 'addresses', 'label' => 'Địa chỉ của tôi', 'icon' => 'fa-map-marker', 'href' => route('customer.account.addresses')],
         ['key' => 'payment-methods', 'label' => 'Phương thức thanh toán', 'icon' => 'fa-credit-card', 'href' => route('customer.account.payment-methods')],
@@ -177,13 +177,13 @@ body.inv-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
                                 $orderCode = $inv->order?->code ?? '—';
                                 $firstItem = $inv->order?->items?->first();
                                 $productName = $firstItem?->product?->name ?? $firstItem?->name ?? '—';
-                                $productImage = $firstItem?->product?->thumbnail ?? $firstItem?->product?->image ?? 'uploads/product/no-image.svg';
+                                $productImage = \App\Support\AssetUrl::productVariant($firstItem?->product?->thumbnail ?? $firstItem?->product?->image ?? null, 'thumb');
                                 $typeLabel = $inv->type === 'company' ? 'Công ty' : 'Cá nhân';
                             @endphp
                             <tr>
                                 <td class="id-cell">{{ $inv->code }}<small>{{ $orderCode }}</small></td>
                                 <td>{{ optional($inv->created_at)->format('d/m/Y H:i') }}</td>
-                                <td><div class="prod-cell"><div class="prod-img"><img src="{{ asset($productImage) }}" alt=""></div><span>{{ $productName }}</span></div></td>
+                                <td><div class="prod-cell"><div class="prod-img"><img src="{{ $productImage }}" alt=""></div><span>{{ $productName }}</span></div></td>
                                 <td>{{ $typeLabel }}</td>
                                 <td style="font-weight:600">{{ number_format((float) $inv->value, 0, ',', '.') }}đ</td>
                                 <td><span class="inv-badge {{ $st[1] }}">{{ $st[0] }}</span></td>

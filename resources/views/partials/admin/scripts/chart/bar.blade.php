@@ -35,6 +35,10 @@
             .prop('hidden', true);
     };
 
+    window.setDashboardChartInteractivity = function(enabled) {
+        $('#chart').css('pointer-events', enabled ? '' : 'none');
+    };
+
     window.resolveDashboardChartError = function(xhr, fallbackMessage) {
         if (xhr && xhr.responseJSON) {
             if (xhr.responseJSON.message) {
@@ -59,6 +63,7 @@
 
         var normalizedData = Array.isArray(data) ? data : [];
         window.adminDashboardChart.setData(normalizedData);
+        setDashboardChartInteractivity(normalizedData.length > 0);
 
         if (normalizedData.length === 0 && emptyMessage) {
             renderDashboardChartNotice('info', emptyMessage);
@@ -83,6 +88,7 @@
                 ykeys: ['order', 'sales', 'profit', 'quantity'],
                 labels: ['đơn hàng', 'doanh số', 'lợi nhuận', 'số lượng']
             });
+            setDashboardChartInteractivity(false);
         }
 
         var _token = $('input[name="_token"]').val();
@@ -100,6 +106,7 @@
             error: function(xhr) {
                 if (window.adminDashboardChart) {
                     window.adminDashboardChart.setData([]);
+                    setDashboardChartInteractivity(false);
                 }
 
                 renderDashboardChartNotice('error', resolveDashboardChartError(
@@ -140,6 +147,7 @@
                 error: function(xhr) {
                     if (window.adminDashboardChart) {
                         window.adminDashboardChart.setData([]);
+                        setDashboardChartInteractivity(false);
                     }
 
                     renderDashboardChartNotice('error', resolveDashboardChartError(
@@ -175,6 +183,7 @@
                 error: function(xhr) {
                     if (window.adminDashboardChart) {
                         window.adminDashboardChart.setData([]);
+                        setDashboardChartInteractivity(false);
                     }
 
                     renderDashboardChartNotice('error', resolveDashboardChartError(

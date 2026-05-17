@@ -2,7 +2,7 @@
     $promoBanners = [
         [
             'class' => 'tech-promo-card--gaming',
-            'query' => 'pc gaming',
+            'url' => url('/danh-muc/pc'),
             'eyebrow' => 'PC GAMING',
             'title' => 'Hiệu năng đỉnh cao',
             'description' => 'Tối ưu cho game thủ',
@@ -10,7 +10,7 @@
         ],
         [
             'class' => 'tech-promo-card--monitor',
-            'query' => 'màn hình',
+            'url' => url('/danh-muc/man-hinh'),
             'eyebrow' => 'MONITOR',
             'title' => 'Hình ảnh sắc nét',
             'description' => 'Mượt mà từng khung hình',
@@ -18,7 +18,7 @@
         ],
         [
             'class' => 'tech-promo-card--laptop',
-            'query' => 'laptop',
+            'url' => url('/danh-muc/laptop'),
             'eyebrow' => 'LAPTOP',
             'title' => 'Linh hoạt học tập',
             'description' => 'Gọn nhẹ cho công việc',
@@ -26,7 +26,7 @@
         ],
         [
             'class' => 'tech-promo-card--phone',
-            'query' => 'điện thoại',
+            'url' => url('/danh-muc/dien-thoai'),
             'eyebrow' => 'PHONE',
             'title' => 'Kết nối mọi lúc',
             'description' => 'Smartphone chính hãng',
@@ -34,7 +34,7 @@
         ],
         [
             'class' => 'tech-promo-card--network',
-            'query' => 'router',
+            'url' => url('/danh-muc/network'),
             'eyebrow' => 'NETWORK',
             'title' => 'Mạng ổn định',
             'description' => 'Router và Wi-Fi mesh',
@@ -42,7 +42,7 @@
         ],
         [
             'class' => 'tech-promo-card--office',
-            'query' => 'máy in',
+            'url' => url('/danh-muc/thiet-bi-van-phong'),
             'eyebrow' => 'OFFICE',
             'title' => 'Thiết bị văn phòng',
             'description' => 'In ấn và làm việc hiệu quả',
@@ -50,7 +50,7 @@
         ],
         [
             'class' => 'tech-promo-card--accessory',
-            'query' => 'phụ kiện gaming',
+            'url' => url('/danh-muc/gaming-gear'),
             'eyebrow' => 'PHỤ KIỆN GAMING',
             'title' => 'Đa dạng lựa chọn',
             'description' => 'Chuột, phím, tai nghe',
@@ -64,14 +64,14 @@
         <div class="row tech-promo-grid">
             @foreach ($promoBanners as $banner)
                 <div class="col-xs-12 col-sm-6 col-md-4">
-                    <a href="{{ url('/tim-kiem?keywords_submit=' . urlencode($banner['query'])) }}" class="tech-promo-card {{ $banner['class'] }}">
+                    <a href="{{ $banner['url'] }}" class="tech-promo-card {{ $banner['class'] }}">
                         <div class="tech-promo-content">
                             <span class="tech-promo-eyebrow">{{ $banner['eyebrow'] }}</span>
                             <h3>{{ $banner['title'] }}</h3>
                             <p>{{ $banner['description'] }}</p>
                             <span class="tech-promo-btn">Xem ngay <i class="fa fa-arrow-right"></i></span>
                         </div>
-                        <img src="{{ asset($banner['image']) }}" alt="{{ $banner['eyebrow'] }}">
+                        <img src="{{ asset($banner['image']) }}" alt="{{ $banner['eyebrow'] }}" loading="lazy" decoding="async">
                     </a>
                 </div>
             @endforeach
