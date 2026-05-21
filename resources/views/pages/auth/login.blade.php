@@ -38,11 +38,18 @@ $url_canonical=$url_canonical??url('/dang-nhap');
                     </div>
                     <button type="submit" class="accp-btn accp-btn--primary accp-btn--block" style="height:46px;font-size:15px"><i class="fa fa-sign-in"></i> Đăng nhập</button>
                 </form>
+                {{-- Fix #13: Chỉ hiển thị Social Login khi đã cấu hình credentials --}}
+                @if(config('services.google.client_id') || config('services.facebook.client_id'))
                 <div class="auth-divider"><span>Hoặc đăng nhập bằng</span></div>
                 <div class="auth-social">
+                    @if(config('services.google.client_id'))
                     <a href="{{ url('/login-customer-google') }}" class="auth-social-btn google"><i class="fa fa-google"></i> Google</a>
+                    @endif
+                    @if(config('services.facebook.client_id'))
                     <a href="{{ url('/login-facebook-customer') }}" class="auth-social-btn facebook"><i class="fa fa-facebook"></i> Facebook</a>
+                    @endif
                 </div>
+                @endif
                 <div class="auth-footer">Chưa có tài khoản? <a href="{{ url('/dang-ky') }}">Đăng ký ngay</a></div>
             </div>
         </div>

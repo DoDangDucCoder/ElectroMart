@@ -548,15 +548,16 @@
                                     <span class="ckq-pay-brand jcb">JCB</span>
                                 </span>
                             </label>
-                            <label class="ckq-method" data-payment>
-                                <input type="radio" name="shipping_method" class="payment_select" value="ewallet">
-                                <span class="ckq-radio-fake"></span>
+                            <label class="ckq-method" data-payment style="opacity:.65; cursor:not-allowed;" onclick="return false;">
+                                <input type="radio" name="shipping_method" class="payment_select" value="ewallet" disabled>
+                                <span class="ckq-radio-fake" style="border-color:#e5e7eb;"></span>
                                 <span class="ckq-method-body">
-                                    <span class="ckq-method-title">Ví điện tử</span>
+                                    <span class="ckq-method-title">Ví điện tử <span style="font-size:11px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:99px;font-weight:600;margin-left:6px;">Sắp ra mắt</span></span>
+                                    <span class="ckq-method-sub">MoMo, ZaloPay — Đang tích hợp, chưa sẵn sàng</span>
                                 </span>
                                 <span class="ckq-pay-brands">
-                                    <span class="ckq-pay-brand momo">MoMo</span>
-                                    <span class="ckq-pay-brand zalo">ZaloPay</span>
+                                    <span class="ckq-pay-brand momo" style="opacity:.5;">MoMo</span>
+                                    <span class="ckq-pay-brand zalo" style="opacity:.5;">ZaloPay</span>
                                 </span>
                             </label>
                         </div>

@@ -390,16 +390,32 @@ class CheckoutController extends Controller
             return Redirect::to('/account/orders')->with('error', 'Không tìm thấy đơn hàng.');
         }
 
+        // Fix #7: Bảo vệ IDOR — chỉ cho xem nếu là guest vừa đặt hoặc khách đã đăng nhập sở hữu đơn
+        $sessionCustomerId = (int) Session::get('customer_id');
+        $guestOrderCode    = Session::get('guest_order_code');
+
+        $isOwner = $sessionCustomerId > 0 && (int) $order->customer_id === $sessionCustomerId;
+        $isGuest = $sessionCustomerId === 0 && $guestOrderCode === $orderCode;
+
+        if (!$isOwner && !$isGuest) {
+            return Redirect::to('/kiem-tra-don-hang')->with('error', 'Bạn không có quyền xem đơn hàng này.');
+        }
+
         $orderView = $this->buildOrderViewData($order);
 
+        // Fix #4: Thêm url vào từng product để product-card hiển thị đúng link
         $recommendedProducts = \App\Infrastructure\Persistence\Eloquent\Catalog\Product::query()
-            ->where('is_active', true)->withCompleteStorefrontMedia()->inRandomOrder()->limit(5)->get();
+            ->where('is_active', true)->withCompleteStorefrontMedia()->inRandomOrder()->limit(8)->get()
+            ->map(function ($p) {
+                $p->url = url('/chi-tiet/' . $p->slug);
+                return $p;
+            });
 
         return view('pages.checkout.order_success', array_merge(
             $this->seoContext($request, 'Đặt hàng thành công', 'đặt hàng thành công'),
             $this->catalogContext(),
             [
-                'orderView' => $orderView,
+                'orderView'           => $orderView,
                 'recommendedProducts' => $recommendedProducts,
             ]
         ));
@@ -419,14 +435,19 @@ class CheckoutController extends Controller
         $orderView['fail_reason'] = $request->query('reason', 'Giao dịch bị từ chối bởi ngân hàng');
         $orderView['status'] = 'failed';
 
+        // Fix #4: Thêm url vào từng product để product-card hiển thị đúng link
         $recommendedProducts = \App\Infrastructure\Persistence\Eloquent\Catalog\Product::query()
-            ->where('is_active', true)->withCompleteStorefrontMedia()->inRandomOrder()->limit(5)->get();
+            ->where('is_active', true)->withCompleteStorefrontMedia()->inRandomOrder()->limit(8)->get()
+            ->map(function ($p) {
+                $p->url = url('/chi-tiet/' . $p->slug);
+                return $p;
+            });
 
         return view('pages.checkout.order_failed', array_merge(
             $this->seoContext($request, 'Đặt hàng thất bại', 'đặt hàng thất bại'),
             $this->catalogContext(),
             [
-                'orderView' => $orderView,
+                'orderView'           => $orderView,
                 'recommendedProducts' => $recommendedProducts,
             ]
         ));

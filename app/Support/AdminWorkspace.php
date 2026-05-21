@@ -25,7 +25,7 @@ final class AdminWorkspace
             'description' => 'Xem và cập nhật thông tin đăng nhập của tài khoản đang sử dụng.',
             'section' => 'Tài khoản',
             'path' => '/admin/profile',
-            'icon' => 'fa-user-circle-o',
+            'icon' => 'fa-user',
             'keywords' => ['ho so', 'profile', 'tai khoan', 'mat khau', 'email'],
         ],
         [

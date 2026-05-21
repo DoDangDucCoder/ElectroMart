@@ -64,8 +64,14 @@ class RateLimitingMiddleware
 
     private function incrementRequestCount(string $key): void
     {
-        $count = Cache::get($key, 0);
-        Cache::put($key, $count + 1, now()->addMinutes($this->windowMinutes));
+        // Fix #17: Dùng Cache::increment thay get/put để atomic, tránh race condition
+        $ttl = now()->addMinutes($this->windowMinutes);
+
+        if (Cache::has($key)) {
+            Cache::increment($key);
+        } else {
+            Cache::put($key, 1, $ttl);
+        }
     }
 
     private function getRetryAfter(string $key): int

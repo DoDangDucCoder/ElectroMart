@@ -80,6 +80,9 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
     Route::get('/admin/customers/{customer}', [AdminCustomerController::class, 'show'])
         ->middleware('admin.permission:'.AdminPermissions::MANAGE_ORDERS)
         ->name('admin.customers.show');
+    Route::post('/admin/customers/{customer}/toggle-status', [AdminCustomerController::class, 'toggleStatus'])
+        ->middleware('admin.permission:'.AdminPermissions::MANAGE_ORDERS)
+        ->name('admin.customers.toggle-status');
     Route::get('/admin/inventory', [AdminInventoryController::class, 'index'])
         ->middleware('admin.permission:'.AdminPermissions::MANAGE_PRODUCTS)
         ->name('admin.inventory');

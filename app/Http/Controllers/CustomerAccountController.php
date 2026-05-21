@@ -276,14 +276,57 @@ class CustomerAccountController extends Controller
 
     public function postReview(Request $request)
     {
-        if (! $this->sessionCustomer()) {
+        $customer = $this->sessionCustomer();
+        if (! $customer) {
             $this->clearCustomerSession();
 
             return $this->redirectToLogin('Phiên đăng nhập không còn hợp lệ.');
         }
 
-        // Simple feedback logic for now
-        return Redirect::back()->with('message', 'Cảm ơn bạn đã gửi đánh giá!');
+        $data = $request->validate([
+            'comment_product_id' => ['required', 'integer', 'min:1'],
+            'comment_rating'     => ['required', 'integer', 'min:1', 'max:5'],
+            'comment_name'       => ['required', 'string', 'max:120'],
+            'comment'            => ['required', 'string', 'min:5', 'max:2000'],
+        ], [
+            'comment_product_id.required' => 'Vui lòng chọn sản phẩm.',
+            'comment_rating.required'     => 'Vui lòng chọn số sao đánh giá.',
+            'comment_rating.min'          => 'Đánh giá phải từ 1 đến 5 sao.',
+            'comment_rating.max'          => 'Đánh giá tối đa 5 sao.',
+            'comment_name.required'       => 'Vui lòng nhập tên.',
+            'comment.required'            => 'Vui lòng nhập nội dung đánh giá.',
+            'comment.min'                 => 'Nội dung đánh giá phải có ít nhất 5 ký tự.',
+        ]);
+
+        $productId = (int) $data['comment_product_id'];
+
+        // Kiểm tra sản phẩm tồn tại
+        $product = \App\Infrastructure\Persistence\Eloquent\Catalog\Product::find($productId);
+        if (! $product) {
+            return Redirect::back()->withErrors(['comment_product_id' => 'Sản phẩm không tồn tại.']);
+        }
+
+        // Mỗi khách chỉ được đánh giá 1 lần mỗi sản phẩm
+        $alreadyReviewed = ProductReview::where('product_id', $productId)
+            ->where('customer_id', $customer->id)
+            ->exists();
+
+        if ($alreadyReviewed) {
+            return Redirect::back()->with('error', 'Bạn đã đánh giá sản phẩm này rồi.');
+        }
+
+        ProductReview::create([
+            'product_id'   => $productId,
+            'customer_id'  => $customer->id,
+            'author_name'  => trim($data['comment_name']),
+            'author_email' => $customer->email,
+            'rating'       => (int) $data['comment_rating'],
+            'content'      => trim($data['comment']),
+            'status'       => 'pending',
+            'is_public'    => false,
+        ]);
+
+        return Redirect::back()->with('message', 'Cảm ơn bạn đã gửi đánh giá! Đánh giá sẽ được hiển thị sau khi được duyệt.');
     }
 
     public function changePassword(Request $request)

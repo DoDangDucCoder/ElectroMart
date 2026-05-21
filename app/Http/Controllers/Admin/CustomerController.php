@@ -90,6 +90,17 @@ class CustomerController extends Controller
         ]);
     }
 
+    public function toggleStatus(Customer $customer): \Illuminate\Http\RedirectResponse
+    {
+        $newStatus = ! $customer->is_active;
+        $customer->update(['is_active' => $newStatus]);
+
+        $label = $newStatus ? 'mở khóa' : 'khóa';
+
+        return redirect()->route('admin.customers.show', $customer)
+            ->with('success', "Đã {$label} tài khoản khách hàng {$customer->name}.");
+    }
+
     private function safeMeta(array $meta): array
     {
         $blocked = [

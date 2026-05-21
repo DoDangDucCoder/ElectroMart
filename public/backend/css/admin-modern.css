@@ -7,7 +7,7 @@ body.g-admin-shell-modern {
     --g-admin-sidebar-width: 280px;
     background: #f4f6fb;
     color: #0f172a;
-    font-family: 'Inter', 'Roboto', system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-family: Inter, "Segoe UI", system-ui, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     min-height: 100vh;
@@ -167,19 +167,20 @@ body.g-admin-shell-modern .g-admin-shell {
     display: flex;
     align-items: center;
     background: #ffffff;
-    border: 1px solid #cbd5e1;
+    border: 1px solid #bfd0e8;
     border-radius: 999px;
-    padding: 6px 10px;
+    padding: 4px 6px 4px 8px;
     gap: 8px;
     width: 320px;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+    min-height: 46px;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14), inset 0 0 0 1px rgba(255, 255, 255, 0.72);
     transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
 .g-admin-shell-modern .g-admin-top-search-form:focus-within {
     background: #ffffff;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+    border-color: #2563eb;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14), 0 16px 36px rgba(15, 23, 42, 0.16);
 }
 
 .g-admin-shell-modern .g-admin-top-search-input {
@@ -205,12 +206,13 @@ body.g-admin-shell-modern .g-admin-shell {
     width: 38px;
     height: 38px;
     border-radius: 999px;
-    background: #eef2ff;
+    background: #2563eb;
     border: 0;
-    color: #2563eb;
+    color: #ffffff;
     cursor: pointer;
     order: -1;
     padding: 0;
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.28);
 }
 
 /* Notification bell */
@@ -311,6 +313,39 @@ body.g-admin-shell-modern .g-admin-shell {
 
 .g-admin-shell-modern .g-admin-user-menu .caret {
     color: #94a3b8;
+}
+
+.g-admin-shell-modern .g-admin-user-menu .dropdown-menu.extended.logout {
+    padding: 14px 0;
+}
+
+.g-admin-shell-modern .g-admin-user-menu .dropdown-menu.extended.logout > li > a,
+.g-admin-shell-modern .g-admin-user-menu .g-admin-user-logout-button {
+    min-height: 42px;
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 0 22px;
+    color: #374151;
+    font-size: 16px;
+    line-height: 1.25;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.g-admin-shell-modern .g-admin-user-menu .dropdown-menu.extended.logout i {
+    width: 28px;
+    min-width: 28px;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #374151;
+    font-size: 18px;
+    line-height: 1;
+    text-align: center;
 }
 
 /* ----------- Sidebar ----------- */

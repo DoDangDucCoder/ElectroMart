@@ -93,6 +93,53 @@
             color: #8ec5ff;
         }
 
+        .admin-auth-feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .admin-auth-feature-card {
+            min-height: 142px;
+            display: grid;
+            grid-template-rows: 30px auto 1fr;
+            align-items: start;
+            justify-items: center;
+            gap: 8px;
+            padding: 18px 14px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, .06);
+            text-align: center;
+        }
+
+        .admin-auth-feature-card i {
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #60a5fa;
+            font-size: 24px;
+            line-height: 1;
+        }
+
+        .admin-auth-feature-title {
+            min-height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.35;
+        }
+
+        .admin-auth-feature-copy {
+            color: rgba(255, 255, 255, .56);
+            font-size: 10px;
+            line-height: 1.45;
+        }
+
         .admin-auth-form {
             padding: 48px 40px;
             display: flex;
@@ -240,6 +287,10 @@
             }
 
             .admin-auth-grid--double {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-auth-feature-grid {
                 grid-template-columns: 1fr;
             }
 

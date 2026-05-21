@@ -84,7 +84,7 @@
                                     @csrf
                                     <button type="submit"
                                         class="g-admin-user-logout-button">
-                                        <i class="fa fa-key"></i>Đăng xuất
+                                        <i class="fa fa-sign-out"></i>Đăng xuất
                                     </button>
                                 </form>
                             </li>

@@ -46,10 +46,23 @@
             </div>
         </section>
 
-        <p>
+        @if(session('success'))
+            <div class="alert alert-success">{{ session('success') }}</div>
+        @endif
+
+        <p style="display:flex;gap:10px;align-items:center;">
             <a href="{{ route('admin.customers') }}" class="btn btn-default">
                 <i class="fa fa-arrow-left"></i> Quay lại danh sách
             </a>
+            {{-- Fix #10: Nút Khóa / Mở khóa tài khoản khách hàng --}}
+            <form method="POST" action="{{ route('admin.customers.toggle-status', $customer) }}"
+                  onsubmit="return confirm('{{ $customer->is_active ? 'Xác nhận khóa tài khoản ' . $customer->name . '?' : 'Xác nhận mở khóa tài khoản ' . $customer->name . '?' }}')">
+                @csrf
+                <button type="submit" class="btn {{ $customer->is_active ? 'btn-danger' : 'btn-success' }}">
+                    <i class="fa {{ $customer->is_active ? 'fa-lock' : 'fa-unlock' }}"></i>
+                    {{ $customer->is_active ? 'Khóa tài khoản' : 'Mở khóa tài khoản' }}
+                </button>
+            </form>
         </p>
 
         <section class="g-admin-panel-card">

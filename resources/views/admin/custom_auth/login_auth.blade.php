@@ -48,21 +48,21 @@
         </div>
     </li>
     {{-- Feature cards --}}
-    <li style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px">
-        <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:14px 12px;text-align:center">
-            <i class="fa fa-cube" style="font-size:24px;color:#60a5fa;display:block;margin-bottom:8px"></i>
-            <div style="font-size:12px;font-weight:700;margin-bottom:4px">Quản lý sản phẩm</div>
-            <div style="font-size:10px;opacity:.5;line-height:1.4">Thêm, sửa, phân loại và kiểm soát tồn kho dễ dàng.</div>
+    <li class="admin-auth-feature-grid">
+        <div class="admin-auth-feature-card">
+            <i class="fa fa-cube"></i>
+            <div class="admin-auth-feature-title">Quản lý sản phẩm</div>
+            <div class="admin-auth-feature-copy">Thêm, sửa, phân loại và kiểm soát tồn kho dễ dàng.</div>
         </div>
-        <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:14px 12px;text-align:center">
-            <i class="fa fa-shopping-cart" style="font-size:24px;color:#60a5fa;display:block;margin-bottom:8px"></i>
-            <div style="font-size:12px;font-weight:700;margin-bottom:4px">Theo dõi đơn hàng</div>
-            <div style="font-size:10px;opacity:.5;line-height:1.4">Xử lý đơn hàng nhanh chóng, chính xác theo từng trạng thái.</div>
+        <div class="admin-auth-feature-card">
+            <i class="fa fa-shopping-cart"></i>
+            <div class="admin-auth-feature-title">Theo dõi đơn hàng</div>
+            <div class="admin-auth-feature-copy">Xử lý đơn hàng nhanh chóng, chính xác theo từng trạng thái.</div>
         </div>
-        <div style="background:rgba(255,255,255,.06);border-radius:10px;padding:14px 12px;text-align:center">
-            <i class="fa fa-bar-chart" style="font-size:24px;color:#60a5fa;display:block;margin-bottom:8px"></i>
-            <div style="font-size:12px;font-weight:700;margin-bottom:4px">Báo cáo & phân quyền</div>
-            <div style="font-size:10px;opacity:.5;line-height:1.4">Báo cáo trực quan, phân quyền linh hoạt, bảo mật.</div>
+        <div class="admin-auth-feature-card">
+            <i class="fa fa-bar-chart"></i>
+            <div class="admin-auth-feature-title">Báo cáo & phân quyền</div>
+            <div class="admin-auth-feature-copy">Báo cáo trực quan, phân quyền linh hoạt, bảo mật.</div>
         </div>
     </li>
 @endsection

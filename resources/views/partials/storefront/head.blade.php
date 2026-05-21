@@ -31,7 +31,7 @@
     <title>{{ $meta_title }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
     {{-- Vendor core: Bootstrap 3 + FontAwesome + SweetAlert --}}
     <link href="{{ asset('frontend/css/vendor-core.min.css') }}?v=2.3" rel="stylesheet">
     {{-- Design tokens + shared components --}}

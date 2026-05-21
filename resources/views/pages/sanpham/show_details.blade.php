@@ -1082,7 +1082,7 @@
                             <small>(8:00 - 21:00)</small>
                         </span>
                         <span class="pdx-support-sep"></span>
-                        <a href="#" class="pdx-support-link" data-chatbot-launch>
+                        <a href="{{ url('/lien-he') }}" class="pdx-support-link">
                             <i class="fa fa-comments-o"></i>
                             Chat với chúng tôi
                         </a>
@@ -1148,7 +1148,8 @@
                     <button type="button" class="pdx-tab-btn is-active" data-pdx-tab="mota" role="tab">Mô tả sản phẩm</button>
                     <button type="button" class="pdx-tab-btn" data-pdx-tab="thongso" role="tab">Thông số kỹ thuật</button>
                     <button type="button" class="pdx-tab-btn" data-pdx-tab="danhgia" role="tab">Đánh giá ({{ $reviewCount }})</button>
-                    <button type="button" class="pdx-tab-btn" data-pdx-tab="hoidap" role="tab">Hỏi đáp (36)</button>
+                    {{-- Tab Hỏi đáp ẩn tạm vì chức năng chưa hoàn thiện (số cứng 36) --}}
+                    {{-- <button type="button" class="pdx-tab-btn" data-pdx-tab="hoidap" role="tab">Hỏi đáp (36)</button> -->
                 </div>
 
                 {{-- Tab: Mô tả --}}
