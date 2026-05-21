@@ -121,19 +121,7 @@ class ProductService
 
     public function searchCatalog(array $filters = [], int $perPage = 12): LengthAwarePaginator
     {
-        $cacheFilters = $filters;
-        ksort($cacheFilters);
-
-        $page = \Illuminate\Pagination\Paginator::resolveCurrentPage('page');
-        $key = 'storefront_search_catalog_'.md5(json_encode([
-            'filters' => $cacheFilters,
-            'per_page' => $perPage,
-            'page' => $page,
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-
-        return $this->cache->remember($key, function () use ($filters, $perPage) {
-            return $this->search->searchCatalog($filters, $perPage);
-        }, 300);
+        return $this->search->searchCatalog($filters, $perPage);
     }
 
     public function searchSuggestions(string $keyword, int $limit = 8): Collection

@@ -35,6 +35,16 @@ class ProductMediaQuality
         return self::$completeIdsCache[$minGalleryImages];
     }
 
+    public static function clearCache(): void
+    {
+        foreach ([1, 4, 5] as $minGalleryImages) {
+            Cache::forget('storefront.product_media_quality.complete_ids.'.$minGalleryImages);
+        }
+
+        self::$auditCache = [];
+        self::$completeIdsCache = [];
+    }
+
     public static function audit(int $minGalleryImages = 4): array
     {
         $minGalleryImages = max(1, $minGalleryImages);
@@ -88,7 +98,10 @@ class ProductMediaQuality
                 ->values();
 
             $galleryCount = $existingGallery->count();
-            $isVisible = $hasMainImage && $galleryCount >= $minGalleryImages;
+            $allowsAdminUploadedSingleImage = $hasMainImage
+                && is_string($mainPath)
+                && str_starts_with($mainPath, 'uploads/product/');
+            $isVisible = $hasMainImage && ($galleryCount >= $minGalleryImages || $allowsAdminUploadedSingleImage);
 
             return [
                 'product_id' => (int) $product->id,

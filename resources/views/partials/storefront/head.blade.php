@@ -64,7 +64,7 @@
     @endif
     @if ($__needsPriceSlider)
         <link href="{{ asset('frontend/css/price-range.css') }}?v=2.3" rel="stylesheet">
-        <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        <link rel="stylesheet" href="{{ asset('frontend/vendor/jquery-ui/jquery-ui.min.css') }}?v=1.0">
     @endif
     @if ($__needsHomeCarousel)
         <link href="{{ asset('frontend/css/owl.carousel.min.css') }}?v=2.3" rel="stylesheet">

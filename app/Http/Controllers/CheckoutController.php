@@ -145,7 +145,7 @@ class CheckoutController extends Controller
         $selectedItems = $this->cartService->setSelectedCheckoutItemIds($this->cartService->selectedCheckoutItemIds());
 
         if ($selectedItems->isEmpty()) {
-            return Redirect::to('/gio-hang')->with('error', 'Vui lòng chọn ít nhất một sản phẩm để thanh toán.');
+            return Redirect::to('/gio-hang')->with('error', 'Vui lòng chọn sản phẩm cần thanh toán trong giỏ hàng.');
         }
 
         $currentCustomer = $this->sessionCustomer();

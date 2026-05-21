@@ -906,7 +906,7 @@
                             data-product-price="{{ number_format($finalPrice, 0, ',', '.') }}đ"
                             data-product-image="{{ $primaryImage }}"
                             data-product-url="{{ url('/chi-tiet/' . $product->product_slug) }}"
-                            data-product-category-id="{{ $product->primary_category_id ?? $primaryCategory?->id }}"
+                            data-product-category-id="{{ $product->primary_category_id ?? ($primaryCategory ?? null)?->id }}"
                             data-product-category="{{ $productCategoryLabel }}">
                             <i class="fa fa-heart-o"></i>
                         </button>

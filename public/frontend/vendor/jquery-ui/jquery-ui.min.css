@@ -1,0 +1,5 @@
+.ui-slider{position:relative;height:8px;border:1px solid #d7e0ea;border-radius:999px;background:#eef2f7}
+.ui-slider-range{position:absolute;top:0;height:100%;border-radius:999px;background:#0d9488}
+.ui-slider-handle{position:absolute;top:50%;width:18px;height:18px;margin-left:-9px;margin-top:-9px;border:2px solid #0d9488;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(15,23,42,.18);cursor:pointer}
+.ui-slider-handle:focus{outline:2px solid rgba(13,148,136,.22);outline-offset:2px}
+.ui-datepicker-trigger{cursor:pointer}

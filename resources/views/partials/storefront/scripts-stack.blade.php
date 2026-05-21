@@ -19,7 +19,7 @@
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 @endif
 @if ($__needsPriceSlider)
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="{{ asset('frontend/vendor/jquery-ui/jquery-ui.min.js') }}?v=1.0"></script>
     <script src="{{ asset('frontend/js/price-range.js') }}?v=2.2"></script>
 @endif
 @if ($__needsHomeCarousel)

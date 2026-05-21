@@ -522,6 +522,7 @@ class ProductController extends Controller
             ])
                 ->withCompleteStorefrontMedia()
                 ->where('slug', $product_slug)
+                ->where('is_active', true)
                 ->first();
         }
 

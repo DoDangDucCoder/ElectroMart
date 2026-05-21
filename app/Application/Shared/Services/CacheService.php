@@ -2,6 +2,7 @@
 
 namespace App\Application\Shared\Services;
 
+use App\Support\ProductMediaQuality;
 use Illuminate\Cache\TaggableStore;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Cache;
@@ -230,6 +231,8 @@ class CacheService
     // Cache invalidation methods
     public function invalidateProductCache(int $productId, array $context = []): void
     {
+        ProductMediaQuality::clearCache();
+
         $product = app(\App\Domain\Catalog\Repositories\ProductRepositoryInterface::class)->findById($productId);
 
         $productSlugs = collect($context['product_slugs'] ?? []);
