@@ -6,6 +6,7 @@ use App\Application\Catalog\Services\BrandService;
 use App\Application\Catalog\Services\CategoryService;
 use App\Application\Catalog\Services\ProductService;
 use App\Application\Cms\Services\BlogCategoryService;
+use App\Application\Shared\Services\PublicUploadService;
 use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use Illuminate\Http\RedirectResponse;
@@ -22,6 +23,7 @@ class BrandProduct extends Controller
         private readonly ProductService $productService,
         private readonly CategoryService $categoryService,
         private readonly BlogCategoryService $blogCategoryService,
+        private readonly PublicUploadService $publicUploadService,
     ) {
     }
 
@@ -62,7 +64,13 @@ class BrandProduct extends Controller
             'brand_product_desc' => ['nullable', 'string'],
             'brand_product_status' => ['nullable', 'in:0,1'],
             'display_order' => ['nullable', 'integer', 'min:0'],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
+
+        $logoPath = null;
+        if ($request->hasFile('logo')) {
+            $logoPath = $this->publicUploadService->storeSluggedImage($request->file('logo'), 'uploads/brand');
+        }
 
         $this->brandService->create([
             'name' => $validated['brand_product_name'],
@@ -70,6 +78,7 @@ class BrandProduct extends Controller
             'description' => $validated['brand_product_desc'] ?? null,
             'is_active' => ((int) ($validated['brand_product_status'] ?? 0)) === 0,
             'display_order' => $validated['display_order'] ?? 0,
+            'logo_path' => $logoPath,
         ]);
 
         return redirect()->to('/all-brand-product')->with('message', 'Thêm thương hiệu sản phẩm thành công');
@@ -128,7 +137,16 @@ class BrandProduct extends Controller
             'brand_product_desc' => ['nullable', 'string'],
             'brand_product_status' => ['nullable', 'in:0,1'],
             'display_order' => ['nullable', 'integer', 'min:0'],
+            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
         ]);
+
+        $logoPath = $brand->logo_path;
+        if ($request->hasFile('logo')) {
+            if ($brand->logo_path) {
+                $this->publicUploadService->deletePublicFile($brand->logo_path);
+            }
+            $logoPath = $this->publicUploadService->storeSluggedImage($request->file('logo'), 'uploads/brand');
+        }
 
         $this->brandService->update($brand, [
             'name' => $validated['brand_product_name'],
@@ -136,6 +154,7 @@ class BrandProduct extends Controller
             'description' => $validated['brand_product_desc'] ?? null,
             'is_active' => ((int) ($validated['brand_product_status'] ?? 0)) === 0,
             'display_order' => $validated['display_order'] ?? $brand->display_order,
+            'logo_path' => $logoPath,
         ]);
 
         return redirect()->to('/all-brand-product')->with('message', 'Cập nhật thương hiệu sản phẩm thành công');

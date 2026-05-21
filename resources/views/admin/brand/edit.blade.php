@@ -42,7 +42,7 @@
                 @endif
 
                 <form role="form" action="{{ url('/update-brand-product/' . $brand->brand_id) }}" method="post"
-                    class="g-admin-site-info-form">
+                    class="g-admin-site-info-form" enctype="multipart/form-data">
                     @csrf
                     <div class="form-group">
                         <label for="brand_product_name">Tên thương hiệu</label>
@@ -62,6 +62,17 @@
                         <label for="display_order">Thứ tự hiển thị</label>
                         <input type="number" name="display_order" id="display_order" class="form-control" min="0"
                             value="{{ old('display_order', $brand->display_order) }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="logo">Logo thương hiệu</label>
+                        @if ($brand->logo_path)
+                            <div class="mb-2">
+                                <img src="{{ asset($brand->logo_path) }}" alt="Logo hiện tại" style="max-height:80px;max-width:200px;border:1px solid #ddd;padding:4px;border-radius:4px;">
+                                <small class="d-block text-muted mt-1">Logo hiện tại</small>
+                            </div>
+                        @endif
+                        <input type="file" name="logo" id="logo" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif">
+                        <small class="form-text text-muted">Chấp nhận: jpg, jpeg, png, webp. Tối đa 2MB. Để trống nếu không muốn thay logo.</small>
                     </div>
                     <div class="form-group">
                         <label for="brand_product_status">Trạng thái</label>

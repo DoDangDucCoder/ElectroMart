@@ -35,7 +35,7 @@
                     </div>
                 @endif
 
-                <form role="form" action="{{ url('/save-brand-product') }}" method="post" class="g-admin-site-info-form">
+                <form role="form" action="{{ url('/save-brand-product') }}" method="post" class="g-admin-site-info-form" enctype="multipart/form-data">
                     @csrf
                     <div class="form-group">
                         <label for="brand_product_name">Tên thương hiệu</label>
@@ -56,6 +56,11 @@
                         <label for="display_order">Thứ tự hiển thị</label>
                         <input type="number" name="display_order" id="display_order" class="form-control" min="0"
                             value="{{ old('display_order', 0) }}">
+                    </div>
+                    <div class="form-group">
+                        <label for="logo">Logo thương hiệu</label>
+                        <input type="file" name="logo" id="logo" class="form-control" accept="image/jpeg,image/png,image/webp,image/gif">
+                        <small class="form-text text-muted">Chấp nhận: jpg, jpeg, png, webp. Dung lượng tối đa 2MB.</small>
                     </div>
                     <div class="form-group">
                         <label for="brand_product_status">Trạng thái</label>
