@@ -141,6 +141,31 @@
             });
             window.addEventListener('storefront:wishlist-updated', syncWishlistButtons);
 
+            // Fix #26: Khi customer đã đăng nhập, đồng bộ localStorage → DB
+            @if(Session::has('customer_id'))
+            (function syncWishlistToDb() {
+                try {
+                    const items = readWishlist();
+                    const productIds = items.map(wishlistItemId).filter(Boolean).map(Number).filter(n => n > 0);
+                    if (productIds.length === 0) return;
+
+                    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                    const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+                    if (!csrfToken) return;
+
+                    fetch('{{ route("customer.wishlist.sync") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({ product_ids: productIds })
+                    }).catch(() => {});
+                } catch (e) {}
+            })();
+            @endif
+
+
             function initFlashSaleControls() {
                 document.querySelectorAll('[data-tech-sale-viewport]').forEach((viewport) => {
                     const track = viewport.querySelector('[data-tech-sale-track]');

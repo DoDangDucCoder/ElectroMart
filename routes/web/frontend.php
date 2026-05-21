@@ -282,3 +282,8 @@ Route::get('/account/purchase-history', [\App\Http\Controllers\CustomerAccountCo
 Route::get('/account/wishlist', [\App\Http\Controllers\CustomerAccountController::class, 'wishlist'])->name('customer.account.wishlist');
 Route::get('/account/profile', [\App\Http\Controllers\CustomerAccountController::class, 'profile'])->name('customer.account.profile');
 Route::get('/account/order-tracking/{orderCode}', [\App\Http\Controllers\CustomerAccountController::class, 'orderTracking'])->name('customer.account.order-tracking');
+
+// Fix #26: Wishlist DB sync — frontend gọi sau khi đăng nhập để đồng bộ localStorage → DB
+Route::post('/account/wishlist/sync', [\App\Http\Controllers\CustomerAccountController::class, 'wishlistSync'])->name('customer.wishlist.sync');
+Route::post('/account/wishlist/toggle', [\App\Http\Controllers\CustomerAccountController::class, 'wishlistToggle'])->name('customer.wishlist.toggle');
+

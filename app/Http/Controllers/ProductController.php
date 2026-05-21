@@ -340,21 +340,21 @@ class ProductController extends Controller
         }
 
         $validator = validator($request->all(), [
-            'product_name' => ['required', 'string', 'max:255'],
-            'product_slug' => ['nullable', 'string', 'max:255', Rule::unique('products', 'slug')->ignore($productId)],
-            'product_price' => ['required'],
-            'price_cost' => ['nullable'],
-            'sale_type' => ['nullable', Rule::in(['percent', 'fixed'])],
-            'sale_value' => ['nullable'],
+            'product_name'     => ['required', 'string', 'max:255'],
+            'product_slug'     => ['nullable', 'string', 'max:255', Rule::unique('products', 'slug')->ignore($productId)],
+            'product_price'    => ['required', 'numeric', 'min:0'],  // Fix #69: thêm numeric|min:0
+            'price_cost'       => ['nullable', 'numeric', 'min:0'],
+            'sale_type'        => ['nullable', Rule::in(['percent', 'fixed'])],
+            'sale_value'       => ['nullable', 'numeric', 'min:0'],
             'product_quantity' => ['required', 'integer', 'min:0'],
-            'product_desc' => ['nullable', 'string'],
-            'product_content' => ['nullable', 'string'],
-            'product_cate' => ['required', 'integer', 'exists:product_categories,id'],
-            'product_brand' => ['nullable', 'integer', 'exists:brands,id'],
-            'product_status' => ['required', 'in:0,1'],
-            'product_tags' => ['nullable', 'string'],
-            'product_image' => ['nullable', 'image', 'max:4096'],
-            'document' => ['nullable', 'file', 'max:5120'],
+            'product_desc'     => ['nullable', 'string'],
+            'product_content'  => ['nullable', 'string'],
+            'product_cate'     => ['required', 'integer', 'exists:product_categories,id'],
+            'product_brand'    => ['nullable', 'integer', 'exists:brands,id'],
+            'product_status'   => ['required', 'in:0,1'],
+            'product_tags'     => ['nullable', 'string'],
+            'product_image'    => ['nullable', 'image', 'max:4096'],
+            'document'         => ['nullable', 'file', 'max:5120'],
         ]);
 
         $validator->after(function ($validator) use ($request) {

@@ -120,8 +120,12 @@ class CustomerAccountController extends Controller
             return $this->redirectToLogin('Vui lòng đăng nhập.');
         }
 
-        // Wishlist stored in session since no dedicated Wishlist model exists
-        $wishlistIds = Session::get('wishlist_product_ids', []);
+        // Fix #26: Đọc wishlist từ DB thay vì session
+        $wishlistIds = DB::table('wishlists')
+            ->where('customer_id', $customer->id)
+            ->pluck('product_id')
+            ->all();
+
         $products = collect();
 
         if (! empty($wishlistIds)) {
@@ -134,8 +138,8 @@ class CustomerAccountController extends Controller
         }
 
         $stats = [
-            'total'      => $products->count(),
-            'on_sale'    => $products->filter(fn ($p) => $p->sale_price && $p->sale_price < $p->price)->count(),
+            'total'        => $products->count(),
+            'on_sale'      => $products->filter(fn ($p) => $p->sale_price && $p->sale_price < $p->price)->count(),
             'out_of_stock' => $products->filter(fn ($p) => ($p->stock_quantity ?? 0) <= 0)->count(),
         ];
 
@@ -149,6 +153,94 @@ class CustomerAccountController extends Controller
             ]
         ));
     }
+
+    /**
+     * Fix #26: Đồng bộ wishlist từ localStorage (frontend) vào DB.
+     * Frontend gọi POST /account/wishlist/sync với JSON { product_ids: [1,2,3] }
+     */
+    public function wishlistSync(Request $request)
+    {
+        $customer = $this->sessionCustomer();
+        if (! $customer) {
+            return response()->json(['ok' => false, 'message' => 'Chưa đăng nhập'], 401);
+        }
+
+        $productIds = collect($request->input('product_ids', []))
+            ->filter(fn ($id) => is_numeric($id) && $id > 0)
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        if (! empty($productIds)) {
+            // Kiểm tra SP có tồn tại không
+            $validIds = DB::table('products')
+                ->whereIn('id', $productIds)
+                ->where('is_active', true)
+                ->pluck('id')
+                ->all();
+
+            foreach ($validIds as $productId) {
+                DB::table('wishlists')->updateOrInsert(
+                    ['customer_id' => $customer->id, 'product_id' => $productId],
+                    ['created_at' => now(), 'updated_at' => now()]
+                );
+            }
+        }
+
+        $count = DB::table('wishlists')->where('customer_id', $customer->id)->count();
+        return response()->json(['ok' => true, 'count' => $count]);
+    }
+
+    /**
+     * Fix #26: Toggle wishlist từ AJAX (thêm hoặc xóa 1 SP).
+     */
+    public function wishlistToggle(Request $request)
+    {
+        $customer = $this->sessionCustomer();
+        if (! $customer) {
+            return response()->json(['ok' => false, 'message' => 'Chưa đăng nhập', 'login_required' => true], 401);
+        }
+
+        $productId = (int) $request->input('product_id', 0);
+        if ($productId <= 0) {
+            return response()->json(['ok' => false, 'message' => 'product_id không hợp lệ'], 422);
+        }
+
+        $exists = DB::table('wishlists')
+            ->where('customer_id', $customer->id)
+            ->where('product_id', $productId)
+            ->exists();
+
+        if ($exists) {
+            DB::table('wishlists')
+                ->where('customer_id', $customer->id)
+                ->where('product_id', $productId)
+                ->delete();
+            $action = 'removed';
+        } else {
+            // Kiểm tra SP hợp lệ
+            $product = DB::table('products')
+                ->where('id', $productId)
+                ->where('is_active', true)
+                ->first(['id']);
+
+            if (! $product) {
+                return response()->json(['ok' => false, 'message' => 'Sản phẩm không tồn tại'], 404);
+            }
+
+            DB::table('wishlists')->updateOrInsert(
+                ['customer_id' => $customer->id, 'product_id' => $productId],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
+            $action = 'added';
+        }
+
+        $count = DB::table('wishlists')->where('customer_id', $customer->id)->count();
+        return response()->json(['ok' => true, 'action' => $action, 'count' => $count]);
+    }
+
+
 
     public function profile(Request $request)
     {

@@ -236,30 +236,24 @@
             ['icon' => 'fa-headphones',  'title' => 'Hỗ trợ tư vấn 24/7',  'description' => 'Tư vấn chọn laptop, điện thoại và phụ kiện phù hợp nhu cầu.'],
         ];
 
-        // News + brands + tags
-        $newsItems = collect([
-            [
-                'title' => 'Đánh giá ' . $productName . ' sau 1 năm sử dụng: Vẫn là lựa chọn đáng giá?',
-                'url' => url('/bai-viet/sony-ht-s40r-600w-trai-nghiem-am-thanh-tai-gia'),
-                'summary' => 'Trải nghiệm thực tế sau thời gian dài sử dụng và những điểm cộng còn lại.',
-                'published_at' => now()->subDays(2),
-                'thumbnail' => asset('assets/news/anker-735-review-1-year.svg'),
-            ],
-            [
-                'title' => 'So sánh ' . $productName . ' với phiên bản trước: Nên chọn máy nào?',
-                'url' => url('/bai-viet/kinh-nghiem-chon-man-hinh-gaming-choi-game-muot'),
-                'summary' => 'So sánh chi tiết SSD và HDD: ưu nhược điểm và lời khuyên cho từng nhu cầu sử dụng.',
-                'published_at' => now()->subDays(5),
-                'thumbnail' => asset('assets/news/anker-735-compare.svg'),
-            ],
-            [
-                'title' => '7 mẹo tối ưu pin MacBook giúp tăng thời lượng sử dụng',
-                'url' => url('/bai-viet/meo-toi-uu-pin-macbook-khi-lam-viec-di-dong'),
-                'summary' => 'Cấu hình macOS hợp lý và thói quen sạc đúng cách giúp pin bền lâu.',
-                'published_at' => now()->subDays(8),
-                'thumbnail' => asset('assets/news/macbook-battery-tips.svg'),
-            ],
-        ]);
+        // Fix #11: Lấy bài viết liên quan từ DB thật thay vì hardcode static
+        // Title và URL cùng một bản ghi → không bị lệch
+        $newsItems = collect(\Illuminate\Support\Facades\DB::table('blog_posts')
+            ->where('status', 'published')
+            ->orderByDesc('published_at')
+            ->limit(3)
+            ->get(['id', 'title', 'slug', 'excerpt', 'published_at', 'featured_image_path']))
+            ->map(fn($post) => [
+                'title'        => $post->title,
+                'url'          => url('/bai-viet/' . $post->slug),
+                'summary'      => $post->excerpt ?? '',
+                'published_at' => $post->published_at ? \Carbon\Carbon::parse($post->published_at) : now(),
+                'thumbnail'    => $post->featured_image_path ? asset('storage/' . $post->featured_image_path) : asset('assets/news/default-blog.svg'),
+            ]);
+        // Fallback nếu không có bài viết trong DB
+        if ($newsItems->isEmpty()) {
+            $newsItems = collect();
+        }
 
         $brandConfig = collect(config('homepage.partner_brands', []));
         $brandItems = collect(['apple', 'samsung', 'asus', 'acer', 'dell', 'hp', 'lenovo', 'anker', 'baseus', 'jbl'])
