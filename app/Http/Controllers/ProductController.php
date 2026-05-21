@@ -607,7 +607,8 @@ class ProductController extends Controller
             ->with('quick_compare_rows', $quickCompareRows)
             ->with('rating', $rating)
             ->with('share_image', $share_image)
-            ->with('share_images', $share_image);
+            ->with('share_images', $share_image)
+            ->with('primaryCategory', $primaryCategory ?? null);
     }
 
     private function quickCompareProducts(Product $product, mixed $relatedProducts)

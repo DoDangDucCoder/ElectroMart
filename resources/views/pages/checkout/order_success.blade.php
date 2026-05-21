@@ -238,21 +238,22 @@ body.ors-page #header .header-bottom { display: none; }
                         <span class="icon"><i class="fa fa-phone"></i></span>
                         <div class="text">
                             <strong>Hotline hỗ trợ 24/7</strong>
-                            <span>1900 1234</span>
+                            <span>{{ config('services.storefront_support.contact_phone_display', '0901 234 567') }}</span>
                         </div>
                     </div>
                     <div class="ors-contact-item">
                         <span class="icon"><i class="fa fa-envelope"></i></span>
                         <div class="text">
                             <strong>Email hỗ trợ</strong>
-                            <a href="mailto:support@dangduc.vn">support@dangduc.vn</a>
+                            @php $supportEmail = config('mail.from.address', 'support@dangducshop.test'); @endphp
+                            <a href="mailto:{{ $supportEmail }}">{{ $supportEmail }}</a>
                         </div>
                     </div>
                     <div class="ors-contact-item">
                         <span class="icon"><i class="fa fa-comments"></i></span>
                         <div class="text">
                             <strong>Chat với chúng tôi</strong>
-                            <a href="#">Trò chuyện ngay</a>
+                            <a href="{{ url('/lien-he') }}">Trò chuyện ngay</a>
                         </div>
                     </div>
                 </div>
