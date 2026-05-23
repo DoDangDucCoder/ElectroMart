@@ -154,6 +154,7 @@
 /* Info card: co theo nội dung, không bị kéo cao bằng form */
 .dd-contact__info {
     align-self: start;
+    padding-bottom: 32px;
 }
 
 /* ---------- Info list ---------- */
@@ -163,7 +164,7 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 22px;
+    gap: 28px;
 }
 
 .dd-info-list > li {
@@ -238,7 +239,7 @@
 .dd-info-list__socials {
     display: flex;
     gap: 10px;
-    margin-top: 8px;
+    margin-top: 14px;
 }
 
 .dd-info-list__socials a {
