@@ -118,3 +118,48 @@ span[class*="fa"] {
 [class*=" glyphicon-"] {
     font-family: 'Glyphicons Halflings' !important;
 }
+
+/* FontAwesome 4.0.3 compatibility aliases for newer FA4 classes used by
+   interactive storefront panels. Keep aliases mapped to glyphs that exist in
+   the bundled 4.0.3 webfont so hidden/dropdown icons do not render blank. */
+.fa-balance-scale:before { content: "\f0ec"; }
+.fa-cart-plus:before { content: "\f07a"; }
+.fa-clone:before { content: "\f0c5"; }
+.fa-commenting:before { content: "\f0e6"; }
+.fa-credit-card-alt:before { content: "\f09d"; }
+.fa-building:before { content: "\f0f7"; }
+.fa-cube:before { content: "\f187"; }
+.fa-cubes:before { content: "\f009"; }
+.fa-database:before { content: "\f0a0"; }
+.fa-diamond:before { content: "\f005"; }
+.fa-file-excel-o:before,
+.fa-file-pdf-o:before,
+.fa-newspaper-o:before { content: "\f0f6"; }
+.fa-google:before { content: "\f0d5"; }
+.fa-handshake-o:before { content: "\f0c0"; }
+.fa-history:before,
+.fa-hourglass-half:before { content: "\f017"; }
+.fa-id-badge:before,
+.fa-user-circle:before,
+.fa-user-circle-o:before,
+.fa-user-o:before,
+.fa-user-plus:before,
+.fa-user-times:before { content: "\f007"; }
+.fa-image:before { content: "\f03e"; }
+.fa-life-ring:before { content: "\f0fa"; }
+.fa-map:before,
+.fa-map-o:before { content: "\f0ac"; }
+.fa-map-signs:before { content: "\f124"; }
+.fa-microchip:before { content: "\f085"; }
+.fa-mouse-pointer:before { content: "\f0a6"; }
+.fa-paper-plane:before { content: "\f0e0"; }
+.fa-plug:before { content: "\f0e7"; }
+.fa-question-circle-o:before { content: "\f059"; }
+.fa-route:before { content: "\f0d1"; }
+.fa-shopping-bag:before,
+.fa-shopping-basket:before { content: "\f07a"; }
+.fa-sliders:before { content: "\f0ae"; }
+.fa-television:before,
+.fa-tv:before { content: "\f108"; }
+.fa-trash:before { content: "\f014"; }
+.fa-university:before { content: "\f0f7"; }

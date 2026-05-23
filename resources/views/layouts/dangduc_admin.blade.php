@@ -52,7 +52,7 @@
                 <a href="javascript:void(0)"><i class="fa fa-cog"></i><span>Cấu hình</span></a>
             </li>
             <li class="dd-nav-item">
-                <a href="{{ url('/users') }}"><i class="fa fa-user-circle-o"></i><span>Quản trị viên</span></a>
+                <a href="{{ url('/users') }}"><i class="fa fa-user"></i><span>Quản trị viên</span></a>
             </li>
             <li class="dd-nav-item">
                 <a href="javascript:void(0)"><i class="fa fa-history"></i><span>Nhật ký hoạt động</span></a>
