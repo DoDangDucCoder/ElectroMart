@@ -126,7 +126,7 @@
                         <i class="fa fa-history"></i> Xem lịch sử đơn hàng
                     </a>
                     <a href="{{ url('/') }}" class="dd-bank-transfer-action dd-bank-transfer-action--secondary">
-                        <i class="fa fa-shopping-bag"></i> Tiếp tục mua sắm
+                        <i class="fa fa-shopping-cart"></i> Tiếp tục mua sắm
                     </a>
                 </div>
             </div>

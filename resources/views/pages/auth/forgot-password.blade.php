@@ -16,7 +16,7 @@ $url_canonical=$url_canonical??url('/quen-mat-khau');
             <form action="{{ url('/recover-pass') }}" method="POST" style="text-align:left">
                 @csrf
                 <div class="accp-field"><label>Email hoặc Số điện thoại</label><input type="text" name="email_account" placeholder="Nhập email hoặc số điện thoại" required></div>
-                <button type="submit" class="accp-btn accp-btn--primary accp-btn--block" style="height:46px;font-size:15px;margin-top:8px"><i class="fa fa-paper-plane"></i> Gửi mã xác nhận</button>
+                <button type="submit" class="accp-btn accp-btn--primary accp-btn--block" style="height:46px;font-size:15px;margin-top:8px"><i class="fa fa-envelope"></i> Gửi mã xác nhận</button>
             </form>
             <div style="margin-top:20px"><a href="{{ url('/dang-nhap') }}" style="font-size:13px;color:#0d9488;text-decoration:none;font-weight:500"><i class="fa fa-arrow-left"></i> Quay lại Đăng nhập</a></div>
         </div>

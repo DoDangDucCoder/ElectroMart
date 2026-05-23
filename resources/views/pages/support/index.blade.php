@@ -305,7 +305,7 @@
                     </ul>
                     <div class="dd-help-card__actions">
                         <button type="button" class="dd-btn dd-btn--primary"><i class="fa fa-comments-o"></i> Bắt đầu chat</button>
-                        <a class="dd-btn dd-btn--ghost" href="{{ url('/lien-he') }}"><i class="fa fa-paper-plane-o"></i> Liên hệ ngay</a>
+                        <a class="dd-btn dd-btn--ghost" href="{{ url('/lien-he') }}"><i class="fa fa-envelope"></i> Liên hệ ngay</a>
                     </div>
                 </div>
 

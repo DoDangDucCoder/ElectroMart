@@ -122,7 +122,7 @@
         <h2 style="font-size:18px;font-weight:700;color:#0f172a">Phương thức thanh toán hỗ trợ</h2>
     </div>
     <div class="pp-scope" style="margin-bottom:32px">
-        @foreach([['i'=>'fa-money','t'=>'COD<br>Thanh toán khi nhận hàng'],['i'=>'fa-university','t'=>'Chuyển khoản<br>ngân hàng'],['i'=>'fa-credit-card','t'=>'Thẻ ATM /<br>Internet Banking'],['i'=>'fa-cc-visa','t'=>'Thẻ quốc tế'],['i'=>'fa-mobile','t'=>'Ví điện tử']] as $s)
+        @foreach([['i'=>'fa-money','t'=>'COD<br>Thanh toán khi nhận hàng'],['i'=>'fa-university','t'=>'Chuyển khoản<br>ngân hàng'],['i'=>'fa-credit-card','t'=>'Thẻ ATM /<br>Internet Banking'],['i'=>'fa-credit-card','t'=>'Thẻ quốc tế'],['i'=>'fa-mobile','t'=>'Ví điện tử']] as $s)
         <div class="pp-scope-item"><i class="fa {{ $s['i'] }}"></i><strong>{!! $s['t'] !!}</strong></div>
         @endforeach
     </div>

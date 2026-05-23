@@ -8,7 +8,7 @@
 
         $accountMenu = [
             ['key' => 'overview', 'label' => 'Tổng quan tài khoản', 'icon' => 'fa-th-large', 'href' => route('customer.account', ['section' => 'overview'])],
-            ['key' => 'orders', 'label' => 'Đơn hàng của tôi', 'icon' => 'fa-shopping-bag', 'href' => route('customer.account', ['section' => 'orders'])],
+            ['key' => 'orders', 'label' => 'Đơn hàng của tôi', 'icon' => 'fa-shopping-cart', 'href' => route('customer.account', ['section' => 'orders'])],
             ['key' => 'history', 'label' => 'Lịch sử mua hàng', 'icon' => 'fa-history', 'href' => route('customer.account', ['section' => 'history'])],
             ['key' => 'order-detail', 'label' => 'Chi tiết đơn hàng', 'icon' => 'fa-file-text-o', 'href' => route('customer.account', ['section' => 'order-detail'])],
             ['key' => 'tracking', 'label' => 'Theo dõi đơn hàng', 'icon' => 'fa-truck', 'href' => route('customer.account', ['section' => 'tracking'])],

@@ -214,7 +214,7 @@
                         </div>
 
                         <button type="submit" class="dd-btn dd-btn--primary">
-                            <i class="fa fa-paper-plane"></i>
+                            <i class="fa fa-envelope"></i>
                             <span>Gửi liên hệ</span>
                         </button>
 

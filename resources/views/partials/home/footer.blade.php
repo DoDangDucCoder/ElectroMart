@@ -66,8 +66,8 @@
                         <span class="sr-only">{{ $payment }}</span>
                     @endforeach
                     <img src="{{ asset('uploads/brand/dangduc-logo-icon-256.svg') }}" alt="Verified" class="tech-verified-badge">
-                    <i class="fa fa-cc-visa"></i>
-                    <i class="fa fa-cc-mastercard"></i>
+                    <i class="fa fa-credit-card"></i>
+                    <i class="fa fa-credit-card"></i>
                     <i class="fa fa-credit-card"></i>
                     <i class="fa fa-money"></i>
                 </div>

@@ -828,7 +828,7 @@
             </button>
 
             <a href="{{ $homeUrl }}" class="logo">
-                <span class="logo-icon"><i class="fa fa-shopping-bag"></i></span>
+                <span class="logo-icon"><i class="fa fa-shopping-cart"></i></span>
                 dangduc
             </a>
 
@@ -1182,7 +1182,7 @@
             <div class="footer-grid">
                 <div class="footer-brand">
                     <a href="{{ $homeUrl }}" class="logo">
-                        <span class="logo-icon"><i class="fa fa-shopping-bag"></i></span>
+                        <span class="logo-icon"><i class="fa fa-shopping-cart"></i></span>
                         dangduc
                     </a>
                     <p>Chuyên cung cấp laptop, linh kiện PC và phụ kiện công nghệ chính hãng. Cam kết giá tốt, bảo hành uy tín và hỗ trợ tận tâm.</p>

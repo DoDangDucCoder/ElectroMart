@@ -81,7 +81,7 @@
             </div>
             @empty
             <div class="accp-card" style="padding:40px;text-align:center">
-                <i class="fa fa-shopping-bag" style="font-size:48px;color:#d1d5db;margin-bottom:12px"></i>
+                <i class="fa fa-shopping-cart" style="font-size:48px;color:#d1d5db;margin-bottom:12px"></i>
                 <div style="font-size:15px;font-weight:600;color:#6b7280;margin-bottom:8px">Chưa có đơn hàng nào</div>
                 <a href="{{ url('/san-pham') }}" class="accp-btn accp-btn--primary">Mua sắm ngay</a>
             </div>

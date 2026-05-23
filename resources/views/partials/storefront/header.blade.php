@@ -85,7 +85,7 @@
         ],
         [
             'href' => $featuredBlogUrl,
-            'icon' => 'fa-newspaper-o',
+            'icon' => 'fa-file-text-o',
             'label' => 'Bài viết mới',
             'note' => 'Tin tức công nghệ',
             'badge' => 'Mới',

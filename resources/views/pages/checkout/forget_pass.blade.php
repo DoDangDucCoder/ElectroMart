@@ -585,7 +585,7 @@
                     <button type="submit" class="forgot-submit">
                         <span>Gửi yêu cầu đặt lại mật khẩu</span>
                         <span class="forgot-submit__divider"></span>
-                        <i class="fa fa-paper-plane"></i>
+                        <i class="fa fa-envelope"></i>
                     </button>
                 </form>
 

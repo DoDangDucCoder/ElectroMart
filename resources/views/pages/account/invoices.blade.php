@@ -9,7 +9,7 @@
 
     $accountMenu = [
         ['key' => 'overview', 'label' => 'Tổng quan tài khoản', 'icon' => 'fa-th-large', 'href' => route('customer.account')],
-        ['key' => 'orders', 'label' => 'Đơn hàng của tôi', 'icon' => 'fa-shopping-bag', 'href' => url('/account/orders')],
+        ['key' => 'orders', 'label' => 'Đơn hàng của tôi', 'icon' => 'fa-shopping-cart', 'href' => url('/account/orders')],
         ['key' => 'cancelled', 'label' => 'Đơn hàng đã huỷ', 'icon' => 'fa-times-circle', 'href' => route('customer.account.cancelled-orders')],
         ['key' => 'returns', 'label' => 'Trả hàng / Hoàn tiền', 'icon' => 'fa-undo', 'href' => route('customer.account.returns')],
         ['key' => 'wishlist', 'label' => 'Sản phẩm yêu thích', 'icon' => 'fa-heart-o', 'href' => route('customer.account.wishlist')],
@@ -217,7 +217,7 @@ body.inv-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
                 </form>
                 <div class="inv-form-actions">
                     <button type="button" class="inv-btn inv-btn--outline"><i class="fa fa-refresh"></i> Làm mới</button>
-                    <button type="button" class="inv-btn inv-btn--primary"><i class="fa fa-paper-plane"></i> Gửi yêu cầu</button>
+                    <button type="button" class="inv-btn inv-btn--primary"><i class="fa fa-envelope"></i> Gửi yêu cầu</button>
                 </div>
             </div>
         </main>

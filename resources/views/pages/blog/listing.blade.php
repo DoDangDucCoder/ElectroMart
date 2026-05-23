@@ -119,7 +119,7 @@
                         @include('pages.blog.partials.pagination')
                     @else
                         <div class="dd-blog-empty">
-                            <i class="fa fa-newspaper-o"></i>
+                            <i class="fa fa-file-text-o"></i>
                             <h2>Chưa có bài viết phù hợp</h2>
                             <p>Hãy thử bỏ bộ lọc, đổi từ khóa tìm kiếm hoặc quay lại sau để xem thêm nội dung mới.</p>
                             <a href="{{ url('/bai-viet') }}" class="dd-blog-empty-cta">Quay lại tất cả bài viết</a>

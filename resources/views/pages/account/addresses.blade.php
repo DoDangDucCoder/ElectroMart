@@ -815,7 +815,7 @@
     <header class="acc-topbar">
         <div class="acc-topbar-inner">
             <a href="{{ url('/') }}" class="acc-brand">
-                <span class="acc-brand-logo"><i class="fa fa-shopping-bag"></i></span>
+                <span class="acc-brand-logo"><i class="fa fa-shopping-cart"></i></span>
                 <span class="acc-brand-name">dangduc</span>
             </a>
 
@@ -864,7 +864,7 @@
                 <ul class="acc-nav">
                     <li class="acc-nav-item"><a href="#"><i class="acc-nav-icon fa fa-th-large"></i>Tổng quan</a></li>
                     <li class="acc-nav-item">
-                        <a href="#"><i class="acc-nav-icon fa fa-shopping-bag"></i>Đơn hàng <span class="acc-nav-badge">12</span></a>
+                        <a href="#"><i class="acc-nav-icon fa fa-shopping-cart"></i>Đơn hàng <span class="acc-nav-badge">12</span></a>
                     </li>
                     <li class="acc-nav-item"><a href="#"><i class="acc-nav-icon fa fa-truck"></i>Theo dõi đơn hàng</a></li>
                     <li class="acc-nav-item"><a href="#"><i class="acc-nav-icon fa fa-heart-o"></i>Sản phẩm yêu thích</a></li>

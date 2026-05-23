@@ -20,7 +20,7 @@
         );
         $videoQuickLinks = [
             [
-                'icon' => 'fa-newspaper-o',
+                'icon' => 'fa-file-text-o',
                 'label' => $featuredBlogLabel,
                 'value' => config('storefront.copy.video_blog_value', 'Theo dõi thêm các bài đánh giá, tư vấn và hướng dẫn mới'),
                 'url' => $featuredBlogUrl,

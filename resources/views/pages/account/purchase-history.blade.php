@@ -9,7 +9,7 @@
             <div class="accp-page-title"><h1>Lịch sử mua hàng</h1><p>Xem lại tất cả đơn hàng đã hoàn thành</p></div>
 
             <div class="accp-stats">
-                <div class="accp-stat"><div class="accp-stat-icon teal"><i class="fa fa-shopping-bag"></i></div><div><div class="num">{{ $stats['total_orders'] }}</div><div class="lbl">Tổng đơn đã mua</div></div></div>
+                <div class="accp-stat"><div class="accp-stat-icon teal"><i class="fa fa-shopping-cart"></i></div><div><div class="num">{{ $stats['total_orders'] }}</div><div class="lbl">Tổng đơn đã mua</div></div></div>
                 <div class="accp-stat"><div class="accp-stat-icon blue"><i class="fa fa-money"></i></div><div><div class="num" style="font-size:18px">{{ $stats['total_spent'] > 0 ? number_format($stats['total_spent'] / 1000000, 1) . 'tr' : '0đ' }}</div><div class="lbl">Tổng chi tiêu</div></div></div>
                 <div class="accp-stat"><div class="accp-stat-icon green"><i class="fa fa-calendar"></i></div><div><div class="num">{{ $stats['this_month'] }}</div><div class="lbl">Đơn tháng này</div></div></div>
                 <div class="accp-stat"><div class="accp-stat-icon star"><i class="fa fa-star"></i></div><div><div class="num">{{ number_format($stats['loyalty_points']) }}</div><div class="lbl">Điểm tích lũy</div></div></div>

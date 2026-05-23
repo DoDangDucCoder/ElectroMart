@@ -99,11 +99,22 @@ code, pre, kbd, samp,
 }
 
 /* --- Restore icon fonts (FontAwesome 4.x + Glyphicons) ---
-   Áp dụng cho cả i, span, div để tránh inherit bị override
-   font-family phải khớp với @font-face name trong vendor-core.min.css */
-.fa, .fas, .far, .fab, .fal,
-[class^="fa-"], [class*=" fa-"],
-i[class*="fa"], span[class*="fa"],
-span.glyphicon, [class^="glyphicon-"], [class*=" glyphicon-"] {
-    font-family: FontAwesome, 'Glyphicons Halflings' !important;
+   Keep each icon family separate so fallback order cannot render glyphs
+   from the wrong font. */
+.fa,
+.fas,
+.far,
+.fab,
+.fal,
+[class^="fa-"],
+[class*=" fa-"],
+i[class*="fa"],
+span[class*="fa"] {
+    font-family: FontAwesome !important;
+}
+
+.glyphicon,
+[class^="glyphicon-"],
+[class*=" glyphicon-"] {
+    font-family: 'Glyphicons Halflings' !important;
 }

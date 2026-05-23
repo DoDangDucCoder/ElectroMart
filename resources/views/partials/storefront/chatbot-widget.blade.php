@@ -28,7 +28,7 @@
             <input type="text" name="message" data-chatbot-input placeholder="Nhập tin nhắn..." maxlength="500"
                 autocomplete="off">
             <button type="submit">
-                <i class="fa fa-paper-plane"></i>
+                <i class="fa fa-envelope"></i>
                 <span>Gửi</span>
             </button>
         </form>

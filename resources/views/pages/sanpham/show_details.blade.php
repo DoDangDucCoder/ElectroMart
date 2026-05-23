@@ -1132,7 +1132,7 @@
 
                         <div class="pdx-actions">
                             <button type="button" class="pdx-btn pdx-btn--ghost add-to-cart" data-pdx-add-cart {{ $stockAvailable ? '' : 'disabled' }}>
-                                <i class="fa fa-shopping-bag"></i>
+                                <i class="fa fa-shopping-cart"></i>
                                 <span class="shopw-pdp-purchase-btn-label">Thêm vào giỏ hàng</span>
                             </button>
                             <button type="button" class="pdx-btn pdx-btn--primary" data-pdx-buy-now {{ $stockAvailable ? '' : 'disabled' }}>

@@ -7,7 +7,7 @@
 
     $sidebarMenu = [
         ['key' => 'overview', 'label' => 'Tổng quan tài khoản', 'icon' => 'fa-th-large'],
-        ['key' => 'orders', 'label' => 'Đơn hàng của tôi', 'icon' => 'fa-shopping-bag'],
+        ['key' => 'orders', 'label' => 'Đơn hàng của tôi', 'icon' => 'fa-shopping-cart'],
         ['key' => 'history', 'label' => 'Lịch sử mua hàng', 'icon' => 'fa-history'],
         ['key' => 'order-detail', 'label' => 'Chi tiết đơn hàng', 'icon' => 'fa-file-text-o'],
         ['key' => 'tracking', 'label' => 'Theo dõi đơn hàng', 'icon' => 'fa-truck'],
