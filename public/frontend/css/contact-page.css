@@ -148,13 +148,14 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.65fr);
     gap: 24px;
     margin-bottom: 24px;
-    align-items: start;
+    align-items: stretch;
 }
 
-/* Info card: co theo nội dung, không bị kéo cao bằng form */
+/* Info card: cao bằng card form, khoảng trắng phân bổ đều giữa các mục */
 .dd-contact__info {
-    align-self: start;
-    padding-bottom: 32px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 
 /* ---------- Info list ---------- */
@@ -164,7 +165,7 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 28px;
+    gap: 32px;
 }
 
 .dd-info-list > li {
@@ -664,6 +665,10 @@
     .dd-contact__lower { grid-template-columns: 1fr; }
     .dd-map iframe,
     .dd-map .dd-map__frame { min-height: 360px; }
+}
+
+@media (max-width: 768px) {
+    .dd-info-list { gap: 24px; }
 }
 
 @media (max-width: 640px) {
