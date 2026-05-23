@@ -248,7 +248,7 @@
                 'url'          => url('/bai-viet/' . $post->slug),
                 'summary'      => $post->excerpt ?? '',
                 'published_at' => $post->published_at ? \Carbon\Carbon::parse($post->published_at) : now(),
-                'thumbnail'    => $post->featured_image_path ? asset('storage/' . $post->featured_image_path) : asset('assets/news/default-blog.svg'),
+                'thumbnail'    => \App\Support\AssetUrl::resolve($post->featured_image_path, 'assets/news/anker-735-review-1-year.svg'),
             ]);
         // Fallback nếu không có bài viết trong DB
         if ($newsItems->isEmpty()) {
