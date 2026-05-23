@@ -5,7 +5,7 @@
     .reset-page {
         background: #f5f7f9;
         padding: 24px 0 56px;
-        font-family: 'Be Vietnam Pro', 'Inter', sans-serif;
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
     }
 
     .reset-container {

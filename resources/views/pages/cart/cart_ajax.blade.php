@@ -2,6 +2,230 @@
 
 @section('body_class', 'g-cart cart-v2-page')
 
+@push('styles')
+    <style>
+        /* ── Quick checkout button ─────────────────────── */
+        .cart-v2-btn--quick {
+            justify-content: space-between;
+            border: 1px solid #bae6fd;
+            background: #fff;
+            color: #0f766e;
+            box-shadow: none;
+            transition: background .15s, border-color .15s, color .15s;
+        }
+
+        .cart-v2-btn--quick:hover,
+        .cart-v2-btn--quick:focus-visible {
+            background: #f0fdfa;
+            border-color: #5eead4;
+            color: #0f766e;
+        }
+
+        .cart-v2-btn-text {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        /* ── Coming-soon badge ──────────────────────────── */
+        .cart-v2-coming-badge {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.2;
+            white-space: nowrap;
+            letter-spacing: .02em;
+        }
+
+        /* ── Payment method pills grid ─────────────────── */
+        .cart-v2-payments {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            padding: 0 0 14px;
+            border-bottom: 1px solid #f1f5f9;
+            margin-bottom: 14px;
+        }
+
+        .cart-v2-payments-label {
+            grid-column: 1 / -1;
+            font-size: 11px;
+            font-weight: 600;
+            color: #94a3b8;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .cart-v2-pay {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            width: 100%;
+            min-height: 48px;
+            padding: 10px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #475569;
+            cursor: pointer;
+            text-align: left;
+            transition: background .14s, border-color .14s, opacity .14s;
+            opacity: .80;
+        }
+
+        .cart-v2-pay:hover,
+        .cart-v2-pay:focus-visible {
+            opacity: 1;
+            background: #fff;
+        }
+
+        .cart-v2-pay:focus-visible {
+            outline: 2px solid #94a3b8;
+            outline-offset: 2px;
+        }
+
+        .cart-v2-pay-inner {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .cart-v2-pay-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            flex-shrink: 0;
+            font-size: 14px;
+            font-weight: 900;
+        }
+
+        .cart-v2-pay-name {
+            font-size: 13px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        /* MoMo: purple brand */
+        .cart-v2-pay--momo {
+            border-color: #f0d6f5;
+        }
+        .cart-v2-pay--momo:hover,
+        .cart-v2-pay--momo:focus-visible {
+            border-color: #d946ef;
+            background: #fdf4ff;
+        }
+        .cart-v2-pay--momo .cart-v2-pay-icon {
+            background: #fdf4ff;
+            color: #a21caf;
+        }
+        .cart-v2-pay--momo .cart-v2-pay-name {
+            color: #a21caf;
+        }
+
+        /* ZaloPay: blue brand */
+        .cart-v2-pay--zalo {
+            border-color: #bfdbfe;
+        }
+        .cart-v2-pay--zalo:hover,
+        .cart-v2-pay--zalo:focus-visible {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        .cart-v2-pay--zalo .cart-v2-pay-icon {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        .cart-v2-pay--zalo .cart-v2-pay-name {
+            color: #1d4ed8;
+        }
+
+        /* ── COD row badge ─────────────────────────────── */
+        .cart-v2-cod-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: #15803d;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        /* ── Secure note ───────────────────────────────── */
+        .cart-v2-secure {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+        }
+
+        /* ── Toast notification ────────────────────────── */
+        .cart-v2-toast {
+            position: fixed;
+            right: 18px;
+            bottom: 18px;
+            z-index: 2500;
+            max-width: min(360px, calc(100vw - 32px));
+            padding: 13px 16px;
+            border-radius: 14px;
+            background: #1e293b;
+            color: #fff;
+            box-shadow: 0 20px 48px rgba(15, 23, 42, .26);
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(12px);
+            transition: opacity .2s ease, transform .2s ease;
+        }
+
+        .cart-v2-toast-icon {
+            flex-shrink: 0;
+            font-size: 15px;
+            line-height: 1.5;
+            color: #fbbf24;
+        }
+
+        .cart-v2-toast.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* ── Responsive ────────────────────────────────── */
+        @media (max-width: 480px) {
+            .cart-v2-payments {
+                grid-template-columns: 1fr;
+            }
+
+            .cart-v2-btn--quick {
+                align-items: center;
+                flex-wrap: wrap;
+            }
+
+            .cart-v2-pay {
+                min-height: 52px;
+            }
+        }
+    </style>
+@endpush
+
 @section('content')
     @php
         $cartCount = $cartItems->sum('product_qty');
@@ -247,6 +471,15 @@
                                         {{ $hasFreeShipping ? 'Miễn phí' : number_format($totals['shipping'], 0, ',', '.') . 'đ' }}
                                     </strong>
                                 </div>
+                                <div class="cart-v2-summary-row">
+                                    <span>Thanh toán</span>
+                                    <strong>
+                                        <span class="cart-v2-cod-badge">
+                                            <i class="fa fa-truck" aria-hidden="true"></i>
+                                            COD
+                                        </span>
+                                    </strong>
+                                </div>
                             </div>
 
                             <div class="cart-v2-summary-total">
@@ -262,9 +495,12 @@
                                     <i class="fa fa-lock" aria-hidden="true"></i>
                                     Tiến hành thanh toán
                                 </button>
-                                <button type="submit" form="cart-v2-checkout-form" class="cart-v2-btn cart-v2-btn--quick">
-                                    <i class="fa fa-bolt" aria-hidden="true"></i>
-                                    Thanh toán nhanh
+                                <button type="button" class="cart-v2-btn cart-v2-btn--quick" data-online-payment-coming-soon>
+                                    <span class="cart-v2-btn-text">
+                                        <i class="fa fa-bolt" aria-hidden="true"></i>
+                                        Thanh toán nhanh
+                                    </span>
+                                    <span class="cart-v2-coming-badge">Sắp ra mắt</span>
                                 </button>
                             </div>
                             <form method="POST" action="{{ $checkoutUrl }}" id="cart-v2-checkout-form" style="display:none;">
@@ -272,11 +508,24 @@
                                 <div data-checkout-selected-items></div>
                             </form>
 
-                            <div class="cart-v2-payments" aria-hidden="true">
-                                <span class="cart-v2-pay cart-v2-pay--visa"><i class="fa fa-cc-visa"></i></span>
-                                <span class="cart-v2-pay cart-v2-pay--mc"><i class="fa fa-cc-mastercard"></i></span>
-                                <span class="cart-v2-pay cart-v2-pay--momo">momo</span>
-                                <span class="cart-v2-pay cart-v2-pay--zalo">ZaloPay</span>
+                            <div class="cart-v2-payments" aria-label="Phương thức thanh toán online sắp ra mắt">
+                                <p class="cart-v2-payments-label">Sắp ra mắt</p>
+                                <button type="button" class="cart-v2-pay cart-v2-pay--momo" data-online-payment-coming-soon
+                                    aria-label="MoMo – Sắp ra mắt" title="Thanh toán MoMo – Sắp ra mắt">
+                                    <span class="cart-v2-pay-inner">
+                                        <span class="cart-v2-pay-icon" aria-hidden="true">M</span>
+                                        <span class="cart-v2-pay-name">MoMo</span>
+                                    </span>
+                                    <span class="cart-v2-coming-badge">Sắp ra mắt</span>
+                                </button>
+                                <button type="button" class="cart-v2-pay cart-v2-pay--zalo" data-online-payment-coming-soon
+                                    aria-label="ZaloPay – Sắp ra mắt" title="Thanh toán ZaloPay – Sắp ra mắt">
+                                    <span class="cart-v2-pay-inner">
+                                        <span class="cart-v2-pay-icon" aria-hidden="true">Z</span>
+                                        <span class="cart-v2-pay-name">ZaloPay</span>
+                                    </span>
+                                    <span class="cart-v2-coming-badge">Sắp ra mắt</span>
+                                </button>
                             </div>
 
                             <div class="cart-v2-secure">
@@ -284,8 +533,8 @@
                                     <i class="fa fa-shield" aria-hidden="true"></i>
                                 </span>
                                 <div class="cart-v2-secure-copy">
-                                    <strong>Thanh toán an toàn, bảo mật</strong>
-                                    <small>Thông tin của bạn được bảo mật tuyệt đối.</small>
+                                    <strong>Thanh toán khi nhận hàng (COD)</strong>
+                                    <small>Bạn có thể thanh toán khi nhận hàng. Các phương thức online đang được triển khai.</small>
                                 </div>
                             </div>
 
@@ -345,10 +594,38 @@
             </section>
         </div>
     </main>
+    <div class="cart-v2-toast" data-cart-online-payment-toast role="status" aria-live="polite">
+        <span class="cart-v2-toast-icon" aria-hidden="true"><i class="fa fa-info-circle"></i></span>
+        <span data-cart-toast-msg></span>
+    </div>
 
     <script>
         (function () {
             'use strict';
+
+            const onlinePaymentMessage = 'Tính năng thanh toán online đang được triển khai. Vui lòng chọn thanh toán khi nhận hàng (COD).';
+            let cartToastTimer = null;
+
+            const showCartToast = (message) => {
+                const toast = document.querySelector('[data-cart-online-payment-toast]');
+                if (!toast) {
+                    alert(message);
+                    return;
+                }
+
+                const msgEl = toast.querySelector('[data-cart-toast-msg]');
+                if (msgEl) {
+                    msgEl.textContent = message;
+                } else {
+                    toast.textContent = message;
+                }
+
+                toast.classList.add('is-visible');
+                window.clearTimeout(cartToastTimer);
+                cartToastTimer = window.setTimeout(() => {
+                    toast.classList.remove('is-visible');
+                }, 4000);
+            };
 
             const formatVND = (value) => {
                 const n = Math.max(0, Math.round(Number(value) || 0));
@@ -493,7 +770,7 @@
 
                 if (!selectedIds.length) {
                     event.preventDefault();
-                    alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán.');
+                    showCartToast('Vui lòng chọn ít nhất một sản phẩm trong giỏ hàng để tiến hành thanh toán.');
                     return;
                 }
 
@@ -504,6 +781,13 @@
                     input.name = 'checkout_cart_item_ids[]';
                     input.value = id;
                     holder.appendChild(input);
+                });
+            });
+
+            document.querySelectorAll('[data-online-payment-coming-soon]').forEach((button) => {
+                button.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    showCartToast(onlinePaymentMessage);
                 });
             });
 

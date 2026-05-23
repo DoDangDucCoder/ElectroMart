@@ -227,11 +227,18 @@ class Product extends BaseModel
 
     protected function pricingPayload(): array
     {
-        return $this->pricing()->derivePricingPayload(
-            (float) ($this->price ?? 0),
-            $this->sale_type,
-            $this->sale_value,
-            $this->sale_price
-        );
+        if ($this->_pricingPayloadCache === null) {
+            $this->_pricingPayloadCache = $this->pricing()->derivePricingPayload(
+                (float) ($this->price ?? 0),
+                $this->sale_type,
+                $this->sale_value,
+                $this->sale_price
+            );
+        }
+
+        return $this->_pricingPayloadCache;
     }
+
+    /** @internal Cache kết quả pricingPayload per product instance. null = chưa tính. */
+    private ?array $_pricingPayloadCache = null;
 }

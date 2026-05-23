@@ -251,12 +251,19 @@ class ProductSearchService
 
     protected function canUseBestSellingRanking(): bool
     {
-        return Schema::hasTable('orders')
-            && Schema::hasTable('order_items')
-            && Schema::hasColumn('orders', 'status')
-            && Schema::hasColumn('order_items', 'order_id')
-            && Schema::hasColumn('order_items', 'product_id')
-            && Schema::hasColumn('order_items', 'quantity');
+        // Cache result per process (static) — schema không thay đổi trong runtime
+        static $result = null;
+
+        if ($result === null) {
+            $result = Schema::hasTable('orders')
+                && Schema::hasTable('order_items')
+                && Schema::hasColumn('orders', 'status')
+                && Schema::hasColumn('order_items', 'order_id')
+                && Schema::hasColumn('order_items', 'product_id')
+                && Schema::hasColumn('order_items', 'quantity');
+        }
+
+        return $result;
     }
 
     protected function productTable(): string

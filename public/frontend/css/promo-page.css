@@ -166,7 +166,7 @@
 }
 
 .promo-hero-title {
-  font-family: 'Bebas Neue', 'Be Vietnam Pro', sans-serif;
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
   font-size: 42px;
   line-height: 1.15;
   color: #fff;
@@ -222,7 +222,7 @@
   font-weight: 700;
   color: #fff;
   line-height: 1.2;
-  font-family: 'Bebas Neue', monospace;
+  font-family: 'Inter', monospace;
   letter-spacing: 1px;
 }
 
@@ -524,7 +524,7 @@
   font-weight: 800;
   color: #fff;
   display: block;
-  font-family: 'Bebas Neue', sans-serif;
+  font-family: 'Inter', sans-serif;
   letter-spacing: 1px;
 }
 

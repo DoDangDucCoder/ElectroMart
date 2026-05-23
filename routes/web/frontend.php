@@ -41,7 +41,7 @@ Route::get('/show_quick_cart', [CartController::class, 'show_quick_cart']);
 Route::match(['get', 'post'], '/tim-kiem', [HomeController::class, 'search']);
 Route::match(['get', 'post'], '/san-pham', [HomeController::class, 'products']);
 Route::get('/san-pham-ban-chay', [HomeController::class, 'best_selling']);
-Route::post('/autocomplete-ajax', [HomeController::class, 'autocomplete_ajax']);
+Route::post('/autocomplete-ajax', [HomeController::class, 'autocomplete_ajax'])->middleware('throttle:60,1');
 Route::get('/yeu-thich', fn () => redirect()->route('customer.account.wishlist', [], 301));
 Route::get('/goi-y-san-pham', fn () => redirect()->to(url('/san-pham?mode=recommendations'), 301));
 Route::get('/khuyen-mai', [HomeController::class, 'khuyenMai']);
@@ -52,7 +52,7 @@ Route::post('/chatbot/messages', [ChatController::class, 'store']);
 
 // Contact page
 Route::get('/lien-he', [ContactController::class, 'lien_he']);
-Route::post('/lien-he', [ContactController::class, 'submitContact']);
+Route::post('/lien-he', [ContactController::class, 'submitContact'])->middleware('throttle:3,1');
 
 // Customer support center
 Route::view('/cham-soc-khach-hang', 'pages.support.index')->name('support.index');
@@ -92,8 +92,8 @@ Route::get('/tag/{product_tag}', function (Request $request, string $product_tag
 });
 Route::post('/quickview', [ProductController::class, 'quickview']);
 Route::post('/load-comment', [ProductController::class, 'load_comment']);
-Route::post('/send-comment', [ProductController::class, 'send_comment']);
-Route::post('/insert-rating', [ProductController::class, 'insert_rating']);
+Route::post('/send-comment', [ProductController::class, 'send_comment'])->middleware('throttle:10,1');
+Route::post('/insert-rating', [ProductController::class, 'insert_rating'])->middleware('throttle:10,1');
 Route::get('/so-sanh', function (Request $request) {
     $firstId = collect(explode(',', (string) $request->query('ids')))
         ->map(fn ($id) => (int) $id)
@@ -171,15 +171,15 @@ Route::get('/del-fee', fn () => Redirect::to('/checkout')
 Route::post('/logout-checkout', [CheckoutController::class, 'logout_checkout']);
 Route::get('/logout-checkout', fn () => Redirect::to('/dang-nhap')
     ->with('error', 'Vui lòng dùng nút đăng xuất trên trang thanh toán.'));
-Route::post('/add-customer', [CheckoutController::class, 'add_customer']);
-Route::post('/login-customer', [CheckoutController::class, 'login_customer']);
+Route::post('/add-customer', [CheckoutController::class, 'add_customer'])->middleware('throttle:10,1');
+Route::post('/login-customer', [CheckoutController::class, 'login_customer'])->middleware('throttle:10,1');
 Route::get('/checkout', [CheckoutController::class, 'checkout'])->name('checkout');
 Route::redirect('/thanh-toan', '/checkout', 301);
 Route::post('/checkout', [CheckoutController::class, 'select_checkout_items']);
 Route::get('/payment', [CheckoutController::class, 'payment']);
 Route::post('/calculate-fee', [CheckoutController::class, 'calculate_fee']);
 Route::post('/select-delivery-home', [CheckoutController::class, 'select_delivery_home']);
-Route::post('/confirm-order', [CheckoutController::class, 'confirm_order']);
+Route::post('/confirm-order', [CheckoutController::class, 'confirm_order'])->middleware('throttle:5,1');
 
 // Order result pages
 Route::get('/dat-hang-thanh-cong/{order_code}', [CheckoutController::class, 'orderSuccess'])->name('order.success');
@@ -214,8 +214,8 @@ Route::post('watch-video', [VideoController::class, 'watch_video']);
 // Forgot password flow
 Route::get('/quen-mat-khau', [MailController::class, 'quen_mat_khau']);
 Route::get('/update-new-pass', [MailController::class, 'update_new_pass']);
-Route::post('/recover-pass', [MailController::class, 'recover_pass']);
-Route::post('/reset-new-pass', [MailController::class, 'reset_new_pass']);
+Route::post('/recover-pass', [MailController::class, 'recover_pass'])->middleware('throttle:5,1');
+Route::post('/reset-new-pass', [MailController::class, 'reset_new_pass'])->middleware('throttle:5,1');
 
 // Payment gateways
 Route::get('process-transaction', [PayPalController::class, 'processTransaction'])->name('processTransaction');

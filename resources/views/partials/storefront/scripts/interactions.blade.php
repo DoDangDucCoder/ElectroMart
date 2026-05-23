@@ -2808,6 +2808,7 @@
                     shipping_method: shipping_method,
                     vietnam_province_code: vietnam_province_code,
                     vietnam_ward_code: vietnam_ward_code,
+                    checkout_idempotency_key: $('#checkout_idempotency_key').val() || '',
                     _token: _token
                 },
                 onSuccess: function(data) {

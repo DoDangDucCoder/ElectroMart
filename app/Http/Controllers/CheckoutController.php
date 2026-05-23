@@ -152,6 +152,12 @@ class CheckoutController extends Controller
         if (! $currentCustomer) {
             $this->clearCustomerSession();
         }
+
+        // Tạo idempotency key mới mỗi lần vào trang checkout
+        // Mỗi phiên checkout có key riêng, chống tạo đơn trùng nếu user bấm 2 lần
+        $idempotencyKey = \Illuminate\Support\Str::uuid()->toString();
+        Session::put('checkout_idempotency_key', $idempotencyKey);
+
         // Allow guests to proceed
         $vietnamProvinces = VietnamProvince::query()->orderBy('name')->get();
 
@@ -163,6 +169,7 @@ class CheckoutController extends Controller
                 'vietnamProvinces' => $vietnamProvinces,
                 'currentCustomer' => $currentCustomer,
                 'storefrontCustomerPicture' => Session::get(StorefrontCustomerAuth::SESSION_PICTURE_KEY),
+                'checkout_idempotency_key' => $idempotencyKey,
             ]
         ));
     }
@@ -266,6 +273,21 @@ class CheckoutController extends Controller
     public function confirm_order(ConfirmOrderRequest $request): JsonResponse
     {
         $validated = $request->validated();
+
+        // === Idempotency: chống tạo đơn trùng khi user bấm 2 lần hoặc mạng gửi lại request ===
+        $submittedKey = $validated['checkout_idempotency_key'] ?? null;
+        $sessionKey   = Session::get('checkout_idempotency_key');
+
+        if ($submittedKey && $sessionKey && $submittedKey === $sessionKey) {
+            // Key hợp lệ — tiêu thụ nó ngay để lần submit thứ 2 không được dùng lại
+            Session::forget('checkout_idempotency_key');
+        } elseif ($submittedKey !== null) {
+            // Key không khớp session hoặc đã bị tiêu thụ
+            return response()->json([
+                'message' => 'Phiên thanh toán không hợp lệ hoặc đơn hàng đã được xử lý. Vui lòng tải lại trang checkout.',
+            ], 422);
+        }
+        // Nếu frontend cũ không gửi key thì bỏ qua (backward-compatible)
 
         $customer = $this->sessionCustomer();
         if (! $customer) {

@@ -31,7 +31,7 @@
     <title>{{ $meta_title }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     {{-- Vendor core: Bootstrap 3 + FontAwesome + SweetAlert --}}
     <link href="{{ asset('frontend/css/vendor-core.min.css') }}?v=2.3" rel="stylesheet">
     {{-- Design tokens + shared components --}}
@@ -46,6 +46,8 @@
 
     @stack('styles')
     <link href="{{ asset('frontend/css/wishlist-state.css') }}?v=1.1" rel="stylesheet">
+    {{-- Font override: phủ Roboto/Be Vietnam Pro còn hardcode trong file lớn --}}
+    <link href="{{ asset('frontend/css/font-override.css') }}?v=1.0" rel="stylesheet">
 
     {{-- Auto-load page CSS based on body_class (avoids editing every page blade) --}}
     @php

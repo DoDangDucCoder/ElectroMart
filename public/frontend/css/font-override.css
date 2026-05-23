@@ -1,0 +1,109 @@
+/* ================================================================
+   FONT OVERRIDE — DangDuc Shop
+   Ghi đè tất cả font-family Roboto / Be Vietnam Pro còn hardcode
+   trong storefront-theme.css, app.css, storefront.css (file lớn).
+   File này được load SAU tất cả CSS khác để đảm bảo ưu tiên cao nhất.
+   ================================================================ */
+
+/* --- Base: root-level override --- */
+html,
+body {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* --- Universal override: bất kỳ element nào khai báo Roboto hoặc Be Vietnam Pro --- */
+*:not(i):not([class*="fa"]):not([class*="glyphicon"]):not(code):not(pre):not(kbd) {
+    font-family: inherit;
+}
+
+/* --- Headings --- */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.015em;
+}
+
+/* --- Navigation & Header --- */
+nav, .navbar, .nav, .nav-item, .nav-link,
+.header, #header, .header-bottom,
+.shopw-topbar, .shopw-topbar-pill,
+.main-menu, .menu, .menu-item,
+.top-links, .top-link {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* --- Buttons & Forms --- */
+button, input, textarea, select, label,
+.btn, .button, [type="button"], [type="submit"] {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* --- Product Cards --- */
+.product-card, .product-item, .product-name,
+.product-title, .product-price,
+.tech-product-card, .tech-product-body,
+.sf-card, .sf-product {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* --- Storefront theme class-level overrides (Roboto was hardcoded here) --- */
+.shopw-body,
+.shopw-header,
+.shopw-nav,
+.shopw-footer,
+.shopw-product,
+.shopw-card,
+.shopw-btn,
+.dd-product-detail,
+.dd-product,
+.dd-cart,
+.dd-checkout,
+.storefront-section {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* --- Flash sale / Promo sections --- */
+.promo-hero-title,
+.promo-countdown-box strong,
+.promo-banner-discount strong,
+.tech-flash-head h2,
+.tech-section-head h2,
+.flash-title,
+.flash-section-title {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    letter-spacing: -0.02em;
+}
+
+/* --- Cart & Account pages --- */
+.cart-page, .cart-table, .cart-item,
+.account-page, .accp-page,
+.ckq-wrap, .ckq-card {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* --- Blog, Contact, Support, Category, Search pages --- */
+.blog-detail, .blog-card,
+.contact-page, .support-page,
+.category-redesign, .search-redesign,
+.dd-blog-archive {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* --- Preserve monospace / icon fonts --- */
+code, pre, kbd, samp,
+.slug, [class*="mono"],
+.font-mono {
+    font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', Consolas, 'Courier New', monospace;
+}
+
+/* --- Restore icon fonts (FontAwesome 4.x + Glyphicons) ---
+   Áp dụng cho cả i, span, div để tránh inherit bị override
+   font-family phải khớp với @font-face name trong vendor-core.min.css */
+.fa, .fas, .far, .fab, .fal,
+[class^="fa-"], [class*=" fa-"],
+i[class*="fa"], span[class*="fa"],
+span.glyphicon, [class^="glyphicon-"], [class*=" glyphicon-"] {
+    font-family: FontAwesome, 'Glyphicons Halflings' !important;
+}

@@ -13,15 +13,16 @@ class ConfirmOrderRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
+            'checkout_idempotency_key' => ['nullable', 'string', 'max:64'],
             'shipping_email' => ['required', 'email', 'max:255'],
             'shipping_name' => ['required', 'string', 'max:255'],
             'shipping_address' => ['required', 'string', 'max:500'],
             'shipping_phone' => ['required', 'string', 'max:30', 'regex:/^(0|\+84)(3[2-9]|5[6-9]|7[0|6-9]|8[0-9]|9[0-9])[0-9]{7}$/'],
             'shipping_notes' => ['nullable', 'string', 'max:500'],
             'order_note' => ['nullable', 'string', 'max:500'],
-            'shipping_method' => ['nullable', 'string', 'max:50', Rule::in(['cod', 'bank_transfer', 'cash', 'card', 'paypal'])],
-            // payment_method: phương thức thanh toán độc lập (nếu form gửi riêng biệt)
-            'payment_method'  => ['nullable', 'string', 'max:50', Rule::in(['cod', 'bank_transfer', 'momo', 'vnpay', 'paypal', 'cash', 'card'])],
+            // Chỉ chấp nhận COD — các phương thức khác chưa được triển khai
+            'shipping_method' => ['nullable', 'string', 'max:50', Rule::in(['cod', 'cash'])],
+            'payment_method'  => ['nullable', 'string', 'max:50', Rule::in(['cod', 'cash'])],
             'vietnam_province_code' => $this->vietnamProvinceRules(),
             'vietnam_ward_code' => $this->vietnamWardRules(),
             'city_id'         => $this->locationRules('city'),
@@ -45,7 +46,8 @@ class ConfirmOrderRequest extends BaseFormRequest
             'shipping_phone.regex' => 'Số điện thoại không hợp lệ. Vui lòng nhập số di động Việt Nam (VD: 0901234567).',
             'shipping_notes.max' => 'Ghi chú giao hàng không được vượt quá 500 ký tự.',
             'order_note.max' => 'Ghi chú đơn hàng không được vượt quá 500 ký tự.',
-            'shipping_method.in' => 'Phương thức thanh toán không hợp lệ.',
+            'shipping_method.in' => 'Phương thức thanh toán này chưa được hỗ trợ. Vui lòng chọn thanh toán khi nhận hàng (COD).',
+            'payment_method.in' => 'Phương thức thanh toán này chưa được hỗ trợ. Vui lòng chọn thanh toán khi nhận hàng (COD).',
             'city_id.integer' => 'Mã thành phố giao hàng không hợp lệ.',
             'city_id.min' => 'Mã thành phố giao hàng không hợp lệ.',
             'city_id.exists' => 'Thành phố giao hàng không tồn tại.',

@@ -40,9 +40,9 @@ Route::middleware('guest:web')->group(function () {
     Route::get('/admin/register', [AuthController::class, 'showRegisterForm'])->name('admin.register');
     Route::post('/admin/register', [AuthController::class, 'register'])->name('admin.register.store');
     Route::get('/admin/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('admin.password.request');
-    Route::post('/admin/forgot-password', [AuthController::class, 'sendResetLink'])->name('admin.password.email');
+    Route::post('/admin/forgot-password', [AuthController::class, 'sendResetLink'])->middleware('throttle:5,1')->name('admin.password.email');
     Route::get('/admin/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('admin.password.reset');
-    Route::post('/admin/reset-password', [AuthController::class, 'resetPassword'])->name('admin.password.update');
+    Route::post('/admin/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:5,1')->name('admin.password.update');
     Route::post('/auth-login', [AuthController::class, 'login'])
         ->middleware('throttle:5,1')
         ->name('admin.login.attempt');

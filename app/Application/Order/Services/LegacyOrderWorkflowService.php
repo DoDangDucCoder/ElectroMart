@@ -134,22 +134,7 @@ class LegacyOrderWorkflowService
         $previousStatus = $this->presentationService->legacyStatusFromModern($order->status);
         $shouldFinalize = $newStatus === 2 && $previousStatus !== 2;
 
-        foreach ($lineItems as $lineItem) {
-            if (! $shouldFinalize) {
-                continue;
-            }
-
-            $product = $lineItem['detail']->product;
-            if (! $product) {
-                return $this->result(false, 404, 'Không tìm thấy sản phẩm của đơn hàng.');
-            }
-
-            $availableQuantity = (int) ($product->stock_quantity ?? 0);
-            if ($lineItem['qty'] > $availableQuantity) {
-                return $this->result(false, 422, 'Số lượng bán trong kho không đủ.');
-            }
-        }
-
+        // Stock check + decrement phải nằm trong transaction với lock để chặn race condition
         DB::transaction(function () use ($lineItems, $order, $newStatus, $shouldFinalize): void {
             foreach ($lineItems as $lineItem) {
                 /** @var OrderItem $detail */
@@ -161,9 +146,24 @@ class LegacyOrderWorkflowService
                 $detail->save();
 
                 if ($shouldFinalize && $detail->product) {
-                    $detail->product->stock_quantity = max(0, (int) $detail->product->stock_quantity - $qty);
-                    $detail->product->save();
-                    $this->cacheService->invalidateProductCache((int) $detail->product->id);
+                    // Lock row để chặn đồng thời nhiều request xác nhận đơn
+                    $product = \App\Infrastructure\Persistence\Eloquent\Catalog\Product::lockForUpdate()
+                        ->find($detail->product_id);
+
+                    if (! $product) {
+                        throw new \RuntimeException('Không tìm thấy sản phẩm của đơn hàng.');
+                    }
+
+                    $availableQuantity = (int) ($product->stock_quantity ?? 0);
+                    if ($qty > $availableQuantity) {
+                        throw new \RuntimeException(
+                            "Sản phẩm \"{$product->name}\" không đủ tồn kho để xác nhận đơn hàng."
+                        );
+                    }
+
+                    $product->stock_quantity = max(0, $availableQuantity - $qty);
+                    $product->save();
+                    $this->cacheService->invalidateProductCache((int) $product->id);
                 }
             }
 

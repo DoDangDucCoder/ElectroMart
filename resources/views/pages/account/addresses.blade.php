@@ -24,7 +24,7 @@
 
     body.acc-portal-body {
         background: var(--acc-bg);
-        font-family: 'Be Vietnam Pro', 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-family: 'Inter', system-ui, -apple-system, "Segoe UI", sans-serif;
         color: var(--acc-text);
         margin: 0;
         padding: 0;

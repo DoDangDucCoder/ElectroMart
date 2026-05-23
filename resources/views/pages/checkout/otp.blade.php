@@ -82,7 +82,7 @@
     }
 
     .otp-form-head h1 {
-        font-family: 'Be Vietnam Pro', sans-serif;
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
         font-size: 26px;
         font-weight: 700;
         color: #0f172a;
@@ -121,7 +121,7 @@
         width: 100%;
         height: 72px;
         text-align: center;
-        font-family: 'Be Vietnam Pro', sans-serif;
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
         font-size: 30px;
         font-weight: 600;
         color: #0f172a;
@@ -635,7 +635,7 @@
                             <rect x="0" y="0" width="120" height="180" rx="20" fill="#ffffff" stroke="#cbe9ec" stroke-width="2"/>
                             <rect x="8" y="10" width="104" height="160" rx="14" fill="#0f9aa5"/>
                             <rect x="44" y="14" width="32" height="6" rx="3" fill="#0c828c"/>
-                            <text x="60" y="100" text-anchor="middle" font-family="'Be Vietnam Pro', Arial, sans-serif" font-size="22" font-weight="700" fill="#ffffff" letter-spacing="2">482159</text>
+                            <text x="60" y="100" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#ffffff" letter-spacing="2">482159</text>
                             {{-- 6 dots --}}
                             <g transform="translate(20 120)">
                                 <circle cx="6" cy="6" r="4" fill="#ffffff" opacity="0.85"/>

@@ -195,22 +195,37 @@ class HomeController extends Controller
         );
     }
 
+    /** @var array<string,bool> Cache kết quả Schema::hasColumn để tránh gọi DB lặp lại */
+    private static array $schemaColumnCache = [];
+
+    /**
+     * Kiểm tra cột trong schema với kết quả được cache theo request (static).
+     */
+    private function hasColumn(string $table, string $column): bool
+    {
+        $key = $table.'.'.$column;
+        if (! array_key_exists($key, self::$schemaColumnCache)) {
+            self::$schemaColumnCache[$key] = Schema::hasColumn($table, $column);
+        }
+        return self::$schemaColumnCache[$key];
+    }
+
     private function resolveFreshTechHomeProducts(int $limit = 8, bool $preferHot = false, bool $onlyDiscounted = false): Collection
     {
         $productTable = (new Product)->getTable();
 
         if (
             Schema::hasTable($productTable)
-            && Schema::hasColumn($productTable, 'thumbnail_path')
+            && $this->hasColumn($productTable, 'thumbnail_path')
         ) {
             try {
-                $hasIsHotColumn = Schema::hasColumn($productTable, 'is_hot');
-                $hasIsFeaturedColumn = Schema::hasColumn($productTable, 'is_featured');
-                $hasDisplayOrderColumn = Schema::hasColumn($productTable, 'display_order');
-                $hasSalePriceColumn = Schema::hasColumn($productTable, 'sale_price');
-                $hasSaleValueColumn = Schema::hasColumn($productTable, 'sale_value');
-                $hasPriceColumn = Schema::hasColumn($productTable, 'price');
-                $hasImageStatusColumn = Schema::hasColumn($productTable, 'image_status');
+                $hasIsHotColumn = $this->hasColumn($productTable, 'is_hot');
+                $hasIsFeaturedColumn = $this->hasColumn($productTable, 'is_featured');
+                $hasDisplayOrderColumn = $this->hasColumn($productTable, 'display_order');
+                $hasSalePriceColumn = $this->hasColumn($productTable, 'sale_price');
+                $hasSaleValueColumn = $this->hasColumn($productTable, 'sale_value');
+                $hasPriceColumn = $this->hasColumn($productTable, 'price');
+                $hasImageStatusColumn = $this->hasColumn($productTable, 'image_status');
 
                 $query = Product::query()
                     ->with('brand')
@@ -218,7 +233,7 @@ class HomeController extends Controller
                     ->whereNotNull('thumbnail_path')
                     ->where('thumbnail_path', '!=', '');
 
-                if (! $this->allowsLocalPreviewCatalog() && Schema::hasColumn($productTable, 'is_active')) {
+                if (! $this->allowsLocalPreviewCatalog() && $this->hasColumn($productTable, 'is_active')) {
                     $query->where('is_active', true);
                 }
 

@@ -13,7 +13,7 @@ class StoreContactInfoRequest extends BaseFormRequest
             'slogan_logo' => ['nullable', 'string', 'max:255'],
             'info_map' => ['nullable', 'string'],
             'info_fanpage' => ['nullable', 'string'],
-            'info_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,gif,webp,svg', 'max:5120'],
+            'info_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:4096'],
         ];
     }
 }

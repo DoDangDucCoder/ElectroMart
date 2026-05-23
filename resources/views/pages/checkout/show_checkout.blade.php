@@ -14,7 +14,7 @@
         $checkoutDiscountTotal = (float) ($cartTotals['discount'] ?? 0);
     @endphp
 
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 
     <style>
         /* ====== PAGE BASE ====== */
@@ -183,6 +183,42 @@
         .ckq-method-title { font-size: 14px; font-weight: 600; color:#111827; }
         .ckq-method-sub { font-size: 12px; color:#6b7280; margin-top: 2px;}
         .ckq-method-fee { font-size: 13px; font-weight: 600; color:#0f172a;}
+
+        /* Disabled payment method */
+        .ckq-method.is-disabled {
+            opacity: 0.52;
+            cursor: not-allowed;
+            background: #f8fafc;
+            border-color: #e5e7eb;
+            pointer-events: none; /* block mouse entirely for safety */
+        }
+        /* Re-enable pointer-events so JS click handler still fires for toast */
+        .ckq-method[data-payment-disabled] { pointer-events: auto !important; cursor: not-allowed !important; }
+
+        .ckq-coming-badge {
+            display:inline-flex; align-items:center;
+            font-size: 10px; font-weight: 700; letter-spacing: .4px;
+            background: #fef3c7; color: #92400e;
+            padding: 2px 8px; border-radius: 99px;
+            margin-left: 7px; vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        /* Toast notification */
+        #ckq-payment-toast {
+            position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+            background: #1e293b; color: #f1f5f9;
+            padding: 12px 20px; border-radius: 10px;
+            font-size: 13.5px; font-weight: 500;
+            box-shadow: 0 8px 24px rgba(15,23,42,.22);
+            z-index: 9999; opacity: 0;
+            transition: opacity .25s ease, transform .25s ease;
+            max-width: 380px; text-align: center;
+            pointer-events: none;
+        }
+        #ckq-payment-toast.show {
+            opacity: 1; transform: translateX(-50%) translateY(0);
+        }
 
         .ckq-payment-list { display:flex; flex-direction: column; gap: 10px; }
         .ckq-payment-list .ckq-method { padding: 12px 14px; }
@@ -520,58 +556,85 @@
                     <div class="ckq-section">
                         <h3 class="ckq-section-title">Phương thức thanh toán</h3>
                         <div class="ckq-payment-list">
-                            <label class="ckq-method is-active" data-payment>
+                            {{-- COD: phương thức duy nhất hoạt động --}}
+                            <label class="ckq-method is-active" data-payment id="pay-method-cod">
                                 <input type="radio" name="shipping_method" class="payment_select" value="cod" checked>
                                 <span class="ckq-radio-fake"></span>
+                                <span class="ckq-method-icon"><i class="fa fa-truck"></i></span>
                                 <span class="ckq-method-body">
                                     <span class="ckq-method-title">Thanh toán khi nhận hàng (COD)</span>
-                                    <span class="ckq-method-sub">Thanh toán bằng tiền mặt khi nhận hàng</span>
+                                    <span class="ckq-method-sub">Thanh toán bằng tiền mặt khi nhận hàng.</span>
                                 </span>
                             </label>
-                            <label class="ckq-method" data-payment>
-                                <input type="radio" name="shipping_method" class="payment_select" value="bank_transfer">
-                                <span class="ckq-radio-fake"></span>
+
+                            {{-- Chuyển khoản: disabled, sắp ra mắt --}}
+                            <div class="ckq-method is-disabled"
+                                 data-payment-disabled
+                                 data-toast-msg="Tính năng chuyển khoản/QR đang được triển khai. Vui lòng chọn thanh toán khi nhận hàng (COD).">
+                                <span class="ckq-radio-fake" style="border-color:#d1d5db;"></span>
+                                <span class="ckq-method-icon"><i class="fa fa-university"></i></span>
                                 <span class="ckq-method-body">
-                                    <span class="ckq-method-title">Chuyển khoản ngân hàng</span>
+                                    <span class="ckq-method-title">
+                                        Chuyển khoản ngân hàng
+                                        <span class="ckq-coming-badge">Sắp ra mắt</span>
+                                    </span>
                                     <span class="ckq-method-sub">Quét mã QR hoặc chuyển khoản</span>
                                 </span>
-                            </label>
-                            <label class="ckq-method" data-payment>
-                                <input type="radio" name="shipping_method" class="payment_select" value="card">
-                                <span class="ckq-radio-fake"></span>
+                            </div>
+
+                            {{-- Thẻ tín dụng: disabled, sắp ra mắt --}}
+                            <div class="ckq-method is-disabled"
+                                 data-payment-disabled
+                                 data-toast-msg="Tính năng thanh toán thẻ đang được triển khai. Vui lòng chọn thanh toán khi nhận hàng (COD).">
+                                <span class="ckq-radio-fake" style="border-color:#d1d5db;"></span>
+                                <span class="ckq-method-icon"><i class="fa fa-credit-card"></i></span>
                                 <span class="ckq-method-body">
-                                    <span class="ckq-method-title">Thẻ tín dụng / Thẻ ghi nợ</span>
+                                    <span class="ckq-method-title">
+                                        Thẻ tín dụng / Thẻ ghi nợ
+                                        <span class="ckq-coming-badge">Sắp ra mắt</span>
+                                    </span>
                                 </span>
-                                <span class="ckq-pay-brands">
+                                <span class="ckq-pay-brands" style="opacity:.4;">
                                     <span class="ckq-pay-brand visa">VISA</span>
                                     <span class="ckq-pay-brand mc">MC</span>
                                     <span class="ckq-pay-brand jcb">JCB</span>
                                 </span>
-                            </label>
-                            <label class="ckq-method" data-payment style="opacity:.65; cursor:not-allowed;" onclick="return false;">
-                                <input type="radio" name="shipping_method" class="payment_select" value="ewallet" disabled>
-                                <span class="ckq-radio-fake" style="border-color:#e5e7eb;"></span>
+                            </div>
+
+                            {{-- Ví điện tử: disabled, sắp ra mắt --}}
+                            <div class="ckq-method is-disabled"
+                                 data-payment-disabled
+                                 data-toast-msg="Tính năng ví điện tử đang được triển khai. Vui lòng chọn thanh toán khi nhận hàng (COD).">
+                                <span class="ckq-radio-fake" style="border-color:#d1d5db;"></span>
+                                <span class="ckq-method-icon"><i class="fa fa-mobile"></i></span>
                                 <span class="ckq-method-body">
-                                    <span class="ckq-method-title">Ví điện tử <span style="font-size:11px;background:#fef3c7;color:#92400e;padding:2px 7px;border-radius:99px;font-weight:600;margin-left:6px;">Sắp ra mắt</span></span>
+                                    <span class="ckq-method-title">
+                                        Ví điện tử
+                                        <span class="ckq-coming-badge">Sắp ra mắt</span>
+                                    </span>
                                     <span class="ckq-method-sub">MoMo, ZaloPay — Đang tích hợp, chưa sẵn sàng</span>
                                 </span>
-                                <span class="ckq-pay-brands">
-                                    <span class="ckq-pay-brand momo" style="opacity:.5;">MoMo</span>
-                                    <span class="ckq-pay-brand zalo" style="opacity:.5;">ZaloPay</span>
+                                <span class="ckq-pay-brands" style="opacity:.4;">
+                                    <span class="ckq-pay-brand momo">MoMo</span>
+                                    <span class="ckq-pay-brand zalo">ZaloPay</span>
                                 </span>
-                            </label>
+                            </div>
                         </div>
                     </div>
 
                     <div class="ckq-secure-note">
                         <i class="fa fa-shield"></i>
-                        Thông tin của bạn được bảo mật tuyệt đối. Đơn hàng sẽ được xử lý nhanh chóng và an toàn.
+                        <span>Thông tin của bạn được bảo mật tuyệt đối. Hiện hệ thống hỗ trợ thanh toán khi nhận hàng (COD). Các phương thức thanh toán online đang được triển khai.</span>
                     </div>
+
+                    {{-- Toast notification element --}}
+                    <div id="ckq-payment-toast"></div>
 
                     <input type="hidden" name="checkout_base_total" class="checkout_base_total" value="{{ $checkoutBaseTotal }}">
                     <input type="hidden" name="order_fee" class="order_fee" value="{{ $shipping_fee }}">
                     <input type="hidden" name="order_coupon" class="order_coupon" value="{{ $coupon['code'] ?? 'no' }}">
                     <input type="hidden" name="total_after" class="total_after" value="{{ $cartTotals['total'] }}">
+                    <input type="hidden" name="checkout_idempotency_key" id="checkout_idempotency_key" value="{{ $checkout_idempotency_key ?? '' }}">
                 </form>
 
                 @if($customerLoggedIn)
@@ -696,14 +759,38 @@
         </div>
     </div>
 
-    {{-- Page-specific JS: method toggling + coupon --}}
+    {{-- Page-specific JS: method toggling + coupon + disabled payment toast --}}
     <script>
         (function () {
-            // Toggle active state for method/payment cards
-            document.querySelectorAll('.ckq-method').forEach(function (el) {
+            /* --- Toast helper --- */
+            var _toastTimer = null;
+            function showPaymentToast(msg) {
+                var toast = document.getElementById('ckq-payment-toast');
+                if (!toast) return;
+                toast.textContent = msg;
+                toast.classList.add('show');
+                if (_toastTimer) clearTimeout(_toastTimer);
+                _toastTimer = setTimeout(function () {
+                    toast.classList.remove('show');
+                }, 3500);
+            }
+
+            /* --- Disabled payment methods: show toast on click, block selection --- */
+            document.querySelectorAll('[data-payment-disabled]').forEach(function (el) {
+                el.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    var msg = el.getAttribute('data-toast-msg') ||
+                        'Phương thức thanh toán này chưa được hỗ trợ. Vui lòng chọn thanh toán khi nhận hàng (COD).';
+                    showPaymentToast(msg);
+                });
+            });
+
+            /* --- Toggle active state only for enabled method/payment cards --- */
+            document.querySelectorAll('.ckq-method:not([data-payment-disabled])').forEach(function (el) {
                 el.addEventListener('click', function (e) {
                     var input = el.querySelector('input[type="radio"]');
-                    if (!input) return;
+                    if (!input || input.disabled) return;
                     var name = input.getAttribute('name');
                     document.querySelectorAll('input[type="radio"][name="' + name + '"]').forEach(function (r) {
                         var card = r.closest('.ckq-method');
@@ -713,6 +800,16 @@
                     el.classList.add('is-active');
                 });
             });
+
+            /* Ensure COD is always the active payment on page load */
+            (function () {
+                var codInput = document.querySelector('input[name="shipping_method"][value="cod"]');
+                if (codInput) {
+                    codInput.checked = true;
+                    var codCard = codInput.closest('.ckq-method');
+                    if (codCard) codCard.classList.add('is-active');
+                }
+            })();
 
             // Coupon apply
             var couponBtn = document.getElementById('apply_coupon_btn');

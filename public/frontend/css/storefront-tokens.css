@@ -69,8 +69,8 @@
     --sf-page-bottom:    56px;
 
     /* ---- Typography ---- */
-    --sf-font:           'Be Vietnam Pro', 'Segoe UI', system-ui, -apple-system, sans-serif;
-    --sf-font-display:   'Bebas Neue', 'Be Vietnam Pro', sans-serif;
+    --sf-font:           'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --sf-font-display:   'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
 
     /* ---- Spacing ---- */
     --sf-space-xs:       4px;

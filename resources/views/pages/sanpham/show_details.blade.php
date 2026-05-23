@@ -758,38 +758,114 @@
         .pdx-policy strong { display: block; font-size: 14px; color: #0f172a; margin-bottom: 4px; }
         .pdx-policy span { font-size: 12.5px; color: #64748b; line-height: 1.45; display: block; }
 
-        /* ===== Tabs section ===== */
+        /* ===== Vertical Tabs section ===== */
         .pdx-tabs {
             background: #fff; border: 1px solid #eef2f7; border-radius: 12px;
-            margin-bottom: 24px; overflow: visible;
+            margin-bottom: 24px; overflow: hidden;
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            min-height: 320px;
         }
+        /* Sidebar nav */
         .pdx-tabs-nav {
-            display: flex; gap: 0; border-bottom: 1px solid #eef2f7;
-            padding: 0 24px;
-            overflow-x: auto;
-            scrollbar-width: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            border-right: 1px solid #eef2f7;
+            padding: 8px 0;
+            background: #f8fafc;
+            border-radius: 12px 0 0 12px;
         }
-        .pdx-tabs-nav::-webkit-scrollbar { display: none; }
         .pdx-tab-btn {
-            background: 0; border: 0;
-            padding: 16px 20px; font-size: 14px; font-weight: 600; color: #64748b;
-            cursor: pointer; position: relative; white-space: nowrap;
+            background: transparent;
+            border: none;
+            border-left: 3px solid transparent;
+            padding: 14px 20px;
+            font-size: 14px; font-weight: 600; color: #64748b;
+            cursor: pointer;
+            text-align: left;
+            white-space: nowrap;
+            display: flex; align-items: center; gap: 10px;
+            transition: background .15s, color .15s, border-color .15s;
+            line-height: 1.4;
         }
-        .pdx-tab-btn:hover { color: #0d9488; }
-        .pdx-tab-btn.is-active { color: #0f172a; }
-        .pdx-tab-btn.is-active::after {
-            content: ''; position: absolute; left: 16px; right: 16px; bottom: -1px;
-            height: 2px; background: #14b8a6; border-radius: 2px;
+        .pdx-tab-btn i.pdx-tab-icon {
+            font-size: 15px;
+            width: 18px;
+            text-align: center;
+            flex-shrink: 0;
+            color: #94a3b8;
+            transition: color .15s;
         }
-        .pdx-tab-pane { display: none; padding: 24px; max-height: none; overflow: visible; }
+        .pdx-tab-btn:hover {
+            background: #f0fdfa;
+            color: #0d9488;
+            border-left-color: #99f6e4;
+        }
+        .pdx-tab-btn:hover i.pdx-tab-icon { color: #0d9488; }
+        .pdx-tab-btn.is-active {
+            background: #f0fdfa;
+            color: #0d9488;
+            border-left-color: #14b8a6;
+            font-weight: 700;
+        }
+        .pdx-tab-btn.is-active i.pdx-tab-icon { color: #14b8a6; }
+        /* Content area */
+        .pdx-tabs-content {
+            min-width: 0;
+        }
+        .pdx-tab-pane { display: none; padding: 28px 28px 24px; max-height: none; overflow: visible; }
         .pdx-tab-pane.is-active { display: block; }
         .pdx-tab-grid {
             display: grid; grid-template-columns: 1fr; gap: 24px;
         }
-        @media (max-width: 991px) { .pdx-tab-grid { grid-template-columns: 1fr; } }
         .pdx-tab-desc :is(h2, h3, h4) { margin: 18px 0 12px; color: #0f172a; font-size: 16px; }
         .pdx-tab-desc :is(p, ul, ol) { margin: 0 0 14px; color: #334155; font-size: 14px; line-height: 1.78; text-align: justify; }
         .pdx-tab-desc ul li { margin-bottom: 6px; }
+
+        /* Mobile: accordion */
+        @media (max-width: 767px) {
+            .pdx-tabs {
+                grid-template-columns: 1fr;
+                display: block;
+            }
+            .pdx-tabs-nav {
+                flex-direction: column;
+                border-right: none;
+                border-bottom: 1px solid #eef2f7;
+                border-radius: 12px 12px 0 0;
+                padding: 0;
+                background: #f8fafc;
+            }
+            .pdx-tab-btn {
+                border-left: none;
+                border-bottom: 1px solid #eef2f7;
+                padding: 14px 18px;
+                justify-content: space-between;
+                white-space: normal;
+            }
+            .pdx-tab-btn:last-child { border-bottom: none; }
+            .pdx-tab-btn::after {
+                content: '\f107';
+                font-family: FontAwesome;
+                font-size: 14px;
+                color: #94a3b8;
+                transition: transform .2s;
+                flex-shrink: 0;
+            }
+            .pdx-tab-btn.is-active::after {
+                transform: rotate(180deg);
+                color: #14b8a6;
+            }
+            .pdx-tab-btn.is-active {
+                border-left: none;
+                border-left-color: transparent;
+            }
+            .pdx-tab-pane { padding: 20px 16px; }
+            .pdx-tabs-content {
+                display: block;
+            }
+        }
 
         .pdx-spec-table {
             width: 100%; border-collapse: collapse; border: 1px solid #eef2f7; border-radius: 8px; overflow: hidden;
@@ -1136,85 +1212,101 @@
                 @endforeach
             </div>
 
-            {{-- Tabs --}}
+            {{-- Vertical Tabs --}}
             <div class="pdx-tabs">
-                <div class="pdx-tabs-nav" role="tablist">
-                    <button type="button" class="pdx-tab-btn is-active" data-pdx-tab="mota" role="tab">Mô tả sản phẩm</button>
-                    <button type="button" class="pdx-tab-btn" data-pdx-tab="thongso" role="tab">Thông số kỹ thuật</button>
-                    <button type="button" class="pdx-tab-btn" data-pdx-tab="danhgia" role="tab">Đánh giá ({{ $reviewCount }})</button>
-                    {{-- Tab Hỏi đáp ẩn tạm vì chức năng chưa hoàn thiện (số cứng 36) --}}
-                    {{-- <button type="button" class="pdx-tab-btn" data-pdx-tab="hoidap" role="tab">Hỏi đáp (36)</button> -->
-                </div>
+                {{-- Sidebar menu dọc --}}
+                <nav class="pdx-tabs-nav" role="tablist" aria-label="Thông tin sản phẩm">
+                    <button type="button" class="pdx-tab-btn is-active" data-pdx-tab="mota"
+                        role="tab" aria-selected="true" aria-controls="mota">
+                        <i class="fa fa-file-text-o pdx-tab-icon"></i>
+                        Mô tả sản phẩm
+                    </button>
+                    <button type="button" class="pdx-tab-btn" data-pdx-tab="thongso"
+                        role="tab" aria-selected="false" aria-controls="thongso">
+                        <i class="fa fa-list-alt pdx-tab-icon"></i>
+                        Thông số kỹ thuật
+                    </button>
+                    <button type="button" class="pdx-tab-btn" data-pdx-tab="danhgia"
+                        role="tab" aria-selected="false" aria-controls="danhgia">
+                        <i class="fa fa-star-o pdx-tab-icon"></i>
+                        Đánh giá ({{ $reviewCount }})
+                    </button>
+                    {{-- Tab Hỏi đáp ẩn tạm vì chức năng chưa hoàn thiện --}}
+                    {{-- <button type="button" class="pdx-tab-btn" data-pdx-tab="hoidap" role="tab">Hỏi đáp</button> --}}
+                </nav>
 
-                {{-- Tab: Mô tả --}}
-                <div class="pdx-tab-pane is-active" id="mota" role="tabpanel">
-                    <div class="pdx-tab-grid">
-                        <div class="pdx-tab-desc">
-                            @if ($productDescriptionHtml)
-                                {!! $productDescriptionHtml !!}
-                            @else
-                                <p class="pdx-muted">Hiện chưa có mô tả sản phẩm.</p>
+                {{-- Vùng nội dung bên phải --}}
+                <div class="pdx-tabs-content">
+                    {{-- Tab: Mô tả --}}
+                    <div class="pdx-tab-pane is-active" id="mota" role="tabpanel">
+                        <div class="pdx-tab-grid">
+                            <div class="pdx-tab-desc">
+                                @if ($productDescriptionHtml)
+                                    {!! $productDescriptionHtml !!}
+                                @else
+                                    <p class="pdx-muted">Hiện chưa có mô tả sản phẩm.</p>
+                                @endif
+                            </div>
+                            @if ($productContentHtml)
+                                <div class="pdx-tab-spec">
+                                    {!! $productContentHtml !!}
+                                </div>
                             @endif
                         </div>
-                        @if ($productContentHtml)
-                            <div class="pdx-tab-spec">
+                    </div>
+
+                    {{-- Tab: Thông số --}}
+                    <div class="pdx-tab-pane" id="thongso" role="tabpanel">
+                        <div class="pdx-tab-spec">
+                            @if ($productContentHtml)
                                 {!! $productContentHtml !!}
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                {{-- Tab: Thông số --}}
-                <div class="pdx-tab-pane" id="thongso" role="tabpanel">
-                    <div class="pdx-tab-spec">
-                        @if ($productContentHtml)
-                            {!! $productContentHtml !!}
-                        @else
-                            <p class="pdx-muted">Hiện chưa có thông số kỹ thuật.</p>
-                        @endif
-                    </div>
-                </div>
-
-                {{-- Tab: Đánh giá --}}
-                <div class="pdx-tab-pane" id="danhgia" role="tabpanel">
-                    <div class="pdx-review-summary">
-                        <strong>Đánh giá trung bình: {{ number_format($ratingValue, 1) }}/5</strong>
-                        <span>({{ number_format($reviewCount, 0, ',', '.') }} đánh giá)</span>
-                    </div>
-
-                    <div class="shopw-pdp-review-thread-shell" style="margin-bottom: 18px;">
-                        @csrf
-                        <input type="hidden" name="comment_product_id" class="comment_product_id" value="{{ $product->product_id }}">
-                        <div id="comment_show"></div>
-                    </div>
-
-                    <div class="pdx-review-form shopw-pdp-review-form-shell">
-                        <h4>Viết đánh giá của bạn</h4>
-                        <ul class="list-inline rating" style="padding:0; list-style:none; display:flex; gap:6px; margin:0 0 12px;" title="Đánh giá trung bình">
-                            @for ($count = 1; $count <= 5; $count++)
-                                @php
-                                    $color = $count <= $ratingValue ? 'color:#f59e0b;' : 'color:#cbd5e1;';
-                                @endphp
-                                <li title="Chọn {{ $count }} sao" id="{{ $product->product_id }}-{{ $count }}"
-                                    data-index="{{ $count }}" data-product_id="{{ $product->product_id }}"
-                                    data-rating="{{ $ratingValue }}" class="rating"
-                                    style="cursor:pointer; {{ $color }} font-size:26px;">&#9733;</li>
-                            @endfor
-                        </ul>
-                        <div class="pdx-review-fields">
-                            <input type="text" class="comment_name" placeholder="Tên của bạn">
-                            <textarea name="comment" class="comment_content" placeholder="Nội dung đánh giá"></textarea>
+                            @else
+                                <p class="pdx-muted">Hiện chưa có thông số kỹ thuật.</p>
+                            @endif
                         </div>
-                        <div id="notify_comment" style="margin-bottom:8px;"></div>
-                        <button type="button" class="pdx-btn pdx-btn--primary send-comment" style="display:inline-flex; max-width:240px;">
-                            <span class="pdx-btn-strong">Gửi đánh giá</span>
-                        </button>
                     </div>
-                </div>
 
-                {{-- Tab: Hỏi đáp --}}
-                <div class="pdx-tab-pane" id="hoidap" role="tabpanel">
-                    <p class="pdx-muted">Tính năng hỏi đáp đang được hoàn thiện. Vui lòng quay lại sau hoặc liên hệ hotline {{ $supportPhoneDisplay }} để được hỗ trợ.</p>
+                    {{-- Tab: Đánh giá --}}
+                    <div class="pdx-tab-pane" id="danhgia" role="tabpanel">
+                        <div class="pdx-review-summary">
+                            <strong>Đánh giá trung bình: {{ number_format($ratingValue, 1) }}/5</strong>
+                            <span>({{ number_format($reviewCount, 0, ',', '.') }} đánh giá)</span>
+                        </div>
+
+                        <div class="shopw-pdp-review-thread-shell" style="margin-bottom: 18px;">
+                            @csrf
+                            <input type="hidden" name="comment_product_id" class="comment_product_id" value="{{ $product->product_id }}">
+                            <div id="comment_show"></div>
+                        </div>
+
+                        <div class="pdx-review-form shopw-pdp-review-form-shell">
+                            <h4>Viết đánh giá của bạn</h4>
+                            <ul class="list-inline rating" style="padding:0; list-style:none; display:flex; gap:6px; margin:0 0 12px;" title="Đánh giá trung bình">
+                                @for ($count = 1; $count <= 5; $count++)
+                                    @php
+                                        $color = $count <= $ratingValue ? 'color:#f59e0b;' : 'color:#cbd5e1;';
+                                    @endphp
+                                    <li title="Chọn {{ $count }} sao" id="{{ $product->product_id }}-{{ $count }}"
+                                        data-index="{{ $count }}" data-product_id="{{ $product->product_id }}"
+                                        data-rating="{{ $ratingValue }}" class="rating"
+                                        style="cursor:pointer; {{ $color }} font-size:26px;">&#9733;</li>
+                                @endfor
+                            </ul>
+                            <div class="pdx-review-fields">
+                                <input type="text" class="comment_name" placeholder="Tên của bạn">
+                                <textarea name="comment" class="comment_content" placeholder="Nội dung đánh giá"></textarea>
+                            </div>
+                            <div id="notify_comment" style="margin-bottom:8px;"></div>
+                            <button type="button" class="pdx-btn pdx-btn--primary send-comment" style="display:inline-flex; max-width:240px;">
+                                <span class="pdx-btn-strong">Gửi đánh giá</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Tab: Hỏi đáp --}}
+                    <div class="pdx-tab-pane" id="hoidap" role="tabpanel">
+                        <p class="pdx-muted">Tính năng hỏi đáp đang được hoàn thiện. Vui lòng quay lại sau hoặc liên hệ hotline {{ $supportPhoneDisplay }} để được hỗ trợ.</p>
+                    </div>
                 </div>
             </div>
 
@@ -1407,13 +1499,20 @@
             pdxSubmitCart(!!buyButton);
         }, true);
 
-        // Tabs
+        // Vertical Tabs
         document.querySelectorAll('.pdx-tab-btn').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var target = this.getAttribute('data-pdx-tab');
-                document.querySelectorAll('.pdx-tab-btn').forEach(function (b) { b.classList.remove('is-active'); });
+                // Cập nhật trạng thái nút
+                document.querySelectorAll('.pdx-tab-btn').forEach(function (b) {
+                    b.classList.remove('is-active');
+                    b.setAttribute('aria-selected', 'false');
+                });
+                // Ẩn tất cả pane
                 document.querySelectorAll('.pdx-tab-pane').forEach(function (p) { p.classList.remove('is-active'); });
+                // Kích hoạt nút và pane được chọn
                 this.classList.add('is-active');
+                this.setAttribute('aria-selected', 'true');
                 var pane = document.getElementById(target);
                 if (pane) pane.classList.add('is-active');
             });

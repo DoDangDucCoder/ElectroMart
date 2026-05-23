@@ -22,7 +22,7 @@ class ProductMediaQuality
         if (! isset(self::$completeIdsCache[$minGalleryImages])) {
             self::$completeIdsCache[$minGalleryImages] = Cache::remember(
                 'storefront.product_media_quality.complete_ids.'.$minGalleryImages,
-                3600,
+                21600, // 6h — tốn computation (scan files), admin clear khi cần
                 fn () => self::audit($minGalleryImages)['rows']
                     ->filter(fn (array $row) => (bool) $row['is_visible'])
                     ->pluck('product_id')

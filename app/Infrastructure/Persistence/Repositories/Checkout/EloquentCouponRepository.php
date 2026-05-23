@@ -7,6 +7,8 @@ use App\Infrastructure\Persistence\Eloquent\Marketing\Coupon;
 use App\Infrastructure\Persistence\Eloquent\Marketing\CouponRedemption;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
+use RuntimeException;
 
 class EloquentCouponRepository implements CouponRepositoryInterface
 {
@@ -72,7 +74,21 @@ class EloquentCouponRepository implements CouponRepositoryInterface
 
     public function incrementUsage(Coupon $coupon): void
     {
-        $coupon->increment('used_count');
+        if ($coupon->usage_limit === null) {
+            // Không giới hạn — increment thường là đủ
+            $coupon->increment('used_count');
+            return;
+        }
+
+        // Atomic update: chỉ tăng nếu CHƯA vượt giới hạn (chống race condition)
+        $affected = DB::table($coupon->getTable())
+            ->where('id', $coupon->id)
+            ->whereColumn('used_count', '<', 'usage_limit')
+            ->update(['used_count' => DB::raw('used_count + 1')]);
+
+        if ($affected === 0) {
+            throw new RuntimeException('Mã giảm giá đã hết lượt sử dụng.');
+        }
     }
 
     public function countRedemptionsForCustomer(Coupon $coupon, ?int $customerId): int

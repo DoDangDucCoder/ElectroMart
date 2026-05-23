@@ -87,7 +87,7 @@
     }
 
     .forgot-headline h2 {
-        font-family: 'Be Vietnam Pro', sans-serif;
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
         font-size: 30px;
         font-weight: 700;
         color: #111827;
@@ -156,7 +156,7 @@
 
     .forgot-form-title {
         text-align: center;
-        font-family: 'Be Vietnam Pro', sans-serif;
+        font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
         font-size: 24px;
         font-weight: 700;
         color: #111827;
