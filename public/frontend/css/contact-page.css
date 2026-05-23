@@ -148,7 +148,12 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1.65fr);
     gap: 24px;
     margin-bottom: 24px;
-    align-items: stretch;
+    align-items: start;
+}
+
+/* Info card: co theo nội dung, không bị kéo cao bằng form */
+.dd-contact__info {
+    align-self: start;
 }
 
 /* ---------- Info list ---------- */
@@ -424,16 +429,20 @@
     color: #0f172a;
 }
 
-/* support 24/7 card */
+/* support 24/7 card — đồng bộ với card THỜI GIAN LÀM VIỆC (nền trắng) */
 .dd-support-247 {
     display: flex;
     gap: 14px;
     align-items: flex-start;
     padding: 18px 22px;
+    background: var(--dd-c-card-bg);
+    border-color: var(--dd-c-border);
 }
 
 .dd-support-247 .dd-info-list__icon {
-    background: #fff;
+    /* giữ nền xanh nhạt, icon xanh — giống icon trong card giờ làm việc */
+    background: var(--dd-c-primary-soft);
+    color: var(--dd-c-primary);
     flex: 0 0 44px;
     width: 44px;
     height: 44px;
@@ -447,7 +456,8 @@
     margin-bottom: 4px;
 }
 
-.dd-support-247 strong span { color: var(--dd-c-primary); }
+/* Bỏ highlight riêng ký tự "7" */
+.dd-support-247 strong span { color: inherit; }
 
 .dd-support-247 p {
     margin: 0;

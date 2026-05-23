@@ -1,4 +1,4 @@
-﻿@extends('layouts.home-tech')
+@extends('layouts.home-tech')
 
 @push('styles')
 <link href="{{ asset('frontend/css/contact-page.css') }}?v=2.1" rel="stylesheet">
@@ -244,11 +244,11 @@
                         </ul>
                     </div>
 
-                    <div class="dd-card dd-card--soft dd-support-247">
-                        <span class="dd-info-list__icon dd-info-list__icon--lg"><i class="fa fa-headphones"></i></span>
+                    <div class="dd-card dd-support-247">
+                        <span class="dd-info-list__icon"><i class="fa fa-headphones"></i></span>
                         <div>
-                            <strong>Hỗ trợ tư vấn 24/<span>7</span></strong>
-                            <p>Đội ngũ của chúng tôi luôn sẵn sàng phục vụ bạn mọi lúc, mọi nơi.</p>
+                            <strong>Tiếp nhận yêu cầu 24/7</strong>
+                            <p>Chúng tôi tiếp nhận tin nhắn mọi lúc và phản hồi trong khung giờ làm việc.</p>
                         </div>
                     </div>
                 </div>
