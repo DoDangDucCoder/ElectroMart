@@ -732,7 +732,7 @@ class HomeController extends Controller
 
         $cate_product = $this->categoryService->listActive();
         $brand_product = $this->brandService->listAll(['is_active' => true]);
-        $search_product = $this->productService->searchCatalog($filters, 16);
+        $search_product = $this->productService->searchCatalog($filters, 12);
         $search_product->appends(array_filter([
             'q' => $validated['q'] ?? $validated['keywords_submit'] ?? null,
             'product_code' => $validated['product_code'] ?? null,
