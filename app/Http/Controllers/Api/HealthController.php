@@ -15,53 +15,13 @@ class HealthController extends Controller
 
     public function check(): JsonResponse
     {
-        $status = [
-            'status' => 'healthy',
-            'timestamp' => now()->toISOString(),
-            'version' => config('app.version', '1.0.0'),
-            'environment' => config('app.env'),
-        ];
-
-        // Check database connection
-        try {
-            \DB::connection()->getPdo();
-            $status['database'] = 'connected';
-        } catch (\Exception $e) {
-            $status['database'] = 'disconnected';
-            $status['status'] = 'unhealthy';
-        }
-
-        // Check cache
-        try {
-            $this->cacheService->remember('health_check', fn() => 'ok', 60);
-            $status['cache'] = 'working';
-        } catch (\Exception $e) {
-            $status['cache'] = 'error';
-            $status['status'] = 'degraded';
-        }
-
-        // Check storage
-        try {
-            \Storage::disk('public')->put('health_check.txt', 'ok');
-            \Storage::disk('public')->delete('health_check.txt');
-            $status['storage'] = 'working';
-        } catch (\Exception $e) {
-            $status['storage'] = 'error';
-            $status['status'] = 'degraded';
-        }
-
-        $httpStatus = match($status['status']) {
-            'healthy' => 200,
-            'degraded' => 200,
-            'unhealthy' => 503,
-            default => 200,
-        };
-
-        return response()->json($status, $httpStatus);
+        return response()->json(['status' => 'ok']);
     }
 
     public function cache(): JsonResponse
     {
+        $this->abortDetailedHealthOutsideLocal();
+
         try {
             $stats = $this->cacheService->getCacheStats();
 
@@ -80,6 +40,8 @@ class HealthController extends Controller
 
     public function performance(): JsonResponse
     {
+        $this->abortDetailedHealthOutsideLocal();
+
         $startTime = defined('LARAVEL_START')
             ? (float) constant('LARAVEL_START')
             : (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true));
@@ -96,5 +58,10 @@ class HealthController extends Controller
             'success' => true,
             'data' => $stats,
         ]);
+    }
+
+    private function abortDetailedHealthOutsideLocal(): void
+    {
+        abort_unless(app()->environment('local'), 404);
     }
 }

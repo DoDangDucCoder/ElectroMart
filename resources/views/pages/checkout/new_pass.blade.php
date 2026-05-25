@@ -594,9 +594,9 @@
         <div class="reset-grid">
             <div class="reset-card">
                 @if(session()->has('message'))
-                    <div class="reset-alert reset-alert--success">{!! session()->get('message') !!}</div>
+                    <div class="reset-alert reset-alert--success">{{ session()->get('message') }}</div>
                 @elseif(session()->has('error'))
-                    <div class="reset-alert reset-alert--error">{!! session()->get('error') !!}</div>
+                    <div class="reset-alert reset-alert--error">{{ session()->get('error') }}</div>
                 @endif
 
                 <h1 class="reset-card__title">Đặt lại mật khẩu mới</h1>

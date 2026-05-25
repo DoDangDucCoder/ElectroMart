@@ -1,7 +1,7 @@
 @php
     $tableRows = collect($mailData->items)
         ->map(function ($item) {
-            return '| ' . $item->productName
+            return '| ' . str_replace(["\r", "\n", '|'], [' ', ' ', '\|'], e((string) $item->productName))
                 . ' | ' . number_format($item->productPrice, 0, ',', '.') . 'đ'
                 . ' | ' . $item->quantity
                 . ' | ' . number_format($item->lineTotal(), 0, ',', '.') . 'đ |';

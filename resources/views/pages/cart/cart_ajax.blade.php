@@ -255,12 +255,12 @@
             @if (session('message'))
                 <div class="cart-v2-flash cart-v2-flash--success">
                     <i class="fa fa-check-circle" aria-hidden="true"></i>
-                    <span>{!! session('message') !!}</span>
+                    <span>{{ session('message') }}</span>
                 </div>
             @elseif(session('error'))
                 <div class="cart-v2-flash cart-v2-flash--error">
                     <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
-                    <span>{!! session('error') !!}</span>
+                    <span>{{ session('error') }}</span>
                 </div>
             @endif
 

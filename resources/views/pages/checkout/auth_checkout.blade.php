@@ -263,9 +263,9 @@
         </header>
 
         @if (session()->has('message'))
-            <div class="dd-auth-flash"><div class="dd-auth-alert dd-auth-alert--success">{!! session()->get('message') !!}</div></div>
+            <div class="dd-auth-flash"><div class="dd-auth-alert dd-auth-alert--success">{{ session()->get('message') }}</div></div>
         @elseif (session()->has('error'))
-            <div class="dd-auth-flash"><div class="dd-auth-alert dd-auth-alert--error">{!! session()->get('error') !!}</div></div>
+            <div class="dd-auth-flash"><div class="dd-auth-alert dd-auth-alert--error">{{ session()->get('error') }}</div></div>
         @endif
 
         @if ($errors->any())

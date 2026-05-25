@@ -281,12 +281,12 @@ class AuthController extends Controller
 
     protected function selfRegistrationEnabled(): bool
     {
-        return (bool) config('admin-auth.registration.enabled', true);
+        return (bool) config('admin-auth.registration.enabled', false);
     }
 
     protected function registrationCodeRequired(bool $bootstrapMode): bool
     {
-        return ! $bootstrapMode;
+        return true;
     }
 
     protected function hasValidRegistrationCode(Request $request): bool
@@ -316,7 +316,7 @@ class AuthController extends Controller
             return false;
         }
 
-        return $bootstrapMode || filled((string) config('admin-auth.registration.invite_code'));
+        return filled((string) config('admin-auth.registration.invite_code'));
     }
 
     protected function resolveRegistrationRole(bool $bootstrapMode): string

@@ -34,7 +34,7 @@
         <h2 class="pp-section-title"><span class="pp-num">1</span> Phạm vi đổi trả</h2>
         <div class="pp-scope">
             @foreach([['i'=>'fa-laptop','t'=>'Laptop &<br>Workstation'],['i'=>'fa-desktop','t'=>'PC &<br>Máy bộ'],['i'=>'fa-television','t'=>'Màn hình'],['i'=>'fa-microchip','t'=>'Linh kiện'],['i'=>'fa-keyboard-o','t'=>'Phụ kiện'],['i'=>'fa-windows','t'=>'Phần mềm<br>& hỗ trợ']] as $s)
-            <div class="pp-scope-item"><i class="fa {{ $s['i'] }}"></i><strong>{!! $s['t'] !!}</strong></div>
+            <div class="pp-scope-item"><i class="fa {{ $s['i'] }}"></i><strong>{!! nl2br(e($s['t'])) !!}</strong></div>
             @endforeach
         </div>
     </div>

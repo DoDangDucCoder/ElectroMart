@@ -32,7 +32,7 @@
         <h2 class="pp-section-title"><span class="pp-num">1</span> Phạm vi vận chuyển</h2>
         <div class="pp-scope pp-scope-5">
             @foreach([['i'=>'fa-building','t'=>'Nội thành<br>Hà Nội & HCM'],['i'=>'fa-building-o','t'=>'Ngoại thành<br>Hà Nội & HCM'],['i'=>'fa-map','t'=>'Các tỉnh<br>Miền Bắc'],['i'=>'fa-map-o','t'=>'Các tỉnh<br>Miền Trung'],['i'=>'fa-map-signs','t'=>'Huyện / Xã<br>vùng xa']] as $s)
-            <div class="pp-scope-item"><i class="fa {{ $s['i'] }}"></i><strong>{!! $s['t'] !!}</strong></div>
+            <div class="pp-scope-item"><i class="fa {{ $s['i'] }}"></i><strong>{!! nl2br(e($s['t'])) !!}</strong></div>
             @endforeach
         </div>
     </div>

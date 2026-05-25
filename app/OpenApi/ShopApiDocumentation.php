@@ -22,13 +22,10 @@ class ShopApiDocumentation
         responses: [
             new OA\Response(
                 response: 200,
-                description: 'Application is healthy or degraded',
+                description: 'Application is reachable',
                 content: new OA\JsonContent(
                     properties: [
-                        new OA\Property(property: 'status', type: 'string', example: 'healthy'),
-                        new OA\Property(property: 'timestamp', type: 'string', example: '2026-04-25T02:00:00.000000Z'),
-                        new OA\Property(property: 'version', type: 'string', example: '1.0.0'),
-                        new OA\Property(property: 'environment', type: 'string', example: 'local'),
+                        new OA\Property(property: 'status', type: 'string', example: 'ok'),
                     ],
                     type: 'object'
                 )

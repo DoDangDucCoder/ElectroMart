@@ -123,7 +123,7 @@
     </div>
     <div class="pp-scope" style="margin-bottom:32px">
         @foreach([['i'=>'fa-money','t'=>'COD<br>Thanh toán khi nhận hàng'],['i'=>'fa-university','t'=>'Chuyển khoản<br>ngân hàng'],['i'=>'fa-credit-card','t'=>'Thẻ ATM /<br>Internet Banking'],['i'=>'fa-credit-card','t'=>'Thẻ quốc tế'],['i'=>'fa-mobile','t'=>'Ví điện tử']] as $s)
-        <div class="pp-scope-item"><i class="fa {{ $s['i'] }}"></i><strong>{!! $s['t'] !!}</strong></div>
+        <div class="pp-scope-item"><i class="fa {{ $s['i'] }}"></i><strong>{!! nl2br(e($s['t'])) !!}</strong></div>
         @endforeach
     </div>
 

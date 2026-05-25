@@ -541,9 +541,9 @@
 
             <div class="forgot-card__form">
                 @if(session()->has('message'))
-                    <div class="forgot-alert forgot-alert--success">{!! session()->get('message') !!}</div>
+                    <div class="forgot-alert forgot-alert--success">{{ session()->get('message') }}</div>
                 @elseif(session()->has('error'))
-                    <div class="forgot-alert forgot-alert--error">{!! session()->get('error') !!}</div>
+                    <div class="forgot-alert forgot-alert--error">{{ session()->get('error') }}</div>
                 @endif
 
                 <h1 class="forgot-form-title">Đặt lại mật khẩu</h1>

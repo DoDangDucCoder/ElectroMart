@@ -244,22 +244,16 @@ class ApiDocumentationController extends Controller
                 ],
                 'health' => [
                     'GET /api/v1/health' => [
-                        'description' => 'Kiểm tra tình trạng API',
+                        'description' => 'Kiểm tra API công khai tối thiểu',
                         'response' => [
-                            'status' => 'healthy|degraded|unhealthy',
-                            'timestamp' => 'thời gian ISO 8601',
-                            'version' => 'phiên bản API',
-                            'environment' => 'tên môi trường',
-                            'database' => 'trạng thái kết nối',
-                            'cache' => 'trạng thái cache',
-                            'storage' => 'trạng thái lưu trữ',
+                            'status' => 'ok',
                         ],
                     ],
                     'GET /api/v1/health/cache' => [
-                        'description' => 'Tình trạng cache và thống kê driver',
+                        'description' => 'Chi tiết cache chỉ mở trong môi trường local',
                     ],
                     'GET /api/v1/health/performance' => [
-                        'description' => 'Ảnh chụp nhanh hiệu năng runtime',
+                        'description' => 'Chi tiết hiệu năng chỉ mở trong môi trường local',
                     ],
                 ],
                 'settings' => [

@@ -47,14 +47,14 @@ class AdminSeeder extends Seeder
         $admins = [
             [
                 'email' => (string) config('admin-auth.seed_defaults.primary_email', 'admin@shop.com'),
-                'password' => Hash::make((string) config('admin-auth.seed_defaults.primary_password', 'admin123')),
+                'password' => Hash::make((string) config('admin-auth.seed_defaults.primary_password', 'CHANGE_ME_STRONG_PASSWORD')),
                 'name' => 'Super Admin',
                 'phone' => '0123456789',
                 'role' => 'Super Admin',
             ],
             [
                 'email' => (string) config('admin-auth.seed_defaults.editor_email', 'editor@shop.com'),
-                'password' => Hash::make((string) config('admin-auth.seed_defaults.editor_password', 'editor123')),
+                'password' => Hash::make((string) config('admin-auth.seed_defaults.editor_password', 'CHANGE_ME_STRONG_PASSWORD')),
                 'name' => 'Editor',
                 'phone' => '0987654321',
                 'role' => 'Editor',

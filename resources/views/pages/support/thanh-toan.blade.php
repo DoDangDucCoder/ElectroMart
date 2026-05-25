@@ -32,7 +32,7 @@
         <h2 class="pp-section-title"><span class="pp-num">1</span> Phương thức thanh toán</h2>
         <div class="pp-scope">
             @foreach([['i'=>'fa-money','t'=>'COD<br>Thanh toán khi nhận hàng'],['i'=>'fa-university','t'=>'Thẻ ATM /<br>Internet Banking'],['i'=>'fa-credit-card','t'=>'Thẻ tín dụng /<br>ghi nợ'],['i'=>'fa-mobile','t'=>'Ví điện tử'],['i'=>'fa-dollar','t'=>'Trả góp 0%']] as $s)
-            <div class="pp-scope-item"><i class="fa {{ $s['i'] }}"></i><strong>{!! $s['t'] !!}</strong></div>
+            <div class="pp-scope-item"><i class="fa {{ $s['i'] }}"></i><strong>{!! nl2br(e($s['t'])) !!}</strong></div>
             @endforeach
         </div>
     </div>

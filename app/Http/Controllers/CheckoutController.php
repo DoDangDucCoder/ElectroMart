@@ -412,14 +412,7 @@ class CheckoutController extends Controller
             return Redirect::to('/account/orders')->with('error', 'Không tìm thấy đơn hàng.');
         }
 
-        // Fix #7: Bảo vệ IDOR — chỉ cho xem nếu là guest vừa đặt hoặc khách đã đăng nhập sở hữu đơn
-        $sessionCustomerId = (int) Session::get('customer_id');
-        $guestOrderCode    = Session::get('guest_order_code');
-
-        $isOwner = $sessionCustomerId > 0 && (int) $order->customer_id === $sessionCustomerId;
-        $isGuest = $sessionCustomerId === 0 && $guestOrderCode === $orderCode;
-
-        if (!$isOwner && !$isGuest) {
+        if (! $this->canViewCheckoutOrder($order, $orderCode)) {
             return Redirect::to('/kiem-tra-don-hang')->with('error', 'Bạn không có quyền xem đơn hàng này.');
         }
 
@@ -453,6 +446,10 @@ class CheckoutController extends Controller
             return Redirect::to('/account/orders')->with('error', 'Không tìm thấy đơn hàng.');
         }
 
+        if (! $this->canViewCheckoutOrder($order, $orderCode)) {
+            return Redirect::to('/kiem-tra-don-hang')->with('error', 'Bạn không có quyền xem đơn hàng này.');
+        }
+
         $orderView = $this->buildOrderViewData($order);
         $orderView['fail_reason'] = $request->query('reason', 'Giao dịch bị từ chối bởi ngân hàng');
         $orderView['status'] = 'failed';
@@ -473,6 +470,17 @@ class CheckoutController extends Controller
                 'recommendedProducts' => $recommendedProducts,
             ]
         ));
+    }
+
+    protected function canViewCheckoutOrder($order, string $orderCode): bool
+    {
+        $sessionCustomerId = (int) Session::get('customer_id');
+        $guestOrderCode = Session::get('guest_order_code');
+
+        $isOwner = $sessionCustomerId > 0 && (int) $order->customer_id === $sessionCustomerId;
+        $isGuest = $sessionCustomerId === 0 && hash_equals((string) $guestOrderCode, $orderCode);
+
+        return $isOwner || $isGuest;
     }
 
     protected function buildOrderViewData($order): array

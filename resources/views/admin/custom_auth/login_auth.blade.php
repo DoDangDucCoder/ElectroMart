@@ -114,10 +114,10 @@
             Khối này chỉ hiện ở môi trường local để tiện kiểm thử nhanh.<br>
             Quản trị cao nhất:
             <code>{{ $adminAuthSeedDefaults['primary_email'] ?? 'admin@shop.com' }}</code> /
-            <code>{{ $adminAuthSeedDefaults['primary_password'] ?? 'admin123' }}</code><br>
+            <code>{{ $adminAuthSeedDefaults['primary_password'] ?? 'CHANGE_ME_STRONG_PASSWORD' }}</code><br>
             Biên tập viên:
             <code>{{ $adminAuthSeedDefaults['editor_email'] ?? 'editor@shop.com' }}</code> /
-            <code>{{ $adminAuthSeedDefaults['editor_password'] ?? 'editor123' }}</code>
+            <code>{{ $adminAuthSeedDefaults['editor_password'] ?? 'CHANGE_ME_STRONG_PASSWORD' }}</code>
         </div>
     @endif
 
