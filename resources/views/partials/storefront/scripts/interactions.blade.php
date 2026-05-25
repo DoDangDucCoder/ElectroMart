@@ -3467,27 +3467,44 @@
 
 {{-- 8. Legacy Main.js logic --}}
 <script>
+    (function () {
+        var scrollButtons = document.querySelectorAll('[data-scroll-top]');
+
+        if (!scrollButtons.length) {
+            return;
+        }
+
+        var threshold = 300;
+
+        function updateScrollTopButtons() {
+            var shouldShow = window.pageYOffset > threshold || document.documentElement.scrollTop > threshold;
+
+            scrollButtons.forEach(function (button) {
+                button.hidden = !shouldShow;
+                button.classList.toggle('is-visible', shouldShow);
+                button.setAttribute('aria-hidden', shouldShow ? 'false' : 'true');
+            });
+        }
+
+        scrollButtons.forEach(function (button) {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        window.addEventListener('scroll', updateScrollTopButtons, { passive: true });
+        window.addEventListener('resize', updateScrollTopButtons);
+        updateScrollTopButtons();
+    })();
+
     $(document).ready(function(){
         if (typeof $.fn.slider === 'function') {
             $('#sl2').slider();
-        }
-
-        if (typeof $.fn.scrollUp === 'function') {
-            $.scrollUp({
-                scrollName: 'scrollUp',
-                scrollDistance: 300,
-                scrollFrom: 'top',
-                scrollSpeed: 300,
-                easingType: 'linear',
-                animation: 'fade',
-                animationSpeed: 200,
-                scrollTrigger: false,
-                scrollText: '<i class="fa fa-angle-up"></i>',
-                scrollTitle: false,
-                scrollImg: false,
-                activeOverlay: false,
-                zIndex: 2147483647
-            });
         }
     });
 </script>

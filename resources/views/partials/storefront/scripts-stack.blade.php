@@ -11,7 +11,6 @@
 {{-- Load vendor scripts individually: app-core/jquery.min are currently invalid bundles. --}}
 <script src="{{ asset('frontend/js/jquery.js') }}?v=2.3"></script>
 <script src="{{ asset('frontend/js/bootstrap.min.js') }}?v=2.3"></script>
-<script src="{{ asset('frontend/js/jquery.scrollUp.min.js') }}?v=2.3"></script>
 <script src="{{ asset('frontend/js/sweetalert.min.js') }}?v=2.3"></script>
 
 {{-- CDN & Third-party scripts --}}

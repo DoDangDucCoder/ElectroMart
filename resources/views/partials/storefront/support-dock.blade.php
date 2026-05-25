@@ -85,6 +85,11 @@
                     <i class="fa fa-angle-up"></i>
                 </span>
             </button>
+
+            <button type="button" class="shopw-support-scrolltop" data-scroll-top hidden
+                aria-label="Quay về đầu trang">
+                <i class="fa fa-angle-up" aria-hidden="true"></i>
+            </button>
         </aside>
     </div>
 </section>
