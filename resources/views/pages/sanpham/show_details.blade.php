@@ -1317,7 +1317,7 @@
 
             {{-- Related products --}}
             @if ($relatedProductCards->isNotEmpty())
-                <section class="pdx-section">
+                <section class="pdx-section related-products">
                     <div class="pdx-section-head">
                         <h2>Sản phẩm liên quan</h2>
                         <a href="{{ url('/san-pham') }}" class="pdx-section-link">Xem tất cả <i class="fa fa-angle-right"></i></a>

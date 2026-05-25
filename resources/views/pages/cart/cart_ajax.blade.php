@@ -583,7 +583,7 @@
             </section>
 
             {{-- ===== Recommendations ===== --}}
-            <section class="cart-v2-recommend" aria-label="Có thể bạn cũng cần">
+            <section class="cart-v2-recommend cart-recommendations" aria-label="Có thể bạn cũng cần">
                 <div class="cart-v2-recommend-head">
                     <h2>Có thể bạn cũng cần</h2>
                     <a href="{{ url('/san-pham') }}" class="cart-v2-recommend-more">
