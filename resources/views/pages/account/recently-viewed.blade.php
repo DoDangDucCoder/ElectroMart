@@ -84,32 +84,11 @@
                     <div style="font-size:12px;margin-top:2px">Các sản phẩm bạn đã xem gần đây sẽ hiển thị tại đây.</div>
                 </div>
             @else
-            <div class="rvp-grid">
+            <div class="rvp-grid tech-product-grid">
                 @foreach ($viewedProducts as $row)
-                @php
-                    $p = $row['product'];
-                    $price = (float) ($p->sale_price > 0 ? $p->sale_price : $p->price);
-                    $oldPrice = (float) $p->price;
-                    $hasDiscount = $p->sale_price && $p->sale_price > 0 && $p->sale_price < $p->price;
-                    $discountPercent = $hasDiscount && $oldPrice > 0 ? round((1 - $price / $oldPrice) * 100) : 0;
-                    $thumb = \App\Support\AssetUrl::productVariant($p->thumbnail ?? $p->image ?? null, 'thumb');
-                    $brandName = $p->brand?->name ?? '';
-                    $detailUrl = url('/chi-tiet/' . ($p->slug ?? $p->id));
-                @endphp
-                <div class="rvp-card">
-                    <button class="rvp-fav" title="Yêu thích"><i class="fa fa-heart-o"></i></button>
-                    @if ($discountPercent > 0)<span style="position:absolute;top:8px;left:8px;background:#dc2626;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;z-index:2">-{{ $discountPercent }}%</span>@endif
-                    <div class="rvp-img"><a href="{{ $detailUrl }}"><img src="{{ $thumb }}" alt="{{ $p->name }}"></a></div>
-                    <div class="rvp-body">
-                        @if ($brandName)<div class="rvp-brand">{{ $brandName }}</div>@endif
-                        <div class="rvp-name"><a href="{{ $detailUrl }}" style="color:inherit;text-decoration:none">{{ $p->name }}</a></div>
-                        <div class="rvp-price">{{ number_format($price, 0, ',', '.') }}đ @if($hasDiscount)<span class="old">{{ number_format($oldPrice, 0, ',', '.') }}đ</span>@endif</div>
-                        <div class="rvp-meta"><span>Đã xem {{ $row['last_viewed_at'] ? $row['last_viewed_at']->diffForHumans() : '' }}</span><span class="stock {{ $p->is_active ? '' : 'out' }}">{{ $p->is_active ? 'Còn hàng' : 'Hết hàng' }}</span></div>
-                        <div class="rvp-actions">
-                            <a href="{{ $detailUrl }}" class="rvp-btn-detail">Xem chi tiết</a>
-                        </div>
+                    <div>
+                        @include('partials.home.product-card', ['product' => $row['product']])
                     </div>
-                </div>
                 @endforeach
             </div>
 
