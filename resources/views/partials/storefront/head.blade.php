@@ -39,7 +39,6 @@
     <link href="{{ asset('frontend/css/storefront-components.min.css') }}?v=2.2" rel="stylesheet">
     {{-- Theme: Header, Footer, Nav, Product cards, Grid, etc. --}}
     <link href="{{ asset('frontend/css/storefront-theme.min.css') }}?v=2.2" rel="stylesheet">
-    <link href="{{ asset('frontend/css/storefront-product-card.css') }}?v=1.0" rel="stylesheet">
     {{-- Layout rhythm: shared backgrounds, containers, breadcrumbs across all pages --}}
     <link href="{{ asset('frontend/css/storefront-layout.min.css') }}?v=2.2" rel="stylesheet">
     {{-- Pagination styles --}}
@@ -49,6 +48,7 @@
     <link href="{{ asset('frontend/css/wishlist-state.css') }}?v=1.1" rel="stylesheet">
     {{-- Font override: phủ Roboto/Be Vietnam Pro còn hardcode trong file lớn --}}
     <link href="{{ asset('frontend/css/font-override.css') }}?v=1.0" rel="stylesheet">
+    <link href="{{ asset('frontend/css/storefront-product-card.css') }}?v=1.1" rel="stylesheet">
 
     {{-- Auto-load page CSS based on body_class (avoids editing every page blade) --}}
     @php
