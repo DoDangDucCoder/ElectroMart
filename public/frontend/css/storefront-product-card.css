@@ -30,10 +30,17 @@
     gap: var(--dd-product-card-gap) !important;
 }
 
-.cat-x__grid,
 .promo-product-grid,
 .cart-v2 .cart-v2-recommend-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+
+.cat-x .cat-x__layout:not(.cat-x__layout--full) .cat-x__grid {
+    grid-template-columns: repeat(3, minmax(280px, 1fr)) !important;
+}
+
+.cat-x .cat-x__layout--full .cat-x__grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
 }
 
 .tech-sale-track {
@@ -261,6 +268,14 @@
     box-shadow: none !important;
 }
 
+.cat-x__grid:not(.is-list) .tech-product-card {
+    min-height: 440px !important;
+}
+
+.cat-x__grid:not(.is-list) .tech-product-body {
+    min-height: 236px !important;
+}
+
 .cat-x__grid.is-list {
     grid-template-columns: 1fr !important;
 }
@@ -330,10 +345,14 @@
 }
 
 @media (max-width: 1199px) {
-    .cat-x__grid,
     .promo-product-grid,
     .cart-v2 .cart-v2-recommend-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+
+    .cat-x .cat-x__layout:not(.cat-x__layout--full) .cat-x__grid,
+    .cat-x .cat-x__layout--full .cat-x__grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
     }
 
     .tech-sale-item {
@@ -347,11 +366,14 @@
 }
 
 @media (max-width: 991px) {
-    .cat-x__grid,
     .promo-product-grid,
     .cart-v2 .cart-v2-recommend-grid,
     .rvp-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .cat-x .cat-x__grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
     }
 
     .tech-sale-item {
@@ -399,6 +421,14 @@
         min-height: 40px !important;
     }
 
+    .cat-x__grid:not(.is-list) .tech-product-card {
+        min-height: var(--dd-product-card-min-height) !important;
+    }
+
+    .cat-x__grid:not(.is-list) .tech-product-body {
+        min-height: var(--dd-product-card-body-min-height) !important;
+    }
+
     .cat-x__grid.is-list .tech-product-card {
         grid-template-columns: 128px minmax(0, 1fr) !important;
         min-height: 188px !important;
@@ -411,11 +441,14 @@
 }
 
 @media (max-width: 520px) {
-    .cat-x__grid,
     .promo-product-grid,
     .cart-v2 .cart-v2-recommend-grid,
     .rvp-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    .cat-x .cat-x__grid {
+        grid-template-columns: 1fr !important;
     }
 
     .tech-sale-item {

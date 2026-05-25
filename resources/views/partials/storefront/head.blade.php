@@ -48,7 +48,7 @@
     <link href="{{ asset('frontend/css/wishlist-state.css') }}?v=1.1" rel="stylesheet">
     {{-- Font override: phủ Roboto/Be Vietnam Pro còn hardcode trong file lớn --}}
     <link href="{{ asset('frontend/css/font-override.css') }}?v=1.0" rel="stylesheet">
-    <link href="{{ asset('frontend/css/storefront-product-card.css') }}?v=1.1" rel="stylesheet">
+    <link href="{{ asset('frontend/css/storefront-product-card.css') }}?v=1.2" rel="stylesheet">
 
     {{-- Auto-load page CSS based on body_class (avoids editing every page blade) --}}
     @php
