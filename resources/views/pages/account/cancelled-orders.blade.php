@@ -129,7 +129,7 @@
                 <div style="padding:6px 0;border-bottom:1px solid #f3f4f6"><span style="font-size:11px;color:#9ca3af;display:block">Hotline</span><span class="hotline">1900 1234</span></div>
                 <div style="padding:8px 0;border-bottom:1px solid #f3f4f6"><span style="font-size:11px;color:#9ca3af;display:block">Email</span><a class="email" href="mailto:support@dangduc.vn">support@dangduc.vn</a><div class="email-sub">Phản hồi trong 24h</div></div>
                 <div style="padding:8px 0"><span style="font-size:11px;color:#9ca3af;display:block">Chat trực tuyến</span><span style="font-size:13px;font-weight:600;color:#111827">Trò chuyện ngay</span></div>
-                <button class="accp-chat-btn"><i class="fa fa-comments"></i> Liên hệ hỗ trợ</button>
+                <button type="button" class="accp-chat-btn" data-chatbot-launch><i class="fa fa-comments"></i> Liên hệ hỗ trợ</button>
             </div>
             <div class="accp-aside-card">
                 <h4>Lưu ý về hoàn tiền</h4>

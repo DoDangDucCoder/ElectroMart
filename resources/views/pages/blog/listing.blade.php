@@ -204,20 +204,12 @@
                         </section>
                     @endif
 
-                    <section class="dd-blog-side-card dd-blog-side-newsletter">
-                        <h3>ĐĂNG KÝ NHẬN TIN</h3>
-                        <p>Nhận ngay thông tin khuyến mãi và bài viết mới nhất từ DangDuc.</p>
-                        <form class="dd-blog-side-newsletter-form" onsubmit="event.preventDefault(); this.querySelector('input').value=''; alert('Cảm ơn bạn đã đăng ký nhận tin!');">
-                            <input type="email" required placeholder="Nhập email của bạn">
-                            <button type="submit" aria-label="Đăng ký">
-                                <i class="fa fa-envelope"></i>
-                            </button>
-                        </form>
-                        <small class="dd-blog-side-newsletter-note">
-                            <i class="fa fa-shield"></i>
-                            Chúng tôi cam kết không gửi thư rác và bảo mật thông tin của bạn.
-                        </small>
-                    </section>
+                    @include('partials.blog.newsletter-card', [
+                        'cardClass' => 'dd-blog-side-card dd-blog-side-newsletter',
+                        'formClass' => 'dd-blog-side-newsletter-form',
+                        'noteClass' => 'dd-blog-side-newsletter-note',
+                        'onsubmit' => "event.preventDefault(); this.querySelector('input').value=''; alert('Cảm ơn bạn đã đăng ký nhận tin!');",
+                    ])
                 </aside>
             </div>
         </div>

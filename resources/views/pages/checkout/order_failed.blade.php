@@ -225,7 +225,7 @@ body.ors-page #header .header-bottom { display: none; }
                         <span class="icon"><i class="fa fa-comments"></i></span>
                         <div class="text">
                             <strong>Chat với chúng tôi</strong>
-                            <a href="#">Trò chuyện ngay</a>
+                            <a href="#" data-chatbot-launch>Trò chuyện ngay</a>
                         </div>
                     </div>
                 </div>

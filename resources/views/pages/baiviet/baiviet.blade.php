@@ -372,21 +372,15 @@
                         </section>
                     @endif
 
-                    <section class="bd-side-card bd-side-newsletter">
-                        <h3>Đăng ký nhận tin</h3>
-                        <p>Nhận ngay thông tin khuyến mãi và bài viết mới nhất từ DangDuc.</p>
-                        <form action="#" method="POST" class="bd-side-newsletter-form">
-                            @csrf
-                            <input type="email" name="email" placeholder="Nhập email của bạn" required>
-                            <button type="submit" aria-label="Đăng ký">
-                                <i class="fa fa-envelope" aria-hidden="true"></i>
-                            </button>
-                        </form>
-                        <p class="bd-side-newsletter-note">
-                            <i class="fa fa-shield" aria-hidden="true"></i>
-                            Chúng tôi cam kết không gửi thư rác và bảo mật thông tin của bạn.
-                        </p>
-                    </section>
+                    @include('partials.blog.newsletter-card', [
+                        'cardClass' => 'bd-side-card bd-side-newsletter',
+                        'formClass' => 'bd-side-newsletter-form',
+                        'noteClass' => 'bd-side-newsletter-note',
+                        'noteTag' => 'p',
+                        'action' => '#',
+                        'method' => 'POST',
+                        'withCsrf' => true,
+                    ])
                 </aside>
             </div>
         </div>

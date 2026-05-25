@@ -229,7 +229,7 @@ body.inv-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
                 <div style="padding:10px 0;border-bottom:1px solid #f3f4f6"><div style="font-size:11px;color:#6b7280">Hotline</div><div style="font-size:18px;font-weight:800;color:#0d9488">1900 1234</div></div>
                 <div style="padding:10px 0;border-bottom:1px solid #f3f4f6"><div style="font-size:11px;color:#6b7280">Email hỗ trợ</div><div style="font-size:13px;font-weight:600;color:#0d9488">support@dangduc.vn</div></div>
                 <div style="padding:10px 0"><div style="font-size:11px;color:#6b7280">Thời gian hỗ trợ</div><div style="font-size:13px;font-weight:600;color:#111827">8:00 - 21:00 (T2 - CN)</div></div>
-                <button type="button" style="width:100%;height:38px;background:#0d9488;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px"><i class="fa fa-comments"></i> Chat ngay</button>
+                <button type="button" data-chatbot-launch style="width:100%;height:38px;background:#0d9488;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px"><i class="fa fa-comments"></i> Chat ngay</button>
             </div>
 
             <div class="inv-aside-card">

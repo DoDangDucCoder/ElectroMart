@@ -117,7 +117,7 @@
                 <p style="font-size:12px;color:#6b7280;margin:0 0 10px">Đội ngũ chăm sóc khách hàng luôn sẵn sàng hỗ trợ bạn.</p>
                 <div style="padding:4px 0"><span style="font-size:11px;color:#9ca3af">Hotline:</span> <strong style="color:#111827">1900 1234</strong></div>
                 <div style="padding:4px 0"><span style="font-size:11px;color:#9ca3af">Email:</span> <strong style="color:#0d9488">support@dangduc.vn</strong></div>
-                <button class="accp-chat-btn-outline"><i class="fa fa-comment-o"></i> Liên hệ hỗ trợ</button>
+                <button type="button" class="accp-chat-btn-outline" data-chatbot-launch><i class="fa fa-comment-o"></i> Liên hệ hỗ trợ</button>
             </div>
         </aside>
     </div>

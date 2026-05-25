@@ -34765,18 +34765,30 @@ body.tech-home {
     color: #ffffff;
 }
 
+.dd-newsletter-card,
+.dd-blog-side-newsletter {
+    background: #ffffff;
+}
+.dd-newsletter-card h3,
+.dd-blog-side-newsletter h3 {
+    text-transform: uppercase;
+    letter-spacing: .02em;
+}
+.dd-newsletter-card__copy,
 .dd-blog-side-newsletter p {
     color: #6b7280;
     font-size: 13px;
     margin: 0 0 12px;
     line-height: 1.5;
 }
+.dd-newsletter-card__form,
 .dd-blog-side-newsletter-form {
     position: relative;
     display: flex;
     align-items: center;
     margin-bottom: 12px;
 }
+.dd-newsletter-card__form input,
 .dd-blog-side-newsletter-form input {
     width: 100%;
     height: 42px;
@@ -34793,6 +34805,7 @@ body.tech-home {
     border-color: #0fb5ba;
     background: #ffffff;
 }
+.dd-newsletter-card__form button,
 .dd-blog-side-newsletter-form button {
     position: absolute;
     right: 4px;
@@ -34807,6 +34820,7 @@ body.tech-home {
     transition: background .15s ease;
 }
 .dd-blog-side-newsletter-form button:hover { background: #0d9499; }
+.dd-newsletter-card__note,
 .dd-blog-side-newsletter-note {
     display: flex;
     align-items: flex-start;
@@ -34814,7 +34828,9 @@ body.tech-home {
     color: #94a3b8;
     font-size: 12px;
     line-height: 1.5;
+    margin: 0;
 }
+.dd-newsletter-card__note i,
 .dd-blog-side-newsletter-note i {
     color: #0fb5ba;
     margin-top: 2px;
@@ -36995,13 +37011,14 @@ body.accp-page{background:#f3f5f7;font-family:'Inter',-apple-system,BlinkMacSyst
 .accp-user-info span{font-size:11px;color:#6b7280;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .accp-user-info a{font-size:11px;color:#0d9488;text-decoration:none;display:flex;align-items:center;gap:4px;margin-top:2px}
 .accp-nav{list-style:none;padding:8px 0;margin:0}
-.accp-nav li a{display:flex;align-items:center;gap:10px;padding:9px 18px;font-size:13px;color:#374151;text-decoration:none;transition:all .15s;border-left:3px solid transparent}
-.accp-nav li a i{width:18px;text-align:center;color:#9ca3af;font-size:13px}
-.accp-nav li a:hover{background:#f0fdfa;color:#0d9488}
+.accp-nav li a,.accp-nav li button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 18px;font:inherit;font-size:13px;color:#374151;text-align:left;text-decoration:none;background:transparent;border:0;cursor:pointer;transition:all .15s;border-left:3px solid transparent}
+.accp-nav li a i,.accp-nav li button i{width:18px;text-align:center;color:#9ca3af;font-size:13px}
+.accp-nav li a:hover,.accp-nav li button:hover{background:#f0fdfa;color:#0d9488}
 .accp-nav li.is-active a{background:#f0fdfa;color:#0d9488;font-weight:600;border-left-color:#0d9488}
 .accp-nav li.is-active a i{color:#0d9488}
 .accp-nav-sep{height:1px;background:#f1f5f9;margin:6px 18px}
-.accp-nav-logout a{color:#dc2626!important}.accp-nav-logout a i{color:#dc2626!important}
+.accp-nav-logout form{margin:0}
+.accp-nav-logout button{color:#dc2626!important}.accp-nav-logout button i{color:#dc2626!important}
 .accp-nav-group{padding:4px 18px 2px;font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.5px}
 
 /* Cards */

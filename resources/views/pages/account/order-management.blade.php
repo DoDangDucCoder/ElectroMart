@@ -95,7 +95,7 @@
             @endif
         </main>
         <aside class="accp-aside">
-            <div class="accp-aside-card accp-contact-card"><h4><i class="fa fa-headphones" style="color:#0d9488;margin-right:6px"></i>Hỗ trợ</h4><div class="hotline">1900 1234</div><div class="hotline-sub">8:00 - 21:00</div><button class="accp-chat-btn"><i class="fa fa-comment-o"></i> Chat với chúng tôi</button></div>
+            <div class="accp-aside-card accp-contact-card"><h4><i class="fa fa-headphones" style="color:#0d9488;margin-right:6px"></i>Hỗ trợ</h4><div class="hotline">1900 1234</div><div class="hotline-sub">8:00 - 21:00</div><button type="button" class="accp-chat-btn" data-chatbot-launch><i class="fa fa-comment-o"></i> Chat với chúng tôi</button></div>
         </aside>
     </div>
 </div>

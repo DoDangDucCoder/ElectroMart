@@ -188,7 +188,7 @@
                 <div style="padding:4px 0"><span style="font-size:11px;color:#9ca3af;display:block">Hotline</span><span class="hotline">1900 1234</span><div class="hotline-sub">(8:00 - 21:00 mỗi ngày)</div></div>
                 <div style="padding:8px 0;border-top:1px solid #f3f4f6"><span style="font-size:11px;color:#9ca3af;display:block">Email</span><a class="email" href="mailto:support@dangduc.vn">support@dangduc.vn</a></div>
                 <div style="padding:8px 0;border-top:1px solid #f3f4f6"><span style="font-size:11px;color:#9ca3af;display:block">Chat trực tuyến</span><span style="font-size:12px;color:#6b7280">Hỗ trợ nhanh chóng 24/7</span></div>
-                <button class="accp-chat-btn"><i class="fa fa-comments"></i> Chat ngay</button>
+                <button type="button" class="accp-chat-btn" data-chatbot-launch><i class="fa fa-comments"></i> Chat ngay</button>
             </div>
             <div class="accp-aside-card">
                 <h4>Mẹo sử dụng voucher</h4>

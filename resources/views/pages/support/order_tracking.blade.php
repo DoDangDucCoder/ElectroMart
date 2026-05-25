@@ -211,7 +211,7 @@ body.ors-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
                     <li><i class="fa fa-phone"></i><div><strong>Hotline</strong><br><span style="color:#0d9488;font-weight:700;font-size:16px">1900 1234</span><br><small style="color:#9ca3af">8:00 - 21:00 (Cả T7, CN)</small></div></li>
                     <li><i class="fa fa-envelope"></i><div><strong>Email</strong><br><a href="mailto:support@dangduc.vn">support@dangduc.vn</a><br><small style="color:#9ca3af">Phản hồi trong 30 phút</small></div></li>
                 </ul>
-                <button type="button" class="otr-chat-btn"><i class="fa fa-comments"></i> Chat ngay</button>
+                <button type="button" class="otr-chat-btn" data-chatbot-launch><i class="fa fa-comments"></i> Chat ngay</button>
             </div>
 
             <div class="otr-aside-card">
