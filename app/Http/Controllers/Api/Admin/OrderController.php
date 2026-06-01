@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Application\Order\Services\OrderInventoryService;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Infrastructure\Persistence\Eloquent\Order\Order;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class OrderController extends Controller
@@ -33,6 +35,7 @@ class OrderController extends Controller
 
     private const FULFILLMENT_STATUSES = [
         'unfulfilled',
+        'partial',
         'fulfilled',
     ];
 
@@ -129,9 +132,20 @@ class OrderController extends Controller
             ], 404);
         }
 
-        $order->fill($validated);
+        DB::transaction(function () use ($order, $validated): void {
+            if (($validated['status'] ?? null) === 'cancelled' && $order->status !== 'cancelled') {
+                $inventoryService = app(OrderInventoryService::class);
 
-        $order->save();
+                if ($inventoryService->hasReservedInventory($order)) {
+                    $inventoryService->release($order, 'admin_api_status_cancelled');
+                } elseif (in_array($order->status, ['confirmed', 'processing', 'shipping', 'shipped'], true)) {
+                    $inventoryService->restoreUntracked($order, 'admin_api_status_cancelled_legacy_untracked');
+                }
+            }
+
+            $order->fill($validated);
+            $order->save();
+        });
 
         return response()->json([
             'success' => true,

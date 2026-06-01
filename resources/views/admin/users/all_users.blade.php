@@ -126,16 +126,7 @@
                 @endif
             </div>
             <div class="panel-footer">
-                <div class="row">
-                    <div class="col-sm-5 text-center">
-                        <small class="text-muted inline m-t-sm m-b-sm">
-                            Hiển thị {{ $admin->count() }} / {{ $admin->total() }} người dùng
-                        </small>
-                    </div>
-                    <div class="col-sm-7 text-right text-center-xs">
-                        {{ $admin->links() }}
-                    </div>
-                </div>
+                @include('admin.partials.pagination', ['paginator' => $admin, 'label' => 'người dùng'])
             </div>
         </section>
     </div>

@@ -2,6 +2,7 @@
 
 namespace App\Application\Checkout\Services;
 
+use App\Application\Order\Services\OrderInventoryService;
 use App\Infrastructure\Persistence\Eloquent\Checkout\CartItem;
 use App\Infrastructure\Persistence\Eloquent\Customer\Address;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
@@ -20,6 +21,7 @@ class CheckoutService
         private readonly CustomerCartService $customerCartService,
         private readonly CouponService $couponService,
         private readonly ShippingService $shippingService,
+        private readonly OrderInventoryService $orderInventoryService,
     ) {}
 
     public function getCustomerOrders(int $customerId): Collection
@@ -101,6 +103,7 @@ class CheckoutService
             $this->createOrderItemsFromCart($order, $items);
             $this->createOrderShipping($order, $payload, $shippingFee);
             $this->createOrderPayment($order, $payload, $totals['total']);
+            $this->orderInventoryService->reserve($order, 'api_order_created');
 
             if ($couponModel) {
                 $this->couponService->redeem($couponModel, $customerId, $order->id, $totals['discount']);
@@ -134,9 +137,13 @@ class CheckoutService
             throw new RuntimeException('Không thể hủy đơn hàng ở trạng thái hiện tại.');
         }
 
-        $order->status = 'cancelled';
-        $order->cancelled_at = now();
-        $order->save();
+        DB::transaction(function () use ($order): void {
+            $this->orderInventoryService->release($order, 'api_customer_cancelled');
+
+            $order->status = 'cancelled';
+            $order->cancelled_at = now();
+            $order->save();
+        });
 
         return $order->fresh(['items', 'shipping', 'payments']);
     }
@@ -148,6 +155,8 @@ class CheckoutService
         if ($items->isEmpty()) {
             throw new RuntimeException('Vui lòng chọn ít nhất một sản phẩm để thanh toán.');
         }
+
+        $this->cartService->validatePurchasableItems($items);
 
         return DB::transaction(function () use ($payload, $customerId, $items) {
             $shippingFee = $this->resolveShippingFee($payload);
@@ -163,6 +172,7 @@ class CheckoutService
             $this->createOrderItems($order, $items);
             $this->createOrderShipping($order, $payload, $shippingFee);
             $this->createOrderPayment($order, $payload, $totals['total']);
+            $this->orderInventoryService->reserve($order, 'storefront_order_created');
 
             $couponModel = $this->couponService->resolveCouponFromSession();
             if ($couponModel) {
@@ -283,7 +293,7 @@ class CheckoutService
                     : null,
                 'original_price' => (float) ($item['product_original_price'] ?? $unitPrice),
                 'price' => $unitPrice,
-                'sale_price' => $item['product_sale_price'] ?? ($unitSaleAmount > 0 ? $unitPrice : null),
+                'sale_price' => $item['product_sale_price'] ?? $unitPrice,
                 'cost_price' => (float) ($item['product_cost_price'] ?? 0),
                 'sale_type' => $item['product_sale_type'] ?? null,
                 'sale_value' => $item['product_sale_value'] ?? null,
@@ -316,7 +326,7 @@ class CheckoutService
                 'attributes' => $item->variant?->attributes,
                 'original_price' => (float) ($meta['original_price'] ?? $unitPrice),
                 'price' => $unitPrice,
-                'sale_price' => $meta['sale_price'] ?? ($unitSaleAmount > 0 ? $unitPrice : null),
+                'sale_price' => $meta['sale_price'] ?? $unitPrice,
                 'cost_price' => (float) ($meta['cost_price'] ?? 0),
                 'sale_type' => $meta['sale_type'] ?? null,
                 'sale_value' => $meta['sale_value'] ?? null,

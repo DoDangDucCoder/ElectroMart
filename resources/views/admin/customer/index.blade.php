@@ -146,13 +146,7 @@
                         </table>
                     </div>
 
-                    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">
-                        <span>
-                            Hiển thị {{ number_format($customers->firstItem()) }}-{{ number_format($customers->lastItem()) }}
-                            của {{ number_format($customers->total()) }} khách hàng
-                        </span>
-                        {{ $customers->links() }}
-                    </div>
+                    @include('admin.partials.pagination', ['paginator' => $customers, 'label' => 'khách hàng'])
                 @endif
             </div>
         </section>

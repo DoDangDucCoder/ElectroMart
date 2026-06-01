@@ -130,9 +130,7 @@
                     </table>
                 </div>
 
-                <div class="text-right">
-                    {{ $brands->appends(request()->query())->links() }}
-                </div>
+                @include('admin.partials.pagination', ['paginator' => $brands, 'label' => 'thương hiệu'])
             </div>
         </section>
     </div>

@@ -1,6 +1,15 @@
 @extends('admin_layout')
 
 @section('admin_content')
+    @php
+        $statusLabels = [
+            1 => ['Chờ xử lý', 'is-warning'],
+            2 => ['Đang xử lý', 'is-info'],
+            3 => ['Đang giao', 'is-info'],
+            4 => ['Đã giao hàng', 'is-success'],
+            5 => ['Đã hủy', 'is-danger'],
+        ];
+    @endphp
     <div class="g-admin-page-shell g-admin-order-date-list">
         <section class="g-admin-page-hero">
             <div>
@@ -54,13 +63,10 @@
                                         <td>{{ $ord->order_code }}</td>
                                         <td>{{ $ord->created_at }}</td>
                                         <td>
-                                            @if ($ord->order_status == 1)
-                                                <span class="g-admin-status-chip is-warning">Đơn hàng mới</span>
-                                            @elseif($ord->order_status == 2)
-                                                <span class="g-admin-status-chip is-success">Đã xử lý</span>
-                                            @else
-                                                <span class="g-admin-status-chip is-danger">Đã hủy</span>
-                                            @endif
+                                            @php
+                                                [$statusLabel, $statusClass] = $statusLabels[(int) $ord->order_status] ?? ['Chưa xác định', ''];
+                                            @endphp
+                                            <span class="g-admin-status-chip {{ $statusClass }}">{{ $statusLabel }}</span>
                                         </td>
                                         <td>
                                             <div class="g-admin-order-table-actions">

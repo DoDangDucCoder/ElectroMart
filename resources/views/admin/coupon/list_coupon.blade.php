@@ -206,16 +206,7 @@
                 @endif
             </div>
             <div class="panel-footer">
-                <div class="row">
-                    <div class="col-sm-5 text-center">
-                        <small class="text-muted inline m-t-sm m-b-sm">
-                            Hiển thị {{ $coupon->count() }} / {{ $coupon->total() }} mã giảm giá
-                        </small>
-                    </div>
-                    <div class="col-sm-7 text-right text-center-xs">
-                        {{ $coupon->links() }}
-                    </div>
-                </div>
+                @include('admin.partials.pagination', ['paginator' => $coupon, 'label' => 'mã giảm giá'])
             </div>
         </section>
     </div>

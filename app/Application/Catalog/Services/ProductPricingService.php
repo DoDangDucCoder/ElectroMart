@@ -66,14 +66,14 @@ class ProductPricingService
                 'sale_type' => $saleType,
                 'sale_value' => $saleValue,
                 'sale_amount' => $saleAmount,
-                'sale_price' => $saleAmount > 0 ? $finalPrice : null,
+                'sale_price' => $saleAmount > 0 ? $finalPrice : 0.0,
                 'final_price' => $finalPrice,
             ];
         }
 
         $manualSalePrice = $this->normalizeNumber($manualSalePrice);
 
-        if ($manualSalePrice !== null && $manualSalePrice >= 0 && $manualSalePrice < $price) {
+        if ($manualSalePrice !== null && $manualSalePrice > 0 && $manualSalePrice < $price) {
             $saleAmount = round($price - $manualSalePrice, 2);
 
             return [
@@ -87,9 +87,9 @@ class ProductPricingService
 
         return [
             'sale_type' => null,
-            'sale_value' => null,
+            'sale_value' => 0.0,
             'sale_amount' => 0.0,
-            'sale_price' => null,
+            'sale_price' => $price,
             'final_price' => $price,
         ];
     }
@@ -129,7 +129,7 @@ class ProductPricingService
         $price = (float) ($sellable->price ?? 0);
         $saleType = $this->normalizeSaleType($sellable->sale_type ?? null);
         $saleValue = $this->normalizeNumber($sellable->sale_value ?? null);
-        $salePrice = $sellable->sale_price !== null ? (float) $sellable->sale_price : null;
+        $salePrice = (float) ($sellable->sale_price ?? 0);
 
         $pricing = $this->derivePricingPayload($price, $saleType, $saleValue, $salePrice);
         $unitPrice = (float) $pricing['final_price'];

@@ -78,6 +78,11 @@ class Product extends BaseModel
         return $this->final_price;
     }
 
+    public function getOriginalPriceAttribute(): float
+    {
+        return (float) ($this->price ?? 0);
+    }
+
     public function getProductQuantityAttribute(): int
     {
         return $this->stock_quantity ?? 0;

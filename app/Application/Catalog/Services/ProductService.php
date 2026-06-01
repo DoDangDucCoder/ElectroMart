@@ -199,7 +199,7 @@ class ProductService
                 'sale_type' => $pricingPayload['sale_type'],
                 'sale_value' => $pricingPayload['sale_value'],
                 'sale_price' => $pricingPayload['sale_price'],
-                'cost_price' => $data['cost_price'] ?? null,
+                'cost_price' => $this->resolveCostPrice($data['cost_price'] ?? null, $pricingPayload['final_price']),
                 'stock_quantity' => $data['stock_quantity'] ?? 0,
                 'stock_alert_threshold' => $data['stock_alert_threshold'] ?? 0,
                 'is_active' => $data['is_active'] ?? true,
@@ -280,7 +280,7 @@ class ProductService
                 'sale_type' => $pricingPayload['sale_type'],
                 'sale_value' => $pricingPayload['sale_value'],
                 'sale_price' => $pricingPayload['sale_price'],
-                'cost_price' => $data['cost_price'] ?? $product->cost_price,
+                'cost_price' => $this->resolveCostPrice($data['cost_price'] ?? $product->cost_price, $pricingPayload['final_price']),
                 'stock_quantity' => $data['stock_quantity'] ?? $product->stock_quantity,
                 'stock_alert_threshold' => $data['stock_alert_threshold'] ?? $product->stock_alert_threshold,
                 'is_active' => $data['is_active'] ?? $product->is_active,
@@ -373,6 +373,24 @@ class ProductService
         return $this->products->update($product, [
             'meta' => $this->cleanMeta($meta),
         ]);
+    }
+
+    protected function resolveCostPrice(float|int|string|null $costPrice, float|int|string|null $finalPrice): float
+    {
+        $costPrice = is_string($costPrice) ? trim($costPrice) : $costPrice;
+        $finalPrice = (float) $finalPrice;
+
+        if ($costPrice !== null && $costPrice !== '' && (float) $costPrice > 0) {
+            $costPrice = (float) $costPrice;
+
+            if ($costPrice >= $finalPrice) {
+                throw new \InvalidArgumentException('Giá nhập phải nhỏ hơn giá bán thực tế.');
+            }
+
+            return $costPrice;
+        }
+
+        throw new \InvalidArgumentException('Giá nhập là bắt buộc.');
     }
 
     protected function prepareMeta(array $data, array $existing): array

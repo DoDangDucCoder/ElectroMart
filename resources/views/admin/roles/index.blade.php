@@ -90,16 +90,7 @@
             </div>
             @if ($user->hasPages())
                 <div class="panel-footer">
-                    <div class="row">
-                        <div class="col-sm-5 text-center">
-                            <small class="text-muted inline m-t-sm m-b-sm">
-                                Hiển thị {{ $user->count() }} / {{ $user->total() }} người dùng
-                            </small>
-                        </div>
-                        <div class="col-sm-7 text-right text-center-xs">
-                            {{ $user->links() }}
-                        </div>
-                    </div>
+                    @include('admin.partials.pagination', ['paginator' => $user, 'label' => 'người dùng'])
                 </div>
             @endif
         </section>

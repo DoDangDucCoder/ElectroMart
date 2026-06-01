@@ -3,9 +3,18 @@
 @section('admin_content')
     @php
         $orderItems = method_exists($getorder, 'getCollection') ? $getorder->getCollection() : collect($getorder);
-        $newOrders = $orderItems->where('order_status', 1)->count();
-        $completedOrders = $orderItems->where('order_status', 2)->count();
-        $cancelledOrders = $orderItems->where('order_status', 3)->count();
+        $pendingOrders = $orderItems->where('order_status', 1)->count();
+        $processingOrders = $orderItems->where('order_status', 2)->count();
+        $shippingOrders = $orderItems->where('order_status', 3)->count();
+        $completedOrders = $orderItems->where('order_status', 4)->count();
+        $cancelledOrders = $orderItems->where('order_status', 5)->count();
+        $statusLabels = [
+            1 => ['Chờ xử lý', 'is-warning'],
+            2 => ['Đang xử lý', 'is-info'],
+            3 => ['Đang giao', 'is-info'],
+            4 => ['Đã giao hàng', 'is-success'],
+            5 => ['Đã hủy', 'is-danger'],
+        ];
     @endphp
 
     <div class="g-admin-page-shell g-admin-order-list">
@@ -25,17 +34,27 @@
                     <span>Tổng đơn đang quản lý</span>
                 </article>
                 <article>
-                    <strong>{{ number_format($newOrders) }}</strong>
-                    <span>Đơn mới trên trang này</span>
+                    <strong>{{ number_format($pendingOrders) }}</strong>
+                    <span>Chờ xử lý trên trang này</span>
                 </article>
             </div>
         </section>
 
         <section class="g-admin-kpi-grid">
             <article class="g-admin-kpi-card">
-                <span>Đơn mới</span>
-                <strong>{{ number_format($newOrders) }}</strong>
-                <p>Cần xử lý hoặc xác nhận trong bước tiếp theo.</p>
+                <span>Chờ xử lý</span>
+                <strong>{{ number_format($pendingOrders) }}</strong>
+                <p>Cần kiểm tra tồn kho và xác nhận xử lý.</p>
+            </article>
+            <article class="g-admin-kpi-card">
+                <span>Đang xử lý</span>
+                <strong>{{ number_format($processingOrders) }}</strong>
+                <p>Đơn đã được duyệt và đang chuẩn bị hàng.</p>
+            </article>
+            <article class="g-admin-kpi-card">
+                <span>Đang giao</span>
+                <strong>{{ number_format($shippingOrders) }}</strong>
+                <p>Đơn đã bàn giao vận chuyển.</p>
             </article>
             <article class="g-admin-kpi-card">
                 <span>Đã giao</span>
@@ -85,15 +104,12 @@
                                         </td>
                                         <td>{{ $ord->created_at }}</td>
                                         <td>
-                                            @if ($ord->order_status == 1)
-                                                <span class="g-admin-status-chip is-warning">Đơn hàng mới</span>
-                                            @elseif($ord->order_status == 2)
-                                                <span class="g-admin-status-chip is-success">Đã xử lý - Đã giao hàng</span>
-                                            @else
-                                                <span class="g-admin-status-chip is-danger">Đơn hàng đã bị hủy</span>
-                                            @endif
+                                            @php
+                                                [$statusLabel, $statusClass] = $statusLabels[(int) $ord->order_status] ?? ['Chưa xác định', ''];
+                                            @endphp
+                                            <span class="g-admin-status-chip {{ $statusClass }}">{{ $statusLabel }}</span>
                                         </td>
-                                        <td>{{ $ord->order_status == 3 ? $ord->order_destroy : 'Không có' }}</td>
+                                        <td>{{ (int) $ord->order_status === 5 ? $ord->order_destroy : 'Không có' }}</td>
                                         <td>
                                             <div class="g-admin-order-table-actions">
                                                 <a href="{{ URL::to('/view-order/' . $ord->order_code) }}" class="btn btn-xs btn-success">
@@ -118,16 +134,7 @@
                 @endif
             </div>
             <div class="panel-footer">
-                <div class="row">
-                    <div class="col-sm-5 text-center">
-                        <small class="text-muted inline m-t-sm m-b-sm">
-                            Hiển thị {{ $getorder->count() }} / {{ $getorder->total() }} đơn hàng
-                        </small>
-                    </div>
-                    <div class="col-sm-7 text-right text-center-xs">
-                        {{ $getorder->links() }}
-                    </div>
-                </div>
+                @include('admin.partials.pagination', ['paginator' => $getorder, 'label' => 'đơn hàng'])
             </div>
         </section>
     </div>

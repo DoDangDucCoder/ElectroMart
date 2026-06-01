@@ -234,6 +234,16 @@
         $isLoggedIn = (bool) Session::get('customer_id');
         $checkoutUrl = url('/checkout');
         $totals = $cartTotals ?? ['subtotal' => 0, 'discount' => 0, 'shipping' => 0, 'total' => 0];
+        $checkoutEligibleItems = collect($cartItems)->filter(function ($item) {
+            $qty = (int) ($item['product_qty'] ?? 1);
+            $stock = (int) ($item['product_quantity'] ?? 0);
+
+            return $stock > 0 && $qty <= $stock;
+        });
+        $summarySubtotal = (float) $checkoutEligibleItems->sum(fn ($item) => (float) ($item['product_price'] ?? 0) * (int) ($item['product_qty'] ?? 1));
+        $summaryDiscount = min((float) ($totals['discount'] ?? 0), $summarySubtotal);
+        $summaryShipping = (float) ($totals['shipping'] ?? 0);
+        $summaryTotal = max(0, $summarySubtotal - $summaryDiscount + $summaryShipping);
         $itemsTotalQty = (int) $cartCount;
         $hasFreeShipping = (float) $totals['shipping'] === 0.0;
     @endphp
@@ -319,7 +329,11 @@
                                         $qty = (int) $item['product_qty'];
                                         $price = (float) $item['product_price'];
                                         $subtotal = $price * $qty;
-                                        $stock = max(1, (int) ($item['product_quantity'] ?? 1));
+                                        $stockRaw = (int) ($item['product_quantity'] ?? 0);
+                                        $stock = max(1, $stockRaw);
+                                        $isOutOfStock = $stockRaw <= 0;
+                                        $exceedsStock = !$isOutOfStock && $qty > $stockRaw;
+                                        $isPurchasable = !$isOutOfStock && !$exceedsStock;
                                         $attribute = trim((string) ($item['product_attribute'] ?? ''));
                                         $originalPrice = (float) ($item['product_original_price'] ?? $item['product_price']);
                                         $hasDiscount = $originalPrice > $price;
@@ -329,9 +343,9 @@
                                         $sid = $item['session_id'];
                                     @endphp
 
-                                    <article class="cart-v2-row" data-cart-row data-line-total="{{ $subtotal }}">
+                                    <article class="cart-v2-row" data-cart-row data-line-total="{{ $isPurchasable ? $subtotal : 0 }}" data-purchasable="{{ $isPurchasable ? '1' : '0' }}">
                                         <label class="cart-v2-check">
-                                            <input type="checkbox" class="cart-v2-row-check" data-cart-item-id="{{ $sid }}" checked>
+                                            <input type="checkbox" class="cart-v2-row-check" data-cart-item-id="{{ $sid }}" {{ $isPurchasable ? 'checked' : 'disabled' }}>
                                             <span class="cart-v2-check-box"></span>
                                         </label>
 
@@ -348,10 +362,22 @@
                                                             {{ $attribute }}
                                                         </p>
                                                     @endif
-                                                    <p class="cart-v2-product-stock">
-                                                        <i class="fa fa-check-circle" aria-hidden="true"></i>
-                                                        Còn hàng
-                                                    </p>
+                                                    @if ($isOutOfStock)
+                                                        <p class="cart-v2-product-stock text-danger">
+                                                            <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                                                            Tạm hết hàng, chưa thể thanh toán
+                                                        </p>
+                                                    @elseif ($exceedsStock)
+                                                        <p class="cart-v2-product-stock text-warning">
+                                                            <i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+                                                            Chỉ còn {{ number_format($stockRaw) }} sản phẩm trong kho
+                                                        </p>
+                                                    @else
+                                                        <p class="cart-v2-product-stock">
+                                                            <i class="fa fa-check-circle" aria-hidden="true"></i>
+                                                            Còn hàng
+                                                        </p>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -368,7 +394,7 @@
 
                                         <div class="cart-v2-col cart-v2-col-qty">
                                             <div class="cart-v2-stepper" data-stepper data-max="{{ $stock }}">
-                                                <button type="button" class="cart-v2-stepper-btn" data-act="dec" aria-label="Giảm số lượng">
+                                                <button type="button" class="cart-v2-stepper-btn" data-act="dec" aria-label="Giảm số lượng" {{ $isOutOfStock ? 'disabled' : '' }}>
                                                     <i class="fa fa-minus" aria-hidden="true"></i>
                                                 </button>
                                                 <input type="number"
@@ -378,8 +404,9 @@
                                                     min="1"
                                                     max="{{ $stock }}"
                                                     data-unit-price="{{ $price }}"
-                                                    aria-label="Số lượng">
-                                                <button type="button" class="cart-v2-stepper-btn" data-act="inc" aria-label="Tăng số lượng">
+                                                    aria-label="Số lượng"
+                                                    {{ $isOutOfStock ? 'disabled' : '' }}>
+                                                <button type="button" class="cart-v2-stepper-btn" data-act="inc" aria-label="Tăng số lượng" {{ $isOutOfStock ? 'disabled' : '' }}>
                                                     <i class="fa fa-plus" aria-hidden="true"></i>
                                                 </button>
                                             </div>
@@ -431,14 +458,14 @@
 
                             <div class="cart-v2-summary-rows">
                                 <div class="cart-v2-summary-row">
-                                    <span>Tạm tính (<span data-summary-count>{{ $cartItems->count() }}</span> sản phẩm)</span>
-                                    <strong data-summary-subtotal>{{ number_format($totals['subtotal'], 0, ',', '.') }}đ</strong>
+                                    <span>Tạm tính (<span data-summary-count>{{ $checkoutEligibleItems->count() }}</span> sản phẩm)</span>
+                                    <strong data-summary-subtotal>{{ number_format($summarySubtotal, 0, ',', '.') }}đ</strong>
                                 </div>
 
-                                @if ($totals['discount'] > 0)
+                                @if ($summaryDiscount > 0)
                                     <div class="cart-v2-summary-row">
                                         <span>Giảm giá sản phẩm</span>
-                                        <strong class="is-discount">-{{ number_format($totals['discount'], 0, ',', '.') }}đ</strong>
+                                        <strong class="is-discount">-{{ number_format($summaryDiscount, 0, ',', '.') }}đ</strong>
                                     </div>
                                 @endif
 
@@ -485,13 +512,13 @@
                             <div class="cart-v2-summary-total">
                                 <div class="cart-v2-summary-total-row">
                                     <span>Tổng cộng</span>
-                                    <strong data-summary-total>{{ number_format($totals['total'], 0, ',', '.') }}đ</strong>
+                                    <strong data-summary-total>{{ number_format($summaryTotal, 0, ',', '.') }}đ</strong>
                                 </div>
                                 <p class="cart-v2-summary-vat">(Đã bao gồm VAT)</p>
                             </div>
 
                             <div class="cart-v2-summary-actions">
-                                <button type="submit" form="cart-v2-checkout-form" class="cart-v2-btn cart-v2-btn--checkout">
+                                <button type="submit" form="cart-v2-checkout-form" class="cart-v2-btn cart-v2-btn--checkout" {{ $checkoutEligibleItems->isEmpty() ? 'disabled' : '' }}>
                                     <i class="fa fa-lock" aria-hidden="true"></i>
                                     Tiến hành thanh toán
                                 </button>
@@ -682,13 +709,14 @@
                 let count = 0;
                 document.querySelectorAll('[data-cart-row]').forEach((row) => {
                     const checked = row.querySelector('.cart-v2-row-check')?.checked;
-                    if (checked) {
+                    const purchasable = row.dataset.purchasable !== '0';
+                    if (checked && purchasable) {
                         subtotal += parseFloat(row.dataset.lineTotal) || 0;
                         count += 1;
                     }
                 });
 
-                const discount = {{ (float) ($totals['discount'] ?? 0) }};
+                const discount = Math.min({{ (float) ($totals['discount'] ?? 0) }}, subtotal);
                 const shipping = {{ (float) ($totals['shipping'] ?? 0) }};
                 const total = Math.max(0, subtotal - discount + shipping);
 
@@ -704,7 +732,11 @@
             const checkoutForm = document.getElementById('cart-v2-checkout-form');
 
             const setAll = (state) => {
-                rowChecks.forEach((c) => { c.checked = state; });
+                rowChecks.forEach((c) => {
+                    if (!c.disabled) {
+                        c.checked = state;
+                    }
+                });
                 if (headCheck) headCheck.checked = state;
                 if (footCheck) footCheck.checked = state;
                 refreshSummary();
@@ -715,7 +747,8 @@
 
             rowChecks.forEach((c) => {
                 c.addEventListener('change', () => {
-                    const allOn = Array.from(rowChecks).every((x) => x.checked);
+                    const enabledChecks = Array.from(rowChecks).filter((x) => !x.disabled);
+                    const allOn = enabledChecks.length > 0 && enabledChecks.every((x) => x.checked);
                     if (headCheck) headCheck.checked = allOn;
                     if (footCheck) footCheck.checked = allOn;
                     refreshSummary();
@@ -764,7 +797,7 @@
             checkoutForm?.addEventListener('submit', (event) => {
                 const holder = checkoutForm.querySelector('[data-checkout-selected-items]');
                 const selectedIds = Array.from(rowChecks)
-                    .filter((checkbox) => checkbox.checked)
+                    .filter((checkbox) => checkbox.checked && !checkbox.disabled)
                     .map((checkbox) => checkbox.dataset.cartItemId)
                     .filter(Boolean);
 

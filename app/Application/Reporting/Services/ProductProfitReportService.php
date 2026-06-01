@@ -37,26 +37,67 @@ class ProductProfitReportService
 
         $baseQuery = $this->baseQuery($filters);
 
-        $rowSelect = [
-            '
-                order_items.product_id,
-                ' . $this->productNameExpression() . ' as product_name,
-                SUM(order_items.quantity) as sold_quantity,
-                SUM(order_items.price * order_items.quantity) as revenue,
-                SUM((' . $costPriceExpression . ') * order_items.quantity) as cost_total,
-                SUM((order_items.price - (' . $costPriceExpression . ')) * order_items.quantity) as profit
-            ',
-            $this->canSelectProductSlug() ? 'MAX(products.slug) as product_slug' : 'NULL as product_slug',
-            $this->canJoinBrands() ? 'MAX(brands.name) as brand_name' : 'NULL as brand_name',
-            $this->canJoinCategories() ? 'MAX(product_categories.name) as category_name' : 'NULL as category_name',
-        ];
-
         $rows = (clone $baseQuery)
-            ->selectRaw(implode(",\n", $rowSelect))
+            ->selectRaw(implode(",\n", $this->rowSelect($costPriceExpression)))
             ->groupBy('order_items.product_id')
             ->orderByDesc('revenue')
             ->paginate($perPage)
             ->appends($filters);
+
+        $summary = (clone $baseQuery)
+            ->selectRaw('
+                COUNT(DISTINCT order_items.product_id) as products_count,
+                SUM(order_items.quantity) as sold_quantity,
+                SUM(order_items.price * order_items.quantity) as revenue,
+                SUM((' . $costPriceExpression . ') * order_items.quantity) as cost_total,
+                SUM((order_items.price - (' . $costPriceExpression . ')) * order_items.quantity) as profit
+            ')
+            ->first();
+
+        return [
+            'rows' => $rows,
+            'summary' => [
+                'products_count' => (int) ($summary->products_count ?? 0),
+                'sold_quantity' => (int) ($summary->sold_quantity ?? 0),
+                'revenue' => (float) ($summary->revenue ?? 0),
+                'cost_total' => (float) ($summary->cost_total ?? 0),
+                'profit' => (float) ($summary->profit ?? 0),
+                'tables_ready' => true,
+            ],
+            'brands' => $this->brandsTableReady() ? Brand::query()->orderBy('name')->get() : collect(),
+            'categories' => $this->categoriesTableReady() ? ProductCategory::query()->orderBy('name')->get() : collect(),
+        ];
+    }
+
+    public function getPrintableReport(array $filters = []): array
+    {
+        $filters = $this->normalizeDateFilters($filters);
+        $reportTablesReady = $this->reportTablesReady();
+        $costPriceExpression = $this->costPriceExpression();
+
+        if (! $reportTablesReady) {
+            return [
+                'rows' => collect(),
+                'summary' => [
+                    'products_count' => 0,
+                    'sold_quantity' => 0,
+                    'revenue' => 0.0,
+                    'cost_total' => 0.0,
+                    'profit' => 0.0,
+                    'tables_ready' => false,
+                ],
+                'brands' => $this->brandsTableReady() ? Brand::query()->orderBy('name')->get() : collect(),
+                'categories' => $this->categoriesTableReady() ? ProductCategory::query()->orderBy('name')->get() : collect(),
+            ];
+        }
+
+        $baseQuery = $this->baseQuery($filters);
+
+        $rows = (clone $baseQuery)
+            ->selectRaw(implode(",\n", $this->rowSelect($costPriceExpression)))
+            ->groupBy('order_items.product_id')
+            ->orderByDesc('revenue')
+            ->get();
 
         $summary = (clone $baseQuery)
             ->selectRaw('
@@ -162,6 +203,23 @@ class ProductProfitReportService
         return $query;
     }
 
+    protected function rowSelect(string $costPriceExpression): array
+    {
+        return [
+            '
+                order_items.product_id,
+                ' . $this->productNameExpression() . ' as product_name,
+                SUM(order_items.quantity) as sold_quantity,
+                SUM(order_items.price * order_items.quantity) as revenue,
+                SUM((' . $costPriceExpression . ') * order_items.quantity) as cost_total,
+                SUM((order_items.price - (' . $costPriceExpression . ')) * order_items.quantity) as profit
+            ',
+            $this->canSelectProductSlug() ? 'MAX(products.slug) as product_slug' : 'NULL as product_slug',
+            $this->canJoinBrands() ? 'MAX(brands.name) as brand_name' : 'NULL as brand_name',
+            $this->canJoinCategories() ? 'MAX(product_categories.name) as category_name' : 'NULL as category_name',
+        ];
+    }
+
     public function reportTablesReady(): bool
     {
         return Schema::hasTable('order_items')
@@ -192,7 +250,11 @@ class ProductProfitReportService
     protected function costPriceExpression(): string
     {
         if ($this->schemaHasColumn('order_items', 'cost_price')) {
-            return 'order_items.cost_price';
+            if ($this->canJoinProducts() && $this->productsHaveColumn('cost_price')) {
+                return 'COALESCE(NULLIF(order_items.cost_price, 0), products.cost_price, 0)';
+            }
+
+            return 'COALESCE(order_items.cost_price, 0)';
         }
 
         if ($this->productsHaveColumn('cost_price')) {

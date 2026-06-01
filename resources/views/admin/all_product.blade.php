@@ -192,9 +192,7 @@
                     </table>
 
                     @if ($all_product instanceof \Illuminate\Pagination\AbstractPaginator)
-                        <div class="text-right">
-                            {{ $all_product->links() }}
-                        </div>
+                        @include('admin.partials.pagination', ['paginator' => $all_product, 'label' => 'sản phẩm'])
                     @endif
                 </div>
             </div>

@@ -40,7 +40,7 @@
                 </article>
                 <article>
                     <strong>{{ number_format($stats['total_skus']) }}</strong>
-                    <span>SKU sản phẩm/biến thể</span>
+                    <span>Mã tồn kho sản phẩm / biến thể</span>
                 </article>
                 <article>
                     <strong>{{ number_format($stats['total_stock_quantity']) }}</strong>
@@ -221,13 +221,7 @@
                         </table>
                     </div>
 
-                    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">
-                        <span>
-                            Hiển thị {{ number_format($products->firstItem()) }}-{{ number_format($products->lastItem()) }}
-                            của {{ number_format($products->total()) }} sản phẩm
-                        </span>
-                        {{ $products->links() }}
-                    </div>
+                    @include('admin.partials.pagination', ['paginator' => $products, 'label' => 'sản phẩm'])
                 @endif
             </div>
         </section>

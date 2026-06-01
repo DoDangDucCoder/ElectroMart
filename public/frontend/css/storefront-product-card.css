@@ -276,30 +276,54 @@
     min-height: 236px !important;
 }
 
-.cat-x__grid.is-list {
+.cat-x .cat-x__grid.is-list {
     grid-template-columns: 1fr !important;
+    align-items: stretch !important;
 }
 
-.cat-x__grid.is-list .tech-product-card {
+.cat-x .cat-x__grid.is-list .tech-product-card {
     display: grid !important;
     grid-template-columns: minmax(160px, 220px) minmax(0, 1fr) !important;
+    align-items: stretch !important;
     min-height: 220px !important;
+    height: auto !important;
+    overflow: visible !important;
 }
 
-.cat-x__grid.is-list .tech-product-media {
+.cat-x .cat-x__grid.is-list .tech-product-media {
+    width: 100% !important;
+    flex-basis: auto !important;
     height: 100% !important;
     min-height: 220px !important;
     max-height: none !important;
+    border-radius: 18px 0 0 18px !important;
 }
 
-.cat-x__grid.is-list .tech-product-media img {
+.cat-x .cat-x__grid.is-list .tech-product-media img {
+    width: auto !important;
+    max-width: 180px !important;
     height: 170px !important;
     max-height: 170px !important;
 }
 
-.cat-x__grid.is-list .tech-product-body {
+.cat-x .cat-x__grid.is-list .tech-product-body {
+    min-width: 0 !important;
     min-height: 0 !important;
-    padding: 18px !important;
+    padding: 20px 24px !important;
+}
+
+.cat-x .cat-x__grid.is-list .tech-product-body h3 {
+    min-height: 0 !important;
+    max-height: none !important;
+}
+
+.cat-x .cat-x__grid.is-list .tech-product-footer {
+    align-items: flex-end !important;
+    gap: 18px !important;
+}
+
+.cat-x .cat-x__grid.is-list .tech-price-block {
+    min-width: 0 !important;
 }
 
 .product-section,
@@ -350,8 +374,8 @@
         grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
 
-    .cat-x .cat-x__layout:not(.cat-x__layout--full) .cat-x__grid,
-    .cat-x .cat-x__layout--full .cat-x__grid {
+    .cat-x .cat-x__layout:not(.cat-x__layout--full) .cat-x__grid:not(.is-list),
+    .cat-x .cat-x__layout--full .cat-x__grid:not(.is-list) {
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
     }
 
@@ -372,7 +396,7 @@
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 
-    .cat-x .cat-x__grid {
+    .cat-x .cat-x__grid:not(.is-list) {
         grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
     }
 
@@ -429,14 +453,35 @@
         min-height: var(--dd-product-card-body-min-height) !important;
     }
 
-    .cat-x__grid.is-list .tech-product-card {
-        grid-template-columns: 128px minmax(0, 1fr) !important;
-        min-height: 188px !important;
+    .cat-x .cat-x__grid.is-list {
+        grid-template-columns: 1fr !important;
     }
 
-    .cat-x__grid.is-list .tech-product-media {
+    .cat-x .cat-x__grid.is-list .tech-product-card {
+        grid-template-columns: 128px minmax(0, 1fr) !important;
+        min-height: 188px !important;
+        overflow: hidden !important;
+    }
+
+    .cat-x .cat-x__grid.is-list .tech-product-media {
         min-height: 188px !important;
         height: 188px !important;
+        border-radius: 18px 0 0 18px !important;
+        padding: 14px !important;
+    }
+
+    .cat-x .cat-x__grid.is-list .tech-product-media img {
+        max-width: 108px !important;
+        height: 128px !important;
+        max-height: 128px !important;
+    }
+
+    .cat-x .cat-x__grid.is-list .tech-product-body {
+        padding: 16px !important;
+    }
+
+    .cat-x .cat-x__grid.is-list .tech-product-footer {
+        gap: 10px !important;
     }
 }
 
@@ -447,8 +492,22 @@
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
 
-    .cat-x .cat-x__grid {
+    .cat-x .cat-x__grid:not(.is-list) {
         grid-template-columns: 1fr !important;
+    }
+
+    .cat-x .cat-x__grid.is-list {
+        grid-template-columns: 1fr !important;
+    }
+
+    .cat-x .cat-x__grid.is-list .tech-product-card {
+        grid-template-columns: 116px minmax(0, 1fr) !important;
+        min-height: 176px !important;
+    }
+
+    .cat-x .cat-x__grid.is-list .tech-product-media {
+        min-height: 176px !important;
+        height: 176px !important;
     }
 
     .tech-sale-item {

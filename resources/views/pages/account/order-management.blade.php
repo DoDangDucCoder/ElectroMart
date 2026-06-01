@@ -68,8 +68,8 @@
                         @if(in_array($order->status, ['shipping', 'shipped']))
                         <a href="{{ route('customer.account.order-tracking', ['orderCode' => $orderCode]) }}" class="accp-btn accp-btn--primary accp-btn--sm"><i class="fa fa-truck"></i> Theo dõi</a>
                         @endif
-                        @if($order->status === 'pending')
-                        <a href="#" class="accp-btn accp-btn--outline accp-btn--sm" style="color:#dc2626;border-color:#dc2626"><i class="fa fa-times"></i> Hủy đơn</a>
+                        @if(in_array($order->status, ['pending', 'confirmed', 'processing'], true))
+                        <button type="button" class="accp-btn accp-btn--outline accp-btn--sm js-cancel-order-trigger" style="color:#dc2626;border-color:#dc2626" data-order-code="{{ $orderCode }}"><i class="fa fa-times"></i> Hủy đơn</button>
                         @endif
                         @if($order->status === 'completed')
                         <a href="#" class="accp-btn accp-btn--primary accp-btn--sm"><i class="fa fa-refresh"></i> Mua lại</a>
@@ -99,4 +99,5 @@
         </aside>
     </div>
 </div>
+@include('pages.history.partials.cancel_order_modal')
 @endsection

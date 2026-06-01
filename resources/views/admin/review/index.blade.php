@@ -150,12 +150,7 @@
             </tbody>
         </table>
 
-        <div class="adm-pagination">
-            <span class="info">
-                Hiển thị {{ $reviews->firstItem() ?? 0 }} đến {{ $reviews->lastItem() ?? 0 }} của {{ number_format($reviews->total()) }} đánh giá
-            </span>
-            <div class="pages">{{ $reviews->links() }}</div>
-        </div>
+        @include('admin.partials.pagination', ['paginator' => $reviews, 'label' => 'đánh giá'])
     </div>
 </div>
 @endsection

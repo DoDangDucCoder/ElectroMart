@@ -148,6 +148,12 @@ class CheckoutController extends Controller
             return Redirect::to('/gio-hang')->with('error', 'Vui lòng chọn sản phẩm cần thanh toán trong giỏ hàng.');
         }
 
+        try {
+            $this->cartService->validatePurchasableItems($selectedItems);
+        } catch (\RuntimeException $e) {
+            return Redirect::to('/gio-hang')->with('error', $e->getMessage());
+        }
+
         $currentCustomer = $this->sessionCustomer();
         if (! $currentCustomer) {
             $this->clearCustomerSession();
@@ -180,6 +186,12 @@ class CheckoutController extends Controller
 
         if ($selectedItems->isEmpty()) {
             return Redirect::to('/gio-hang')->with('error', 'Vui lòng chọn ít nhất một sản phẩm để thanh toán.');
+        }
+
+        try {
+            $this->cartService->validatePurchasableItems($selectedItems);
+        } catch (\RuntimeException $e) {
+            return Redirect::to('/gio-hang')->with('error', $e->getMessage());
         }
 
         return Redirect::to('/checkout');

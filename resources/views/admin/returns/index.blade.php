@@ -147,12 +147,7 @@
             </tbody>
         </table>
 
-        <div class="adm-pagination">
-            <span class="info">
-                Hiển thị {{ $returns->firstItem() ?? 0 }} đến {{ $returns->lastItem() ?? 0 }} của {{ number_format($returns->total()) }} yêu cầu
-            </span>
-            <div class="pages">{{ $returns->links() }}</div>
-        </div>
+        @include('admin.partials.pagination', ['paginator' => $returns, 'label' => 'yêu cầu'])
     </div>
 </div>
 @endsection

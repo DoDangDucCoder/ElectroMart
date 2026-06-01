@@ -42,6 +42,7 @@
             const salePricePreview = document.getElementById('sale_price_preview');
             const profitPreview = document.getElementById('profit_preview');
             const explanation = document.getElementById('sale_explanation_preview');
+            const profitExplanation = document.getElementById('profit_explanation_preview');
 
             if (!priceInput || !saleTypeInput || !saleValueInput || !salePricePreview || !profitPreview || !explanation) {
                 return;
@@ -66,6 +67,19 @@
             salePricePreview.value = formatCurrency(finalPrice);
             profitPreview.value = formatCurrency(profit);
             explanation.textContent = buildExplanation(price, saleType, saleValue, finalPrice);
+
+            if (profitExplanation) {
+                if (cost <= 0) {
+                    profitExplanation.textContent = 'Giá nhập là bắt buộc để xác định vốn và lợi nhuận.';
+                    profitExplanation.style.color = '#b91c1c';
+                } else if (profit <= 0) {
+                    profitExplanation.textContent = 'Cảnh báo: giá nhập đang lớn hơn hoặc bằng giá sau sale, sản phẩm sẽ không có lãi.';
+                    profitExplanation.style.color = '#b91c1c';
+                } else {
+                    profitExplanation.textContent = 'Lãi dự kiến = ' + formatCurrency(finalPrice) + 'đ - ' + formatCurrency(cost) + 'đ = ' + formatCurrency(profit) + 'đ.';
+                    profitExplanation.style.color = '';
+                }
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {

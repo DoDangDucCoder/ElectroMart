@@ -100,13 +100,7 @@
                 </div>
             </div>
             <footer class="panel-footer">
-                <div class="row">
-                    <div class="col-sm-12 text-right text-center-xs">
-                        <ul class="pagination pagination-sm m-t-none m-b-none">
-                            {!! $category_post->links() !!}
-                        </ul>
-                    </div>
-                </div>
+                @include('admin.partials.pagination', ['paginator' => $category_post, 'label' => 'danh mục'])
             </footer>
         </section>
     </div>

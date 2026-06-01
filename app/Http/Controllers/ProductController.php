@@ -339,11 +339,13 @@ class ProductController extends Controller
             ]);
         }
 
+        $this->normalizeProductPricingInputs($request);
+
         $validator = validator($request->all(), [
             'product_name'     => ['required', 'string', 'max:255'],
             'product_slug'     => ['nullable', 'string', 'max:255', Rule::unique('products', 'slug')->ignore($productId)],
-            'product_price'    => ['required', 'numeric', 'min:0'],  // Fix #69: thêm numeric|min:0
-            'price_cost'       => ['nullable', 'numeric', 'min:0'],
+            'product_price'    => ['required', 'numeric', 'gt:0'],
+            'price_cost'       => ['required', 'numeric', 'gt:0'],
             'sale_type'        => ['nullable', Rule::in(['percent', 'fixed'])],
             'sale_value'       => ['nullable', 'numeric', 'min:0'],
             'product_quantity' => ['required', 'integer', 'min:0'],
@@ -359,12 +361,17 @@ class ProductController extends Controller
 
         $validator->after(function ($validator) use ($request) {
             $price = $this->normalizeCurrency($request->input('product_price')) ?? 0.0;
+            $cost = $this->normalizeCurrency($request->input('price_cost'));
             $saleType = $this->pricingService->normalizeSaleType($request->input('sale_type'));
             $saleValue = $saleType === 'percent'
                 ? $this->normalizeDecimal($request->input('sale_value'))
                 : $this->normalizeCurrency($request->input('sale_value'));
 
-            if (! $saleType && $saleValue === null) {
+            if (! $saleType && ($saleValue === null || $saleValue <= 0)) {
+                if ($cost !== null && $cost > 0 && $cost >= $price) {
+                    $validator->errors()->add('price_cost', 'Giá nhập phải nhỏ hơn giá bán để sản phẩm có lãi.');
+                }
+
                 return;
             }
 
@@ -381,9 +388,37 @@ class ProductController extends Controller
             if ($saleType === 'fixed' && $saleValue >= $price) {
                 $validator->errors()->add('sale_value', 'Số tiền khuyến mãi phải nhỏ hơn giá bán gốc.');
             }
+
+            $finalPrice = $this->pricingService->calculateFinalPrice($price, $saleType, $saleValue);
+
+            if ($cost !== null && $cost > 0 && $cost >= $finalPrice) {
+                $validator->errors()->add('price_cost', 'Giá nhập phải nhỏ hơn giá sau sale để sản phẩm có lãi.');
+            }
         });
 
         return $validator->validate();
+    }
+
+    protected function normalizeProductPricingInputs(Request $request): void
+    {
+        $normalized = [];
+
+        if ($request->has('product_price')) {
+            $normalized['product_price'] = $this->normalizeCurrency($request->input('product_price'));
+        }
+
+        if ($request->has('price_cost')) {
+            $normalized['price_cost'] = $this->normalizeCurrency($request->input('price_cost'));
+        }
+
+        if ($request->has('sale_value')) {
+            $saleType = $this->pricingService->normalizeSaleType($request->input('sale_type'));
+            $normalized['sale_value'] = $saleType === 'percent'
+                ? $this->normalizeDecimal($request->input('sale_value'))
+                : $this->normalizeCurrency($request->input('sale_value'));
+        }
+
+        $request->merge($normalized);
     }
 
     protected function mapProductData(array $data, ?Product $existing = null): array

@@ -181,9 +181,9 @@ class CartService
         if ($existingKey !== false) {
             $item = $cart->get($existingKey);
             $nextQuantity = (int) ($item['product_qty'] ?? 0) + $quantity;
-            $this->ensureAvailableQuantity($availableStock, $nextQuantity, $attributeData['label'] ?? $product->product_name);
+            $this->ensureQuantityWithinStockIfAvailable($availableStock, $nextQuantity, $attributeData['label'] ?? $product->product_name);
 
-            $item['product_qty'] = max(1, $nextQuantity);
+            $item['product_qty'] = $availableStock <= 0 ? 1 : max(1, $nextQuantity);
             $item['product_quantity'] = $availableStock;
             $item['product_price'] = $pricingData['product_price'];
             $item['product_original_price'] = $pricingData['product_original_price'];
@@ -206,7 +206,7 @@ class CartService
         }
 
         $sessionId = Str::random(10);
-        $this->ensureAvailableQuantity($availableStock, $quantity, $attributeData['label'] ?? $product->product_name);
+        $this->ensureQuantityWithinStockIfAvailable($availableStock, $quantity, $attributeData['label'] ?? $product->product_name);
 
         $cart->push([
             'session_id' => $sessionId,
@@ -220,7 +220,7 @@ class CartService
             'product_sale_type' => $pricingData['product_sale_type'],
             'product_sale_value' => $pricingData['product_sale_value'],
             'product_sale_amount' => $pricingData['product_sale_amount'],
-            'product_qty' => $quantity,
+            'product_qty' => $availableStock <= 0 ? 1 : $quantity,
             'product_quantity' => $availableStock,
             'product_attribute_id' => $attributeId,
             'product_attribute' => $attributeData['label'] ?? null,
@@ -267,6 +267,20 @@ class CartService
         $cart->put($index, $item);
 
         $this->persist($cart);
+    }
+
+    public function validatePurchasableItems(Collection $items): void
+    {
+        $items->each(function (array $item): void {
+            $availableStock = $this->currentAvailableStockForItem($item);
+            $requestedQuantity = max(1, (int) ($item['product_qty'] ?? 1));
+            $label = $item['attribute_label']
+                ?? $item['product_attribute']
+                ?? $item['product_name']
+                ?? null;
+
+            $this->ensureAvailableQuantity($availableStock, $requestedQuantity, $label);
+        });
     }
 
     public function updateItem(?int $customerId, string $sessionId, int $quantity): array
@@ -397,6 +411,42 @@ class CartService
         }
     }
 
+    protected function ensureQuantityWithinStockIfAvailable(int $availableStock, int $requestedQuantity, ?string $label = null): void
+    {
+        if ($availableStock <= 0) {
+            return;
+        }
+
+        if ($requestedQuantity > $availableStock) {
+            $itemLabel = trim((string) $label);
+
+            throw new RuntimeException($itemLabel !== ''
+                ? sprintf('%s chỉ còn %d sản phẩm trong kho.', $itemLabel, $availableStock)
+                : sprintf('Sản phẩm chỉ còn %d sản phẩm trong kho.', $availableStock));
+        }
+    }
+
+    protected function currentAvailableStockForItem(array $item): int
+    {
+        $variantId = (int) ($item['product_attribute_id'] ?? 0);
+
+        if ($variantId > 0 && Schema::hasTable((new ProductVariant())->getTable())) {
+            $variant = ProductVariant::query()
+                ->where('id', $variantId)
+                ->where('product_id', (int) ($item['product_id'] ?? 0))
+                ->where('is_active', true)
+                ->first();
+
+            return (int) ($variant?->stock_quantity ?? 0);
+        }
+
+        $product = Product::query()
+            ->where('is_active', true)
+            ->find((int) ($item['product_id'] ?? 0));
+
+        return (int) ($product?->stock_quantity ?? 0);
+    }
+
     /**
      * @param  array<string,mixed>  $attributeData
      * @return array<string,mixed>
@@ -409,8 +459,8 @@ class CartService
             return [
                 'product_price' => $attributePrice,
                 'product_original_price' => $attributePrice,
-                'product_cost_price' => 0.0,
-                'product_sale_price' => null,
+                'product_cost_price' => (float) ($product->cost_price ?? 0),
+                'product_sale_price' => $attributePrice,
                 'product_sale_type' => null,
                 'product_sale_value' => null,
                 'product_sale_amount' => 0.0,

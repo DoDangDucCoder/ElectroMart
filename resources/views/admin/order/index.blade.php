@@ -43,8 +43,7 @@
                     <option value="pending" @selected($filters['status'] === 'pending')>Chờ xác nhận</option>
                     <option value="confirmed" @selected($filters['status'] === 'confirmed')>Đã xác nhận</option>
                     <option value="processing" @selected($filters['status'] === 'processing')>Đang xử lý</option>
-                    <option value="shipping" @selected($filters['status'] === 'shipping')>Đang giao</option>
-                    <option value="shipped" @selected($filters['status'] === 'shipped')>Đã giao</option>
+                    <option value="shipped" @selected($filters['status'] === 'shipped')>Đang giao</option>
                     <option value="completed" @selected($filters['status'] === 'completed')>Hoàn thành</option>
                     <option value="cancelled" @selected($filters['status'] === 'cancelled')>Đã hủy</option>
                 </select>
@@ -80,7 +79,7 @@
                                 'confirmed' => ['Đã xác nhận', 'teal'],
                                 'processing' => ['Đang xử lý', 'teal'],
                                 'shipping' => ['Đang giao', 'blue'],
-                                'shipped' => ['Đã giao', 'blue'],
+                                'shipped' => ['Đang giao', 'blue'],
                                 'completed' => ['Hoàn thành', 'green'],
                                 'cancelled' => ['Đã hủy', 'red'],
                                 'refunded' => ['Đã hoàn tiền', 'red'],
@@ -126,10 +125,7 @@
                     @endforelse
                     </tbody>
                 </table>
-                <div class="adm-pagination">
-                    <span class="info">Hiển thị {{ $orders->count() }} / {{ $orders->total() }} đơn hàng</span>
-                    <div class="pages">{{ $orders->links() }}</div>
-                </div>
+                @include('admin.partials.pagination', ['paginator' => $orders, 'label' => 'đơn hàng'])
             </div>
         </div>
     </div>

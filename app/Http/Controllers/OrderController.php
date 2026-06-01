@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Application\Order\Services\LegacyOrderPresentationService;
 use App\Application\Order\Services\LegacyOrderWorkflowService;
+use App\Application\Order\Services\OrderInventoryService;
 use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand as StorefrontBrand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory as StorefrontCategory;
@@ -11,6 +12,7 @@ use App\Infrastructure\Persistence\Eloquent\Customer\Customer as StorefrontCusto
 use App\Infrastructure\Persistence\Eloquent\Order\Order as StorefrontOrder;
 use App\Support\StorefrontCustomerAuth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 
@@ -57,18 +59,23 @@ class OrderController extends Controller
             return response()->json(['message' => 'Đơn hàng này không thể hủy ở trạng thái hiện tại.'], 422);
         }
 
-        $meta = $order->meta ?? [];
-        $meta['cancel_reason'] = $data['lydo'];
-        $meta['cancelled_from'] = 'storefront_history';
+        DB::transaction(function () use ($order, $data): void {
+            app(OrderInventoryService::class)->release($order, 'storefront_customer_cancelled');
+            $order->refresh();
 
-        $order->status = 'cancelled';
-        $order->cancelled_at = now();
-        $order->meta = $meta;
-        $order->note = trim(implode("\n", array_filter([
-            $order->note,
-            'Khách hủy đơn: '.$data['lydo'],
-        ])));
-        $order->save();
+            $meta = $order->meta ?? [];
+            $meta['cancel_reason'] = $data['lydo'];
+            $meta['cancelled_from'] = 'storefront_history';
+
+            $order->status = 'cancelled';
+            $order->cancelled_at = now();
+            $order->meta = $meta;
+            $order->note = trim(implode("\n", array_filter([
+                $order->note,
+                'Khách hủy đơn: '.$data['lydo'],
+            ])));
+            $order->save();
+        });
 
         return response()->json([
             'message' => 'Hủy đơn hàng thành công.',
@@ -88,7 +95,7 @@ class OrderController extends Controller
         $data = $request->validate([
             'order_product_id' => ['required', 'integer', 'min:1'],
             'order_code' => ['required', 'string'],
-            'order_qty' => ['required', 'integer', 'min:1'],
+            'order_qty' => ['required', 'integer', 'min:0'],
         ]);
 
         $result = app(LegacyOrderWorkflowService::class)->updateOrderLineQuantity(
@@ -104,9 +111,9 @@ class OrderController extends Controller
     {
         $data = $request->validate([
             'order_id' => ['required', 'integer', 'min:1'],
-            'order_status' => ['required', 'integer', 'in:1,2,3'],
+            'order_status' => ['required', 'integer', 'in:1,2,3,4,5'],
             'quantity' => ['required', 'array', 'min:1'],
-            'quantity.*' => ['required', 'integer', 'min:1'],
+            'quantity.*' => ['required', 'integer', 'min:0'],
             'order_product_id' => ['required', 'array', 'min:1'],
             'order_product_id.*' => ['required', 'integer', 'min:1'],
         ]);
@@ -190,11 +197,13 @@ class OrderController extends Controller
             'Dự kiến giao',
         ];
 
-        // 1=new (in flight, pending stages), 2=delivered (all done), 3=cancelled
+        // 1=pending, 2=processing, 3=shipping, 4=delivered, 5=cancelled
         $currentStep = match ($status) {
             1 => 1,
-            2 => 6,
-            3 => 0,
+            2 => 3,
+            3 => 5,
+            4 => 6,
+            5 => 0,
             default => 1,
         };
 
@@ -202,13 +211,13 @@ class OrderController extends Controller
         $steps = [];
         foreach ($stepLabels as $i => $label) {
             $idx = $i + 1;
-            $isDone = $status !== 3 && $idx < $currentStep;
-            $isActive = $status !== 3 && $idx === $currentStep;
+            $isDone = $status !== 5 && $idx < $currentStep;
+            $isActive = $status !== 5 && $idx === $currentStep;
             $isFuture = $idx > $currentStep;
 
             if ($idx === 1) {
                 $when = $createdAt;
-            } elseif ($idx === 6 && $status === 2) {
+            } elseif ($idx === 6 && $status === 4) {
                 $when = $orderDate ?: $createdAt->copy()->addDays(2);
             } elseif ($idx === 6) {
                 $when = $createdAt->copy()->addDays(2);
@@ -230,22 +239,23 @@ class OrderController extends Controller
         return [
             'status_code' => $status,
             'status_label' => match ($status) {
-                1 => 'Đang giao hàng',
-                2 => 'Đã giao thành công',
-                3 => 'Đã hủy',
+                1 => 'Chờ xử lý',
+                2 => 'Đang xử lý',
+                3 => 'Đang giao hàng',
+                4 => 'Đã giao thành công',
+                5 => 'Đã hủy',
                 default => 'Đang xử lý',
             },
             'status_chip_tone' => match ($status) {
-                1 => 'in-progress',
-                2 => 'success',
-                3 => 'danger',
+                4 => 'success',
+                5 => 'danger',
                 default => 'in-progress',
             },
             'current_step' => $currentStep,
             'steps' => $steps,
             'eta_label' => match ($status) {
-                2 => 'Đã giao thành công',
-                3 => 'Đã hủy',
+                4 => 'Đã giao thành công',
+                5 => 'Đã hủy',
                 default => $orderDate?->translatedFormat('l, d/m/Y') ?: $createdAt->copy()->addDays(2)->translatedFormat('l, d/m/Y'),
             },
             'eta_window' => '08:00 - 17:00',
@@ -254,7 +264,7 @@ class OrderController extends Controller
                 ['label' => 'Trung tâm trung chuyển', 'sub' => 'Hà Nội', 'is_done' => $currentStep > 3],
                 ['label' => 'Trung tâm trung chuyển', 'sub' => 'Đà Nẵng', 'is_done' => $currentStep > 4],
                 ['label' => 'Đang giao hàng', 'sub' => 'TP. Hồ Chí Minh', 'is_done' => $currentStep >= 5, 'is_active' => $currentStep === 5],
-                ['label' => 'Giao thành công', 'sub' => 'TP. Hồ Chí Minh', 'is_done' => $currentStep >= 6 && $status === 2],
+                ['label' => 'Giao thành công', 'sub' => 'TP. Hồ Chí Minh', 'is_done' => $currentStep >= 6 && $status === 4],
             ],
             'carrier' => [
                 'name' => 'Giao Hàng Nhanh (GHN)',
@@ -612,11 +622,11 @@ class OrderController extends Controller
     protected function formatModernOrderStatusLabel(?string $status): string
     {
         return match ($status) {
-            'pending' => 'Đơn hàng mới',
+            'pending' => 'Chờ xử lý',
             'confirmed' => 'Đã xác nhận',
             'processing' => 'Đang xử lý',
-            'shipped' => 'Đang giao hàng',
-            'completed' => 'Hoàn tất',
+            'shipping', 'shipped' => 'Đang giao hàng',
+            'completed' => 'Đã giao hàng',
             'cancelled' => 'Đã hủy',
             'refunded' => 'Đã hoàn tiền',
             default => 'Chưa xác định',

@@ -128,6 +128,8 @@ class LegacyOrderHistoryService
     protected function statusKey(?string $status): string
     {
         return match ($status) {
+            'confirmed', 'processing' => 'processing',
+            'shipping', 'shipped' => 'shipping',
             'completed' => 'completed',
             'cancelled', 'refunded' => 'cancelled',
             default => 'pending',
@@ -137,13 +139,14 @@ class LegacyOrderHistoryService
     protected function formatStatusLabel(?string $status): string
     {
         return match ($status) {
-            'completed' => 'Đã xử lý - Đã giao hàng',
+            'pending' => 'Chờ xử lý',
+            'completed' => 'Đã giao hàng',
             'cancelled' => 'Đơn hàng đã bị hủy',
             'refunded' => 'Đã hoàn tiền',
             'confirmed' => 'Đã xác nhận',
             'processing' => 'Đang xử lý',
-            'shipped' => 'Đang giao hàng',
-            default => 'Đơn hàng mới',
+            'shipping', 'shipped' => 'Đang giao hàng',
+            default => 'Chưa xác định',
         };
     }
 

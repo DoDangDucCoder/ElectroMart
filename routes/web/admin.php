@@ -311,6 +311,7 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
         Route::get('/print-order/{checkout_code}', [OrderController::class, 'print_order']);
         Route::get('/manage-order', fn () => redirect('/admin/orders-management'));
         Route::get('/product-profit', [ProductProfitController::class, 'index'])->name('admin.product-profit');
+        Route::get('/product-profit/print', [ProductProfitController::class, 'print'])->name('admin.product-profit.print');
         Route::get('/view-order/{order_code}', [OrderController::class, 'view_order']);
         Route::get('/track-order/{order_code}', [OrderController::class, 'track_order'])->name('admin.order.track');
         Route::post('/update-order-qty', [OrderController::class, 'update_order_qty']);

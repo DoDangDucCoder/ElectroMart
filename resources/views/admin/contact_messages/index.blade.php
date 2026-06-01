@@ -181,13 +181,7 @@
                         </table>
                     </div>
 
-                    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap;">
-                        <span>
-                            Hiển thị {{ number_format($messages->firstItem()) }}-{{ number_format($messages->lastItem()) }}
-                            của {{ number_format($messages->total()) }} liên hệ
-                        </span>
-                        {{ $messages->links() }}
-                    </div>
+                    @include('admin.partials.pagination', ['paginator' => $messages, 'label' => 'liên hệ'])
                 @endif
             </div>
         </section>

@@ -1285,12 +1285,19 @@
 
 {{-- 6. Main Interactions --}}
 <script type="text/javascript">
-    $(document).on('click', '[data-target="#cancelOrderModal"]', function() {
+    $(document).on('click', '.js-cancel-order-trigger', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
         var orderCode = $(this).data('orderCode') || $(this).data('order-code') || '';
 
         $('#cancel-order-submit').attr('data-order-code', orderCode);
         $('#cancel-order-code-preview').text(orderCode ? ('#' + orderCode) : '');
         $('.lydohuydon').val('');
+
+        if (typeof $('#cancelOrderModal').modal === 'function') {
+            $('#cancelOrderModal').modal('show');
+        }
     });
 
     $(document).on('click', '#cancel-order-submit', function() {
@@ -2930,21 +2937,25 @@
             var availableStock = Math.max(0, parseInt(stock || 0, 10));
             var $purchase = $('.shopw-pdp-purchase');
             var $quantityInput = $('.cart_product_qty');
-            var $actionButtons = $('[data-pdx-add-cart], [data-pdx-buy-now]');
+            var $addCartButtons = $('[data-pdx-add-cart]');
+            var $buyNowButtons = $('[data-pdx-buy-now]');
             var $buttonLabel = $('.shopw-pdp-purchase-btn-label');
             var defaultLabel = $purchase.data('defaultLabel') || 'Thêm giỏ hàng';
-            var nextLabel = label || (availableStock > 0 ? defaultLabel : 'Tạm hết hàng');
+            var nextLabel = label || defaultLabel;
             var currentValue = parseInt($quantityInput.val() || 1, 10);
 
             $quantityInput.attr('max', Math.max(1, availableStock));
+            $quantityInput.attr('data-available-stock', availableStock);
 
             if (availableStock <= 0) {
-                $quantityInput.val(0).prop('disabled', true);
-                $actionButtons.prop('disabled', true);
+                $quantityInput.val(1).prop('disabled', false);
+                $addCartButtons.prop('disabled', false);
+                $buyNowButtons.prop('disabled', true);
             } else {
                 $quantityInput.prop('disabled', false);
                 $quantityInput.val(Math.min(Math.max(1, currentValue || 1), availableStock));
-                $actionButtons.prop('disabled', false);
+                $addCartButtons.prop('disabled', false);
+                $buyNowButtons.prop('disabled', false);
             }
 
             $buttonLabel.text(nextLabel);
@@ -2976,7 +2987,7 @@
             } else {
 
                 $('.cart_product_id_attribute').val(newIdAttribute);
-                syncProductDetailPurchaseState(attributeStock, attributeStock > 0 ? 'Thêm giỏ hàng' : 'Phiên bản tạm hết hàng');
+                syncProductDetailPurchaseState(attributeStock, 'Thêm giỏ hàng');
 
                 $('#price_after_click').text('Giá ' + formatPrice(newPrice)).show();
                 $('#price_init').hide();

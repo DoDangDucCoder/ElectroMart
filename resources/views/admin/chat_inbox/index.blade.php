@@ -137,7 +137,7 @@
                     @endforelse
                 </div>
                 <div class="g-admin-panel-body">
-                    {{ $conversations->links() }}
+                    @include('admin.partials.pagination', ['paginator' => $conversations, 'label' => 'hội thoại'])
                 </div>
             </aside>
 

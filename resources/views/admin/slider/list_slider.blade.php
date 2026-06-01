@@ -147,13 +147,7 @@
                 </div>
             </div>
             <footer class="panel-footer">
-                <div class="row">
-                    <div class="col-sm-12 text-right text-center-xs">
-                        <ul class="pagination pagination-sm m-t-none m-b-none">
-                            {!! $all_slide->links() !!}
-                        </ul>
-                    </div>
-                </div>
+                @include('admin.partials.pagination', ['paginator' => $all_slide, 'label' => 'slider'])
             </footer>
         </section>
     </div>

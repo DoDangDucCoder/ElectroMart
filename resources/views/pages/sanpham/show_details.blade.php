@@ -1123,15 +1123,15 @@
                                 <button type="button" onclick="pdxDecreaseQty()" aria-label="Giảm số lượng">−</button>
                                 <input id="product-detail-qty" name="qty" type="number" min="1"
                                     max="{{ max(1, (int) $product->product_quantity) }}"
+                                    data-available-stock="{{ max(0, (int) $product->product_quantity) }}"
                                     class="cart_product_qty"
-                                    value="{{ $stockAvailable ? 1 : 0 }}"
-                                    {{ $stockAvailable ? '' : 'disabled' }}>
+                                    value="1">
                                 <button type="button" onclick="pdxIncreaseQty()" aria-label="Tăng số lượng">+</button>
                             </div>
                         </div>
 
                         <div class="pdx-actions">
-                            <button type="button" class="pdx-btn pdx-btn--ghost add-to-cart" data-pdx-add-cart {{ $stockAvailable ? '' : 'disabled' }}>
+                            <button type="button" class="pdx-btn pdx-btn--ghost add-to-cart" data-pdx-add-cart>
                                 <i class="fa fa-shopping-cart"></i>
                                 <span class="shopw-pdp-purchase-btn-label">Thêm vào giỏ hàng</span>
                             </button>
@@ -1383,12 +1383,38 @@
             };
         }
 
-        function pdxValidateCartQuantity() {
+        function pdxAvailableStock() {
             var qtyInput = document.querySelector('.cart_product_qty');
-            var maxQuantity = parseInt(qtyInput ? qtyInput.getAttribute('max') || '0' : '0', 10);
+            return parseInt(qtyInput ? qtyInput.getAttribute('data-available-stock') || '0' : '0', 10);
+        }
+
+        function pdxRestorePurchaseButtons() {
+            var availableStock = pdxAvailableStock();
+            document.querySelectorAll('[data-pdx-add-cart]').forEach(function (button) {
+                button.disabled = false;
+            });
+            document.querySelectorAll('[data-pdx-buy-now]').forEach(function (button) {
+                button.disabled = availableStock <= 0;
+            });
+        }
+
+        function pdxValidateCartQuantity(redirectToCart) {
+            var qtyInput = document.querySelector('.cart_product_qty');
+            var availableStock = pdxAvailableStock();
+            var maxQuantity = parseInt(qtyInput ? qtyInput.getAttribute('max') || '1' : '1', 10);
             var quantity = parseInt(qtyInput ? qtyInput.value || '1' : '1', 10);
 
             pdxClearStatus();
+
+            if (availableStock <= 0) {
+                if (redirectToCart) {
+                    pdxSetStatus('Sản phẩm hiện đã hết hàng nên chưa thể mua ngay.', 'warning');
+                    return false;
+                }
+
+                if (qtyInput) qtyInput.value = 1;
+                return true;
+            }
 
             if (!maxQuantity) {
                 pdxSetStatus('Sản phẩm hiện chưa sẵn sàng để mua.', 'warning');
@@ -1405,7 +1431,7 @@
         }
 
         function pdxSubmitCart(redirectToCart) {
-            if (!pdxValidateCartQuantity()) return;
+            if (!pdxValidateCartQuantity(redirectToCart)) return;
 
             var payload = pdxCartPayload();
             var buttons = document.querySelectorAll('[data-pdx-add-cart], [data-pdx-buy-now]');
@@ -1418,7 +1444,7 @@
                         buttons.forEach(function (button) { button.disabled = true; });
                     },
                     onSuccess: function () {
-                        buttons.forEach(function (button) { button.disabled = false; });
+                        pdxRestorePurchaseButtons();
                         if (typeof window.refreshStorefrontCartUi === 'function') {
                             window.refreshStorefrontCartUi();
                         }
@@ -1429,7 +1455,7 @@
                         pdxSetStatus('Đã thêm sản phẩm vào giỏ hàng.', 'success');
                     },
                     onError: function (xhr) {
-                        buttons.forEach(function (button) { button.disabled = false; });
+                        pdxRestorePurchaseButtons();
                         var message = 'Không thể thêm sản phẩm vào giỏ hàng lúc này.';
                         if (typeof window.getAjaxErrorMessage === 'function') {
                             message = window.getAjaxErrorMessage(xhr, message);
@@ -1474,7 +1500,7 @@
                     pdxSetStatus(error.message || 'Không thể thêm sản phẩm vào giỏ hàng lúc này.', 'error');
                 })
                 .finally(function () {
-                    buttons.forEach(function (button) { button.disabled = false; });
+                    pdxRestorePurchaseButtons();
                 });
         }
 

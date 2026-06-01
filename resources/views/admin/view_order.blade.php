@@ -6,10 +6,18 @@
         $firstDetail = $order_details->first();
         $shippingFee = $firstDetail->product_feeship ?? 0;
         $total = 0;
-        $isEditableOrder = (int) $order_status === 1;
-        $isCompletedOrder = (int) $order_status === 2;
-        $isCancelledOrder = (int) $order_status === 3;
-        $orderStatusLabel = $isEditableOrder ? 'Mới' : ($isCompletedOrder ? 'Đã xử lý' : 'Đã hủy');
+        $statusOptions = [
+            1 => 'Chờ xử lý',
+            2 => 'Đang xử lý',
+            3 => 'Đang giao',
+            4 => 'Đã giao hàng',
+            5 => 'Đã hủy',
+        ];
+        $currentStatus = (int) $order_status;
+        $isPendingOrder = $currentStatus === 1;
+        $isFinalOrder = in_array($currentStatus, [4, 5], true);
+        $isCancelledOrder = $currentStatus === 5;
+        $orderStatusLabel = $statusOptions[$currentStatus] ?? 'Chưa xác định';
     @endphp
 
     <div class="g-admin-page-shell g-admin-order-view">
@@ -131,7 +139,7 @@
                 </div>
                 @if ($currentOrder)
                     <a target="_blank" href="{{ url('/print-order/' . $currentOrder->order_code) }}" class="btn btn-primary btn-sm">
-                        In đơn hàng
+                        In hoá đơn
                     </a>
                 @endif
             </div>
@@ -187,7 +195,7 @@
                                         <td>{{ number_format($details->product_feeship, 0, ',', '.') }}đ</td>
                                         <td>
                                             <div class="g-admin-order-qty-editor">
-                                                <input type="number" min="1" {{ $isEditableOrder ? '' : 'disabled' }}
+                                                <input type="number" min="0" {{ $isPendingOrder ? '' : 'disabled' }}
                                                     class="form-control order_qty_{{ $details->product_id }}"
                                                     value="{{ $details->product_sales_quantity }}" name="product_sales_quantity">
 
@@ -201,7 +209,7 @@
                                                 <input type="hidden" name="order_product_id" class="order_product_id"
                                                     value="{{ $details->product_id }}">
 
-                                                @if ($isEditableOrder)
+                                                @if ($isPendingOrder)
                                                     <button class="btn btn-default update_quantity_order"
                                                         data-product_id="{{ $details->product_id }}" name="update_quantity_order">
                                                         Cập nhật
@@ -210,7 +218,7 @@
                                             </div>
                                         </td>
                                         <td>{{ number_format($details->product_price, 0, ',', '.') }}đ</td>
-                                        <td>{{ number_format(optional($details->product)->price_cost ?? 0, 0, ',', '.') }}đ</td>
+                                        <td>{{ number_format((float) ($details->product_cost_price ?? optional($details->product)->price_cost ?? 0), 0, ',', '.') }}đ</td>
                                         <td>{{ number_format($subtotal, 0, ',', '.') }}đ</td>
                                     </tr>
                                 @endforeach
@@ -250,17 +258,19 @@
                             <h3>Cập nhật trạng thái đơn</h3>
                             <form>
                                 @csrf
-                                <select class="form-control order_details" {{ $isEditableOrder ? '' : 'disabled' }}>
-                                    @if ($currentOrder && $isEditableOrder)
-                                        <option id="{{ $currentOrder->order_id }}" selected value="1">Chưa xử lý</option>
-                                        <option id="{{ $currentOrder->order_id }}" value="2">Đã xử lý - Đã giao hàng</option>
-                                    @elseif($currentOrder && $isCompletedOrder)
-                                        <option disabled value="1">Chưa xử lý</option>
-                                        <option id="{{ $currentOrder->order_id }}" selected value="2">Đã xử lý - Đã giao hàng</option>
-                                    @else
-                                        <option disabled value="3" selected>Đã hủy</option>
-                                    @endif
+                                <select class="form-control order_details" {{ $isFinalOrder ? 'disabled' : '' }}>
+                                    @foreach ($statusOptions as $value => $label)
+                                        @continue($value < $currentStatus && $value !== 5)
+                                        <option id="{{ $currentOrder?->order_id }}" value="{{ $value }}" @selected($currentStatus === $value)>
+                                            {{ $label }}
+                                        </option>
+                                    @endforeach
                                 </select>
+                                @if ($isFinalOrder)
+                                    <p class="text-muted" style="margin-top:8px;">Đơn hàng đã ở trạng thái cuối nên không thể cập nhật tiếp.</p>
+                                @else
+                                    <p class="text-muted" style="margin-top:8px;">Luồng xử lý: Chờ xử lý -> Đang xử lý -> Đang giao -> Đã giao hàng. Có thể hủy trước khi giao thành công.</p>
+                                @endif
                             </form>
                         </div>
                     </div>

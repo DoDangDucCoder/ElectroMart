@@ -156,12 +156,7 @@
             </tbody>
         </table>
 
-        <div class="adm-pagination">
-            <span class="info">
-                Hiển thị {{ $payments->firstItem() ?? 0 }} đến {{ $payments->lastItem() ?? 0 }} của {{ number_format($payments->total()) }} thanh toán
-            </span>
-            <div class="pages">{{ $payments->links() }}</div>
-        </div>
+        @include('admin.partials.pagination', ['paginator' => $payments, 'label' => 'thanh toán'])
     </div>
 </div>
 @endsection

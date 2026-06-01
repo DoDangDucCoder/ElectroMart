@@ -130,6 +130,8 @@ class LegacyOrderPresentationService
 
     public function legacyOrderDetailRecord(OrderItem $item, Order $order): object
     {
+        $costPrice = (float) ($item->cost_price ?: ($item->product?->cost_price ?? 0));
+
         return (object) [
             'order_details_id' => $item->id,
             'order_code' => $order->code,
@@ -140,6 +142,7 @@ class LegacyOrderPresentationService
             'product_feeship' => (float) $order->shipping_total,
             'product_sales_quantity' => (int) $item->quantity,
             'product_price' => (float) $item->price,
+            'product_cost_price' => $costPrice,
             'product' => $item->product,
         ];
     }
@@ -147,8 +150,10 @@ class LegacyOrderPresentationService
     public function legacyStatusFromModern(?string $status): int
     {
         return match ($status) {
-            'completed' => 2,
-            'cancelled', 'refunded' => 3,
+            'confirmed', 'processing' => 2,
+            'shipping', 'shipped' => 3,
+            'completed' => 4,
+            'cancelled', 'refunded' => 5,
             default => 1,
         };
     }

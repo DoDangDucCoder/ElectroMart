@@ -173,7 +173,7 @@
                                         <td>
                                             <a href="{{ url('/account/order-tracking/' . $order['code']) }}" class="btn-action btn-view" title="Xem chi tiết">Chi tiết</a>
                                             @if ($order['can_cancel'])
-                                                <button type="button" class="btn-action btn-cancel" data-toggle="modal" data-target="#cancelOrderModal" data-order-code="{{ $order['code'] }}">HỦY</button>
+                                                <button type="button" class="btn-action btn-cancel js-cancel-order-trigger" data-order-code="{{ $order['code'] }}">HỦY</button>
                                             @endif
                                         </td>
                                     </tr>

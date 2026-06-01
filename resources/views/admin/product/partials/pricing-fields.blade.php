@@ -81,7 +81,8 @@
         <label for="price_cost">Giá nhập (đ)</label>
         <input type="text" name="price_cost" id="price_cost"
             class="form-control @error('price_cost') is-invalid @enderror price_format"
-            value="{{ $displayCostPrice }}" placeholder="Ví dụ: 1.200.000">
+            value="{{ $displayCostPrice }}" placeholder="Ví dụ: 1.200.000" required>
+        <small class="text-muted">Giá nhập/giá vốn bắt buộc. Giá này phải nhỏ hơn giá sau sale.</small>
     </div>
 
     <div class="form-group">
@@ -118,4 +119,7 @@
 
 <div class="g-admin-pricing-explanation" id="sale_explanation_preview">
     {{ $pricingService->buildSaleExplanation($priceValue, $saleTypeValue, $saleValueNumber) ?: 'Không áp dụng khuyến mãi cho sản phẩm này.' }}
+</div>
+<div class="g-admin-pricing-explanation" id="profit_explanation_preview">
+    Lãi dự kiến = giá sau sale - giá nhập.
 </div>

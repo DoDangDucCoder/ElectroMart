@@ -127,10 +127,7 @@
                     @endforelse
                     </tbody>
                 </table>
-                <div class="adm-pagination">
-                    <span class="info">Hiển thị {{ $categories->count() }} / {{ $categories->total() }} danh mục</span>
-                    <div class="pages">{{ $categories->links() }}</div>
-                </div>
+                @include('admin.partials.pagination', ['paginator' => $categories, 'label' => 'danh mục'])
             </div>
         </div>
     </div>

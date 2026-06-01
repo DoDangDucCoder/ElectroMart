@@ -39,11 +39,11 @@ class ProductRequest extends FormRequest
                 Rule::unique('products', 'barcode')->ignore($productId),
             ],
             'unit' => ['nullable', 'string', 'max:20'],
-            'price' => ['required', 'numeric', 'min:0'],
-            'cost_price' => ['nullable', 'numeric', 'min:0'],
+            'price' => ['required', 'numeric', 'gt:0'],
+            'cost_price' => ['required', 'numeric', 'gt:0'],
             'sale_type' => ['nullable', 'in:percent,fixed'],
             'sale_value' => ['nullable', 'numeric', 'min:0'],
-            'sale_price' => ['nullable', 'numeric', 'min:0', 'lt:price'],
+            'sale_price' => ['nullable', 'numeric', 'min:0'],
             'stock_quantity' => ['required', 'integer', 'min:0'],
             'stock_alert_threshold' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
@@ -111,10 +111,15 @@ class ProductRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $price = (float) $this->input('price', 0);
+            $costPrice = (float) $this->input('cost_price', 0);
             $saleType = $this->input('sale_type');
             $saleValue = $this->input('sale_value');
 
-            if (! $saleType && ($saleValue === null || $saleValue === '')) {
+            if (! $saleType && ($saleValue === null || $saleValue === '' || (float) $saleValue <= 0)) {
+                if ($costPrice >= $price) {
+                    $validator->errors()->add('cost_price', 'Giá nhập phải nhỏ hơn giá bán để sản phẩm có lãi.');
+                }
+
                 return;
             }
 
@@ -132,6 +137,14 @@ class ProductRequest extends FormRequest
 
             if ($saleType === 'fixed' && $saleValue >= $price) {
                 $validator->errors()->add('sale_value', 'Số tiền khuyến mãi phải nhỏ hơn giá bán gốc.');
+            }
+
+            $finalPrice = $saleType === 'percent'
+                ? max(0, $price - (($price * min(100, $saleValue)) / 100))
+                : max(0, $price - $saleValue);
+
+            if ($costPrice >= $finalPrice) {
+                $validator->errors()->add('cost_price', 'Giá nhập phải nhỏ hơn giá sau sale để sản phẩm có lãi.');
             }
         });
     }

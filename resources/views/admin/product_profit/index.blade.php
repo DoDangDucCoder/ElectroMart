@@ -76,6 +76,10 @@
                         <label>&nbsp;</label>
                         <div class="g-admin-inline-actions">
                             <button type="submit" class="btn btn-info">Lọc báo cáo</button>
+                            <a href="{{ route('admin.product-profit.print', request()->except('page')) }}" target="_blank"
+                                class="btn btn-primary">
+                                <i class="fa fa-print"></i> In báo cáo doanh thu
+                            </a>
                             <a href="{{ url('/product-profit') }}" class="btn btn-default">Xóa bộ lọc</a>
                         </div>
                     </div>
@@ -139,7 +143,7 @@
                         </tbody>
                     </table>
 
-                    {{ $rows->links() }}
+                    @include('admin.partials.pagination', ['paginator' => $rows, 'label' => 'dòng'])
                 </div>
             </div>
         </section>

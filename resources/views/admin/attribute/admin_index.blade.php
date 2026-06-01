@@ -65,8 +65,16 @@
                 </table>
                 <div class="adm-pagination">
                     <span class="info">Hiển thị 1 đến 8 của 156 thuộc tính</span>
-                    <div class="pages"><a href="#"><i class="fa fa-angle-left"></i></a><span class="active">1</span><a href="#">2</a><a href="#">3</a><a href="#">4</a><a href="#">5</a><span class="dots">...</span><a href="#">20</a><a href="#"><i class="fa fa-angle-right"></i></a></div>
-                    <select class="adm-select" style="width:auto"><option>20 / trang</option></select>
+                    <div class="pages">
+                        <a class="adm-page-link disabled" href="#"><i class="fa fa-angle-left"></i></a>
+                        <a class="adm-page-link active" href="#">1</a>
+                        <a class="adm-page-link" href="#">2</a>
+                        <a class="adm-page-link" href="#">3</a>
+                        <span class="adm-page-ellipsis">...</span>
+                        <a class="adm-page-link" href="#">20</a>
+                        <a class="adm-page-link" href="#"><i class="fa fa-angle-right"></i></a>
+                    </div>
+                    <select class="adm-per-page-select" aria-label="Số thuộc tính mỗi trang"><option>20 / trang</option></select>
                 </div>
             </div>
 

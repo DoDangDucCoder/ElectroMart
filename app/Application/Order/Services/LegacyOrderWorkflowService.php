@@ -81,6 +81,10 @@ class LegacyOrderWorkflowService
 
     public function updateOrderLineQuantity(string $orderCode, int $productId, int $quantity): array
     {
+        if ($quantity < 0) {
+            return $this->result(false, 422, 'Số lượng sản phẩm không được nhỏ hơn 0.');
+        }
+
         if (! $this->canManageOrders()) {
             return $this->result(false, 404, 'Dữ liệu đơn hàng hiện chưa sẵn sàng trên môi trường này.');
         }
@@ -91,7 +95,7 @@ class LegacyOrderWorkflowService
         }
 
         if ($this->presentationService->legacyStatusFromModern($order->status) !== 1) {
-            return $this->result(false, 422, 'Chỉ có thể cập nhật số lượng khi đơn hàng chưa xử lý.');
+            return $this->result(false, 422, 'Chỉ có thể cập nhật số lượng khi đơn hàng còn chờ xử lý.');
         }
 
         $orderItem = $order->items->first(fn (OrderItem $item): bool => (int) $item->product_id === $productId);
@@ -132,54 +136,69 @@ class LegacyOrderWorkflowService
 
         $lineItems = $lineItemsResult['data'];
         $previousStatus = $this->presentationService->legacyStatusFromModern($order->status);
-        $shouldFinalize = $newStatus === 2 && $previousStatus !== 2;
+        $inventoryService = app(OrderInventoryService::class);
+        $hasReservedInventory = $inventoryService->hasReservedInventory($order);
+        $shouldReserveStock = $newStatus >= 2 && $newStatus <= 4 && $previousStatus === 1 && ! $hasReservedInventory;
+        $shouldRestoreStock = $newStatus === 5 && (
+            $hasReservedInventory || ($previousStatus >= 2 && $previousStatus <= 3)
+        );
 
-        // Stock check + decrement phải nằm trong transaction với lock để chặn race condition
-        DB::transaction(function () use ($lineItems, $order, $newStatus, $shouldFinalize): void {
-            foreach ($lineItems as $lineItem) {
-                /** @var OrderItem $detail */
-                $detail = $lineItem['detail'];
-                $qty = $lineItem['qty'];
+        if (in_array($previousStatus, [4, 5], true) && $newStatus !== $previousStatus) {
+            return $this->result(false, 422, 'Không thể đổi trạng thái khi đơn hàng đã giao hoặc đã hủy.');
+        }
 
-                $detail->quantity = $qty;
-                $detail->subtotal = (float) $detail->price * $qty;
-                $detail->save();
+        try {
+            // Stock check + decrement phải nằm trong transaction với lock để chặn race condition
+            DB::transaction(function () use ($lineItems, $order, $newStatus, $shouldReserveStock, $shouldRestoreStock, $hasReservedInventory): void {
+                foreach ($lineItems as $lineItem) {
+                    /** @var OrderItem $detail */
+                    $detail = $lineItem['detail'];
+                    $qty = $lineItem['qty'];
 
-                if ($shouldFinalize && $detail->product) {
-                    // Lock row để chặn đồng thời nhiều request xác nhận đơn
-                    $product = \App\Infrastructure\Persistence\Eloquent\Catalog\Product::lockForUpdate()
-                        ->find($detail->product_id);
+                    $detail->quantity = $qty;
+                    $detail->subtotal = (float) $detail->price * $qty;
+                    $detail->save();
 
-                    if (! $product) {
-                        throw new \RuntimeException('Không tìm thấy sản phẩm của đơn hàng.');
-                    }
-
-                    $availableQuantity = (int) ($product->stock_quantity ?? 0);
-                    if ($qty > $availableQuantity) {
-                        throw new \RuntimeException(
-                            "Sản phẩm \"{$product->name}\" không đủ tồn kho để xác nhận đơn hàng."
-                        );
-                    }
-
-                    $product->stock_quantity = max(0, $availableQuantity - $qty);
-                    $product->save();
-                    $this->cacheService->invalidateProductCache((int) $product->id);
                 }
-            }
 
-            $order->status = $this->modernStatusFromLegacy($newStatus);
+                if ($shouldReserveStock) {
+                    app(OrderInventoryService::class)->reserve($order, 'admin_status_reserved');
+                } elseif ($shouldRestoreStock) {
+                    $inventoryService = app(OrderInventoryService::class);
 
-            if ($newStatus === 2) {
-                $order->fulfillment_status = 'fulfilled';
-                $order->payment_status = $order->payment_status === 'paid' ? 'paid' : $order->payment_status;
-                $order->completed_at = $order->completed_at ?: now();
-            } elseif ($newStatus === 3) {
-                $order->cancelled_at = $order->cancelled_at ?: now();
-            }
+                    if ($hasReservedInventory) {
+                        $inventoryService->release($order, 'admin_status_cancelled');
+                    } else {
+                        $inventoryService->restoreUntracked($order, 'admin_status_cancelled_legacy_untracked');
+                    }
+                }
 
-            $order->save();
-            $this->refreshOrderTotals($order->fresh('items'));
-        });
+                $order->status = $this->modernStatusFromLegacy($newStatus);
+
+                if ($newStatus === 2) {
+                    $order->confirmed_at = $order->confirmed_at ?: now();
+                    $order->fulfillment_status = 'unfulfilled';
+                } elseif ($newStatus === 3) {
+                    $order->confirmed_at = $order->confirmed_at ?: now();
+                    $order->shipped_at = $order->shipped_at ?: now();
+                    $order->fulfillment_status = 'partial';
+                } elseif ($newStatus === 4) {
+                    $order->fulfillment_status = 'fulfilled';
+                    $order->payment_status = $order->payment_status === 'paid' ? 'paid' : $order->payment_status;
+                    $order->confirmed_at = $order->confirmed_at ?: now();
+                    $order->shipped_at = $order->shipped_at ?: now();
+                    $order->completed_at = $order->completed_at ?: now();
+                } elseif ($newStatus === 5) {
+                    $order->fulfillment_status = 'unfulfilled';
+                    $order->cancelled_at = $order->cancelled_at ?: now();
+                }
+
+                $order->save();
+                $this->refreshOrderTotals($order->fresh('items'));
+            });
+        } catch (\RuntimeException $exception) {
+            return $this->result(false, 422, $exception->getMessage());
+        }
 
         return $this->result(true, 200, 'Thay đổi tình trạng đơn hàng thành công.');
     }
@@ -223,6 +242,10 @@ class LegacyOrderWorkflowService
             $productId = (int) $productId;
             $qty = (int) $quantities[$index];
             $detail = $orderDetails->get($productId);
+
+            if ($qty < 0) {
+                return $this->result(false, 422, 'Số lượng sản phẩm không được nhỏ hơn 0.');
+            }
 
             if (! $detail) {
                 return $this->result(false, 404, 'Không tìm thấy dòng sản phẩm cần cập nhật.');
@@ -276,8 +299,10 @@ class LegacyOrderWorkflowService
     protected function modernStatusFromLegacy(int $status): string
     {
         return match ($status) {
-            2 => 'completed',
-            3 => 'cancelled',
+            2 => 'processing',
+            3 => 'shipped',
+            4 => 'completed',
+            5 => 'cancelled',
             default => 'pending',
         };
     }

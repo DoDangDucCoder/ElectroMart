@@ -103,6 +103,9 @@
                 </div>
                 <div style="display:flex;gap:10px;margin-top:16px">
                     <a href="#" class="accp-btn accp-btn--outline"><i class="fa fa-headphones"></i> Liên hệ hỗ trợ</a>
+                    @if(in_array($order->status, ['pending', 'confirmed', 'processing'], true))
+                    <button type="button" class="accp-btn accp-btn--outline js-cancel-order-trigger" style="color:#dc2626;border-color:#dc2626" data-order-code="{{ $orderCode }}"><i class="fa fa-times"></i> Hủy đơn</button>
+                    @endif
                     @if(in_array($order->status, ['shipping', 'shipped']))
                     <a href="#" class="accp-btn accp-btn--primary"><i class="fa fa-check"></i> Xác nhận đã nhận</a>
                     @endif
@@ -121,6 +124,7 @@
         </aside>
     </div>
 </div>
+@include('pages.history.partials.cancel_order_modal')
 <style>
 .tk-timeline{position:relative;padding-left:30px}
 .tk-step{position:relative;padding-bottom:24px;padding-left:16px}

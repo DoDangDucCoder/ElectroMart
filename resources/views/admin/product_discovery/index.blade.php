@@ -196,7 +196,7 @@
                             </tbody>
                         </table>
 
-                        {{ $recommended_products_rows->links() }}
+                        @include('admin.partials.pagination', ['paginator' => $recommended_products_rows, 'label' => 'sản phẩm'])
                     </div>
                 </div>
             </section>

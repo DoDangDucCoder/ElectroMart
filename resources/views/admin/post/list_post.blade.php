@@ -145,11 +145,7 @@
                 </div>
             </div>
             <footer class="panel-footer">
-                <div class="row">
-                    <div class="col-sm-12 text-right">
-                        {{ $all_post->appends(request()->query())->links() }}
-                    </div>
-                </div>
+                @include('admin.partials.pagination', ['paginator' => $all_post, 'label' => 'bài viết'])
             </footer>
         </section>
     </div>
