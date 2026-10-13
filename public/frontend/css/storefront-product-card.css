@@ -1,8 +1,8 @@
 /* Unified storefront product-card layout and dimensions */
 :root {
-    --dd-product-card-min-height: 390px;
+    --dd-product-card-min-height: 410px;
     --dd-product-card-media-height: 190px;
-    --dd-product-card-body-min-height: 198px;
+    --dd-product-card-body-min-height: 218px;
     --dd-product-card-padding: 16px;
     --dd-product-card-gap: 20px;
 }
@@ -186,6 +186,44 @@
     margin-left: 6px !important;
     color: #94a3b8 !important;
     font-size: 12px !important;
+}
+
+.tech-product-stock,
+.cart-v2 .cart-v2-recommend-grid .tech-product-stock {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: fit-content !important;
+    max-width: 100% !important;
+    min-height: 24px !important;
+    margin: -4px 0 12px !important;
+    padding: 4px 9px !important;
+    border-radius: 999px !important;
+    background: #ecfdf5 !important;
+    color: #047857 !important;
+    font-size: 12px !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+}
+
+.tech-product-stock i,
+.cart-v2 .cart-v2-recommend-grid .tech-product-stock i {
+    flex: 0 0 auto !important;
+    font-size: 12px !important;
+}
+
+.tech-product-stock span,
+.cart-v2 .cart-v2-recommend-grid .tech-product-stock span {
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.tech-product-stock--empty,
+.cart-v2 .cart-v2-recommend-grid .tech-product-stock--empty {
+    background: #fef2f2 !important;
+    color: #b91c1c !important;
 }
 
 .tech-product-footer,
@@ -412,9 +450,9 @@
 
 @media (max-width: 767px) {
     :root {
-        --dd-product-card-min-height: 372px;
+        --dd-product-card-min-height: 392px;
         --dd-product-card-media-height: 172px;
-        --dd-product-card-body-min-height: 198px;
+        --dd-product-card-body-min-height: 218px;
         --dd-product-card-padding: 14px;
         --dd-product-card-gap: 12px;
     }

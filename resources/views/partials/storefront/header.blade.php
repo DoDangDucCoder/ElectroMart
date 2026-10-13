@@ -189,7 +189,7 @@
                                             @endif
                                         </div>
                                         <div class="shopw-account-dropdown-links">
-                                            <a class="shopw-account-dropdown-link" href="{{ url('/account') }}"><i class="fa fa-user"></i> Trang tài khoản</a>
+                                            <a class="shopw-account-dropdown-link" href="{{ route('customer.account.profile') }}"><i class="fa fa-user"></i> Trang tài khoản</a>
                                             <a class="shopw-account-dropdown-link" href="{{ url('/account/orders') }}"><i class="fa fa-list-alt"></i> Đơn hàng của tôi</a>
                                             <form method="POST" action="{{ url('/dang-xuat-khach-hang') }}">
                                                 @csrf

@@ -9,7 +9,7 @@
         <section class="g-admin-page-hero">
             <div>
                 <span class="g-admin-page-eyebrow">Sản phẩm</span>
-                <h1>Liệt kê sản phẩm</h1>
+                <h1>Quản lý sản phẩm</h1>
                 <p>Theo dõi danh sách sản phẩm, tài liệu đính kèm, thư viện ảnh và trạng thái hiển thị trong một màn hình.</p>
             </div>
             <div class="g-admin-page-stats">
@@ -49,11 +49,6 @@
                     <table class="table table-striped b-t b-light g-admin-data-table" id="myTable">
                         <thead>
                             <tr>
-                                <th style="width:20px;">
-                                    <label class="i-checks m-b-none">
-                                        <input type="checkbox"><i></i>
-                                    </label>
-                                </th>
                                 <th>Tên sản phẩm</th>
                                 <th>Thư viện ảnh</th>
                                 <th>Thuộc tính</th>
@@ -68,19 +63,13 @@
                                 <th>Hình ảnh</th>
                                 <th>Danh mục</th>
                                 <th>Thương hiệu</th>
-                                <th>Hiển thị</th>
-                                <th style="width:30px;"></th>
+                                <th>Trạng thái</th>
+                                <th style="width:80px;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody class="align-middle">
                             @forelse ($all_product as $pro)
                                 <tr>
-                                    <td>
-                                        <label class="i-checks m-b-none">
-                                            <input type="checkbox" name="post[]"><i></i>
-                                        </label>
-                                    </td>
-
                                     <td>{{ $pro->product_name }}</td>
                                     <td><a href="{{ url('/add-gallery/' . $pro->product_id) }}">Quản lý thư viện ảnh</a></td>
                                     <td><a href="{{ url('product-attribute', [$pro->product_id]) }}">Quản lý thuộc tính</a></td>
@@ -146,7 +135,7 @@
                                                     @method('PATCH')
                                                     <button type="submit"
                                                         style="border:0;background:none;padding:0;"
-                                                        title="Ẩn sản phẩm">
+                                                        title="Tạm ẩn sản phẩm">
                                                         <span class="fa-thumb-styling fa fa-thumbs-up"></span>
                                                     </button>
                                                 </form>

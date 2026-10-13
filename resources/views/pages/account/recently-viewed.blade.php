@@ -84,10 +84,10 @@
                     <div style="font-size:12px;margin-top:2px">Các sản phẩm bạn đã xem gần đây sẽ hiển thị tại đây.</div>
                 </div>
             @else
-            <div class="rvp-grid tech-product-grid">
+            <div class="rvp-grid accp-product-grid accp-product-grid--compact">
                 @foreach ($viewedProducts as $row)
                     <div>
-                        @include('partials.home.product-card', ['product' => $row['product']])
+                        @include('partials.home.product-card', ['product' => $row['product'], 'compact' => true])
                     </div>
                 @endforeach
             </div>

@@ -10,7 +10,7 @@ class SelectDeliveryRequest extends BaseFormRequest
     {
         return [
             'action' => ['required', 'in:province'],
-            'ma_id' => ['required', 'string', 'max:20'],
+            'ma_id' => ['nullable', 'string', 'max:20'],
         ];
     }
 }

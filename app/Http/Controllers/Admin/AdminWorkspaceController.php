@@ -9,11 +9,14 @@ use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
 use App\Infrastructure\Persistence\Eloquent\Order\Order;
 use App\Models\User;
 use App\Support\AdminWorkspace;
+use App\Support\CsvExport;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminWorkspaceController extends Controller
 {
@@ -100,11 +103,11 @@ class AdminWorkspaceController extends Controller
         $perPage = max(1, min((int) $request->integer('per_page', 15), 50));
         $search = trim((string) $request->query('q', ''));
         $status = (string) $request->query('status', 'all');
+        $sort = (string) $request->query('sort', 'newest');
 
         $query = Product::query()
             ->with(['brand', 'primaryCategory'])
-            ->withCount('categories')
-            ->orderByDesc('id');
+            ->withCount('categories');
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search): void {
@@ -124,6 +127,16 @@ class AdminWorkspaceController extends Controller
                 ->where('stock_quantity', '<=', 10);
         }
 
+        match ($sort) {
+            'name_asc' => $query->orderBy('name'),
+            'name_desc' => $query->orderByDesc('name'),
+            'price_asc' => $query->orderBy('price')->orderByDesc('id'),
+            'price_desc' => $query->orderByDesc('price')->orderByDesc('id'),
+            'stock_asc' => $query->orderBy('stock_quantity')->orderByDesc('id'),
+            'stock_desc' => $query->orderByDesc('stock_quantity')->orderByDesc('id'),
+            default => $query->orderByDesc('id'),
+        };
+
         return view('admin.product.admin_index', [
             'products' => $query->paginate($perPage)->withQueryString(),
             'stats' => [
@@ -136,6 +149,7 @@ class AdminWorkspaceController extends Controller
             'filters' => [
                 'q' => $search,
                 'status' => $status,
+                'sort' => $sort,
                 'per_page' => $perPage,
             ],
         ]);
@@ -147,12 +161,11 @@ class AdminWorkspaceController extends Controller
         $search = trim((string) $request->query('q', ''));
         $status = (string) $request->query('status', 'all');
         $level = (string) $request->query('level', 'all');
+        $sort = (string) $request->query('sort', 'name_asc');
 
         $query = ProductCategory::query()
             ->with('parent')
-            ->withCount(['products', 'children'])
-            ->orderBy('display_order')
-            ->orderBy('name');
+            ->withCount(['products', 'children']);
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search): void {
@@ -173,6 +186,17 @@ class AdminWorkspaceController extends Controller
             $query->whereNotNull('parent_id');
         }
 
+        match ($sort) {
+            'name_asc' => $query->orderBy('name'),
+            'name_desc' => $query->orderByDesc('name'),
+            'products_asc' => $query->orderBy('products_count')->orderByDesc('id'),
+            'products_desc' => $query->orderByDesc('products_count')->orderByDesc('id'),
+            'newest' => $query->orderByDesc('id'),
+            'oldest' => $query->orderBy('id'),
+            'order_desc' => $query->orderByDesc('display_order')->orderByDesc('name'),
+            default => $query->orderBy('display_order')->orderBy('name'),
+        };
+
         return view('admin.category.admin_index', [
             'categories' => $query->paginate($perPage)->withQueryString(),
             'stats' => [
@@ -186,6 +210,7 @@ class AdminWorkspaceController extends Controller
                 'q' => $search,
                 'status' => $status,
                 'level' => $level,
+                'sort' => $sort,
                 'per_page' => $perPage,
             ],
         ]);
@@ -193,40 +218,11 @@ class AdminWorkspaceController extends Controller
 
     public function ordersManagement(Request $request): View
     {
-        $perPage = max(1, min((int) $request->integer('per_page', 15), 50));
-        $search = trim((string) $request->query('q', ''));
-        $status = (string) $request->query('status', 'all');
-        $paymentStatus = (string) $request->query('payment_status', 'all');
-
-        $query = Order::query()
-            ->with(['customer', 'items', 'payments'])
-            ->withCount('items')
-            ->orderByDesc('id');
-
-        if ($search !== '') {
-            $query->where(function ($builder) use ($search): void {
-                $builder->where('code', 'like', '%' . $search . '%')
-                    ->orWhereHas('customer', function ($customerQuery) use ($search): void {
-                        $customerQuery->where('name', 'like', '%' . $search . '%')
-                            ->orWhere('email', 'like', '%' . $search . '%')
-                            ->orWhere('phone', 'like', '%' . $search . '%');
-                    })
-                    ->orWhereHas('items', function ($itemQuery) use ($search): void {
-                        $itemQuery->where('product_name', 'like', '%' . $search . '%');
-                    });
-            });
-        }
-
-        if ($status !== 'all') {
-            $query->where('status', $status);
-        }
-
-        if ($paymentStatus !== 'all') {
-            $query->where('payment_status', $paymentStatus);
-        }
+        $filters = $this->orderFilters($request);
+        $query = $this->orderQuery($filters);
 
         return view('admin.order.index', [
-            'orders' => $query->paginate($perPage)->withQueryString(),
+            'orders' => $query->paginate($filters['per_page'])->withQueryString(),
             'stats' => [
                 'total' => Order::count(),
                 'pending' => Order::where('status', 'pending')->count(),
@@ -235,12 +231,97 @@ class AdminWorkspaceController extends Controller
                 'completed' => Order::where('status', 'completed')->count(),
                 'cancelled' => Order::where('status', 'cancelled')->count(),
             ],
-            'filters' => [
-                'q' => $search,
-                'status' => $status,
-                'payment_status' => $paymentStatus,
-                'per_page' => $perPage,
-            ],
+            'filters' => $filters,
         ]);
+    }
+
+    public function ordersExport(Request $request): StreamedResponse
+    {
+        $filters = $this->orderFilters($request);
+        $rows = $this->orderQuery($filters)
+            ->limit(5000)
+            ->get()
+            ->map(static function (Order $order): array {
+                $firstItem = $order->items->first();
+                $payment = $order->payments->first();
+                $placedAt = $order->placed_at ?? $order->created_at;
+
+                return [
+                    $order->code,
+                    $placedAt?->format('d/m/Y H:i') ?? '',
+                    $order->customer?->name ?? 'Khách vãng lai',
+                    $order->customer?->phone ?? $order->customer?->email ?? '',
+                    $firstItem?->product_name ?? '',
+                    (int) $order->items_count,
+                    (float) $order->total,
+                    strtoupper((string) ($payment?->provider ?? 'COD')),
+                    $order->status,
+                    $order->payment_status,
+                ];
+            });
+
+        return CsvExport::download('don-hang-' . now()->format('Ymd-His') . '.csv', [
+            'Mã đơn',
+            'Ngày tạo',
+            'Khách hàng',
+            'Liên hệ',
+            'Sản phẩm đầu tiên',
+            'Số dòng sản phẩm',
+            'Tổng tiền',
+            'Thanh toán',
+            'Trạng thái đơn',
+            'Trạng thái thanh toán',
+        ], $rows);
+    }
+
+    private function orderFilters(Request $request): array
+    {
+        return [
+            'q' => trim((string) $request->query('q', '')),
+            'status' => (string) $request->query('status', 'all'),
+            'payment_status' => (string) $request->query('payment_status', 'all'),
+            'sort' => (string) $request->query('sort', 'newest'),
+            'per_page' => max(1, min((int) $request->integer('per_page', 15), 50)),
+        ];
+    }
+
+    private function orderQuery(array $filters): Builder
+    {
+        $query = Order::query()
+            ->with(['customer', 'items', 'payments'])
+            ->withCount('items');
+
+        if ($filters['q'] !== '') {
+            $query->where(function ($builder) use ($filters): void {
+                $builder->where('code', 'like', '%' . $filters['q'] . '%')
+                    ->orWhereHas('customer', function ($customerQuery) use ($filters): void {
+                        $customerQuery->where('name', 'like', '%' . $filters['q'] . '%')
+                            ->orWhere('email', 'like', '%' . $filters['q'] . '%')
+                            ->orWhere('phone', 'like', '%' . $filters['q'] . '%');
+                    })
+                    ->orWhereHas('items', function ($itemQuery) use ($filters): void {
+                        $itemQuery->where('product_name', 'like', '%' . $filters['q'] . '%');
+                    });
+            });
+        }
+
+        if ($filters['status'] !== 'all') {
+            $query->where('status', $filters['status']);
+        }
+
+        if ($filters['payment_status'] !== 'all') {
+            $query->where('payment_status', $filters['payment_status']);
+        }
+
+        match ($filters['sort']) {
+            'oldest' => $query->orderBy('id'),
+            'total_desc' => $query->orderByDesc('total')->orderByDesc('id'),
+            'total_asc' => $query->orderBy('total')->orderByDesc('id'),
+            'date_asc' => $query->orderBy('placed_at')->orderBy('id'),
+            'date_desc' => $query->orderByDesc('placed_at')->orderByDesc('id'),
+            default => $query->orderByDesc('id'),
+        };
+
+        return $query;
     }
 }

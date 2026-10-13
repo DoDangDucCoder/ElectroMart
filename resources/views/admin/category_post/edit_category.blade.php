@@ -10,11 +10,11 @@
             </div>
             <div class="g-admin-page-stats">
                 <article>
-                    <strong>{{ $category_post->cate_post_id }}</strong>
-                    <span>ID danh mục</span>
+                    <strong>{{ $category_post->cate_post_name }}</strong>
+                    <span>Danh mục đang chỉnh</span>
                 </article>
                 <article>
-                    <strong>{{ $category_post->cate_post_status == 0 ? 'Hiển thị' : 'Ẩn' }}</strong>
+                    <strong>{{ $category_post->cate_post_status == 0 ? 'Đang hoạt động' : 'Tạm ẩn' }}</strong>
                     <span>Trạng thái hiện tại</span>
                 </article>
             </div>
@@ -63,14 +63,14 @@
                             placeholder="Mô tả danh mục">{{ old('cate_post_desc', $category_post->cate_post_desc) }}</textarea>
                     </div>
                     <div class="form-group">
-                        <label for="cate_post_status">Hiển thị</label>
+                        <label for="cate_post_status">Trạng thái hiển thị</label>
                         <select name="cate_post_status" id="cate_post_status" class="form-control input-sm m-bot15">
                             @if ((string) old('cate_post_status', (string) $category_post->cate_post_status) === '0')
-                                <option selected value="0">Hiển thị</option>
-                                <option value="1">Ẩn</option>
+                                <option selected value="0">Đang hoạt động</option>
+                                <option value="1">Tạm ẩn</option>
                             @else
-                                <option value="0">Hiển thị</option>
-                                <option selected value="1">Ẩn</option>
+                                <option value="0">Đang hoạt động</option>
+                                <option selected value="1">Tạm ẩn</option>
                             @endif
                         </select>
                     </div>

@@ -18,7 +18,7 @@ class LegacyMailWorkflowService
 {
     private const PASSWORD_RESET_EXPIRY_MINUTES = 60;
 
-    public function sendCouponCampaign(string $couponCode, bool $vipOnly): array
+    public function sendCouponCampaign(string $couponCode, ?bool $vipOnly = null): array
     {
         $couponTable = (new Coupon)->getTable();
         $customerTable = (new Customer)->getTable();
@@ -55,9 +55,11 @@ class LegacyMailWorkflowService
             ->where('is_active', true)
             ->get();
 
-        $customers = $vipOnly
-            ? $customers->filter(fn (Customer $customer): bool => $this->isVipCustomer($customer))
-            : $customers->reject(fn (Customer $customer): bool => $this->isVipCustomer($customer));
+        if ($vipOnly === true) {
+            $customers = $customers->filter(fn (Customer $customer): bool => $this->isVipCustomer($customer));
+        } elseif ($vipOnly === false) {
+            $customers = $customers->reject(fn (Customer $customer): bool => $this->isVipCustomer($customer));
+        }
 
         $emails = $customers->pluck('email')
             ->filter(fn ($email) => filter_var($email, FILTER_VALIDATE_EMAIL))
@@ -66,9 +68,11 @@ class LegacyMailWorkflowService
             ->all();
 
         if ($emails === []) {
-            return $this->result(false, $vipOnly
-                ? 'Không có khách hàng VIP hợp lệ để gửi email.'
-                : 'Không có khách hàng thường hợp lệ để gửi email.');
+            return $this->result(false, match ($vipOnly) {
+                true => 'Không có khách hàng VIP hợp lệ để gửi email.',
+                false => 'Không có khách hàng thường hợp lệ để gửi email.',
+                default => 'Không có khách hàng đã đăng ký hợp lệ để gửi email.',
+            });
         }
 
         $now = Carbon::now('Asia/Ho_Chi_Minh')->format('d-m-Y H:i:s');
@@ -76,7 +80,11 @@ class LegacyMailWorkflowService
         $brandName = (string) config('services.storefront_brand.name', 'DangDuc');
         $mailData = CouponCampaignMailData::fromCoupon(
             $coupon,
-            $vipOnly ? 'khách hàng thân thiết' : 'khách hàng thường',
+            match ($vipOnly) {
+                true => 'khách hàng thân thiết',
+                false => 'khách hàng thường',
+                default => 'khách hàng đã đăng ký',
+            },
             shopName: $brandName
         );
 
@@ -87,9 +95,11 @@ class LegacyMailWorkflowService
 
         Mail::to($emails)->send($mail);
 
-        return $this->result(true, $vipOnly
-            ? 'Gửi mã khuyến mãi khách vip thành công'
-            : 'Gửi mã khuyến mãi khách thường thành công');
+        return $this->result(true, match ($vipOnly) {
+            true => 'Đã gửi mã khuyến mãi cho '.number_format(count($emails)).' khách hàng VIP.',
+            false => 'Đã gửi mã khuyến mãi cho '.number_format(count($emails)).' khách hàng thường.',
+            default => 'Đã gửi mã khuyến mãi cho '.number_format(count($emails)).' khách hàng đã đăng ký.',
+        });
     }
 
     public function sendPasswordRecovery(string $email): array

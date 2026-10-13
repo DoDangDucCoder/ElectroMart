@@ -110,6 +110,42 @@
                     <a href="#" class="accp-btn accp-btn--primary"><i class="fa fa-check"></i> Xác nhận đã nhận</a>
                     @endif
                 </div>
+                @if($order->status === 'completed')
+                <details style="border-top:1px solid #f3f4f6;margin-top:16px;padding-top:14px">
+                    <summary style="cursor:pointer;font-size:13px;font-weight:700;color:#0d9488"><i class="fa fa-undo"></i> Gửi yêu cầu trả hàng / hoàn tiền</summary>
+                    <form method="POST" action="{{ route('customer.account.returns.request', ['orderCode' => $orderCode]) }}" style="display:grid;grid-template-columns:minmax(260px,1.2fr) 150px minmax(180px,.8fr);gap:12px;margin-top:12px;align-items:end">
+                        @csrf
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:5px">Sản phẩm</label>
+                            <select name="order_item_id" class="accp-select js-return-item-select" style="width:100%" required>
+                                @foreach($order->items as $item)
+                                <option value="{{ $item->id }}" data-max="{{ (int) $item->quantity }}">{{ $item->product_name ?? $item->product?->name ?? 'Sản phẩm' }} - tối đa {{ (int) $item->quantity }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:5px">Số lượng</label>
+                            <input type="number" name="quantity" class="accp-input js-return-quantity" value="1" min="1" max="{{ (int) ($order->items->first()?->quantity ?? 1) }}" style="width:100%" required>
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:5px">Hoàn tiền qua</label>
+                            <select name="refund_method" class="accp-select" style="width:100%">
+                                <option value="bank_transfer">Chuyển khoản</option>
+                                <option value="cod">COD</option>
+                                <option value="vnpay">VNPay</option>
+                                <option value="momo">MoMo</option>
+                            </select>
+                        </div>
+                        <div style="grid-column:1 / -1">
+                            <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:5px">Lý do</label>
+                            <textarea name="reason" class="accp-textarea" rows="3" style="width:100%" placeholder="Ví dụ: sản phẩm lỗi, không đúng mô tả, cần đổi trả..." required></textarea>
+                        </div>
+                        <div style="grid-column:1 / -1;display:flex;justify-content:flex-end">
+                            <button type="submit" class="accp-btn accp-btn--primary"><i class="fa fa-paper-plane"></i> Gửi yêu cầu</button>
+                        </div>
+                    </form>
+                </details>
+                @endif
             </div>
         </main>
         <aside class="accp-aside">
@@ -125,6 +161,18 @@
     </div>
 </div>
 @include('pages.history.partials.cancel_order_modal')
+<script>
+document.addEventListener('change', function (event) {
+    if (!event.target.classList.contains('js-return-item-select')) return;
+    var form = event.target.closest('form');
+    var input = form ? form.querySelector('.js-return-quantity') : null;
+    var option = event.target.selectedOptions[0];
+    var max = option ? parseInt(option.getAttribute('data-max') || '1', 10) : 1;
+    if (!input) return;
+    input.max = String(max);
+    if (parseInt(input.value || '1', 10) > max) input.value = String(max);
+});
+</script>
 <style>
 .tk-timeline{position:relative;padding-left:30px}
 .tk-step{position:relative;padding-bottom:24px;padding-left:16px}

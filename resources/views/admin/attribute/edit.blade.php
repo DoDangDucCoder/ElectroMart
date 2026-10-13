@@ -10,8 +10,8 @@
             </div>
             <div class="g-admin-page-stats">
                 <article>
-                    <strong>#{{ $attribute->id }}</strong>
-                    <span>ID thuộc tính</span>
+                    <strong>{{ $attribute->name }}</strong>
+                    <span>Thuộc tính đang chỉnh</span>
                 </article>
             </div>
         </section>

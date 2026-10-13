@@ -504,7 +504,7 @@
 
                         <div class="ckq-row single" style="margin-bottom: 0;">
                             <button type="button" class="calculate_delivery ckq-coupon-btn" style="height:40px;">
-                                <i class="fa fa-truck"></i> Tính phí vận chuyển
+                                <i class="fa fa-refresh"></i> Tính lại phí vận chuyển
                             </button>
                             <div id="checkout_delivery_notice"></div>
                         </div>
@@ -632,6 +632,7 @@
 
                     <input type="hidden" name="checkout_base_total" class="checkout_base_total" value="{{ $checkoutBaseTotal }}">
                     <input type="hidden" name="order_fee" class="order_fee" value="{{ $shipping_fee }}">
+                    <input type="hidden" name="shipping_fee_resolved" class="shipping_fee_resolved" value="0">
                     <input type="hidden" name="order_coupon" class="order_coupon" value="{{ $coupon['code'] ?? 'no' }}">
                     <input type="hidden" name="total_after" class="total_after" value="{{ $cartTotals['total'] }}">
                     <input type="hidden" name="checkout_idempotency_key" id="checkout_idempotency_key" value="{{ $checkout_idempotency_key ?? '' }}">
@@ -712,7 +713,7 @@
                         </div>
                     @endif
 
-                    <button type="button" class="ckq-place-btn send_order">
+                    <button type="button" class="ckq-place-btn send_order" disabled>
                         <i class="fa fa-lock"></i> Đặt hàng và thanh toán
                     </button>
                     <div id="checkout_order_notice" aria-live="polite"></div>

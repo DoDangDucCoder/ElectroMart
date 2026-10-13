@@ -67,7 +67,7 @@
             @forelse ($returns as $r)
             @php
                 $product = optional($r->orderItem)->product ?? null;
-                $productImage = \App\Support\AssetUrl::productVariant($product?->thumbnail ?? $product?->image ?? null, 'thumb');
+                $productImage = \App\Support\AssetUrl::productVariant($product?->product_image ?? $product?->thumbnail_path ?? $product?->thumbnail ?? $product?->image ?? null, 'thumb');
             @endphp
             <div class="rt-item">
                 <div class="rt-head">
@@ -75,16 +75,15 @@
                     <span class="rt-dates">
                         Ngày tạo: {{ optional($r->created_at)->format('d/m/Y - H:i') }}<br>
                         @if ($r->order)
-                            Đơn hàng: <a href="#" style="color:#0d9488;text-decoration:none;font-weight:600">#{{ $r->order->code }}</a>
+                            Đơn hàng: <a href="{{ route('customer.account.order-tracking', ['orderCode' => $r->order->code]) }}" style="color:#0d9488;text-decoration:none;font-weight:600">#{{ $r->order->code }}</a>
                         @endif
                     </span>
-                    <span style="margin-left:auto"><span class="accp-badge {{ $r->statusClass() }}">{{ $r->statusLabel() }}</span></span>
                 </div>
                 <div class="rt-body">
                     <div class="rt-product">
-                        <div class="rt-prod-img"><img src="{{ $productImage }}" alt=""></div>
+                        <div class="rt-prod-img"><img src="{{ $productImage }}" alt="{{ $r->orderItem?->product_name ?? $product?->name ?? 'Sản phẩm' }}"></div>
                         <div class="rt-prod-info">
-                            <div class="rt-prod-name">{{ $product?->name ?? 'Sản phẩm không còn tồn tại' }}</div>
+                            <div class="rt-prod-name">{{ $r->orderItem?->product_name ?? $product?->name ?? 'Sản phẩm không còn tồn tại' }}</div>
                             <div class="rt-prod-meta">SL: {{ $r->quantity }} sản phẩm</div>
                         </div>
                     </div>
@@ -144,9 +143,9 @@
     @if ($visibleRecommendedProducts->isNotEmpty())
     <div class="accp-recommend" style="margin-top:20px">
         <div class="accp-recommend-head"><h3>Có thể bạn cũng thích</h3><a href="{{ url('/san-pham') }}">Xem tất cả <i class="fa fa-arrow-right"></i></a></div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+        <div class="accp-recommend-grid">
             @foreach ($visibleRecommendedProducts as $p)
-                @php $pc = ['id'=>$p->id,'name'=>$p->name??'','url'=>url('/chi-tiet-san-pham/'.($p->slug??$p->id)),'image'=>\App\Support\AssetUrl::productVariant($p->thumbnail_path ?? null, 'thumb'),'original_price'=>$p->price??0,'price'=>$p->sale_price??$p->price??0]; @endphp
+                @php $pc = ['id'=>$p->id,'name'=>$p->name??'','url'=>url('/chi-tiet/'.($p->slug ?? $p->product_slug ?? $p->id)),'image'=>\App\Support\AssetUrl::productVariant($p->product_image ?? $p->thumbnail_path ?? null, 'thumb'),'original_price'=>$p->price??0,'price'=>$p->sale_price??$p->price??0]; @endphp
                 <div>@include('partials.home.product-card', ['product' => $pc, 'compact' => true])</div>
             @endforeach
         </div>

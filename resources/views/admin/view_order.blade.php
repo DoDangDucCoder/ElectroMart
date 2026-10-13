@@ -78,7 +78,7 @@
                             <strong>{{ data_get($customer, 'customer_phone', 'Chưa có dữ liệu') }}</strong>
                         </div>
                         <div>
-                            <span>Thư điện tử</span>
+                            <span>Email</span>
                             <strong>{{ data_get($customer, 'customer_email', 'Chưa có dữ liệu') }}</strong>
                         </div>
                     </div>
@@ -107,7 +107,7 @@
                             <strong>{{ data_get($shipping, 'shipping_phone', 'Chưa có dữ liệu') }}</strong>
                         </div>
                         <div>
-                            <span>Thư điện tử</span>
+                            <span>Email</span>
                             <strong>{{ data_get($shipping, 'shipping_email', 'Chưa có dữ liệu') }}</strong>
                         </div>
                         <div>
@@ -115,14 +115,14 @@
                             <strong>{{ data_get($shipping, 'shipping_notes') ?: 'Không có ghi chú' }}</strong>
                         </div>
                         <div>
-                            <span>Thanh toán</span>
+                            <span>Phương thức TT</span>
                             <strong>
                                 @if (data_get($shipping, 'shipping_method') == 0)
                                     Chuyển khoản
                                 @elseif(data_get($shipping, 'shipping_method') == 1)
-                                    Tiền mặt
+                                    COD
                                 @else
-                                    Paypal
+                                    Không rõ
                                 @endif
                             </strong>
                         </div>
@@ -166,12 +166,12 @@
                         <table class="table table-striped b-t b-light g-admin-data-table">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>STT</th>
                                     <th>Sản phẩm</th>
                                     <th>Thuộc tính</th>
                                     <th>Tồn kho</th>
                                     <th>Mã giảm giá</th>
-                                    <th>Phí ship</th>
+                                    <th>Phí vận chuyển</th>
                                     <th>Số lượng</th>
                                     <th>Giá bán</th>
                                     <th>Giá gốc</th>
@@ -249,7 +249,7 @@
                             <ul class="g-admin-note-list">
                                 <li>Tạm tính: {{ number_format($total, 0, ',', '.') }}đ</li>
                                 <li>Tổng giảm: {{ $discountLabel }}</li>
-                                <li>Phí ship: {{ number_format($shippingFee, 0, ',', '.') }}đ</li>
+                                <li>Phí vận chuyển: {{ number_format($shippingFee, 0, ',', '.') }}đ</li>
                                 <li>Thanh toán: {{ number_format(max(0, $total_coupon), 0, ',', '.') }}đ</li>
                             </ul>
                         </div>

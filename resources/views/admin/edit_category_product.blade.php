@@ -18,8 +18,8 @@
             @if ($currentCategory)
                 <div class="g-admin-page-stats">
                     <article>
-                        <strong>#{{ $currentCategory->category_id }}</strong>
-                        <span>Mã danh mục</span>
+                        <strong>{{ $currentCategory->category_name }}</strong>
+                        <span>Danh mục đang chỉnh</span>
                     </article>
                 </div>
             @endif

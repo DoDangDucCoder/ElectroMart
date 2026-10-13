@@ -6,7 +6,7 @@
                 <th>Thứ tự</th>
                 <th>Tên hình ảnh</th>
                 <th>Hình ảnh</th>
-                <th>Quản lý</th>
+                <th>Thao tác</th>
             </tr>
         </thead>
         <tbody>

@@ -1430,6 +1430,23 @@
   outline: none;
 }
 
+.g-admin-user-menu .dropdown-menu.extended.logout > li > a,
+.g-admin-user-menu .dropdown-menu.extended.logout > li .g-admin-user-logout-button {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: center;
+}
+
+.g-admin-user-menu .dropdown-menu.extended.logout > li > a > i,
+.g-admin-user-menu .dropdown-menu.extended.logout > li .g-admin-user-logout-button > i {
+  width: 28px;
+  min-width: 28px;
+  margin: 0;
+  justify-self: center;
+  text-align: center;
+}
+
 .g-admin-workspace-search-form {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

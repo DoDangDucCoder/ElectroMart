@@ -21,11 +21,10 @@ class ProductReviewController extends Controller
         $rating = (string) $request->query('rating', 'all');
         $dateFrom = $request->date('date_from');
         $dateTo = $request->date('date_to');
+        $sort = (string) $request->query('sort', 'newest');
 
         $query = ProductReview::query()
-            ->with(['product:id,name,slug,sku', 'customer:id,name,email,phone'])
-            ->orderByDesc('created_at')
-            ->orderByDesc('id');
+            ->with(['product:id,name,slug,sku,thumbnail_path', 'customer:id,name,email,phone']);
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search): void {
@@ -61,7 +60,13 @@ class ProductReviewController extends Controller
         }
 
         return view('admin.review.index', [
-            'reviews' => $query->paginate($perPage)->withQueryString(),
+            'reviews' => (match ($sort) {
+                'rating_asc' => $query->orderBy('rating')->orderByDesc('id'),
+                'rating_desc' => $query->orderByDesc('rating')->orderByDesc('id'),
+                'pending_first' => $query->orderByRaw("CASE WHEN status = 'pending' THEN 0 ELSE 1 END")->orderByDesc('created_at')->orderByDesc('id'),
+                'oldest' => $query->orderBy('created_at')->orderBy('id'),
+                default => $query->orderByDesc('created_at')->orderByDesc('id'),
+            })->paginate($perPage)->withQueryString(),
             'statuses' => self::STATUSES,
             'stats' => [
                 'total' => ProductReview::count(),
@@ -76,6 +81,7 @@ class ProductReviewController extends Controller
                 'rating' => $rating,
                 'date_from' => $dateFrom?->toDateString(),
                 'date_to' => $dateTo?->toDateString(),
+                'sort' => $sort,
                 'per_page' => $perPage,
             ],
         ]);

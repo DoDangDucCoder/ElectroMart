@@ -43,10 +43,10 @@
                             <thead>
                                 <tr>
                                     <th>Tên người dùng</th>
-                                    <th>Thư điện tử</th>
+                                    <th>Email</th>
                                     <th>Vai trò</th>
                                     <th>Quyền thừa hưởng</th>
-                                    <th>Quản lý</th>
+                                    <th>Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>

@@ -65,8 +65,8 @@ class DeliveryController extends Controller
 		$data = $request->validated();
 
 		$fee_ship = ShippingFee::firstOrNew([
-			'vietnam_province_code' => $data['province_code'],
-			'vietnam_ward_code' => $data['ward_code'],
+			'vietnam_province_code' => $data['province_code'] ?? null,
+			'vietnam_ward_code' => $data['ward_code'] ?? null,
 		]);
 		$fee_ship->city_id = null;
 		$fee_ship->province_id = null;
@@ -91,6 +91,15 @@ class DeliveryController extends Controller
 	public function select_delivery(SelectDeliveryRequest $request)
 	{
 		$data = $request->validated();
+
+		if (empty($data['ma_id'])) {
+			return response()->view('admin.delivery.partials.select_options', [
+				'placeholder' => '---Để trống nếu dùng phí theo tỉnh hoặc mặc định---',
+				'options' => collect(),
+				'valueField' => 'code',
+				'labelField' => 'name',
+			]);
+		}
 
 		if (! $this->vietnamWardsTableExists()) {
 			return response()->view('admin.delivery.partials.select_options', [
@@ -135,6 +144,16 @@ class DeliveryController extends Controller
 
 	private function mapShippingFeeToLegacyShape(ShippingFee $fee): object
 	{
+		$vietnamProvinceCode = trim((string) $fee->vietnam_province_code);
+		$vietnamWardCode = trim((string) $fee->vietnam_ward_code);
+		$scopeLabel = 'Mặc định toàn quốc';
+
+		if ($vietnamProvinceCode !== '' && $vietnamWardCode !== '') {
+			$scopeLabel = 'Theo xã/phường';
+		} elseif ($vietnamProvinceCode !== '') {
+			$scopeLabel = 'Theo tỉnh/thành phố';
+		}
+
 		return (object) [
 			'fee_id' => $fee->id,
 			'fee_matp' => $fee->city_id,
@@ -144,6 +163,7 @@ class DeliveryController extends Controller
 			'city_name' => $fee->vietnamProvince?->name ?? $fee->city?->name,
 			'province_name' => $fee->province?->name,
 			'ward_name' => $fee->vietnamWard?->name ?? $fee->ward?->name,
+			'scope_label' => $scopeLabel,
 		];
 	}
 

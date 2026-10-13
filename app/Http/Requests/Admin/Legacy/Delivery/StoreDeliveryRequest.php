@@ -13,8 +13,8 @@ class StoreDeliveryRequest extends BaseFormRequest
 {
     public function rules(): array
     {
-        $provinceRules = ['required', 'string', 'max:20'];
-        $wardRules = ['required', 'string', 'max:20'];
+        $provinceRules = ['nullable', 'string', 'max:20'];
+        $wardRules = ['nullable', 'string', 'max:20'];
 
         if (Schema::hasTable('vietnam_provinces')) {
             $provinceRules[] = Rule::exists('vietnam_provinces', 'code');
@@ -27,20 +27,28 @@ class StoreDeliveryRequest extends BaseFormRequest
         return [
             'province_code' => $provinceRules,
             'ward_code' => $wardRules,
-            'fee_ship' => ['required', 'string', 'regex:/^[0-9\.\,\s]+$/'],
+            'fee_ship' => ['required', 'string', 'regex:/^[0-9\.\,\s]+$/', 'not_in:0'],
         ];
     }
 
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            if (! Schema::hasTable('vietnam_wards')) {
+            $provinceCode = (string) $this->input('province_code');
+            $wardCode = (string) $this->input('ward_code');
+
+            if ($wardCode !== '' && $provinceCode === '') {
+                $validator->errors()->add('province_code', 'Vui lòng chọn tỉnh/thành phố trước khi chọn xã/phường/đặc khu.');
+                return;
+            }
+
+            if ($wardCode === '' || ! Schema::hasTable('vietnam_wards')) {
                 return;
             }
 
             $exists = VietnamWard::query()
-                ->where('code', (string) $this->input('ward_code'))
-                ->where('province_code', (string) $this->input('province_code'))
+                ->where('code', $wardCode)
+                ->where('province_code', $provinceCode)
                 ->exists();
 
             if (! $exists) {
@@ -52,9 +60,20 @@ class StoreDeliveryRequest extends BaseFormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'province_code' => (string) $this->input('province_code', $this->input('city')),
-            'ward_code' => (string) $this->input('ward_code', $this->input('wards')),
+            'province_code' => $this->normalizeNullableString($this->input('province_code', $this->input('city'))),
+            'ward_code' => $this->normalizeNullableString($this->input('ward_code', $this->input('wards'))),
             'fee_ship' => (string) app(NumericInputNormalizer::class)->digitsOnly($this->input('fee_ship')),
         ]);
+    }
+
+    protected function normalizeNullableString(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
     }
 }

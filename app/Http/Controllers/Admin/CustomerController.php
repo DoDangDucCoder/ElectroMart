@@ -4,57 +4,23 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
+use App\Support\CsvExport;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\View\View;
 
 class CustomerController extends Controller
 {
     public function index(Request $request): View
     {
-        $perPage = max(1, min((int) $request->integer('per_page', 15), 50));
-        $search = trim((string) $request->query('q', ''));
-        $status = (string) $request->query('status', 'all');
-        $dateFrom = $request->date('date_from');
-        $dateTo = $request->date('date_to');
-
-        $query = Customer::query()
-            ->withCount('orders')
-            ->withSum('orders as total_spending', 'total')
-            ->orderByDesc('created_at')
-            ->orderByDesc('id');
-
-        if ($search !== '') {
-            $query->where(function (Builder $builder) use ($search): void {
-                $builder->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('email', 'like', '%' . $search . '%')
-                    ->orWhere('phone', 'like', '%' . $search . '%');
-            });
-        }
-
-        if ($status === 'active') {
-            $query->where('is_active', true);
-        } elseif ($status === 'inactive') {
-            $query->where('is_active', false);
-        }
-
-        if ($dateFrom) {
-            $query->whereDate('created_at', '>=', $dateFrom->toDateString());
-        }
-
-        if ($dateTo) {
-            $query->whereDate('created_at', '<=', $dateTo->toDateString());
-        }
+        $filters = $this->filters($request);
+        $query = $this->customerQuery($filters);
 
         return view('admin.customer.index', [
-            'customers' => $query->paginate($perPage)->withQueryString(),
-            'filters' => [
-                'q' => $search,
-                'status' => $status,
-                'date_from' => $dateFrom?->toDateString(),
-                'date_to' => $dateTo?->toDateString(),
-                'per_page' => $perPage,
-            ],
+            'customers' => $query->paginate($filters['per_page'])->withQueryString(),
+            'filters' => $filters,
             'stats' => [
                 'total' => Customer::query()->count(),
                 'active' => Customer::query()->where('is_active', true)->count(),
@@ -62,8 +28,98 @@ class CustomerController extends Controller
                 'new_this_month' => Customer::query()
                     ->where('created_at', '>=', now()->startOfMonth())
                     ->count(),
+                'returning' => Customer::query()
+                    ->whereIn('id', DB::table('orders')
+                        ->select('customer_id')
+                        ->whereNotNull('customer_id')
+                        ->groupBy('customer_id')
+                        ->havingRaw('COUNT(*) >= 2'))
+                    ->count(),
             ],
         ]);
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $filters = $this->filters($request);
+        $rows = $this->customerQuery($filters)
+            ->limit(5000)
+            ->get()
+            ->map(fn (Customer $customer): array => [
+                $customer->id,
+                $customer->name,
+                $customer->email,
+                $customer->phone ?: '',
+                $customer->created_at?->format('d/m/Y H:i') ?? '',
+                (int) $customer->orders_count,
+                (float) ($customer->total_spending ?? 0),
+                $customer->is_active ? 'Hoạt động' : 'Tạm khóa',
+            ]);
+
+        return CsvExport::download('khach-hang-' . now()->format('Ymd-His') . '.csv', [
+            'Mã khách hàng',
+            'Tên khách hàng',
+            'Email',
+            'Số điện thoại',
+            'Ngày tạo',
+            'Số đơn hàng',
+            'Tổng chi tiêu',
+            'Trạng thái',
+        ], $rows);
+    }
+
+    private function filters(Request $request): array
+    {
+        return [
+            'q' => trim((string) $request->query('q', '')),
+            'status' => (string) $request->query('status', 'all'),
+            'date_from' => $request->date('date_from')?->toDateString(),
+            'date_to' => $request->date('date_to')?->toDateString(),
+            'sort' => (string) $request->query('sort', 'newest'),
+            'per_page' => max(1, min((int) $request->integer('per_page', 15), 50)),
+        ];
+    }
+
+    private function customerQuery(array $filters): Builder
+    {
+        $query = Customer::query()
+            ->withCount('orders')
+            ->withSum('orders as total_spending', 'total');
+
+        if ($filters['q'] !== '') {
+            $query->where(function (Builder $builder) use ($filters): void {
+                $builder->where('name', 'like', '%' . $filters['q'] . '%')
+                    ->orWhere('email', 'like', '%' . $filters['q'] . '%')
+                    ->orWhere('phone', 'like', '%' . $filters['q'] . '%');
+            });
+        }
+
+        if ($filters['status'] === 'active') {
+            $query->where('is_active', true);
+        } elseif ($filters['status'] === 'inactive') {
+            $query->where('is_active', false);
+        }
+
+        if ($filters['date_from']) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
+        }
+
+        if ($filters['date_to']) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
+        }
+
+        match ($filters['sort']) {
+            'spending_desc' => $query->orderByDesc('total_spending')->orderByDesc('id'),
+            'spending_asc' => $query->orderBy('total_spending')->orderByDesc('id'),
+            'orders_desc' => $query->orderByDesc('orders_count')->orderByDesc('id'),
+            'orders_asc' => $query->orderBy('orders_count')->orderByDesc('id'),
+            'name_asc' => $query->orderBy('name')->orderByDesc('id'),
+            'name_desc' => $query->orderByDesc('name')->orderByDesc('id'),
+            'oldest' => $query->orderBy('created_at')->orderBy('id'),
+            default => $query->orderByDesc('created_at')->orderByDesc('id'),
+        };
+
+        return $query;
     }
 
     public function show(Customer $customer): View

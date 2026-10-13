@@ -43,7 +43,7 @@ class OrderReturn extends BaseModel
     public function statusLabel(): string
     {
         return match ($this->status) {
-            self::STATUS_APPROVED => 'Đã chấp thuận',
+            self::STATUS_APPROVED => 'Đã duyệt trả hàng',
             self::STATUS_REJECTED => 'Từ chối',
             self::STATUS_REFUNDED => 'Đã hoàn tiền',
             default => 'Chờ xử lý',

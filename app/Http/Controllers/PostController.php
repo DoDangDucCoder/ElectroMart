@@ -51,6 +51,7 @@ class PostController extends Controller
             'search' => $request->input('search'),
             'status' => $request->input('status'),
             'category_id' => $request->input('category_id'),
+            'sort' => $request->input('sort', 'newest'),
         ]);
 
         $perPage = (int) $request->input('per_page', 15);

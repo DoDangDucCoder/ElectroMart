@@ -34,20 +34,48 @@ class BrandProduct extends Controller
 
     public function all_brand_product(Request $request): View
     {
-        $perPage = (int) $request->input('per_page', 15);
-        $search = $request->input('search');
+        $perPage = max(1, min((int) $request->input('per_page', 10), 50));
+        $search = trim((string) $request->input('search', ''));
+        $status = (string) $request->input('status', 'all');
+        $sort = (string) $request->input('sort', 'name');
 
         $brands = $this->brandService->paginate(
             array_filter([
-                'search' => $search,
-                'is_active' => $request->input('is_active'),
-            ]),
+                'search' => $search !== '' ? $search : null,
+                'is_active' => match ($status) {
+                    'visible' => true,
+                    'hidden' => false,
+                    default => null,
+                },
+            ], static fn ($value) => $value !== null),
             $perPage
         );
+
+        if ($sort === 'name') {
+            $brands->setCollection($brands->getCollection()->sortBy('brand_name')->values());
+        } elseif ($sort === 'newest') {
+            $brands->setCollection($brands->getCollection()->sortByDesc('brand_id')->values());
+        } else {
+            $brands->setCollection($brands->getCollection()->sortBy('display_order')->values());
+        }
+
+        $stats = [
+            'total' => Brand::query()->count(),
+            'page' => $brands->count(),
+            'visible' => Brand::query()->where('is_active', true)->count(),
+            'hidden' => Brand::query()->where('is_active', false)->count(),
+        ];
 
         return view('admin.brand.index', [
             'brands' => $brands,
             'search' => $search,
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+                'sort' => $sort,
+                'per_page' => $perPage,
+            ],
+            'stats' => $stats,
         ]);
     }
 

@@ -196,7 +196,7 @@ class CartController extends Controller
     public function delete_all_product()
     {
         $this->cartService->clear();
-        $this->couponService->clear();
+        $this->couponService->clear(true, 'cart_cleared');
         $this->shippingService->clearFee();
 
         return Redirect::back()->with('message', 'Đã xóa giỏ hàng.');
@@ -246,7 +246,7 @@ class CartController extends Controller
         $items = $this->safeCartItems();
 
         if ($items->isEmpty()) {
-            $this->couponService->clear();
+            $this->couponService->clear(true, 'cart_empty');
             $this->shippingService->clearFee();
         }
 

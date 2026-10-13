@@ -26,9 +26,15 @@ $url_canonical=$url_canonical??url('/dang-nhap');
             <div class="auth-card">
                 <h1>Đăng nhập</h1>
                 <p>Nhập thông tin tài khoản của bạn</p>
+                @if(session('error'))
+                    <div class="auth-notice auth-notice--error">{{ session('error') }}</div>
+                @endif
+                @if(session('message'))
+                    <div class="auth-notice auth-notice--success">{{ session('message') }}</div>
+                @endif
                 <form action="{{ url('/login-customer') }}" method="POST">
                     @csrf
-                    <div class="accp-field"><label>Email hoặc Số điện thoại</label><input type="text" name="email_account" placeholder="Nhập email hoặc số điện thoại" required></div>
+                    <div class="accp-field"><label>Email hoặc Số điện thoại</label><input type="text" name="email_account" value="{{ old('email_account') }}" placeholder="Nhập email hoặc số điện thoại" required></div>
                     <div class="accp-field"><label>Mật khẩu</label>
                         <div class="input-wrap"><input type="password" name="password_account" placeholder="Nhập mật khẩu" required data-auth-password><button type="button" class="toggle-pw" aria-label="Hiện mật khẩu"><i class="fa fa-eye"></i></button></div>
                     </div>
@@ -70,6 +76,9 @@ body.auth-page{background:#f3f5f7;font-family:'Inter',-apple-system,sans-serif}
 .auth-card{background:#fff;border-radius:16px;padding:32px;box-shadow:0 4px 24px rgba(0,0,0,.06)}
 .auth-card h1{font-size:24px;font-weight:800;color:#0f172a;margin:0 0 4px}
 .auth-card p{font-size:14px;color:#6b7280;margin:0 0 24px}
+.auth-notice{border-radius:8px;margin:0 0 16px;padding:10px 12px;font-size:13px;font-weight:600;line-height:1.45}
+.auth-notice--error{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c}
+.auth-notice--success{background:#ecfdf5;border:1px solid #a7f3d0;color:#047857}
 .auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#e5e7eb}
 .auth-divider span{font-size:12px;color:#9ca3af;white-space:nowrap}

@@ -91,10 +91,10 @@
                     </div>
                     <div class="cord-products">
                         @foreach ($order->items->take(2) as $item)
-                        @php $product = $item->product; $productImage = \App\Support\AssetUrl::productVariant($product?->thumbnail ?? $product?->image ?? null, 'thumb'); @endphp
+                        @php $product = $item->product; $productImage = \App\Support\AssetUrl::productVariant($product?->product_image ?? $product?->thumbnail_path ?? $product?->thumbnail ?? $product?->image ?? null, 'thumb'); @endphp
                         <div class="cord-prod-img"><img src="{{ $productImage }}" alt=""></div>
                         <div class="cord-prod-info">
-                            <div class="cord-prod-name">{{ $product?->name ?? $item->name ?? 'Sản phẩm' }}</div>
+                            <div class="cord-prod-name">{{ $item->product_name ?? $product?->name ?? 'Sản phẩm' }}</div>
                             <div class="cord-prod-meta">x{{ $item->quantity }} sản phẩm</div>
                         </div>
                         @endforeach
@@ -108,7 +108,10 @@
                         <div class="cord-refund-status"><span class="accp-badge {{ $refundLabelClass }}">{{ $refundLabelText }}</span></div>
                         <div class="cord-actions">
                             <a href="{{ route('customer.account.order-tracking', ['orderCode' => $order->code]) }}" class="accp-btn accp-btn--outline accp-btn--sm">Xem chi tiết</a>
-                            <a href="{{ url('/san-pham') }}" class="accp-btn accp-btn--outline accp-btn--sm"><i class="fa fa-shopping-cart"></i> Mua lại</a>
+                            <form method="POST" action="{{ route('customer.account.orders.reorder', ['orderCode' => $order->code]) }}" style="margin:0">
+                                @csrf
+                                <button type="submit" class="accp-btn accp-btn--outline accp-btn--sm"><i class="fa fa-shopping-cart"></i> Mua lại</button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -145,13 +148,13 @@
     @if ($visibleRecommendedProducts->isNotEmpty())
     <div class="accp-recommend">
         <div class="accp-recommend-head"><h3>Có thể bạn cũng thích</h3><a href="{{ url('/san-pham') }}">Xem tất cả <i class="fa fa-arrow-right"></i></a></div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px">
+        <div class="accp-recommend-grid">
             @foreach ($visibleRecommendedProducts as $p)
                 @php
                     $productCard = [
                         'id' => $p->id,
                         'name' => $p->product_name ?? $p->name ?? 'Sản phẩm',
-                        'url' => url('/chi-tiet-san-pham/' . ($p->product_slug ?? $p->slug ?? $p->id)),
+                        'url' => url('/chi-tiet/' . ($p->slug ?? $p->product_slug ?? $p->id)),
                         'image' => \App\Support\AssetUrl::productVariant($p->product_image ?? null, 'thumb'),
                         'original_price' => $p->product_price ?? $p->original_price ?? 0,
                         'price' => $p->product_price_sale ?? $p->price ?? $p->product_price ?? 0,

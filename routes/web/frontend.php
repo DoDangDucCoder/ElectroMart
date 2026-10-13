@@ -274,6 +274,8 @@ Route::get('/dat-lai-mat-khau', [\App\Http\Controllers\CustomerAccountController
 Route::get('/account/recently-viewed', [\App\Http\Controllers\CustomerAccountController::class, 'recentlyViewed'])->name('customer.account.recently-viewed');
 Route::get('/account/payment-methods', [\App\Http\Controllers\CustomerAccountController::class, 'paymentMethods'])->name('customer.account.payment-methods');
 Route::get('/account/returns', [\App\Http\Controllers\CustomerAccountController::class, 'returns'])->name('customer.account.returns');
+Route::post('/account/orders/{orderCode}/returns', [\App\Http\Controllers\CustomerAccountController::class, 'requestReturn'])->middleware('throttle:3,1')->name('customer.account.returns.request');
+Route::post('/account/orders/{orderCode}/reorder', [\App\Http\Controllers\CustomerAccountController::class, 'reorder'])->middleware('throttle:10,1')->name('customer.account.orders.reorder');
 Route::get('/xac-thuc-otp', [\App\Http\Controllers\CustomerAccountController::class, 'otpVerification'])->name('customer.otp-verification');
 
 // Account section pages (previously served with hardcoded data, now backed by controller)
@@ -286,4 +288,3 @@ Route::get('/account/order-tracking/{orderCode}', [\App\Http\Controllers\Custome
 // Fix #26: Wishlist DB sync — frontend gọi sau khi đăng nhập để đồng bộ localStorage → DB
 Route::post('/account/wishlist/sync', [\App\Http\Controllers\CustomerAccountController::class, 'wishlistSync'])->name('customer.wishlist.sync');
 Route::post('/account/wishlist/toggle', [\App\Http\Controllers\CustomerAccountController::class, 'wishlistToggle'])->name('customer.wishlist.toggle');
-

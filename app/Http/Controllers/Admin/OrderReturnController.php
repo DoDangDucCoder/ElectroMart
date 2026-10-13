@@ -25,15 +25,14 @@ class OrderReturnController extends Controller
         $status = (string) $request->query('status', 'all');
         $dateFrom = $request->date('date_from');
         $dateTo = $request->date('date_to');
+        $sort = (string) $request->query('sort', 'newest');
 
         $query = OrderReturn::query()
             ->with([
                 'customer:id,name,email,phone',
                 'order:id,code,total,status,customer_id',
                 'orderItem:id,order_id,product_name,sku,quantity,subtotal',
-            ])
-            ->orderByDesc('created_at')
-            ->orderByDesc('id');
+            ]);
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search): void {
@@ -64,6 +63,13 @@ class OrderReturnController extends Controller
             $query->whereDate('created_at', '<=', $dateTo->toDateString());
         }
 
+        match ($sort) {
+            'refund_desc' => $query->orderByDesc('refund_amount')->orderByDesc('id'),
+            'refund_asc' => $query->orderBy('refund_amount')->orderByDesc('id'),
+            'oldest' => $query->orderBy('created_at')->orderBy('id'),
+            default => $query->orderByDesc('created_at')->orderByDesc('id'),
+        };
+
         return view('admin.returns.index', [
             'returns' => $query->paginate($perPage)->withQueryString(),
             'statuses' => self::STATUSES,
@@ -79,6 +85,7 @@ class OrderReturnController extends Controller
                 'status' => $status,
                 'date_from' => $dateFrom?->toDateString(),
                 'date_to' => $dateTo?->toDateString(),
+                'sort' => $sort,
                 'per_page' => $perPage,
             ],
         ]);
@@ -90,12 +97,21 @@ class OrderReturnController extends Controller
             'status' => ['required', 'string', 'in:' . implode(',', self::STATUSES)],
         ]);
 
+        $isRefunded = $data['status'] === OrderReturn::STATUS_REFUNDED;
+
         $orderReturn->update([
             'status' => $data['status'],
-            'refunded_at' => $data['status'] === OrderReturn::STATUS_REFUNDED
+            'refunded_at' => $isRefunded
                 ? ($orderReturn->refunded_at ?? Carbon::now())
                 : null,
         ]);
+
+        if ($isRefunded && $orderReturn->order) {
+            $orderReturn->order->update([
+                'payment_status' => 'refunded',
+                'status' => 'refunded',
+            ]);
+        }
 
         return redirect()
             ->route('admin.returns', $request->query())

@@ -10,10 +10,6 @@
             </div>
             <div class="g-admin-page-stats">
                 <article>
-                    <strong>#{{ $pro_id }}</strong>
-                    <span>Mã sản phẩm đang thao tác</span>
-                </article>
-                <article>
                     <strong>Nhiều ảnh</strong>
                     <span>Upload nhiều ảnh cùng lúc</span>
                 </article>

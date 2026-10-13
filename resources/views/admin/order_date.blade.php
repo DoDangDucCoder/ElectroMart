@@ -49,7 +49,7 @@
                         <table class="table table-striped b-t b-light g-admin-data-table">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>STT</th>
                                     <th>Mã đơn</th>
                                     <th>Ngày đặt</th>
                                     <th>Trạng thái</th>

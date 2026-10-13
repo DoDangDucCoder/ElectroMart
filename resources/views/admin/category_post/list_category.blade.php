@@ -5,7 +5,7 @@
         <section class="g-admin-page-hero">
             <div>
                 <span class="g-admin-page-eyebrow">Nội dung / Danh mục bài viết</span>
-                <h1>Liệt kê danh mục bài viết</h1>
+                <h1>Quản lý danh mục bài viết</h1>
                 <p>Theo dõi danh mục bài viết hiện có và cập nhật nhanh khi cần chỉnh sửa nội dung.</p>
             </div>
             <div class="g-admin-page-stats">
@@ -41,34 +41,24 @@
                     <table class="table table-striped b-t b-light g-admin-data-table">
                         <thead>
                             <tr>
-                                <th style="width:20px;">
-                                    <label class="i-checks m-b-none">
-                                        <input type="checkbox"><i></i>
-                                    </label>
-                                </th>
                                 <th>Tên danh mục bài viết</th>
                                 <th>Mô tả</th>
                                 <th>Đường dẫn tĩnh (slug)</th>
-                                <th>Hiển thị</th>
-                                <th style="width:30px;"></th>
+                                <th>Trạng thái</th>
+                                <th style="width:80px;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($category_post as $cate_post)
                                 <tr>
-                                    <td>
-                                        <label class="i-checks m-b-none">
-                                            <input type="checkbox" name="post[]"><i></i>
-                                        </label>
-                                    </td>
                                     <td><strong>{{ $cate_post->cate_post_name }}</strong></td>
                                     <td>{{ \Illuminate\Support\Str::limit((string) $cate_post->cate_post_desc, 120) }}</td>
                                     <td>{{ $cate_post->cate_post_slug }}</td>
                                     <td>
                                         @if ($cate_post->cate_post_status == 0)
-                                            <span class="label label-success">Hiển thị</span>
+                                            <span class="label label-success">Đang hoạt động</span>
                                         @else
-                                            <span class="label label-default">Ẩn</span>
+                                            <span class="label label-default">Tạm ẩn</span>
                                         @endif
                                     </td>
                                     <td>

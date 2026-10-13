@@ -152,11 +152,13 @@
 
     .adm-product-management .adm-product-name-cell {
         width: 260px;
-        text-align: left !important;
+        text-align: center !important;
     }
 
     .adm-product-management .adm-product-name-cell strong {
         display: block;
+        margin-left: auto;
+        margin-right: auto;
         max-width: 280px;
         color: #0f172a;
         font-size: 13.5px;
@@ -165,6 +167,8 @@
     }
 
     .adm-product-management .adm-product-name-cell div {
+        margin-left: auto;
+        margin-right: auto;
         max-width: 250px;
         line-height: 1.35;
     }
@@ -237,23 +241,23 @@
     </div>
 
     <div class="adm-stats">
-        <div class="adm-stat">
+        <div class="adm-stat" data-filter-field="status" data-filter-value="all">
             <div class="icon blue"><i class="fa fa-cubes"></i></div>
             <div><div class="num">{{ number_format($stats['total']) }}</div><div class="lbl">Tổng sản phẩm</div></div>
         </div>
-        <div class="adm-stat">
+        <div class="adm-stat" data-filter-field="status" data-filter-value="active">
             <div class="icon green"><i class="fa fa-check-circle"></i></div>
             <div><div class="num" style="color:var(--adm-green)">{{ number_format($stats['active']) }}</div><div class="lbl">Đang hoạt động</div></div>
         </div>
-        <div class="adm-stat">
+        <div class="adm-stat" data-filter-field="status" data-filter-value="low_stock">
             <div class="icon amber"><i class="fa fa-exclamation-triangle"></i></div>
             <div><div class="num" style="color:var(--adm-amber)">{{ number_format($stats['low_stock']) }}</div><div class="lbl">Sắp hết hàng</div></div>
         </div>
-        <div class="adm-stat">
+        <div class="adm-stat" data-filter-field="status" data-filter-value="out_of_stock">
             <div class="icon red"><i class="fa fa-times-circle"></i></div>
             <div><div class="num">{{ number_format($stats['out_of_stock']) }}</div><div class="lbl">Hết hàng</div></div>
         </div>
-        <div class="adm-stat">
+        <div class="adm-stat" data-filter-field="status" data-filter-value="hidden">
             <div class="icon" style="background:rgba(148,163,184,.15);color:#94a3b8"><i class="fa fa-eye-slash"></i></div>
             <div><div class="num">{{ number_format($stats['hidden']) }}</div><div class="lbl">Tạm ẩn</div></div>
         </div>
@@ -273,6 +277,7 @@
                     <option value="low_stock" @selected($filters['status'] === 'low_stock')>Sắp hết hàng</option>
                     <option value="out_of_stock" @selected($filters['status'] === 'out_of_stock')>Hết hàng</option>
                 </select>
+
                 <button class="adm-btn outline" type="submit"><i class="fa fa-filter"></i> Lọc</button>
                 <a href="{{ url('/add-product') }}" class="adm-btn primary"><i class="fa fa-plus"></i> Thêm sản phẩm</a>
             </form>
@@ -281,14 +286,14 @@
                 <table class="adm-table">
                     <thead>
                         <tr>
-                            <th class="adm-product-id-col">#</th>
+                            <th class="adm-product-id-col">Mã SP</th>
                             <th class="adm-product-image-col">Ảnh</th>
-                            <th class="adm-product-name-cell">Sản phẩm</th>
+                            <th class="adm-product-name-cell">@include('admin.partials.sort_header', ['label' => 'Tên sản phẩm', 'asc' => 'name_asc', 'desc' => 'name_desc', 'filters' => $filters])</th>
                             <th class="adm-category-col">Danh mục</th>
                             <th class="adm-brand-col">Thương hiệu</th>
-                            <th class="adm-price-col">Giá bán</th>
+                            <th class="adm-price-col">@include('admin.partials.sort_header', ['label' => 'Giá bán', 'asc' => 'price_asc', 'desc' => 'price_desc', 'filters' => $filters])</th>
                             <th class="adm-price-col">Giá vốn</th>
-                            <th class="adm-stock-col">Tồn kho</th>
+                            <th class="adm-stock-col">@include('admin.partials.sort_header', ['label' => 'Tồn kho', 'asc' => 'stock_asc', 'desc' => 'stock_desc', 'filters' => $filters])</th>
                             <th class="adm-status-col">Trạng thái</th>
                             <th class="adm-action-col">Thao tác</th>
                         </tr>
@@ -323,7 +328,7 @@
                                 @elseif ((int) $product->stock_quantity <= 10)
                                     <span class="adm-badge amber">Sắp hết</span>
                                 @else
-                                    <span class="adm-badge green">Hoạt động</span>
+                                    <span class="adm-badge green">Đang hoạt động</span>
                                 @endif
                             </td>
                             <td class="adm-action-col">

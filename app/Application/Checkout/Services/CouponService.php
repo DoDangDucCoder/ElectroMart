@@ -4,6 +4,8 @@ namespace App\Application\Checkout\Services;
 
 use App\Domain\Checkout\Repositories\CouponRepositoryInterface;
 use App\Infrastructure\Persistence\Eloquent\Marketing\Coupon;
+use App\Infrastructure\Persistence\Eloquent\Marketing\CouponRedemption;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Session;
 use RuntimeException;
@@ -42,10 +44,23 @@ class CouponService
             return $data;
         }
 
-        $validation = $this->validateCoupon($code, $subtotal, $customerId);
+        $reservation = $this->currentReservation();
+        if (! $reservation || (int) $reservation->coupon_id !== (int) ($data['id'] ?? 0)) {
+            $this->clear(true, 'missing_reservation');
+
+            return null;
+        }
+
+        if ($reservation->reserved_until && $reservation->reserved_until->isPast()) {
+            $this->clear(true, 'expired');
+
+            return null;
+        }
+
+        $validation = $this->validateCoupon($code, $subtotal, $customerId, true);
 
         if (! ($validation['valid'] ?? false)) {
-            $this->clear();
+            $this->clear(true, 'invalid_after_reservation');
 
             return null;
         }
@@ -58,6 +73,8 @@ class CouponService
             'value' => (float) $coupon->value,
             'discount_amount' => (float) $validation['discount_amount'],
             'max_discount' => (float) ($coupon->max_discount ?? 0),
+            'redemption_id' => $reservation->id,
+            'reserved_until' => $reservation->reserved_until?->toIso8601String(),
         ];
 
         Session::put(self::SESSION_KEY, $payload);
@@ -81,7 +98,7 @@ class CouponService
         return $this->coupons->findActiveByCode($code);
     }
 
-    public function validateCoupon(string $code, float $totalAmount, ?int $customerId = null): array
+    public function validateCoupon(string $code, float $totalAmount, ?int $customerId = null, bool $skipUsageLimit = false): array
     {
         $coupon = $this->coupons->findActiveByCode($code);
 
@@ -100,7 +117,7 @@ class CouponService
         }
 
         try {
-            $this->assertUsageAvailable($coupon, $customerId);
+            $this->assertUsageAvailable($coupon, $customerId, $skipUsageLimit);
         } catch (RuntimeException $exception) {
             return [
                 'valid' => false,
@@ -120,8 +137,15 @@ class CouponService
         ];
     }
 
-    public function clear(): void
+    public function clear(bool $releaseReservation = false, string $reason = 'session_cleared'): void
     {
+        if ($releaseReservation) {
+            $reservation = $this->currentReservation();
+            if ($reservation) {
+                $this->coupons->releaseReservation($reservation, $reason);
+            }
+        }
+
         Session::forget(self::SESSION_KEY);
     }
 
@@ -133,9 +157,37 @@ class CouponService
             throw new RuntimeException('Mã giảm giá không hợp lệ hoặc đã hết hạn.');
         }
 
-        $this->assertUsageAvailable($coupon, $customerId);
+        if ($coupon->min_order_total !== null && $subtotal < (float) $coupon->min_order_total) {
+            throw new RuntimeException('Tổng đơn hàng chưa đạt điều kiện tối thiểu.');
+        }
 
         $discount = $this->calculateDiscount($coupon, $subtotal);
+        $currentReservation = $this->currentReservation();
+        if ($currentReservation && $currentReservation->reserved_until && $currentReservation->reserved_until->isPast()) {
+            $this->coupons->releaseReservation($currentReservation, 'expired');
+            $currentReservation = null;
+        }
+
+        $isSameReservation = $currentReservation && (int) $currentReservation->coupon_id === (int) $coupon->id;
+        $this->assertUsageAvailable($coupon, $customerId, (bool) $isSameReservation);
+
+        if ($isSameReservation) {
+            $reservedUntil = $currentReservation->reserved_until;
+            $redemption = $currentReservation;
+        } else {
+            if ($currentReservation) {
+                $this->coupons->releaseReservation($currentReservation, 'replaced');
+            }
+
+            $reservedUntil = Carbon::now()->addMinutes(max(1, (int) config('coupon.reservation_minutes', 30)));
+            $redemption = $this->coupons->reserveUsage(
+                $coupon,
+                $customerId,
+                $discount,
+                Session::getId(),
+                $reservedUntil
+            );
+        }
 
         $payload = [
             'id' => $coupon->id,
@@ -144,6 +196,8 @@ class CouponService
             'value' => (float) $coupon->value,
             'discount_amount' => $discount,
             'max_discount' => (float) ($coupon->max_discount ?? 0),
+            'redemption_id' => $redemption->id,
+            'reserved_until' => $reservedUntil?->toIso8601String(),
         ];
 
         Session::put(self::SESSION_KEY, $payload);
@@ -173,17 +227,43 @@ class CouponService
 
     public function redeem(Coupon $coupon, ?int $customerId, ?int $orderId, float $discount): void
     {
-        $this->coupons->recordRedemption($coupon, $customerId, $orderId, $discount);
-        $this->coupons->incrementUsage($coupon);
-    }
+        $reservation = $this->currentReservation();
 
-    protected function assertUsageAvailable(Coupon $coupon, ?int $customerId): void
-    {
-        if ($coupon->usage_limit !== null && $coupon->used_count >= $coupon->usage_limit) {
-            throw new RuntimeException('Mã giảm giá đã đạt giới hạn sử dụng.');
+        if ($reservation && (int) $reservation->coupon_id === (int) $coupon->id) {
+            $this->coupons->redeemReservation($reservation, $customerId, $orderId, $discount);
+
+            return;
         }
 
-        if ($coupon->usage_per_customer !== null) {
+        $redemption = $this->coupons->reserveUsage(
+            $coupon,
+            $customerId,
+            $discount,
+            Session::getId(),
+            Carbon::now()->addMinutes(max(1, (int) config('coupon.reservation_minutes', 30)))
+        );
+        $this->coupons->redeemReservation($redemption, $customerId, $orderId, $discount);
+    }
+
+    protected function currentReservation(): ?CouponRedemption
+    {
+        $data = Session::get(self::SESSION_KEY);
+        $redemptionId = is_array($data) ? (int) ($data['redemption_id'] ?? 0) : 0;
+
+        if ($redemptionId <= 0 || Session::getId() === '') {
+            return null;
+        }
+
+        return $this->coupons->findActiveReservation($redemptionId, Session::getId());
+    }
+
+    protected function assertUsageAvailable(Coupon $coupon, ?int $customerId, bool $skipUsageLimit = false): void
+    {
+        if (! $skipUsageLimit && $coupon->usage_limit !== null && $coupon->usage_limit <= 0) {
+            throw new RuntimeException('Mã giảm giá đã hết lượt sử dụng.');
+        }
+
+        if (! $skipUsageLimit && $coupon->usage_per_customer !== null) {
             $customerUsage = $this->coupons->countRedemptionsForCustomer($coupon, $customerId);
             if ($customerUsage >= $coupon->usage_per_customer) {
                 throw new RuntimeException('Bạn đã sử dụng mã giảm giá này tối đa số lần cho phép.');

@@ -6,6 +6,16 @@
 !/.env.example
 /docs/report/
 /.claude/
+/docs/ai/
+/security-scanner.SKILL.md
+/AGENTS.md
+/.vscode/settings.json
+/cau-hoi-phan-bien.md
+/docs/cv-verification.md
+/tools/cv-verify.php
+/storage/cv-verification-results.jsonl
+/storage/cv-verification.sqlite
+/storage/route-verification.json
 /public/build/
 /public/hot
 /public/uploads/attribute/attribute*.png

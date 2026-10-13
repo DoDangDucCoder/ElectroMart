@@ -98,8 +98,12 @@ class CheckoutController extends Controller
     public function login_customer(LoginCustomerRequest $request): RedirectResponse
     {
         $credentials = $request->validated();
+        $account = trim((string) $credentials['email_account']);
 
-        $customer = Customer::where('email', $credentials['email_account'])->first();
+        $customer = Customer::query()
+            ->where('email', $account)
+            ->orWhere('phone', $account)
+            ->first();
 
         if (
             ! $customer ||
@@ -219,8 +223,11 @@ class CheckoutController extends Controller
         $provinceCode = $validated['vietnam_province_code'] ?? null;
         $wardCode = $validated['vietnam_ward_code'] ?? null;
 
+        $feeMeta = null;
+
         if ($provinceCode && $wardCode) {
-            $fee = $this->shippingService->calculateVietnam2025Fee($provinceCode, $wardCode);
+            $feeMeta = $this->shippingService->resolveVietnam2025Fee($provinceCode, $wardCode);
+            $fee = $feeMeta['fee'];
         } else {
             $cityId = $validated['city_id'] ?? null;
             $provinceId = $validated['province_id'] ?? null;
@@ -235,7 +242,11 @@ class CheckoutController extends Controller
 
         $this->shippingService->storeFee($fee);
 
-        return response()->json(['fee' => $fee]);
+        return response()->json(array_filter([
+            'fee' => $fee,
+            'scope' => $feeMeta['scope'] ?? null,
+            'label' => $feeMeta['label'] ?? null,
+        ]));
     }
 
     public function select_delivery_home(SelectDeliveryHomeRequest $request)
@@ -290,9 +301,9 @@ class CheckoutController extends Controller
         $submittedKey = $validated['checkout_idempotency_key'] ?? null;
         $sessionKey   = Session::get('checkout_idempotency_key');
 
+        $consumeIdempotencyKey = false;
         if ($submittedKey && $sessionKey && $submittedKey === $sessionKey) {
-            // Key hợp lệ — tiêu thụ nó ngay để lần submit thứ 2 không được dùng lại
-            Session::forget('checkout_idempotency_key');
+            $consumeIdempotencyKey = true;
         } elseif ($submittedKey !== null) {
             // Key không khớp session hoặc đã bị tiêu thụ
             return response()->json([
@@ -308,11 +319,21 @@ class CheckoutController extends Controller
         $customerId = $customer?->id;
 
         try {
+            $shippingFeeMeta = $this->shippingService->resolveVietnam2025Fee(
+                $validated['vietnam_province_code'] ?? null,
+                $validated['vietnam_ward_code'] ?? null
+            );
+            $this->shippingService->storeFee((float) $shippingFeeMeta['fee']);
+
             $order = $this->checkoutService->confirmOrder(array_merge($validated, [
                 'payment_method' => $validated['payment_method'] ?? $validated['shipping_method'] ?? null,
             ]), $customerId);
         } catch (\Throwable $e) {
             return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        if ($consumeIdempotencyKey) {
+            Session::forget('checkout_idempotency_key');
         }
 
         if (! $customer) {
@@ -614,7 +635,7 @@ class CheckoutController extends Controller
         $items = $this->cartService->selectedCheckoutItems();
 
         if ($items->isEmpty()) {
-            $this->couponService->clear();
+            $this->couponService->clear(true, 'checkout_cart_empty');
             $this->shippingService->clearFee();
         }
 

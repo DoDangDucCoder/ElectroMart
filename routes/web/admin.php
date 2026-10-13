@@ -74,6 +74,9 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
     };
 
     // Local/testing admin preview pages only. Production admin pages must use real controllers.
+    Route::get('/admin/customers/export', [AdminCustomerController::class, 'export'])
+        ->middleware('admin.permission:'.AdminPermissions::MANAGE_ORDERS)
+        ->name('admin.customers.export');
     Route::get('/admin/customers', [AdminCustomerController::class, 'index'])
         ->middleware('admin.permission:'.AdminPermissions::MANAGE_ORDERS)
         ->name('admin.customers');
@@ -86,6 +89,9 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
     Route::get('/admin/inventory', [AdminInventoryController::class, 'index'])
         ->middleware('admin.permission:'.AdminPermissions::MANAGE_PRODUCTS)
         ->name('admin.inventory');
+    Route::get('/admin/inventory/export', [AdminInventoryController::class, 'export'])
+        ->middleware('admin.permission:'.AdminPermissions::MANAGE_PRODUCTS)
+        ->name('admin.inventory.export');
     Route::get('/admin/warehouse', fn () => redirect('/admin/inventory'))->name('admin.warehouse');
     Route::get('/admin/vouchers', fn () => redirect('/list-coupon'))
         ->middleware('admin.permission:'.AdminPermissions::MANAGE_COUPONS)
@@ -125,6 +131,9 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
     Route::get('/admin/transactions', [AdminPaymentController::class, 'index'])
         ->middleware('admin.permission:'.AdminPermissions::MANAGE_ORDERS)
         ->name('admin.transactions');
+    Route::get('/admin/transactions/export', [AdminPaymentController::class, 'export'])
+        ->middleware('admin.permission:'.AdminPermissions::MANAGE_ORDERS)
+        ->name('admin.transactions.export');
     Route::get('/admin/shipping', fn () => redirect('/delivery'))
         ->middleware('admin.permission:'.AdminPermissions::MANAGE_ORDERS)
         ->name('admin.shipping');
@@ -259,6 +268,7 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
 
     Route::middleware('admin.permission:'.AdminPermissions::MANAGE_PRODUCTS)->group(function () {
         // Comment moderation & editor utilities
+        Route::get('/admin/comment', fn () => redirect('/comment'));
         Route::get('/comment', [ProductController::class, 'list_comment']);
         Route::post('/allow-comment', [ProductController::class, 'allow_comment']);
         Route::post('/reply-comment', [ProductController::class, 'reply_comment']);
@@ -291,6 +301,7 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
         Route::get('/edit-coupon/{coupon_id}', [CouponController::class, 'edit_coupon']);
         Route::put('/update-coupon/{coupon_id}', [CouponController::class, 'update_coupon']);
         Route::delete('/delete-coupon/{coupon_id}', [CouponController::class, 'delete_coupon']);
+        Route::get('/list-coupon/export', [CouponController::class, 'export_coupon'])->name('admin.coupons.export');
         Route::get('/list-coupon', [CouponController::class, 'list_coupon']);
         Route::post('/insert-coupon-code', [CouponController::class, 'insert_coupon_code'])->middleware('admin.create.locked');
     });
@@ -306,11 +317,13 @@ Route::middleware(['auth:web', 'admin.access'])->group(function () {
 
     Route::middleware('admin.permission:'.AdminPermissions::MANAGE_ORDERS)->group(function () {
         // Order administration
+        Route::get('/admin/orders-management/export', [AdminWorkspaceController::class, 'ordersExport'])->name('admin.orders.export');
         Route::get('/admin/orders-management', [AdminWorkspaceController::class, 'ordersManagement'])->name('admin.orders.management');
         Route::delete('/delete-order/{order_code}', [OrderController::class, 'order_code']);
         Route::get('/print-order/{checkout_code}', [OrderController::class, 'print_order']);
         Route::get('/manage-order', fn () => redirect('/admin/orders-management'));
         Route::get('/product-profit', [ProductProfitController::class, 'index'])->name('admin.product-profit');
+        Route::get('/product-profit/export', [ProductProfitController::class, 'export'])->name('admin.product-profit.export');
         Route::get('/product-profit/print', [ProductProfitController::class, 'print'])->name('admin.product-profit.print');
         Route::get('/view-order/{order_code}', [OrderController::class, 'view_order']);
         Route::get('/track-order/{order_code}', [OrderController::class, 'track_order'])->name('admin.order.track');

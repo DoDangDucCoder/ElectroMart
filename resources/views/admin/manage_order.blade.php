@@ -41,27 +41,27 @@
         </section>
 
         <section class="g-admin-kpi-grid">
-            <article class="g-admin-kpi-card">
+            <article class="g-admin-kpi-card" data-filter-field="status" data-filter-value="pending">
                 <span>Chờ xử lý</span>
                 <strong>{{ number_format($pendingOrders) }}</strong>
                 <p>Cần kiểm tra tồn kho và xác nhận xử lý.</p>
             </article>
-            <article class="g-admin-kpi-card">
+            <article class="g-admin-kpi-card" data-filter-field="status" data-filter-value="processing">
                 <span>Đang xử lý</span>
                 <strong>{{ number_format($processingOrders) }}</strong>
                 <p>Đơn đã được duyệt và đang chuẩn bị hàng.</p>
             </article>
-            <article class="g-admin-kpi-card">
+            <article class="g-admin-kpi-card" data-filter-field="status" data-filter-value="shipped">
                 <span>Đang giao</span>
                 <strong>{{ number_format($shippingOrders) }}</strong>
                 <p>Đơn đã bàn giao vận chuyển.</p>
             </article>
-            <article class="g-admin-kpi-card">
+            <article class="g-admin-kpi-card" data-filter-field="status" data-filter-value="completed">
                 <span>Đã giao</span>
                 <strong>{{ number_format($completedOrders) }}</strong>
                 <p>Đã chuyển sang trạng thái hoàn tất giao hàng.</p>
             </article>
-            <article class="g-admin-kpi-card">
+            <article class="g-admin-kpi-card" data-filter-field="status" data-filter-value="cancelled">
                 <span>Đã hủy</span>
                 <strong>{{ number_format($cancelledOrders) }}</strong>
                 <p>Có lý do hủy để đối chiếu với khách hàng.</p>
@@ -87,7 +87,7 @@
                         <table class="table table-striped b-t b-light g-admin-data-table">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>STT</th>
                                     <th>Mã đơn</th>
                                     <th>Ngày đặt</th>
                                     <th>Trạng thái</th>

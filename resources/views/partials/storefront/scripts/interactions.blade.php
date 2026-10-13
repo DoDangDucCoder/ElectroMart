@@ -2743,6 +2743,102 @@
         $('[data-checkout-grand-total-display]').text(formatCheckoutCurrency(grandTotal));
     }
 
+    function setCheckoutShippingResolved(isResolved) {
+        $('.shipping_fee_resolved').val(isResolved ? '1' : '0');
+        updateCheckoutSubmitState();
+    }
+
+    function isCheckoutShippingResolved() {
+        return $('.shipping_fee_resolved').val() === '1';
+    }
+
+    function hasCheckoutRequiredAddress() {
+        return !!($('.shipping_email').val() &&
+            $('.shipping_name').val() &&
+            $('.shipping_address').val() &&
+            $('.shipping_phone').val() &&
+            $('.province').val() &&
+            $('.wards').val());
+    }
+
+    function updateCheckoutSubmitState() {
+        var canSubmit = hasCheckoutRequiredAddress() && isCheckoutShippingResolved();
+        $('.send_order').prop('disabled', !canSubmit);
+    }
+
+    function shippingFeeMessage(response) {
+        var label = response && response.label ? response.label : 'Theo khu vực giao hàng';
+        var fee = response && typeof response.fee !== 'undefined' ? response.fee : 0;
+
+        return label + ': ' + formatCheckoutCurrency(fee) + '. Tổng tiền đã được cập nhật.';
+    }
+
+    function calculateCheckoutDeliveryFee(options) {
+        var settings = $.extend({
+            silent: false,
+            button: null
+        }, options || {});
+        var $button = settings.button || $('.calculate_delivery');
+        var vietnam_province_code = $('.province').val();
+        var vietnam_ward_code = $('.wards').val();
+        var _token = $('input[name="_token"]').val();
+
+        if (vietnam_province_code == '' || vietnam_ward_code == '') {
+            setCheckoutShippingResolved(false);
+            syncCheckoutDeliveryTotals(0);
+            renderCheckoutDeliveryNotice('Vui lòng chọn đầy đủ tỉnh/thành phố và xã/phường để hệ thống tự tính phí vận chuyển.', 'warning');
+
+            if (!settings.silent) {
+                showStorefrontStatus('Thiếu thông tin giao hàng',
+                    'Vui lòng chọn đầy đủ tỉnh/thành phố và xã/phường để hệ thống tính phí vận chuyển.', 'warning');
+            }
+
+            return;
+        }
+
+        loadStorefrontJson({
+            url: '{{ url('/calculate-fee') }}',
+            method: 'POST',
+            beforeSend: function() {
+                setCheckoutShippingResolved(false);
+                $button.prop('disabled', true);
+                $button.data('originalHtml', $button.html());
+                $button.html('<i class="fa fa-spinner fa-spin"></i> Đang tính phí');
+            },
+            data: {
+                vietnam_province_code: vietnam_province_code,
+                vietnam_ward_code: vietnam_ward_code,
+                _token: _token
+            },
+            fallbackMessage: 'Không thể tính phí vận chuyển.',
+            onSuccess: function(response) {
+                var fee = response && typeof response.fee !== 'undefined' ? response.fee : 0;
+
+                syncCheckoutDeliveryTotals(fee);
+                setCheckoutShippingResolved(true);
+                renderCheckoutDeliveryNotice(shippingFeeMessage(response), 'success');
+
+                if (!settings.silent) {
+                    showStorefrontStatus('Phí vận chuyển', shippingFeeMessage(response), 'success');
+                }
+            },
+            onError: function(xhr) {
+                var message = getAjaxErrorMessage(xhr, 'Không thể tính phí vận chuyển.');
+                setCheckoutShippingResolved(false);
+                renderCheckoutDeliveryNotice(message, 'error');
+
+                if (!settings.silent) {
+                    showStorefrontStatus('Chưa thể tính phí vận chuyển', message, 'error');
+                }
+            },
+            complete: function() {
+                $button.prop('disabled', false);
+                $button.html($button.data('originalHtml') || '<i class="fa fa-refresh"></i> Tính lại phí vận chuyển');
+                updateCheckoutSubmitState();
+            }
+        });
+    }
+
     function initSelect2Interactions() {
         if (typeof $.fn.select2 === 'function') {
             $('.city, .province, .wards').select2({
@@ -2760,6 +2856,12 @@
 
     $(document).ready(function() {
         initSelect2Interactions();
+        setCheckoutShippingResolved(false);
+        updateCheckoutSubmitState();
+
+        $('.shipping_email, .shipping_name, .shipping_address, .shipping_phone').on('input change', function() {
+            updateCheckoutSubmitState();
+        });
 
         $('.send_order').click(function() {
             var $button = $(this);
@@ -2793,6 +2895,13 @@
                 });
                 renderCheckoutOrderNotice('Vui lòng chọn tỉnh/thành phố và xã/phường/đặc khu giao hàng.', 'error');
                 swal("Thiếu thông tin giao hàng", "Vui lòng chọn tỉnh/thành phố và xã/phường/đặc khu giao hàng.", "error");
+                return;
+            }
+
+            if (!isCheckoutShippingResolved()) {
+                renderCheckoutOrderNotice('Vui lòng chọn đầy đủ địa chỉ để hệ thống tính phí vận chuyển trước khi đặt hàng.', 'error');
+                renderCheckoutDeliveryNotice('Phí vận chuyển chưa được tính. Vui lòng kiểm tra lại tỉnh/thành phố và xã/phường.', 'warning');
+                swal("Chưa tính phí vận chuyển", "Vui lòng chọn đầy đủ địa chỉ để hệ thống tính phí vận chuyển trước khi đặt hàng.", "warning");
                 return;
             }
 
@@ -2839,6 +2948,11 @@
             var ma_id = $(this).val();
             var _token = $('input[name="_token"]').val();
             var result = 'wards';
+
+            setCheckoutShippingResolved(false);
+            syncCheckoutDeliveryTotals(0);
+            renderCheckoutDeliveryNotice('Vui lòng chọn xã/phường để hệ thống tự tính phí vận chuyển.', 'warning');
+
             loadStorefrontFragment({
                 url: '{{ url('/select-delivery-home') }}',
                 method: 'POST',
@@ -2851,56 +2965,23 @@
                 fallbackMessage: 'Không thể tải danh sách địa chỉ.',
                 onSuccess: function() {
                     initSelect2Interactions();
+                    updateCheckoutSubmitState();
                 }
             });
+        });
+
+        $(document).on('change', '.wards', function() {
+            calculateCheckoutDeliveryFee({ silent: true });
         });
     });
 </script>
 <script type="text/javascript">
     $(document).ready(function() {
         $('.calculate_delivery').click(function() {
-            var $button = $(this);
-            var vietnam_province_code = $('.province').val();
-            var vietnam_ward_code = $('.wards').val();
-            var _token = $('input[name="_token"]').val();
-            if (vietnam_province_code == '' || vietnam_ward_code == '') {
-                renderCheckoutDeliveryNotice('Chưa có đủ dữ liệu địa chỉ để tính phí vận chuyển theo khu vực. Hệ thống sẽ dùng phí mặc định khi đặt hàng.', 'warning');
-                showStorefrontStatus('Thiếu thông tin giao hàng',
-                    'Chưa có đủ dữ liệu địa chỉ để tính phí vận chuyển theo khu vực.', 'warning');
-            } else {
-            loadStorefrontJson({
-                url: '{{ url('/calculate-fee') }}',
-                method: 'POST',
-                beforeSend: function() {
-                    $button.prop('disabled', true);
-                    $button.data('originalHtml', $button.html());
-                    $button.html('<i class="fa fa-spinner fa-spin"></i>Đang tính phí');
-                },
-                data: {
-                    vietnam_province_code: vietnam_province_code,
-                    vietnam_ward_code: vietnam_ward_code,
-                    _token: _token
-                },
-                fallbackMessage: 'Không thể tính phí vận chuyển.',
-                onSuccess: function(response) {
-                    var fee = response && typeof response.fee !== 'undefined' ? response.fee : 0;
-
-                    syncCheckoutDeliveryTotals(fee);
-                    renderCheckoutDeliveryNotice('Đã cập nhật phí vận chuyển theo khu vực bạn chọn.', 'success');
-                    showStorefrontStatus('Phí vận chuyển',
-                        'Đã cập nhật phí vận chuyển theo khu vực bạn chọn.', 'success');
-                },
-                onError: function(xhr) {
-                    var message = getAjaxErrorMessage(xhr, 'Không thể tính phí vận chuyển.');
-                    renderCheckoutDeliveryNotice(message, 'error');
-                    showStorefrontStatus('Chưa thể tính phí vận chuyển', message, 'error');
-                },
-                complete: function() {
-                    $button.prop('disabled', false);
-                    $button.html($button.data('originalHtml') || '<i class="fa fa-truck"></i>Tính phí vận chuyển');
-                }
+            calculateCheckoutDeliveryFee({
+                silent: false,
+                button: $(this)
             });
-            }
         });
     });
 </script>

@@ -21,6 +21,13 @@
             'cancelled' => 'default',
             'refunded' => 'default',
         ];
+        $paymentStatusLabels = [
+            'unpaid' => 'Chưa thanh toán',
+            'pending' => 'Chờ thanh toán',
+            'paid' => 'Đã thanh toán',
+            'failed' => 'Thanh toán lỗi',
+            'refunded' => 'Đã hoàn tiền',
+        ];
     @endphp
 
     <div class="g-admin-page-shell">
@@ -71,7 +78,7 @@
                     <strong>Thông tin hồ sơ</strong>
                     <p>Thông tin định danh cơ bản, không bao gồm dữ liệu xác thực nhạy cảm.</p>
                 </div>
-                <span class="g-admin-status-chip">#{{ $customer->id }}</span>
+                <span class="g-admin-status-chip">KH{{ str_pad((string) $customer->id, 4, '0', STR_PAD_LEFT) }}</span>
             </header>
             <div class="g-admin-panel-body">
                 <div class="row" style="row-gap:12px;">
@@ -112,7 +119,7 @@
                                     <th>Mã đơn</th>
                                     <th>Ngày đặt</th>
                                     <th>Sản phẩm</th>
-                                    <th>Thanh toán</th>
+                                    <th>Trạng thái TT</th>
                                     <th>Trạng thái</th>
                                     <th>Tổng tiền</th>
                                     <th>Chi tiết</th>
@@ -125,10 +132,10 @@
                                         <td>{{ $order->code }}</td>
                                         <td>{{ ($order->placed_at ?: $order->created_at)?->format('d/m/Y H:i') ?: 'Không rõ' }}</td>
                                         <td>{{ number_format((int) $order->items_count) }}</td>
-                                        <td>{{ $order->payment_status }}</td>
+                                        <td>{{ $paymentStatusLabels[$order->payment_status] ?? 'Không rõ' }}</td>
                                         <td>
                                             <span class="label label-{{ $statusClasses[$status] ?? 'default' }}">
-                                                {{ $statusLabels[$status] ?? $status }}
+                                                {{ $statusLabels[$status] ?? 'Không rõ' }}
                                             </span>
                                         </td>
                                         <td><strong>{{ $formatMoney($order->total) }}</strong></td>

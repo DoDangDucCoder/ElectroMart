@@ -117,7 +117,7 @@
                     <div class="form-group">
                         <label for="is_active">Trạng thái</label>
                         <select name="is_active" id="is_active" class="form-control">
-                            <option value="1" @selected((string) old('is_active', (int) $coupon->is_active) === '1')>Đang kích hoạt</option>
+                            <option value="1" @selected((string) old('is_active', (int) $coupon->is_active) === '1')>Đang hoạt động</option>
                             <option value="0" @selected((string) old('is_active', (int) $coupon->is_active) === '0')>Đã khóa</option>
                         </select>
                     </div>

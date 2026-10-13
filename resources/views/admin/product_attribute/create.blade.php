@@ -115,14 +115,14 @@
                         <table class="table table-striped g-admin-data-table">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>STT</th>
                                     <th>Tên sản phẩm</th>
                                     <th>Tên thuộc tính</th>
                                     <th>Thuộc tính</th>
                                     <th>Hình ảnh</th>
                                     <th>Số lượng</th>
                                     <th>Giá</th>
-                                    <th>Quản lý</th>
+                                    <th>Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>

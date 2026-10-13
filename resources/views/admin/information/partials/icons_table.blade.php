@@ -4,7 +4,7 @@
             <th>{{ $nameLabel }}</th>
             <th>{{ $imageLabel }}</th>
             <th>{{ $linkLabel }}</th>
-            <th>Quản lý</th>
+            <th>Thao tác</th>
         </tr>
     </thead>
     <tbody>

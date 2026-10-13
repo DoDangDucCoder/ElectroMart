@@ -87,7 +87,7 @@
         <div class="print-header">
             <h1>Công ty TNHH một thành viên ABCD</h1>
             <p>Độc lập - Tự do - Hạnh phúc</p>
-            <p>Phiếu đơn hàng #{{ $order->order_code }}</p>
+            <p>Phiếu đơn hàng - Mã đơn {{ $order->order_code }}</p>
         </div>
 
         <div class="print-section">
@@ -97,7 +97,7 @@
                     <tr>
                         <th>Tên khách đặt</th>
                         <th>Số điện thoại</th>
-                        <th>Thư điện tử</th>
+                        <th>Email</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -118,7 +118,7 @@
                         <th>Tên người nhận</th>
                         <th>Địa chỉ</th>
                         <th>Số điện thoại</th>
-                        <th>Thư điện tử</th>
+                        <th>Email</th>
                         <th>Ghi chú</th>
                     </tr>
                 </thead>
@@ -142,7 +142,7 @@
                         <th>Tên sản phẩm</th>
                         <th>Thuộc tính</th>
                         <th>Mã giảm giá</th>
-                        <th>Phí ship</th>
+                        <th>Phí vận chuyển</th>
                         <th>Số lượng</th>
                         <th>Giá sản phẩm</th>
                         <th>Thành tiền</th>
@@ -175,7 +175,7 @@
                     <td>{{ $totals['coupon_label'] }}</td>
                 </tr>
                 <tr>
-                    <td>Phí ship</td>
+                    <td>Phí vận chuyển</td>
                     <td>{{ number_format($totals['shipping'], 0, ',', '.') }}đ</td>
                 </tr>
                 <tr>

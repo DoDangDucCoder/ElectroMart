@@ -41,8 +41,8 @@
                     <table class="table g-admin-data-table">
                         <thead>
                             <tr>
-                                <th>#</th>
-                                <th>Tên</th>
+                                <th>STT</th>
+                                <th>Tên thuộc tính</th>
                                 <th>Mô tả</th>
                                 <th>Thao tác</th>
                             </tr>

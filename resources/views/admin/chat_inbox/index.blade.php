@@ -123,7 +123,9 @@
                                 {{ $customer?->name ?: 'Khách vãng lai' }}
                                 <span class="g-admin-chat-status status-{{ $conversation->status }}">{{ $conversation->status === 'unread' ? 'Chưa đọc' : ($conversation->status === 'resolved' ? 'Đã xử lý' : 'Đang xử lý') }}</span>
                             </strong>
-                            <span>{{ $customer?->email ?: ($conversation->session_token ? 'Phiên: ' . \Illuminate\Support\Str::limit($conversation->session_token, 18) : 'Chưa có email') }}</span>
+                            @if ($customer?->email)
+                                <span>{{ $customer->email }}</span>
+                            @endif
                             <span>{{ $conversation->assignee?->name ? 'Phụ trách: ' . $conversation->assignee->name : 'Chưa gán phụ trách' }}</span>
                             <small>
                                 {{ $latestMessage?->message ? \Illuminate\Support\Str::limit($latestMessage->message, 70) : 'Chưa có tin nhắn' }}
@@ -151,7 +153,7 @@
                             @if ($selected_conversation?->customer)
                                 {{ $selected_conversation->customer->email }}{{ $selected_conversation->customer->phone ? ' • ' . $selected_conversation->customer->phone : '' }}
                             @elseif ($selected_conversation)
-                                Khách vãng lai • {{ $selected_conversation->session_token }}
+                                Khách vãng lai
                             @else
                                 Chọn một hội thoại ở cột bên trái để xem chi tiết.
                             @endif
@@ -380,7 +382,7 @@
                     title.textContent = conversation.customer?.name || 'Khách vãng lai';
                     meta.textContent = conversation.customer
                         ? [conversation.customer.email, conversation.customer.phone].filter(Boolean).join(' • ')
-                        : `Khách vãng lai • ${conversation.session_token || ''}`;
+                        : 'Khách vãng lai';
                     updateConversationMeta(conversation);
                     updateListItem(conversation);
 

@@ -16,7 +16,7 @@
             </div>
             <div class="g-admin-page-stats">
                 <article>
-                    <strong>{{ $post->post_status == 0 ? 'Hiển thị' : 'Ẩn' }}</strong>
+                    <strong>{{ $post->post_status == 0 ? 'Đang hoạt động' : 'Tạm ẩn' }}</strong>
                     <span>Trạng thái hiện tại</span>
                 </article>
                 <article>
@@ -107,13 +107,13 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="post_status">Hiển thị</label>
+                            <label for="post_status">Trạng thái hiển thị</label>
                             <select name="post_status" id="post_status" class="form-control input-sm m-bot15">
                                 <option value="0"
-                                    {{ (string) old('post_status', $post->post_status) === '0' ? 'selected' : '' }}>Hiển thị
+                                    {{ (string) old('post_status', $post->post_status) === '0' ? 'selected' : '' }}>Đang hoạt động
                                 </option>
                                 <option value="1"
-                                    {{ (string) old('post_status', $post->post_status) === '1' ? 'selected' : '' }}>Ẩn
+                                    {{ (string) old('post_status', $post->post_status) === '1' ? 'selected' : '' }}>Tạm ẩn
                                 </option>
                             </select>
                         </div>
@@ -138,7 +138,7 @@
                         <ul class="g-admin-note-list">
                             <li>Đường dẫn tĩnh (slug) hiện tại: <strong>{{ $post->post_slug }}</strong></li>
                             <li>Danh mục: <strong>{{ optional($post->category)->name ?? 'Chưa chọn' }}</strong></li>
-                            <li>Trạng thái: <strong>{{ $post->post_status == 0 ? 'Hiển thị' : 'Ẩn' }}</strong></li>
+                            <li>Trạng thái: <strong>{{ $post->post_status == 0 ? 'Đang hoạt động' : 'Tạm ẩn' }}</strong></li>
                         </ul>
                     </div>
                 </div>

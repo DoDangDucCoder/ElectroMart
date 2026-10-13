@@ -51,7 +51,8 @@
     $fullStars = (int) floor($rating);
     $emptyStars = max(0, 5 - $fullStars);
 
-    $stockValue = $value('product_quantity') ?? $value('stock') ?? null;
+    $stockValue = $value('product_quantity') ?? $value('stock_quantity') ?? $value('stock') ?? null;
+    $stockQuantity = max(0, (int) ($stockValue ?? 0));
     $isActive = $value('is_active');
     $isOutOfStock = ($stockValue !== null && (int) $stockValue <= 0) || ($isActive !== null && ! (bool) $isActive);
     $isHot = (bool) $value('is_hot', false);
@@ -111,6 +112,13 @@
             @endfor
             <span>({{ $reviewCount }})</span>
         </div>
+
+        @if ($stockValue !== null)
+            <div class="tech-product-stock {{ $isOutOfStock ? 'tech-product-stock--empty' : '' }}">
+                <i class="fa fa-archive" aria-hidden="true"></i>
+                <span>{{ $isOutOfStock ? 'Kho: tạm hết hàng' : 'Kho: còn ' . number_format($stockQuantity, 0, ',', '.') . ' sản phẩm' }}</span>
+            </div>
+        @endif
 
         <div class="tech-product-footer">
             <div class="tech-price-block">

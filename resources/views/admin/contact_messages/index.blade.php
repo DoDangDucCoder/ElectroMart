@@ -72,7 +72,7 @@
                         <select name="status" id="status" class="form-control">
                             <option value="all" @selected($filters['status'] === 'all')>Tất cả</option>
                             @foreach ($statuses as $status)
-                                <option value="{{ $status }}" @selected($filters['status'] === $status)>{{ $statusLabels[$status] ?? $status }}</option>
+                                <option value="{{ $status }}" @selected($filters['status'] === $status)>{{ $statusLabels[$status] ?? 'Không rõ' }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -84,14 +84,7 @@
                         <label for="date_to">Đến ngày</label>
                         <input type="date" name="date_to" id="date_to" value="{{ $filters['date_to'] }}" class="form-control">
                     </div>
-                    <div>
-                        <label for="per_page">Mỗi trang</label>
-                        <select name="per_page" id="per_page" class="form-control">
-                            @foreach ([10, 15, 25, 50] as $size)
-                                <option value="{{ $size }}" @selected((int) $filters['per_page'] === $size)>{{ $size }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+
                     <div class="g-admin-contact-filter-actions">
                         <button type="submit" class="btn btn-info">
                             <i class="fa fa-search"></i> Lọc liên hệ
@@ -121,7 +114,7 @@
                         <table class="table table-bordered table-striped">
                             <thead>
                                 <tr>
-                                    <th style="width:80px;">Mã</th>
+                                    <th style="width:90px;">Mã liên hệ</th>
                                     <th>Người gửi</th>
                                     <th>Chủ đề</th>
                                     <th>Nội dung</th>
@@ -137,7 +130,7 @@
                                         $createdAt = $message->created_at;
                                     @endphp
                                     <tr>
-                                        <td>#{{ $message->id }}</td>
+                                        <td>LH{{ str_pad((string) $message->id, 4, '0', STR_PAD_LEFT) }}</td>
                                         <td>
                                             <strong>{{ $message->name }}</strong><br>
                                             <a href="mailto:{{ $message->email }}">{{ $message->email }}</a>
@@ -157,7 +150,7 @@
                                         </td>
                                         <td>
                                             <span class="label label-{{ $statusClasses[$status] ?? 'default' }}">
-                                                {{ $statusLabels[$status] ?? $status }}
+                                                {{ $statusLabels[$status] ?? 'Không rõ' }}
                                             </span>
                                         </td>
                                         <td>{{ $createdAt ? $createdAt->format('d/m/Y H:i') : 'Không rõ' }}</td>
@@ -166,7 +159,7 @@
                                                 @csrf
                                                 @method('PATCH')
                                                 <div style="display:flex;gap:6px;">
-                                                    <select name="status" class="form-control input-sm" aria-label="Trạng thái liên hệ #{{ $message->id }}">
+                                                    <select name="status" class="form-control input-sm" aria-label="Trạng thái liên hệ LH{{ str_pad((string) $message->id, 4, '0', STR_PAD_LEFT) }}">
                                                         @foreach ($statuses as $option)
                                                             <option value="{{ $option }}" @selected($status === $option)>{{ $statusLabels[$option] ?? $option }}</option>
                                                         @endforeach

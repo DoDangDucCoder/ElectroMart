@@ -9,6 +9,7 @@
         @include('partials.admin.content-shell')
     </section>
     @include('partials.admin.scripts-stack')
+    <script src="{{ asset('backend/js/stat-card-filter.js') }}"></script>
 </body>
 
 </html>

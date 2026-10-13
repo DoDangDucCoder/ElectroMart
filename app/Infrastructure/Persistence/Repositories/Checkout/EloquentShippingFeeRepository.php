@@ -9,12 +9,8 @@ class EloquentShippingFeeRepository implements ShippingFeeRepositoryInterface
 {
     public function findVietnam2025Fee(?string $provinceCode, ?string $wardCode = null): ?ShippingFee
     {
-        if (! $provinceCode) {
-            return null;
-        }
-
         // Thử match chính xác province + ward trước
-        if ($wardCode) {
+        if ($provinceCode && $wardCode) {
             $fee = ShippingFee::query()
                 ->where('vietnam_province_code', $provinceCode)
                 ->where('vietnam_ward_code', $wardCode)
@@ -26,11 +22,29 @@ class EloquentShippingFeeRepository implements ShippingFeeRepositoryInterface
         }
 
         // Fallback: match theo province-only (ward rỗng hoặc null)
+        if ($provinceCode) {
+            $fee = ShippingFee::query()
+                ->where('vietnam_province_code', $provinceCode)
+                ->where(function ($query) {
+                    $query->whereNull('vietnam_ward_code')
+                        ->orWhere('vietnam_ward_code', '');
+                })
+                ->first();
+
+            if ($fee) {
+                return $fee;
+            }
+        }
+
+        // Fallback cuối: phí mặc định toàn quốc.
         return ShippingFee::query()
-            ->where('vietnam_province_code', $provinceCode)
+            ->where(function ($query) {
+                $query->whereNull('vietnam_province_code')
+                    ->orWhere('vietnam_province_code', '');
+            })
             ->where(function ($query) {
                 $query->whereNull('vietnam_ward_code')
-                      ->orWhere('vietnam_ward_code', '');
+                    ->orWhere('vietnam_ward_code', '');
             })
             ->first();
     }
@@ -51,9 +65,19 @@ class EloquentShippingFeeRepository implements ShippingFeeRepositoryInterface
             $query->where('city_id', $cityId);
         }
 
-        return $query->orderByDesc('ward_id')
+        $fee = $query->orderByDesc('ward_id')
             ->orderByDesc('province_id')
             ->orderByDesc('city_id')
+            ->first();
+
+        if ($fee) {
+            return $fee;
+        }
+
+        return ShippingFee::query()
+            ->whereNull('city_id')
+            ->whereNull('province_id')
+            ->whereNull('ward_id')
             ->first();
     }
 }

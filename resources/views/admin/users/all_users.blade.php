@@ -62,7 +62,7 @@
                                     <th>Liên hệ</th>
                                     <th>Vai trò hiện tại</th>
                                     <th>Đồng bộ vai trò</th>
-                                    <th>Quản lý</th>
+                                    <th>Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -70,7 +70,6 @@
                                     <tr>
                                         <td>
                                             <div class="g-admin-order-line-name">{{ $user->name }}</div>
-                                            <small class="text-muted">ID: {{ $user->id }}</small>
                                         </td>
                                         <td>
                                             <div>{{ $user->email }}</div>

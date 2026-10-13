@@ -1,7 +1,7 @@
 <x-mail::message>
 # Ưu đãi dành cho {{ $mailData->audienceLabel }}
 
-{{ $mailData->shopName }} gửi tới bạn một mã giảm giá để áp dụng cho đơn hàng tiếp theo trên website.
+{{ $mailData->shopName }} gửi tới bạn một mã ưu đãi. Khi mua hàng, bạn chỉ cần sao chép mã bên dưới và nhập vào ô mã giảm giá ở bước thanh toán.
 
 <x-mail::panel>
 **Mức ưu đãi**  
@@ -18,13 +18,9 @@
 | Thời gian hiệu lực | {{ $mailData->activeWindowLabel() }} |
 </x-mail::table>
 
-<x-mail::button :url="$mailData->loginUrl">
-Đăng nhập để sử dụng mã
-</x-mail::button>
-
-Hoặc truy cập [{{ $mailData->shopUrl }}]({{ $mailData->shopUrl }}) để tiếp tục mua sắm và áp dụng mã ưu đãi ở bước thanh toán.
+Lưu ý: mã chỉ được áp dụng khi còn hiệu lực, còn lượt sử dụng và đơn hàng thỏa điều kiện khuyến mãi của hệ thống.
 
 <x-slot:subcopy>
-Email này được gửi tự động từ {{ $mailData->shopName }} dành cho {{ $mailData->audienceLabel }}.
+Email này được gửi tự động từ {{ $mailData->shopName }} để thông báo mã ưu đãi cho {{ $mailData->audienceLabel }}. Vui lòng không trả lời trực tiếp email này.
 </x-slot:subcopy>
 </x-mail::message>

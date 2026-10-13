@@ -81,11 +81,11 @@
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 32px;">#</th>
+                        <th style="width: 42px;">STT</th>
                         <th>Sản phẩm</th>
                         <th>Danh mục</th>
                         <th>Thương hiệu</th>
-                        <th class="text-right">SL bán</th>
+                        <th class="text-right">Số lượng bán</th>
                         <th class="text-right">Doanh thu</th>
                         <th class="text-right">Giá vốn</th>
                         <th class="text-right">Lợi nhuận</th>

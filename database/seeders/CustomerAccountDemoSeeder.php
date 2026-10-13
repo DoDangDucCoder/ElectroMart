@@ -12,16 +12,34 @@ class CustomerAccountDemoSeeder extends Seeder
     {
         $now = now();
 
-        $customer = DB::table('customers')
-            ->where('email', 'customer1@example.com')
-            ->first();
-
         $product = DB::table('products')
             ->where('sku', 'IP15PM256')
             ->first();
 
-        if (! $customer || ! $product) {
+        if (! $product) {
             return;
+        }
+
+        $customer = DB::table('customers')
+            ->where('email', 'customer1@example.com')
+            ->first();
+
+        if (! $customer) {
+            DB::table('customers')->insert([
+                'name' => 'Nguyen Van An',
+                'email' => 'customer1@example.com',
+                'phone' => '0901000001',
+                'password' => bcrypt('password'),
+                'is_active' => true,
+                'email_verified_at' => $now,
+                'meta' => json_encode(['seed' => 'customer-account-demo']),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            $customer = DB::table('customers')
+                ->where('email', 'customer1@example.com')
+                ->first();
         }
 
         $customerId = (int) $customer->id;

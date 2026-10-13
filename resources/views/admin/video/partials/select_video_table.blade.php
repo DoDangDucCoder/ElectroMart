@@ -10,7 +10,7 @@
                 <th>Link</th>
                 <th>Mô tả</th>
                 <th>Demo video</th>
-                <th style="width:30px;">Quản lý</th>
+                <th style="width:80px;">Thao tác</th>
             </tr>
         </thead>
         <tbody>

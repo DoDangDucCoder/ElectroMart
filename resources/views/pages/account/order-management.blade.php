@@ -20,8 +20,8 @@
                 <button class="accp-tab">Đang xử lý</button>
                 <button class="accp-tab">Đang giao</button>
                 <button class="accp-tab">Hoàn thành</button>
-                <button class="accp-tab">Đã hủy</button>
-                <button class="accp-tab">Trả hàng</button>
+                <a class="accp-tab" href="{{ route('customer.account.cancelled-orders') }}">Đã hủy</a>
+                <a class="accp-tab" href="{{ route('customer.account.returns') }}">Trả hàng</a>
             </div>
             <div class="accp-toolbar">
                 <div class="accp-search"><i class="fa fa-search"></i><input type="text" placeholder="Tìm theo mã đơn, sản phẩm..."></div>
@@ -62,7 +62,43 @@
                 @if($order->items->count() > 2)
                 <div style="font-size:12px;color:#6b7280;padding:4px 0">...và {{ $order->items->count() - 2 }} sản phẩm khác</div>
                 @endif
-                <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f3f4f6;padding-top:12px">
+                @if($order->status === 'completed')
+                <details style="border-top:1px solid #f3f4f6;margin-top:8px;padding-top:12px">
+                    <summary style="cursor:pointer;font-size:13px;font-weight:700;color:#0d9488"><i class="fa fa-undo"></i> Gửi yêu cầu trả hàng / hoàn tiền</summary>
+                    <form method="POST" action="{{ route('customer.account.returns.request', ['orderCode' => $orderCode]) }}" style="display:grid;grid-template-columns:minmax(260px,1.2fr) 150px minmax(180px,.8fr);gap:12px;margin-top:12px;align-items:end">
+                        @csrf
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:5px">Sản phẩm</label>
+                            <select name="order_item_id" class="accp-select js-return-item-select" style="width:100%" required>
+                                @foreach($order->items as $item)
+                                <option value="{{ $item->id }}" data-max="{{ (int) $item->quantity }}">{{ $item->product_name ?? $item->product?->name ?? 'Sản phẩm' }} - tối đa {{ (int) $item->quantity }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:5px">Số lượng</label>
+                            <input type="number" name="quantity" class="accp-input js-return-quantity" value="1" min="1" max="{{ (int) ($order->items->first()?->quantity ?? 1) }}" style="width:100%" required>
+                        </div>
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:5px">Hoàn tiền qua</label>
+                            <select name="refund_method" class="accp-select" style="width:100%">
+                                <option value="bank_transfer">Chuyển khoản</option>
+                                <option value="cod">COD</option>
+                                <option value="vnpay">VNPay</option>
+                                <option value="momo">MoMo</option>
+                            </select>
+                        </div>
+                        <div style="grid-column:1 / -1">
+                            <label style="display:block;font-size:12px;font-weight:600;color:#6b7280;margin-bottom:5px">Lý do</label>
+                            <textarea name="reason" class="accp-textarea" rows="3" style="width:100%" placeholder="Ví dụ: sản phẩm lỗi, không đúng mô tả, cần đổi trả..." required></textarea>
+                        </div>
+                        <div style="grid-column:1 / -1;display:flex;justify-content:flex-end">
+                            <button type="submit" class="accp-btn accp-btn--primary accp-btn--sm"><i class="fa fa-paper-plane"></i> Gửi yêu cầu</button>
+                        </div>
+                    </form>
+                </details>
+                @endif
+                <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f3f4f6;padding-top:12px;margin-top:{{ $order->status === 'completed' ? '12px' : '0' }}">
                     <div style="font-size:13px;color:#6b7280">Tổng: <strong style="color:#111827">{{ number_format($order->total) }}đ</strong></div>
                     <div style="display:flex;gap:8px">
                         @if(in_array($order->status, ['shipping', 'shipped']))
@@ -72,7 +108,10 @@
                         <button type="button" class="accp-btn accp-btn--outline accp-btn--sm js-cancel-order-trigger" style="color:#dc2626;border-color:#dc2626" data-order-code="{{ $orderCode }}"><i class="fa fa-times"></i> Hủy đơn</button>
                         @endif
                         @if($order->status === 'completed')
-                        <a href="#" class="accp-btn accp-btn--primary accp-btn--sm"><i class="fa fa-refresh"></i> Mua lại</a>
+                        <form method="POST" action="{{ route('customer.account.orders.reorder', ['orderCode' => $orderCode]) }}" style="margin:0">
+                            @csrf
+                            <button type="submit" class="accp-btn accp-btn--primary accp-btn--sm"><i class="fa fa-refresh"></i> Mua lại</button>
+                        </form>
                         <a href="#" class="accp-btn accp-btn--outline accp-btn--sm"><i class="fa fa-star"></i> Đánh giá</a>
                         @endif
                         <a href="{{ route('customer.account.order-tracking', ['orderCode' => $orderCode]) }}" class="accp-btn accp-btn--outline accp-btn--sm">Chi tiết</a>
@@ -100,4 +139,16 @@
     </div>
 </div>
 @include('pages.history.partials.cancel_order_modal')
+<script>
+document.addEventListener('change', function (event) {
+    if (!event.target.classList.contains('js-return-item-select')) return;
+    var form = event.target.closest('form');
+    var input = form ? form.querySelector('.js-return-quantity') : null;
+    var option = event.target.selectedOptions[0];
+    var max = option ? parseInt(option.getAttribute('data-max') || '1', 10) : 1;
+    if (!input) return;
+    input.max = String(max);
+    if (parseInt(input.value || '1', 10) > max) input.value = String(max);
+});
+</script>
 @endsection

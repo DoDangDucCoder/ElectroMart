@@ -20,6 +20,7 @@ use App\Support\AssetUrl;
 use App\Support\StorefrontLabel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Redirect;
@@ -99,14 +100,66 @@ class ProductController extends Controller
         return response()->json(['message' => 'Thành công.', 'status' => $review->comment_status]);
     }
 
-    public function list_comment()
+    public function list_comment(Request $request)
     {
-        $roots = $this->productReviewService->getAdminRootComments();
-        $replies = $this->productReviewService->getRepliesForParents($roots->pluck('id')->all());
+        $allRoots = $this->productReviewService->getAdminRootComments();
+        $roots = $allRoots;
+        $search = trim((string) $request->query('q', ''));
+        $status = (string) $request->query('status', '');
+        $sort = (string) $request->query('sort', 'newest');
+        $perPage = max(1, min((int) $request->integer('per_page', 10), 50));
+
+        if ($search !== '') {
+            $normalized = Str::lower($search);
+            $roots = $roots->filter(function ($comment) use ($normalized): bool {
+                return Str::contains(Str::lower((string) $comment->comment_name), $normalized)
+                    || Str::contains(Str::lower((string) $comment->comment), $normalized)
+                    || Str::contains(Str::lower((string) ($comment->product?->product_name ?? '')), $normalized);
+            })->values();
+        }
+
+        if ($status === 'approved') {
+            $roots = $roots->where('comment_status', 0)->values();
+        } elseif ($status === 'pending') {
+            $roots = $roots->where('comment_status', 1)->values();
+        }
+
+        $roots = match ($sort) {
+            'oldest' => $roots->sortBy('created_at')->values(),
+            'pending_first' => $roots->sortBy('comment_status')->sortByDesc('created_at')->values(),
+            default => $roots->sortByDesc('created_at')->values(),
+        };
+
+        $page = max(1, (int) $request->query('page', 1));
+        $paginatedRoots = new LengthAwarePaginator(
+            $roots->forPage($page, $perPage)->values(),
+            $roots->count(),
+            $perPage,
+            $page,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
+
+        $allRepliesCount = $this->productReviewService->getRepliesForParents($allRoots->pluck('id')->all())->count();
+        $replies = $this->productReviewService->getRepliesForParents($paginatedRoots->getCollection()->pluck('id')->all());
 
         return view('admin.comment.list_comment')->with([
-            'comment' => $roots,
+            'comment' => $paginatedRoots,
             'comment_rep' => $replies,
+            'comment_stats' => [
+                'total' => $allRoots->count(),
+                'replies' => $allRepliesCount,
+                'approved' => $allRoots->where('comment_status', 0)->count(),
+                'pending' => $allRoots->where('comment_status', 1)->count(),
+            ],
+            'filters' => [
+                'q' => $search,
+                'status' => $status,
+                'sort' => $sort,
+                'per_page' => $perPage,
+            ],
         ]);
     }
 

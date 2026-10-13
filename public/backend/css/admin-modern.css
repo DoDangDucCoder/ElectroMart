@@ -348,6 +348,20 @@ body.g-admin-shell-modern .g-admin-shell {
     text-align: center;
 }
 
+.g-admin-shell-modern .g-admin-user-menu .dropdown-menu.extended.logout > li > a,
+.g-admin-shell-modern .g-admin-user-menu .dropdown-menu.extended.logout > li .g-admin-user-logout-button {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    column-gap: 10px;
+    align-items: center;
+}
+
+.g-admin-shell-modern .g-admin-user-menu .dropdown-menu.extended.logout > li > a > i,
+.g-admin-shell-modern .g-admin-user-menu .dropdown-menu.extended.logout > li .g-admin-user-logout-button > i {
+    grid-column: 1;
+    justify-self: center;
+}
+
 /* ----------- Sidebar ----------- */
 .g-admin-shell-modern .g-admin-shell-leading {
     background: #0f172a;
@@ -451,6 +465,10 @@ body.g-admin-shell-modern .g-admin-shell {
     letter-spacing: 0;
 }
 
+.g-admin-shell-modern #nav-accordion > li > a[data-admin-sidebar-key="dashboard"] {
+    padding-left: 18px;
+}
+
 .g-admin-shell-modern #nav-accordion > li.active > a,
 .g-admin-shell-modern #nav-accordion > li.is-active > a,
 .g-admin-shell-modern #nav-accordion > li > a[aria-current="page"],
@@ -495,13 +513,17 @@ body.g-admin-shell-modern .g-admin-shell {
 }
 
 .g-admin-shell-modern #nav-accordion > li.g-admin-sidebar-group > ul.sub li > a {
-    display: block;
-    padding: 8px 14px 8px 32px;
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 10px 14px 10px 40px;
     color: #94a3b8;
     font-size: 13px;
+    line-height: 1.35;
     text-decoration: none;
     border-radius: 8px;
     margin: 2px 6px;
+    box-sizing: border-box;
 }
 
 .g-admin-shell-modern #nav-accordion > li.g-admin-sidebar-group > ul.sub li > a:hover,

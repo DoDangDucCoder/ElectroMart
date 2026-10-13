@@ -57,7 +57,10 @@
                 <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #f3f4f6;padding-top:12px;margin-top:4px">
                     <div style="font-size:13px;color:#6b7280">Tổng: <strong style="color:#111827;font-size:15px">{{ number_format($order->total) }}đ</strong></div>
                     <div style="display:flex;gap:8px">
-                        <a href="#" class="accp-btn accp-btn--primary accp-btn--sm"><i class="fa fa-refresh"></i> Mua lại</a>
+                        <form method="POST" action="{{ route('customer.account.orders.reorder', ['orderCode' => $orderCode]) }}" style="margin:0">
+                            @csrf
+                            <button type="submit" class="accp-btn accp-btn--primary accp-btn--sm"><i class="fa fa-refresh"></i> Mua lại</button>
+                        </form>
                         <a href="#" class="accp-btn accp-btn--outline accp-btn--sm"><i class="fa fa-star"></i> Đánh giá</a>
                         <a href="{{ route('customer.account.order-tracking', ['orderCode' => $orderCode]) }}" class="accp-btn accp-btn--outline accp-btn--sm">Chi tiết</a>
                     </div>

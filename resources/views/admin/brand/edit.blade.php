@@ -6,12 +6,12 @@
             <div>
                 <span class="g-admin-page-eyebrow">Thương hiệu</span>
                 <h1>Cập nhật thương hiệu</h1>
-                <p>Điều chỉnh tên, mô tả, thứ tự hiển thị và trạng thái của thương hiệu đang chọn.</p>
+                <p>Điều chỉnh tên, mô tả và trạng thái của thương hiệu đang chọn.</p>
             </div>
             <div class="g-admin-page-stats">
                 <article>
-                    <strong>#{{ $brand->brand_id }}</strong>
-                    <span>Mã thương hiệu</span>
+                    <strong>{{ $brand->brand_name }}</strong>
+                    <span>Thương hiệu đang chỉnh</span>
                 </article>
             </div>
         </section>
@@ -59,11 +59,6 @@
                         <textarea name="brand_product_desc" id="brand_product_desc" rows="5" class="form-control">{{ old('brand_product_desc', $brand->brand_desc) }}</textarea>
                     </div>
                     <div class="form-group">
-                        <label for="display_order">Thứ tự hiển thị</label>
-                        <input type="number" name="display_order" id="display_order" class="form-control" min="0"
-                            value="{{ old('display_order', $brand->display_order) }}">
-                    </div>
-                    <div class="form-group">
                         <label for="logo">Logo thương hiệu</label>
                         @if ($brand->logo_path)
                             <div class="mb-2">
@@ -79,10 +74,10 @@
                         <select name="brand_product_status" id="brand_product_status" class="form-control input-sm m-bot15">
                             <option value="0"
                                 {{ (string) old('brand_product_status', $brand->brand_status) === '0' ? 'selected' : '' }}>
-                                Hiển thị</option>
+                                Đang hoạt động</option>
                             <option value="1"
                                 {{ (string) old('brand_product_status', $brand->brand_status) === '1' ? 'selected' : '' }}>
-                                Ẩn</option>
+                                Tạm ẩn</option>
                         </select>
                     </div>
                     <div class="g-admin-inline-actions">

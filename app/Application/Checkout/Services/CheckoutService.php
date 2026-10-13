@@ -225,18 +225,39 @@ class CheckoutService
             return null;
         }
 
-        return $customer->addresses()->create([
-            'label' => $payload['address_label'] ?? 'Checkout',
-            'recipient_name' => $payload['shipping_name'] ?? $customer->name,
-            'recipient_phone' => $payload['shipping_phone'] ?? $customer->phone,
-            'email' => $payload['shipping_email'] ?? $customer->email,
-            'address_line1' => $payload['shipping_address'] ?? '',
-            'address_line2' => $payload['shipping_notes'] ?? null,
-            'country' => 'Vietnam',
+        $addressData = [
+            'recipient_name' => trim((string) ($payload['shipping_name'] ?? $customer->name)),
+            'recipient_phone' => trim((string) ($payload['shipping_phone'] ?? $customer->phone)),
+            'address_line1' => trim((string) ($payload['shipping_address'] ?? '')),
+            'address_line2' => trim((string) ($payload['shipping_notes'] ?? '')) ?: null,
             'location_city_id' => $payload['city_id'] ?? null,
             'location_province_id' => $payload['province_id'] ?? null,
             'location_ward_id' => $payload['ward_id'] ?? null,
-            'is_default' => false,
+        ];
+
+        $existing = $customer->addresses()
+            ->where('recipient_name', $addressData['recipient_name'])
+            ->where('recipient_phone', $addressData['recipient_phone'])
+            ->where('address_line1', $addressData['address_line1'])
+            ->where(function ($query) use ($addressData) {
+                $addressData['address_line2'] === null
+                    ? $query->whereNull('address_line2')->orWhere('address_line2', '')
+                    : $query->where('address_line2', $addressData['address_line2']);
+            })
+            ->where('location_city_id', $addressData['location_city_id'])
+            ->where('location_province_id', $addressData['location_province_id'])
+            ->where('location_ward_id', $addressData['location_ward_id'])
+            ->first();
+
+        if ($existing) {
+            return $existing;
+        }
+
+        return $customer->addresses()->create($addressData + [
+            'label' => $payload['address_label'] ?? 'Checkout',
+            'email' => $payload['shipping_email'] ?? $customer->email,
+            'country' => 'Vietnam',
+            'is_default' => ! $customer->addresses()->exists(),
             'meta' => array_filter([
                 'source' => 'checkout_form',
                 'vietnam_2025' => $this->vietnamLocationMeta($payload),

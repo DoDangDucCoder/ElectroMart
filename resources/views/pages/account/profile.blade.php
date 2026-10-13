@@ -13,7 +13,7 @@
 <div class="accp-wrap">
     @include('partials.storefront.breadcrumb', ['class' => 'accp-crumb', 'separator' => '›', 'items' => [['label' => 'Tài khoản', 'url' => url('/account')], ['label' => 'Thông tin tài khoản', 'current' => true]]])
     <div class="accp-grid">
-        @include('pages.account.partials.sidebar', ['currentSection' => 'profile', 'customer' => $customer])
+        @include('pages.account.partials.sidebar', ['currentSection' => 'overview', 'customer' => $customer])
         <main>
             <div class="accp-page-title"><h1>Thông tin tài khoản</h1></div>
 

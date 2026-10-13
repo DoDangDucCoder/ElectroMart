@@ -92,11 +92,11 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="category_product_status">Hiển thị</label>
+                            <label for="category_product_status">Trạng thái hiển thị</label>
                             <select name="category_product_status" id="category_product_status"
                                 class="form-control input-sm m-bot15">
-                                <option value="0" {{ old('category_product_status', '0') === '0' ? 'selected' : '' }}>Hiển thị</option>
-                                <option value="1" {{ old('category_product_status') === '1' ? 'selected' : '' }}>Ẩn</option>
+                                <option value="0" {{ old('category_product_status', '0') === '0' ? 'selected' : '' }}>Đang hoạt động</option>
+                                <option value="1" {{ old('category_product_status') === '1' ? 'selected' : '' }}>Tạm ẩn</option>
                             </select>
                         </div>
 

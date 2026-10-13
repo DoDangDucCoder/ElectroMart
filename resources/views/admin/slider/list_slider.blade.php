@@ -5,7 +5,7 @@
         <section class="g-admin-page-hero">
             <div>
                 <span class="g-admin-page-eyebrow">Nội dung / Trình chiếu</span>
-                <h1>Liệt kê banner</h1>
+                <h1>Quản lý banner</h1>
                 <p>Theo dõi trạng thái hiển thị của banner và xóa những mục không còn sử dụng.</p>
             </div>
             <div class="g-admin-page-stats">
@@ -43,27 +43,17 @@
                     <table class="table table-striped b-t b-light g-admin-data-table">
                         <thead>
                             <tr>
-                                <th style="width:20px;">
-                                    <label class="i-checks m-b-none">
-                                        <input type="checkbox"><i></i>
-                                    </label>
-                                </th>
                                 <th>Tên mục</th>
                                 <th>Hình ảnh</th>
                                 <th>Tiêu đề nổi bật</th>
                                 <th>Phong cách</th>
-                                <th>Tình trạng</th>
-                                <th style="width:30px;"></th>
+                                <th>Trạng thái</th>
+                                <th style="width:80px;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($all_slide as $slide)
                                 <tr>
-                                    <td>
-                                        <label class="i-checks m-b-none">
-                                            <input type="checkbox" name="post[]"><i></i>
-                                        </label>
-                                    </td>
                                     <td>
                                         <strong>{{ $slide->slider_name }}</strong>
                                         @if (!empty($slide->slider_alt))

@@ -26,7 +26,7 @@
                 <div class="g-admin-panel-head">
                     <div>
                         <div>Thêm phí vận chuyển</div>
-                        <p>Chọn đủ 2 cấp địa giới trước khi lưu giá trị phí ship.</p>
+                        <p>Để trống tỉnh/xã để lưu phí mặc định toàn quốc, hoặc chọn tỉnh/xã để cấu hình chi tiết hơn.</p>
                     </div>
                 </div>
                 <div class="g-admin-panel-body">
@@ -40,7 +40,7 @@
                         <div class="form-group">
                             <label for="province">Chọn tỉnh/thành phố</label>
                             <select name="province_code" id="province" class="form-control input-sm m-bot15 choose province">
-                                <option value="">--Chọn tỉnh thành phố--</option>
+                                <option value="">Mặc định toàn quốc</option>
                                 @foreach ($provinces as $province)
                                     <option value="{{ $province->code }}">{{ $province->name }}</option>
                                 @endforeach
@@ -50,7 +50,7 @@
                         <div class="form-group">
                             <label for="wards">Chọn xã/phường/đặc khu</label>
                             <select name="ward_code" id="wards" class="form-control input-sm m-bot15 wards">
-                                <option value="">--Chọn xã/phường/đặc khu--</option>
+                                <option value="">Để trống nếu dùng phí theo tỉnh hoặc mặc định</option>
                             </select>
                         </div>
 

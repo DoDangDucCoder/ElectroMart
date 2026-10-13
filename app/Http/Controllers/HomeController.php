@@ -183,7 +183,7 @@ class HomeController extends Controller
     private function resolveTechHomeProducts(int $limit = 8, bool $preferHot = false, bool $onlyDiscounted = false): Collection
     {
         $limit = max(1, $limit);
-        $cacheKey = 'storefront.home.tech_products.'
+        $cacheKey = 'storefront.home.tech_products.v2.'
             .$limit.'.'
             .($preferHot ? 'hot' : 'normal').'.'
             .($onlyDiscounted ? 'discounted' : 'all');
@@ -333,6 +333,7 @@ class HomeController extends Controller
             'original_price' => $originalPrice,
             'price' => $finalPrice,
             'discount_percent' => $discountPercent,
+            'stock_quantity' => max(0, (int) ($product->stock_quantity ?? 0)),
             'is_hot' => (bool) ($product->is_hot ?? false),
         ];
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Application\Checkout\Services\CartService;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Brand;
 use App\Infrastructure\Persistence\Eloquent\Catalog\Product;
 use App\Infrastructure\Persistence\Eloquent\Catalog\ProductCategory;
@@ -10,6 +11,7 @@ use App\Infrastructure\Persistence\Eloquent\Catalog\ProductView;
 use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
 use App\Infrastructure\Persistence\Eloquent\Marketing\Coupon;
 use App\Infrastructure\Persistence\Eloquent\Order\Order;
+use App\Infrastructure\Persistence\Eloquent\Order\OrderReturn;
 use App\Support\StorefrontCustomerAuth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,6 +21,7 @@ use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
 use App\Http\Controllers\Concerns\LegacyStorefrontContext;
+use RuntimeException;
 
 class CustomerAccountController extends Controller
 {
@@ -333,7 +336,19 @@ class CustomerAccountController extends Controller
             ->with(['city', 'province', 'ward'])
             ->orderByDesc('is_default')
             ->orderByDesc('id')
-            ->get();
+            ->get()
+            ->unique(function ($address) {
+                return mb_strtolower(implode('|', [
+                    trim((string) $address->recipient_name),
+                    preg_replace('/\D+/', '', (string) $address->recipient_phone),
+                    trim((string) $address->address_line1),
+                    trim((string) $address->address_line2),
+                    (string) $address->location_city_id,
+                    (string) $address->location_province_id,
+                    (string) $address->location_ward_id,
+                ]));
+            })
+            ->values();
 
         return view('pages.account.addresses', array_merge(
             $this->seoContext($request, 'Địa chỉ giao hàng', 'dia-chi'),
@@ -862,6 +877,136 @@ class CustomerAccountController extends Controller
                 'recommendedProducts' => $recommendedProducts,
             ]
         ));
+    }
+
+    public function requestReturn(Request $request, string $orderCode): RedirectResponse
+    {
+        $customer = $this->sessionCustomer();
+        if (! $customer) {
+            $this->clearCustomerSession();
+            return $this->redirectToLogin('Vui lòng đăng nhập.');
+        }
+
+        if (! Schema::hasTable('order_returns')) {
+            return Redirect::back()->with('error', 'Chức năng trả hàng chưa được cấu hình.');
+        }
+
+        $data = $request->validate([
+            'order_item_id' => ['required', 'integer', 'min:1'],
+            'quantity' => ['required', 'integer', 'min:1'],
+            'reason' => ['required', 'string', 'min:10', 'max:1000'],
+            'refund_method' => ['nullable', 'string', 'in:cod,bank_transfer,transfer,cash,vnpay,momo'],
+        ], [
+            'reason.required' => 'Vui lòng nhập lý do trả hàng.',
+            'reason.min' => 'Lý do trả hàng cần ít nhất 10 ký tự.',
+        ]);
+
+        $order = Order::query()
+            ->where('customer_id', $customer->id)
+            ->where('code', $orderCode)
+            ->with('items')
+            ->first();
+
+        if (! $order) {
+            return Redirect::route('customer.account.orders')->with('error', 'Không tìm thấy đơn hàng.');
+        }
+
+        if ($order->status !== 'completed') {
+            return Redirect::back()->with('error', 'Chỉ đơn hàng đã hoàn thành mới được gửi yêu cầu trả hàng.');
+        }
+
+        $completedAt = $order->completed_at ?? $order->updated_at ?? $order->created_at;
+        if ($completedAt && $completedAt->lt(Carbon::now()->subDays(14))) {
+            return Redirect::back()->with('error', 'Đơn hàng đã quá thời hạn 14 ngày để gửi yêu cầu trả hàng.');
+        }
+
+        $item = $order->items->firstWhere('id', (int) $data['order_item_id']);
+        if (! $item) {
+            return Redirect::back()->with('error', 'Sản phẩm không thuộc đơn hàng này.');
+        }
+
+        $quantity = (int) $data['quantity'];
+        if ($quantity > (int) $item->quantity) {
+            return Redirect::back()->with('error', 'Số lượng trả hàng không được vượt quá số lượng đã mua.');
+        }
+
+        $exists = OrderReturn::query()
+            ->where('customer_id', $customer->id)
+            ->where('order_id', $order->id)
+            ->where('order_item_id', $item->id)
+            ->exists();
+
+        if ($exists) {
+            return Redirect::back()->with('error', 'Sản phẩm này đã có yêu cầu trả hàng, vui lòng theo dõi trong mục Trả hàng / Hoàn tiền.');
+        }
+
+        OrderReturn::create([
+            'code' => 'RET-' . now()->format('ymdHis') . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6)),
+            'customer_id' => $customer->id,
+            'order_id' => $order->id,
+            'order_item_id' => $item->id,
+            'quantity' => $quantity,
+            'reason' => trim($data['reason']),
+            'refund_amount' => round(((float) $item->price) * $quantity, 2),
+            'refund_method' => $data['refund_method'] ?: ($order->payment_status === 'paid' ? 'bank_transfer' : 'cod'),
+            'status' => OrderReturn::STATUS_PENDING,
+            'meta' => ['source' => 'customer_account'],
+        ]);
+
+        return Redirect::route('customer.account.returns')->with('message', 'Đã gửi yêu cầu trả hàng. Quản trị viên sẽ kiểm tra và xử lý.');
+    }
+
+    public function reorder(Request $request, string $orderCode, CartService $cartService): RedirectResponse
+    {
+        $customer = $this->sessionCustomer();
+        if (! $customer) {
+            $this->clearCustomerSession();
+            return $this->redirectToLogin('Vui lòng đăng nhập.');
+        }
+
+        $order = Order::query()
+            ->where('customer_id', $customer->id)
+            ->where('code', $orderCode)
+            ->with('items')
+            ->first();
+
+        if (! $order) {
+            return Redirect::route('customer.account.orders')->with('error', 'Không tìm thấy đơn hàng.');
+        }
+
+        $addedItems = 0;
+        $skippedMessages = [];
+
+        foreach ($order->items as $item) {
+            $productId = (int) ($item->product_id ?? 0);
+            if ($productId <= 0) {
+                $skippedMessages[] = 'Một sản phẩm trong đơn không còn tồn tại.';
+                continue;
+            }
+
+            try {
+                $cartService->addItem(
+                    $productId,
+                    max(1, (int) $item->quantity),
+                    $item->product_variant_id ? (int) $item->product_variant_id : null
+                );
+                $addedItems++;
+            } catch (RuntimeException $exception) {
+                $name = trim((string) ($item->product_name ?? 'Sản phẩm'));
+                $skippedMessages[] = $name . ': ' . $exception->getMessage();
+            }
+        }
+
+        if ($addedItems === 0) {
+            return Redirect::back()->with('error', $skippedMessages[0] ?? 'Không có sản phẩm nào có thể mua lại.');
+        }
+
+        $message = 'Đã thêm ' . $addedItems . ' sản phẩm từ đơn #' . $order->code . ' vào giỏ hàng.';
+        if ($skippedMessages !== []) {
+            $message .= ' Một số sản phẩm không thêm được do hết hàng hoặc không còn bán.';
+        }
+
+        return Redirect::to('/gio-hang')->with('message', $message);
     }
 
     public function otpVerification(Request $request)

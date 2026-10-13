@@ -4,15 +4,23 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Admin\Legacy\Coupon\StoreCouponRequest;
 use App\Http\Requests\Admin\Legacy\Coupon\UpdateCouponRequest;
+use App\Application\Checkout\Services\CouponService;
 use App\Infrastructure\Persistence\Eloquent\Marketing\Coupon as MarketingCoupon;
+use App\Support\CsvExport;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Session;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class CouponController extends Controller
 {
+    public function __construct(
+        private readonly CouponService $couponService,
+    ) {
+    }
     // public function __construct()
     // {
 
@@ -26,7 +34,7 @@ class CouponController extends Controller
         $coupon = Session::get('coupon');
         if ($coupon == true) {
 
-            Session::forget('coupon');
+            $this->couponService->clear(true, 'customer_unset');
             return redirect()->back()->with('message', 'Xóa mã khuyến mãi thành công');
         }
 
@@ -90,23 +98,86 @@ class CouponController extends Controller
 
         return Redirect::to('list-coupon');
     }
-    public function list_coupon()
+    public function list_coupon(Request $request)
     {
-        $today = Carbon::now('Asia/Ho_Chi_Minh')->format('d/m/Y');
+        $today = Carbon::now('Asia/Ho_Chi_Minh');
+        $filters = $this->couponFilters($request);
+
         if (! Schema::hasTable((new MarketingCoupon())->getTable())) {
-            $coupon = new LengthAwarePaginator([], 0, 5, 1, [
+            $coupon = new LengthAwarePaginator([], 0, $filters['per_page'], 1, [
                 'path' => request()->url(),
             ]);
+            $stats = ['total' => 0, 'active' => 0, 'valid' => 0, 'expired' => 0];
 
-            return view('admin.coupon.list_coupon')->with(compact('coupon', 'today'));
+            return view('admin.coupon.list_coupon')->with(compact('coupon', 'today', 'filters', 'stats'));
         }
 
-        $coupon = MarketingCoupon::query()
-            ->orderByDesc('id')
-            ->paginate(5)
+        $baseQuery = MarketingCoupon::query();
+        $stats = [
+            'total' => (clone $baseQuery)->count(),
+            'active' => (clone $baseQuery)->where('is_active', true)->count(),
+            'valid' => (clone $baseQuery)->whereDate('expires_at', '>=', $today->toDateString())->count(),
+                'expired' => (clone $baseQuery)->whereDate('expires_at', '<', $today->toDateString())->count(),
+        ];
+
+        $couponQuery = $this->couponQuery($filters, $today);
+
+        $coupon = $couponQuery
+            ->paginate($filters['per_page'])
+            ->appends($request->query())
             ->through(fn (MarketingCoupon $coupon): object => $this->legacyCouponRecord($coupon));
 
-        return view('admin.coupon.list_coupon')->with(compact('coupon', 'today'));
+        return view('admin.coupon.list_coupon')->with(compact('coupon', 'today', 'filters', 'stats'));
+    }
+
+    public function export_coupon(Request $request): StreamedResponse
+    {
+        $today = Carbon::now('Asia/Ho_Chi_Minh');
+
+        if (! Schema::hasTable((new MarketingCoupon())->getTable())) {
+            return CsvExport::download('ma-giam-gia-' . now()->format('Ymd-His') . '.csv', [
+                'Tên mã',
+                'Mã giảm giá',
+                'Loại giảm',
+                'Giá trị',
+                'Số lượt',
+                'Bắt đầu',
+                'Kết thúc',
+                'Trạng thái',
+                'Hạn dùng',
+            ], []);
+        }
+
+        $rows = $this->couponQuery($this->couponFilters($request), $today)
+            ->limit(5000)
+            ->get()
+            ->map(static function (MarketingCoupon $coupon) use ($today): array {
+                return [
+                    $coupon->name,
+                    $coupon->code,
+                    $coupon->type === 'percent' ? 'Giảm theo %' : 'Giảm theo tiền',
+                    (float) $coupon->value,
+                    (int) ($coupon->usage_limit ?? 0),
+                    $coupon->starts_at?->timezone('Asia/Ho_Chi_Minh')->format('d/m/Y') ?? '',
+                    $coupon->expires_at?->timezone('Asia/Ho_Chi_Minh')->format('d/m/Y') ?? '',
+                    $coupon->is_active ? 'Đang kích hoạt' : 'Đã khóa',
+                    $coupon->expires_at && $coupon->expires_at->timezone('Asia/Ho_Chi_Minh')->startOfDay()->gte($today)
+                        ? 'Còn hạn'
+                        : 'Đã hết hạn',
+                ];
+            });
+
+        return CsvExport::download('ma-giam-gia-' . now()->format('Ymd-His') . '.csv', [
+            'Tên mã',
+            'Mã giảm giá',
+            'Loại giảm',
+            'Giá trị',
+            'Số lượt',
+            'Bắt đầu',
+            'Kết thúc',
+            'Trạng thái',
+            'Hạn dùng',
+        ], $rows);
     }
     public function insert_coupon_code(StoreCouponRequest $request)
     {
@@ -163,6 +234,48 @@ class CouponController extends Controller
             'coupon_condition' => $coupon->type === 'percent' ? 1 : 2,
             'coupon_status' => $coupon->is_active ? 1 : 0,
         ];
+    }
+
+    private function couponFilters(Request $request): array
+    {
+        return [
+            'q' => trim((string) $request->query('q', '')),
+            'status' => (string) $request->query('status', 'all'),
+            'type' => (string) $request->query('type', 'all'),
+            'validity' => (string) $request->query('validity', 'all'),
+            'sort' => (string) $request->query('sort', 'newest'),
+            'per_page' => max(1, min((int) $request->integer('per_page', 10), 50)),
+        ];
+    }
+
+    private function couponQuery(array $filters, Carbon $today)
+    {
+        $couponQuery = MarketingCoupon::query()
+            ->when($filters['q'] !== '', function ($query) use ($filters) {
+                $query->where(function ($nested) use ($filters) {
+                    $nested->where('name', 'like', '%'.$filters['q'].'%')
+                        ->orWhere('code', 'like', '%'.$filters['q'].'%');
+                });
+            })
+            ->when($filters['status'] !== 'all', function ($query) use ($filters) {
+                $query->where('is_active', $filters['status'] === 'active');
+            })
+            ->when($filters['type'] !== 'all', fn ($query) => $query->where('type', $filters['type']))
+            ->when($filters['validity'] === 'valid', fn ($query) => $query->whereDate('expires_at', '>=', $today->toDateString()))
+            ->when($filters['validity'] === 'expired', fn ($query) => $query->whereDate('expires_at', '<', $today->toDateString()));
+
+        match ($filters['sort']) {
+            'oldest' => $couponQuery->orderBy('id'),
+            'expiry_asc' => $couponQuery->orderBy('expires_at')->orderByDesc('id'),
+            'expiry_desc' => $couponQuery->orderByDesc('expires_at')->orderByDesc('id'),
+            'usage_asc' => $couponQuery->orderBy('usage_limit')->orderByDesc('id'),
+            'usage_desc' => $couponQuery->orderByDesc('usage_limit')->orderByDesc('id'),
+            'value_asc' => $couponQuery->orderByRaw('CAST(value AS DECIMAL(10,2)) ASC')->orderByDesc('id'),
+            'value_desc' => $couponQuery->orderByRaw('CAST(value AS DECIMAL(10,2)) DESC')->orderByDesc('id'),
+            default => $couponQuery->orderByDesc('id'),
+        };
+
+        return $couponQuery;
     }
 
     private function modernCouponType(int $condition): string

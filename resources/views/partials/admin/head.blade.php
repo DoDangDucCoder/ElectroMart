@@ -26,6 +26,10 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
         table.dataTable thead .sorting_desc_disabled {
             background-image: none !important;
         }
+        .adm-th-sort{color:inherit;text-decoration:none;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;transition:color .15s}
+        .adm-th-sort:hover{color:#4361ee;text-decoration:none}
+        .adm-th-sort .fa-sort{opacity:.28;font-size:11px}
+        .adm-th-sort.sort-active .fa{opacity:1;color:#4361ee;font-size:11px}
     </style>
 
     <link rel="icon" href="{{ asset('frontend/images/logo-mail.png') }}" type="image/gif" sizes="32x32">

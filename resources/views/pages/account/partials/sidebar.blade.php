@@ -9,8 +9,6 @@
         ['key' => 'overview', 'label' => 'Tổng quan tài khoản', 'icon' => 'fa-th-large'],
         ['key' => 'orders', 'label' => 'Đơn hàng của tôi', 'icon' => 'fa-shopping-cart'],
         ['key' => 'history', 'label' => 'Lịch sử mua hàng', 'icon' => 'fa-history'],
-        ['key' => 'order-detail', 'label' => 'Chi tiết đơn hàng', 'icon' => 'fa-file-text-o'],
-        ['key' => 'tracking', 'label' => 'Theo dõi đơn hàng', 'icon' => 'fa-truck'],
         ['key' => 'cancelled-orders', 'label' => 'Đơn hàng đã hủy', 'icon' => 'fa-times-circle-o'],
         ['key' => 'returns', 'label' => 'Trả hàng / Hoàn tiền', 'icon' => 'fa-undo'],
         ['key' => 'wishlist', 'label' => 'Sản phẩm yêu thích', 'icon' => 'fa-heart-o'],
@@ -19,25 +17,24 @@
         ['key' => 'billing', 'label' => 'Thông tin thanh toán', 'icon' => 'fa-credit-card'],
         ['key' => 'payment-methods', 'label' => 'Phương thức thanh toán', 'icon' => 'fa-money'],
         ['key' => 'reviews', 'label' => 'Nhận xét của tôi', 'icon' => 'fa-comment-o'],
-        ['key' => 'password', 'label' => 'Cài đặt tài khoản', 'icon' => 'fa-cog'],
         ['key' => 'vouchers', 'label' => 'Kho voucher / mã giảm giá của tôi', 'icon' => 'fa-ticket'],
-        ['key' => 'password-change', 'label' => 'Đổi mật khẩu', 'icon' => 'fa-lock'],
     ];
 
     $sectionRouteMap = [
+        'overview' => url('/account'),
         'orders' => url('/account/orders'),
         'history' => url('/account/purchase-history'),
         'tracking' => url('/account/orders'),
         'wishlist' => url('/account/wishlist'),
         'profile' => url('/account/profile'),
         'address' => url('/account/addresses'),
+        'billing' => url('/account/invoices'),
         'cancelled-orders' => url('/account/cancelled-orders'),
         'returns' => url('/account/returns'),
         'recently-viewed' => url('/account/recently-viewed'),
         'payment-methods' => url('/account/payment-methods'),
         'reviews' => url('/account/reviews'),
         'vouchers' => url('/account/vouchers'),
-        'password-change' => url('/account/change-password'),
     ];
 @endphp
 
@@ -47,7 +44,7 @@
         <div class="accp-user-info">
             <strong>{{ $customerName }}</strong>
             <span>{{ $customerEmail }}</span>
-            <a href="{{ route('customer.account', ['section' => 'profile']) }}">Xem thông tin tài khoản <i class="fa fa-angle-right"></i></a>
+            <a href="{{ route('customer.account.profile') }}">Xem thông tin tài khoản <i class="fa fa-angle-right"></i></a>
         </div>
     </div>
     <ul class="accp-nav">

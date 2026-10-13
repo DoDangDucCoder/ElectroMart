@@ -15,8 +15,6 @@
         <div>
             <div class="adm-toolbar">
                 <div class="adm-search" style="flex:1"><i class="fa fa-search"></i><input type="text" placeholder="Tìm kiếm thuộc tính (tên, slug, mã...)"></div>
-                <button class="adm-btn outline"><i class="fa fa-download"></i> Nhập Excel</button>
-                <button class="adm-btn outline"><i class="fa fa-upload"></i> Xuất Excel</button>
                 <button class="adm-btn primary"><i class="fa fa-plus"></i> Thêm thuộc tính</button>
             </div>
             <div class="adm-filters">
@@ -43,11 +41,10 @@
 
             <div class="adm-table-wrap">
                 <table class="adm-table">
-                    <thead><tr><th><input type="checkbox"></th><th>Mã</th><th>Tên thuộc tính</th><th>Slug</th><th>Nhóm</th><th>Loại dữ liệu</th><th>Danh mục áp dụng</th><th>Số giá trị</th><th>Kiểu hiển thị</th><th>Trạng thái</th><th>Cập nhật</th><th>Thao tác</th></tr></thead>
+                    <thead><tr><th>Mã thuộc tính</th><th>Tên thuộc tính</th><th>Slug</th><th>Nhóm</th><th>Loại dữ liệu</th><th>Danh mục áp dụng</th><th>Số giá trị</th><th>Kiểu hiển thị</th><th>Trạng thái</th><th>Cập nhật</th><th>Thao tác</th></tr></thead>
                     <tbody>
                     @foreach ($attrs as $a)
                         <tr>
-                            <td><input type="checkbox"></td>
                             <td class="id">{{ $a['code'] }}</td>
                             <td style="font-weight:700;font-size:12.5px">{{ $a['name'] }}</td>
                             <td style="font-size:11px;color:#64748b">{{ $a['slug'] }}</td>
@@ -131,7 +128,7 @@
                     @endforeach
                 </ol>
             </div>
-            <div class="adm-aside-card"><h4>Tình trạng thuộc tính</h4>
+            <div class="adm-aside-card"><h4>Trạng thái thuộc tính</h4>
                 <div style="display:flex;align-items:center;gap:16px;margin-bottom:6px">
                     <div style="width:80px;height:80px;border-radius:50%;background:conic-gradient(#16a34a 0deg 242deg,#f59e0b 242deg 274deg,#3b82f6 274deg 318deg,#94a3b8 318deg 360deg);position:relative;flex-shrink:0"><div style="position:absolute;inset:12px;border-radius:50%;background:#fff"></div></div>
                     <div style="font-size:11px;display:grid;gap:4px">

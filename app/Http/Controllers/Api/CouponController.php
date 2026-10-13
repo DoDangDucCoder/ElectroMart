@@ -44,7 +44,7 @@ class CouponController extends Controller
     {
         $coupon = $this->couponService->findActiveByCode($code);
 
-        if (! $coupon || ($coupon->usage_limit !== null && $coupon->used_count >= $coupon->usage_limit)) {
+        if (! $coupon || ($coupon->usage_limit !== null && $coupon->usage_limit <= 0)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Không tìm thấy mã giảm giá.',

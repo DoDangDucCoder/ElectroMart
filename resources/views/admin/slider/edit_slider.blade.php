@@ -15,11 +15,11 @@
             </div>
             <div class="g-admin-page-stats">
                 <article>
-                    <strong>#{{ $slider->id }}</strong>
+                    <strong>SL{{ str_pad((string) $slider->id, 4, '0', STR_PAD_LEFT) }}</strong>
                     <span>Mã banner</span>
                 </article>
                 <article>
-                    <strong>{{ $slider->is_active ? 'Đang bật' : 'Đang ẩn' }}</strong>
+                    <strong>{{ $slider->is_active ? 'Đang hoạt động' : 'Tạm ẩn' }}</strong>
                     <span>Trạng thái</span>
                 </article>
             </div>
@@ -114,8 +114,8 @@
                     <div class="form-group">
                         <label for="slider_status">Trạng thái hiển thị</label>
                         <select name="slider_status" id="slider_status" class="form-control input-sm m-bot15">
-                            <option value="1" @selected((string) old('slider_status', (int) $slider->is_active) === '1')>Hiển thị ngay trên giao diện cửa hàng</option>
-                            <option value="0" @selected((string) old('slider_status', (int) $slider->is_active) === '0')>Ẩn tạm thời</option>
+                            <option value="1" @selected((string) old('slider_status', (int) $slider->is_active) === '1')>Đang hoạt động</option>
+                            <option value="0" @selected((string) old('slider_status', (int) $slider->is_active) === '0')>Tạm ẩn</option>
                         </select>
                     </div>
 

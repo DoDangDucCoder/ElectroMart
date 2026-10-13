@@ -37,10 +37,22 @@ class ProductProfitReportService
 
         $baseQuery = $this->baseQuery($filters);
 
+        $sortColumn = match ($filters['sort'] ?? 'revenue_desc') {
+            'profit_desc' => 'profit',
+            'profit_asc' => 'profit',
+            'sold_desc' => 'sold_quantity',
+            'sold_asc' => 'sold_quantity',
+            'cost_desc' => 'cost_total',
+            'cost_asc' => 'cost_total',
+            'revenue_asc' => 'revenue',
+            default => 'revenue',
+        };
+        $sortDirection = in_array($filters['sort'] ?? 'revenue_desc', ['profit_asc', 'sold_asc', 'cost_asc', 'revenue_asc'], true) ? 'asc' : 'desc';
+
         $rows = (clone $baseQuery)
             ->selectRaw(implode(",\n", $this->rowSelect($costPriceExpression)))
             ->groupBy('order_items.product_id')
-            ->orderByDesc('revenue')
+            ->orderBy($sortColumn, $sortDirection)
             ->paginate($perPage)
             ->appends($filters);
 
@@ -215,6 +227,7 @@ class ProductProfitReportService
                 SUM((order_items.price - (' . $costPriceExpression . ')) * order_items.quantity) as profit
             ',
             $this->canSelectProductSlug() ? 'MAX(products.slug) as product_slug' : 'NULL as product_slug',
+            $this->productsHaveColumn('thumbnail_path') ? 'MAX(products.thumbnail_path) as thumbnail_path' : 'NULL as thumbnail_path',
             $this->canJoinBrands() ? 'MAX(brands.name) as brand_name' : 'NULL as brand_name',
             $this->canJoinCategories() ? 'MAX(product_categories.name) as category_name' : 'NULL as category_name',
         ];

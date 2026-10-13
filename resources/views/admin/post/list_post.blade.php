@@ -57,8 +57,8 @@
                         <div class="form-group">
                             <select name="status" class="form-control">
                                 <option value="">-- Trạng thái --</option>
-                                <option value="published" {{ ($filters['status'] ?? '') === 'published' ? 'selected' : '' }}>Hiển thị</option>
-                                <option value="draft" {{ ($filters['status'] ?? '') === 'draft' ? 'selected' : '' }}>Ẩn</option>
+                                <option value="published" {{ ($filters['status'] ?? '') === 'published' ? 'selected' : '' }}>Đang hoạt động</option>
+                                <option value="draft" {{ ($filters['status'] ?? '') === 'draft' ? 'selected' : '' }}>Tạm ẩn</option>
                             </select>
                         </div>
                         <button type="submit" class="btn btn-primary">Lọc</button>
@@ -69,19 +69,14 @@
                     <table class="table table-striped b-t b-light g-admin-data-table" id="myTable">
                         <thead>
                             <tr>
-                                <th style="width:20px;">
-                                    <label class="i-checks m-b-none">
-                                        <input type="checkbox"><i></i>
-                                    </label>
-                                </th>
-                                <th>Tên bài viết</th>
+                                <th>@include('admin.partials.sort_header', ['label' => 'Tên bài viết', 'asc' => 'oldest', 'desc' => 'newest', 'filters' => $filters ?? []])</th>
                                 <th>Hình ảnh</th>
                                 <th>Đường dẫn tĩnh (slug)</th>
                                 <th>Tóm tắt</th>
                                 <th>Từ khóa SEO</th>
                                 <th>Danh mục</th>
-                                <th>Hiển thị</th>
-                                <th style="width:30px;"></th>
+                                <th>@include('admin.partials.sort_header', ['label' => 'Trạng thái', 'asc' => 'oldest', 'desc' => 'most_viewed', 'filters' => $filters ?? []])</th>
+                                <th style="width:80px;">Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -92,11 +87,6 @@
                                         : asset('uploads/product/no-image.svg');
                                 @endphp
                                 <tr>
-                                    <td>
-                                        <label class="i-checks m-b-none">
-                                            <input type="checkbox" name="post[]"><i></i>
-                                        </label>
-                                    </td>
                                     <td>
                                         <strong>{{ $post->post_title }}</strong>
                                     </td>
@@ -110,9 +100,9 @@
                                     <td>{{ optional($post->category)->name }}</td>
                                     <td>
                                         @if ($post->post_status == 0)
-                                            <span class="label label-success">Hiển thị</span>
+                                            <span class="label label-success">Đang hoạt động</span>
                                         @else
-                                            <span class="label label-default">Ẩn</span>
+                                            <span class="label label-default">Tạm ẩn</span>
                                         @endif
                                     </td>
                                     <td>

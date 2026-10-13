@@ -9,7 +9,7 @@ class LoginCustomerRequest extends BaseFormRequest
     public function rules(): array
     {
         return [
-            'email_account' => ['required', 'email'],
+            'email_account' => ['required', 'string', 'max:255'],
             'password_account' => ['required', 'string'],
         ];
     }
@@ -17,8 +17,8 @@ class LoginCustomerRequest extends BaseFormRequest
     public function messages(): array
     {
         return [
-            'email_account.required' => 'Vui lòng nhập email đăng nhập.',
-            'email_account.email' => 'Email đăng nhập không hợp lệ.',
+            'email_account.required' => 'Vui lòng nhập email hoặc số điện thoại đăng nhập.',
+            'email_account.max' => 'Email hoặc số điện thoại không được vượt quá 255 ký tự.',
             'password_account.required' => 'Vui lòng nhập mật khẩu.',
         ];
     }

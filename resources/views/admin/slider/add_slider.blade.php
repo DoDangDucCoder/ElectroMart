@@ -94,11 +94,11 @@
                     <div class="form-group">
                         <label for="slider_status">Trạng thái hiển thị</label>
                         <select name="slider_status" id="slider_status" class="form-control input-sm m-bot15">
-                            <option value="1" @selected(old('slider_status', '1') === '1')>Hiển thị ngay trên giao diện cửa hàng</option>
-                            <option value="0" @selected(old('slider_status') === '0')>Ẩn tạm thời</option>
+                            <option value="1" @selected(old('slider_status', '1') === '1')>Đang hoạt động</option>
+                            <option value="0" @selected(old('slider_status') === '0')>Tạm ẩn</option>
                         </select>
                         <span class="g-admin-cell-note">
-                            Trình chiếu chỉ xuất hiện ở giao diện cửa hàng khi trạng thái là <strong>Hiển thị</strong>.
+                            Trình chiếu chỉ xuất hiện ở giao diện cửa hàng khi trạng thái là <strong>Đang hoạt động</strong>.
                         </span>
                     </div>
                     <button type="submit" name="add_slider" class="btn btn-info">Thêm trình chiếu</button>

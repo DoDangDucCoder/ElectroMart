@@ -13,12 +13,16 @@ use App\Http\Controllers\Concerns\LegacyStorefrontContext;
 use App\Http\Requests\Admin\Legacy\Mail\SendCouponCampaignRequest;
 use App\Http\Requests\Storefront\Checkout\RecoverPasswordRequest;
 use App\Http\Requests\Storefront\Checkout\ResetPasswordRequest;
+use App\Infrastructure\Persistence\Eloquent\Customer\Customer;
+use App\Infrastructure\Persistence\Eloquent\Marketing\Coupon as MarketingCoupon;
 use App\Mail\LegacyCouponCampaignMail;
 use App\Mail\LegacyPasswordRecoveryMail;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Mail\Markdown;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\Response;
 
 class MailController extends Controller
@@ -43,6 +47,8 @@ class MailController extends Controller
             'selectedPreviewKey' => $selectedKey,
             'selectedPreview' => $previews[$selectedKey],
             'selectedRenderUrl' => route('admin.mail.preview.render', ['preview' => $selectedKey]),
+            'campaignCoupons' => $this->mailCampaignCoupons(),
+            'campaignStats' => $this->mailCampaignStats(),
         ]);
     }
 
@@ -62,7 +68,7 @@ class MailController extends Controller
     {
         $result = app(LegacyMailWorkflowService::class)->sendCouponCampaign(
             (string) $request->validated('coupon_code'),
-            false
+            null
         );
 
         return $this->mailRedirectResponse($result, '/list-coupon');
@@ -187,18 +193,18 @@ class MailController extends Controller
     {
         return [
             'coupon-standard' => [
-                'label' => 'Mã giảm giá khách thường',
+                'label' => 'Email ưu đãi khách hàng',
                 'category' => 'Khuyến mãi',
-                'description' => 'Email giảm giá phần trăm cho nhóm khách hàng phổ thông.',
+                'description' => 'Mẫu email hệ thống gửi mã giảm giá phần trăm cho khách hàng đã đăng ký.',
                 'snapshot' => 'coupon-campaign.standard',
-                'snapshot_label' => 'Mẫu mã giảm giá khách thường',
+                'snapshot_label' => 'Mẫu gửi khách hàng',
             ],
             'coupon-vip' => [
-                'label' => 'Mã giảm giá khách thân thiết',
+                'label' => 'Email ưu đãi khách thân thiết',
                 'category' => 'Khuyến mãi',
-                'description' => 'Email giảm giá theo tiền cho nhóm khách hàng thân thiết.',
+                'description' => 'Mẫu email hệ thống gửi mã giảm giá theo tiền cho nhóm khách hàng thân thiết.',
                 'snapshot' => 'coupon-campaign.vip',
-                'snapshot_label' => 'Mẫu mã giảm giá khách thân thiết',
+                'snapshot_label' => 'Mẫu gửi khách thân thiết',
             ],
             'password-recovery' => [
                 'label' => 'Khôi phục mật khẩu',
@@ -336,5 +342,48 @@ class MailController extends Controller
     protected function previewBrandName(): string
     {
         return (string) config('services.storefront_brand.name', 'ShopW');
+    }
+
+    protected function mailCampaignCoupons()
+    {
+        if (! Schema::hasTable((new MarketingCoupon())->getTable())) {
+            return collect();
+        }
+
+        $today = Carbon::now('Asia/Ho_Chi_Minh')->startOfDay();
+
+        return MarketingCoupon::query()
+            ->where('is_active', true)
+            ->where('usage_limit', '>', 0)
+            ->whereDate('expires_at', '>=', $today->toDateString())
+            ->orderByDesc('id')
+            ->limit(8)
+            ->get();
+    }
+
+    protected function mailCampaignStats(): array
+    {
+        if (! Schema::hasTable((new Customer())->getTable())) {
+            return ['all' => 0, 'vip' => 0];
+        }
+
+        $customers = Customer::query()->where('is_active', true)->get();
+        $validCustomers = $customers->filter(fn (Customer $customer): bool => filter_var($customer->email, FILTER_VALIDATE_EMAIL) !== false);
+
+        return [
+            'all' => $validCustomers->count(),
+            'vip' => $validCustomers->filter(fn (Customer $customer): bool => $this->isPreviewVipCustomer($customer))->count(),
+        ];
+    }
+
+    protected function isPreviewVipCustomer(Customer $customer): bool
+    {
+        $meta = is_array($customer->meta) ? $customer->meta : [];
+
+        if (array_key_exists('legacy_vip', $meta)) {
+            return (int) $meta['legacy_vip'] === 1;
+        }
+
+        return (float) ($customer->loyalty_points_balance ?? 0) >= 1000;
     }
 }

@@ -11,6 +11,12 @@ class CouponRedemption extends BaseModel
 {
     protected $table = 'coupon_redemptions';
 
+    protected $casts = [
+        'reserved_until' => 'datetime',
+        'redeemed_at' => 'datetime',
+        'released_at' => 'datetime',
+    ];
+
     public function coupon(): BelongsTo
     {
         return $this->belongsTo(Coupon::class);
